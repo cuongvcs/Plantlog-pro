@@ -140,19 +140,25 @@ async function syncToSheets(){
       status:        s(tk.status)||'pending',
       checklist:     cl.map(c=>(c.done?'[x] ':'[ ] ')+s(c.text||c.name)).join(' | '),
       checklistJson: JSON.stringify(cl),
+      flightJson:    tk.flight?JSON.stringify(tk.flight):'',
       createdAt:     s(tk.createdAt),
       updatedAt:     s(tk.updatedAt)||new Date().toISOString()
     };
   });
 
   const enrichedTrips=(S.trips||[]).map(tr=>({
-    id:        s(tr.id),        plant:     s(tr.plant),
-    location:  s(tr.location),  date:      s(tr.date),
-    dateEnd:   s(tr.dateEnd),   purpose:   s(tr.purpose),
-    contact:   s(tr.contact),   transport: s(tr.transport),
-    status:    s(tr.status)||'planned',
-    notes:     s(tr.notes),
-    createdAt: s(tr.createdAt)
+    id:         s(tr.id),
+    plant:      s(tr.plant),
+    location:   s(tr.location),
+    date:       s(tr.date),
+    dateEnd:    s(tr.dateEnd),
+    purpose:    s(tr.purpose),
+    contact:    s(tr.contact),
+    transport:  s(tr.transport),
+    status:     s(tr.status)||'planned',
+    notes:      s(tr.notes),
+    flight:     tr.flight?JSON.stringify(tr.flight):'',
+    createdAt:  s(tr.createdAt)
   }));
 
   // Compress bill photos to small JPEG thumbnails (max 200px) before sending
@@ -193,6 +199,7 @@ async function syncToSheets(){
         detail:     s(b.detail),
         amount:     parseFloat(s(b.amount))||0,
         currency:   s(b.currency)||'VND',
+        vndAmount:  parseFloat(s(b.vndAmount))||0,
         category:   s(b.category)||'other',
         notes:      s(b.notes),
         photoCount: photos.length,
@@ -378,6 +385,7 @@ async function loadFromSheets(){
             detail:     strB(b.Detail),
             amount:     parseFloat(strB(b.Amount))||0,
             currency:   strB(b.Currency)||'VND',
+            vndAmount:  parseFloat(strB(b.VndAmount||b.vndAmount))||0,
             category:   strB(b.Category)||'other',
             notes:      strB(b.Notes),
             photos:     photos,
