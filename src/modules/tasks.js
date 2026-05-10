@@ -277,11 +277,23 @@ function renderTasks(){
   const done=tasks.filter(t=>t.status==='done').length;
   const over=tasks.filter(t=>(t.dateEnd||t.date||t.dateStart||'')< today&&t.status!=='done').length;
 
-  let html=`<div class="task-stats">
-    <div class="ts-box"><div class="ts-num" style="color:var(--g700);">${total}</div><div class="ts-lbl">Total</div></div>
-    <div class="ts-box"><div class="ts-num" style="color:var(--g500);">${pend}</div><div class="ts-lbl">Pending</div></div>
-    <div class="ts-box"><div class="ts-num" style="color:var(--amber);">${inp}</div><div class="ts-lbl">In Progress</div></div>
-    <div class="ts-box"><div class="ts-num" style="color:var(--green);">${done}</div><div class="ts-lbl">Done</div></div>
+  let html=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;">
+    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+      <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--n700);line-height:1;">${total}</div>
+      <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Total</div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+      <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--n500);line-height:1;">${pend}</div>
+      <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Pending</div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+      <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--amber);line-height:1;">${inp}</div>
+      <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Active</div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+      <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--brand);line-height:1;">${done}</div>
+      <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Done</div>
+    </div>
   </div>`;
 
   if(!tasks.length){
@@ -405,7 +417,13 @@ function openTaskDetail(id){
   const dur=calcDuration(tk);
   const trip=tk.tripId?(S.trips.find(tr=>tr.id===tk.tripId)||{}).plant||'':'' ;
   const dStart=tk.dateStart||tk.date||'';
-  const dEnd=tk.dateEnd||dStart;
+  // Only use dateEnd if it's a real YYYY-MM-DD, not empty/time string
+  const _dateRx=/^\d{4}-\d{2}-\d{2}$/;
+  const dEnd=(tk.dateEnd&&_dateRx.test(tk.dateEnd))?tk.dateEnd:dStart;
+  // Only show times if they look like HH:MM
+  const _timeRx=/^\d{2}:\d{2}/;
+  const showTimeStart=tk.timeStart&&_timeRx.test(tk.timeStart);
+  const showTimeEnd=tk.timeEnd&&_timeRx.test(tk.timeEnd);
   document.getElementById('task-detail-content').innerHTML=`
     <div class="detail-hero">
       <span class="detail-cat-badge" style="background:${cc.bg};color:${cc.text};">${cc.icon} ${cc.label}${isOver?' · <span style=color:var(--red)>Overdue</span>':''}</span>
@@ -413,8 +431,8 @@ function openTaskDetail(id){
       ${tk.desc?`<div style="font-size:13px;color:var(--g600);line-height:1.5;">${tk.desc}</div>`:''}
     </div>
     <div class="detail-grid" style="margin-bottom:14px;">
-      <div class="dg-item"><div class="dg-label">Start</div><div class="dg-val">${fmtDate(dStart)}${tk.timeStart?' '+tk.timeStart:''}</div></div>
-      <div class="dg-item"><div class="dg-label">End</div><div class="dg-val">${fmtDate(dEnd)}${tk.timeEnd?' '+tk.timeEnd:''}</div></div>
+      <div class="dg-item"><div class="dg-label">Start</div><div class="dg-val">${fmtDate(dStart)}${showTimeStart?' ⏰ '+tk.timeStart:''}</div></div>
+      <div class="dg-item"><div class="dg-label">End</div><div class="dg-val">${fmtDate(dEnd)}${showTimeEnd?' ⏰ '+tk.timeEnd:''}</div></div>
       ${dur?`<div class="dg-item"><div class="dg-label">Duration</div><div class="dg-val">${dur}</div></div>`:''}
       <div class="dg-item"><div class="dg-label">Priority</div><div class="dg-val">${tk.priority||'—'}</div></div>
       <div class="dg-item"><div class="dg-label">Period</div><div class="dg-val">${periodLabel(tk.period)||'—'}</div></div>
