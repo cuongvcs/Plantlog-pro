@@ -123,7 +123,7 @@ function setupPWA(){
   // ── Clear old PlantLog v4 caches on every load ─────
   if('caches' in window){
     caches.keys().then(keys=>keys.forEach(k=>{
-      if(k!=='plantlog-pro-v1'){
+      if(k!=='plantlog-pro-v2'){
         console.log('[PlantLog] Deleting old cache:',k);
         caches.delete(k);
       }
@@ -232,9 +232,12 @@ function applyT(){document.querySelectorAll('[data-t]').forEach(el=>{const v=T[S
 // ═══════ INIT ═══════
 function init(){
   ld();setupPWA();
+  // ALWAYS initialize calendar vars first — before any render calls
+  const now=new Date();
+  calY=now.getFullYear();
+  calM=now.getMonth();
   // Hide app initially — authInit() will show it after PIN check
   document.getElementById('app').style.display='none';
-  const now=new Date();calY=now.getFullYear();calM=now.getMonth();
   document.getElementById('today-date').textContent=now.toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();
   initSig();renderTemplates();renderDefaultTeam();

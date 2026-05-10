@@ -251,20 +251,62 @@ async function loadFromSheets(){
     const data=await gsGet(url,{action:'getAll'});
     if(data.ok&&data.data){
       const d=data.data;
+
+      // ── Universal safe converters ─────────────────────────
+      // Converts any value to a clean YYYY-MM-DD string or ''
+      const safeDate=v=>{
+        if(v===null||v===undefined||v==='')return'';
+        if(v instanceof Date){
+          if(isNaN(v.getTime()))return'';
+          return v.toISOString().slice(0,10);
+        }
+        const s=String(v).trim();
+        // Already YYYY-MM-DD
+        if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+        // ISO with time: 2026-05-11T00:00:00.000Z
+        if(/^\d{4}-\d{2}-\d{2}T/.test(s))return s.slice(0,10);
+        // Slash format: 2026/05/11
+        if(/^\d{4}\/\d{2}\/\d{2}$/.test(s))return s.replace(/\//g,'-');
+        // Excel serial number
+        if(/^\d{5}$/.test(s)){
+          const d=new Date(Math.round((parseFloat(s)-25569)*86400*1000));
+          if(!isNaN(d.getTime()))return d.toISOString().slice(0,10);
+        }
+        // Try parsing as date string, but only accept YYYY-MM-DD result
+        try{
+          const d=new Date(s);
+          if(!isNaN(d.getTime())&&s.length>=8){
+            const iso=d.toISOString().slice(0,10);
+            if(iso>'1900-01-01')return iso;
+          }
+        }catch(e){}
+        return'';
+      };
+      // Safe time: returns HH:MM or ''
+      const safeTime=v=>{
+        if(!v&&v!==0)return'';
+        const s=String(v).trim();
+        if(/^\d{2}:\d{2}/.test(s))return s.slice(0,5);
+        return'';
+      };
+      // Safe string
+      const ss=v=>v===null||v===undefined?'':String(v).trim();
+
       if(d.trips&&d.trips.length){
-        const strV=v=>v===null||v===undefined?'':v instanceof Date?v.toISOString().slice(0,10):String(v);
+        const strV=v=>safeDate(v)||ss(v);
         S.trips=d.trips.map(tr=>({
-          id:       strV(tr.ID),
-          plant:    strV(tr.Plant),
-          location: strV(tr.Location),
-          date:     strV(tr.Date),
-          dateEnd:  strV(tr.DateEnd),
-          purpose:  strV(tr.Purpose),
-          contact:  strV(tr.Contact),
-          transport:strV(tr.Transport),
-          status:   strV(tr.Status)||'planned',
-          notes:    strV(tr.Notes),
-          createdAt:strV(tr.CreatedAt)
+          id:        ss(tr.ID),
+          plant:     ss(tr.Plant),
+          location:  ss(tr.Location),
+          date:      safeDate(tr.Date),
+          dateEnd:   safeDate(tr.DateEnd),
+          purpose:   ss(tr.Purpose),
+          contact:   ss(tr.Contact),
+          transport: ss(tr.Transport),
+          status:    ss(tr.Status)||'planned',
+          notes:     ss(tr.Notes),
+          flight:    tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
+          createdAt: ss(tr.CreatedAt)
         }));
       }
       if(d.tasks&&d.tasks.length){
@@ -282,36 +324,42 @@ async function loadFromSheets(){
             if(cj.startsWith('['))cl=JSON.parse(cj);
             else{const c2=str(tk.Checklist||'');if(c2.startsWith('['))cl=JSON.parse(c2);}
           }catch(e){cl=[];}
-          const ds=str(tk.DateStart)||str(tk.Date)||'';
-          const de=str(tk.DateEnd)||ds;
+          const ds=safeDate(tk.DateStart||tk.Date);
+          const de=safeDate(tk.DateEnd)||ds;
+          const ts=safeTime(tk.TimeStart||tk.Time);
+          const te=safeTime(tk.TimeEnd);
           return {
-            id:           str(tk.ID),
-            title:        str(tk.Title),
-            desc:         str(tk.Description),
-            category:     str(tk.Category)||'work',
+            id:           ss(tk.ID),
+            title:        ss(tk.Title),
+            desc:         ss(tk.Description),
+            category:     ss(tk.Category)||'work',
             dateStart:    ds,
-            timeStart:    str(tk.TimeStart)||str(tk.Time)||'',
+            timeStart:    ts,
             dateEnd:      de,
-            timeEnd:      str(tk.TimeEnd)||'',
-            hours:        str(tk.Hours),
-            minutes:      str(tk.Minutes),
-            priority:     str(tk.Priority)||'medium',
-            period:       str(tk.Period),
-            machine:      str(tk.Machine),
-            plan:         str(tk.Plan),
-            tripId:       str(tk.TripID),
-            status:       str(tk.Status)||'pending',
+            timeEnd:      te,
+            hours:        ss(tk.Hours),
+            minutes:      ss(tk.Minutes),
+            priority:     ss(tk.Priority)||'medium',
+            period:       ss(tk.Period),
+            machine:      ss(tk.Machine),
+            plan:         ss(tk.Plan),
+            tripId:       ss(tk.TripID),
+            status:       ss(tk.Status)||'pending',
             checklist:    cl,
+            flight:       tk.FlightJson?(()=>{try{return JSON.parse(ss(tk.FlightJson));}catch(e){return null;}})():null,
             date:         ds,
-            time:         str(tk.TimeStart)||str(tk.Time)||'',
-            createdAt:    str(tk.CreatedAt),
-            updatedAt:    str(tk.UpdatedAt)
+            time:         ts,
+            createdAt:    ss(tk.CreatedAt),
+            updatedAt:    ss(tk.UpdatedAt)
           };
         });
       }
       if(d.leave&&d.leave.length){
         S.leaveData={};
-        d.leave.forEach(l=>{if(l.Date&&l.Type)S.leaveData[l.Date]=l.Type;});
+        d.leave.forEach(l=>{
+          const lDate=safeDate(l.Date)||ss(l.Date);
+          if(lDate&&l.Type)S.leaveData[lDate]=ss(l.Type);
+        });
       }
       // Load bills
       if(d.bills&&d.bills.length){
@@ -323,9 +371,9 @@ async function loadFromSheets(){
             if(pj&&pj.startsWith('['))photos=JSON.parse(pj);
           }catch(e){photos=[];}
           return {
-            id:         strB(b.ID),
-            tripId:     strB(b.TripID),
-            date:       strB(b.Date),
+            id:         ss(b.ID),
+            tripId:     ss(b.TripID),
+            date:       safeDate(b.Date)||ss(b.Date),
             billNumber: strB(b.BillNumber),
             detail:     strB(b.Detail),
             amount:     parseFloat(strB(b.Amount))||0,
