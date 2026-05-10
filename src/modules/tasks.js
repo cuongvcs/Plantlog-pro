@@ -201,10 +201,19 @@ function calcDuration(tk){
     const h=parseInt(tk.hours)||0,m=parseInt(tk.minutes)||0;
     return h>0&&m>0?`${h}h ${m}m`:h>0?`${h}h`:`${m}m`;
   }
-  if(tk.dateStart&&tk.dateEnd&&tk.timeStart&&tk.timeEnd){
+  // Only calculate from dates if ALL four values are valid non-empty strings
+  const ds=tk.dateStart||tk.date||'';
+  const de=tk.dateEnd||ds;
+  const ts=tk.timeStart||'';
+  const te=tk.timeEnd||'';
+  // Guard: date must match YYYY-MM-DD format
+  const dateRx=/^\d{4}-\d{2}-\d{2}$/;
+  const timeRx=/^\d{2}:\d{2}$/;
+  if(ds&&de&&ts&&te&&dateRx.test(ds)&&dateRx.test(de)&&timeRx.test(ts)&&timeRx.test(te)){
     try{
-      const s=new Date(tk.dateStart+'T'+tk.timeStart);
-      const e=new Date(tk.dateEnd+'T'+tk.timeEnd);
+      const s=new Date(ds+'T'+ts);
+      const e=new Date(de+'T'+te);
+      if(isNaN(s.getTime())||isNaN(e.getTime()))return'';
       const diff=e-s;if(diff<=0)return'';
       const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
       return h>0&&m>0?`${h}h ${m}m`:h>0?`${h}h`:`${m}m`;
@@ -302,13 +311,13 @@ function renderTasks(){
         </div>
         ${tk.desc?`<div style="font-size:12px;color:var(--g500);margin-bottom:6px;line-height:1.4;">${tk.desc.substring(0,70)}${tk.desc.length>70?'…':''}</div>`:''}
         <div class="tc-meta">
-          <div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${dateRange}</div>
-          ${tk.timeStart?`<div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${tk.timeStart}${tk.timeEnd?' – '+tk.timeEnd:''}</div>`:''}
-          ${dur?`<div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${dur}</div>`:''}
-          ${tk.machine?`<div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-8l-2 4h12z"/></svg>${tk.machine}</div>`:''}
-          ${tk.plan?`<div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${tk.plan}</div>`:''}
-          ${trip?`<div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>${trip}</div>`:''}
-          ${isOver?`<div class="tc-meta-item" style="color:var(--red);">⚠ Overdue</div>`:''}
+          <span class="tc-meta-item">📅 ${dateRange}</span>
+          ${tk.timeStart?`<span class="tc-meta-item">⏰ ${tk.timeStart}${tk.timeEnd?' – '+tk.timeEnd:''}</span>`:''}
+          ${dur?`<span class="tc-meta-item">⏱ ${dur}</span>`:''}
+          ${tk.machine?`<span class="tc-meta-item">🔩 ${tk.machine}</span>`:''}
+          ${tk.plan?`<span class="tc-meta-item">📁 ${tk.plan}</span>`:''}
+          ${trip?`<span class="tc-meta-item">🏭 ${trip}</span>`:''}
+          ${isOver?`<span class="tc-meta-item" style="color:var(--red);font-weight:600;">⚠ Overdue</span>`:''}
         </div>
         ${tk.checklist&&tk.checklist.length?`<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
           <div style="flex:1;height:4px;background:var(--g200);border-radius:2px;overflow:hidden;">

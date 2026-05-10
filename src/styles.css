@@ -640,3 +640,114 @@ input, textarea, select, button { font-family: var(--font); }
 @media (min-width: 768px) {
   #app { border-radius: 24px; height: calc(100vh - 40px); margin-top: 20px; }
 }
+
+/* ═══════════════════════════════════════════════════════
+   TASK CARDS — Pro v4 style
+   ═══════════════════════════════════════════════════════ */
+
+.task-card-v4 {
+  background: var(--surface);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  border: 1px solid var(--n150);
+  margin-bottom: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  transition: box-shadow var(--dur-base), transform var(--dur-fast);
+}
+.task-card-v4:active { box-shadow: var(--sh-md); transform: scale(0.997); }
+
+/* Left colour bar */
+.tc-bar {
+  width: 3px; flex-shrink: 0;
+  background: var(--n300);
+}
+.tc-bar.work    { background: var(--brand); }
+.tc-bar.leave   { background: var(--amber); }
+.tc-bar.travel  { background: var(--blue); }
+.tc-bar.overdue { background: var(--red); }
+
+.tc-body { flex: 1; padding: 11px 12px; min-width: 0; }
+
+.tc-head {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 8px; margin-bottom: 3px;
+}
+.tc-title {
+  font-family: var(--font-hd); font-size: 13px;
+  font-weight: 600; color: var(--n800);
+  line-height: 1.35; flex: 1; min-width: 0;
+}
+.tc-badges { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+
+/* Period badge */
+.period-badge {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; background: var(--n100);
+  color: var(--n500); padding: 2px 6px; border-radius: 4px;
+  border: 1px solid var(--n200);
+}
+
+/* Priority dot */
+.prio-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.prio-high     { background: var(--red); }
+.prio-medium   { background: var(--amber); }
+.prio-low      { background: var(--n300); }
+
+/* Meta row — text only, no large SVG icons */
+.tc-meta {
+  display: flex; flex-wrap: wrap; gap: 5px 10px;
+  margin: 5px 0 8px; font-size: 11px; color: var(--n500);
+  line-height: 1.4;
+}
+/* Each meta item: small emoji/icon + text — inline, compact */
+.tc-meta-item {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 11px; color: var(--n500);
+  white-space: nowrap;
+}
+/* Hide the SVG inside tc-meta-item — replace with text only */
+.tc-meta-item svg { display: none; }
+
+/* tc-footer */
+.tc-footer {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 8px;
+  margin-top: 6px;
+}
+
+/* Status segment control */
+.status-seg {
+  display: flex; align-items: center; gap: 0;
+  background: var(--n100); border-radius: 20px;
+  border: 1px solid var(--n200);
+  overflow: hidden;
+}
+.ss-btn {
+  border: none; background: transparent; cursor: pointer;
+  padding: 4px 9px; font-size: 12px; color: var(--n400);
+  transition: all var(--dur-fast); font-family: var(--font);
+  line-height: 1;
+}
+.ss-btn:active { background: var(--n200); }
+.ss-btn.active-p  { background: var(--n200); color: var(--n600); font-weight: 700; }
+.ss-btn.active-ip { background: var(--bl); color: var(--bd); font-weight: 700; }
+.ss-btn.active-d  { background: var(--brand-light); color: var(--brand); font-weight: 700; }
+
+/* ── KANBAN CARDS ──────────────────────────────────────── */
+.kb-card {
+  background: var(--surface); border-radius: var(--r-sm);
+  box-shadow: var(--sh-xs); border: 1px solid var(--n150);
+  padding: 10px 12px; margin-bottom: 6px; cursor: pointer;
+  transition: box-shadow var(--dur-base);
+}
+.kb-card:active { box-shadow: var(--sh-md); }
+.kb-card-title {
+  font-family: var(--font-hd); font-size: 12px;
+  font-weight: 600; color: var(--n800); margin-bottom: 4px;
+  line-height: 1.3;
+}
+.kb-card-meta { font-size: 11px; color: var(--n500); }
