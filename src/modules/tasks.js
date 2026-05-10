@@ -296,8 +296,10 @@ function renderTasks(){
     const pc=prioConfig(tk.priority);
     const dur=calcDuration(tk);
     const dStart=tk.dateStart||tk.date||'';
-    const dEnd=tk.dateEnd||dStart;
-    const dateRange=dStart===dEnd?fmtDate(dStart):`${fmtDate(dStart)} → ${fmtDate(dEnd)}`;
+    // Only use dateEnd if it's a valid YYYY-MM-DD date, not a time or empty string
+    const dateRx=/^\d{4}-\d{2}-\d{2}$/;
+    const dEnd=(tk.dateEnd&&dateRx.test(tk.dateEnd))?tk.dateEnd:dStart;
+    const dateRange=(dStart&&dEnd&&dStart!==dEnd)?`${fmtDate(dStart)} → ${fmtDate(dEnd)}`:fmtDate(dStart);
     const trip=tk.tripId?(S.trips.find(tr=>tr.id===tk.tripId)||{}).plant||'':'' ;
     return `<div class="task-card-v4" onclick="openTaskDetail('${tk.id}')">
       <div class="tc-bar ${isOver?'overdue':cat}"></div>

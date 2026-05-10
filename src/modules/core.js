@@ -120,6 +120,28 @@ function t(k){return T[S.lang][k]||T.en[k]||k;}
 
 // ═══════ PWA ═══════
 function setupPWA(){
+  // ── Clear old PlantLog v4 caches on every load ─────
+  if('caches' in window){
+    caches.keys().then(keys=>keys.forEach(k=>{
+      if(k!=='plantlog-pro-v1'){
+        console.log('[PlantLog] Deleting old cache:',k);
+        caches.delete(k);
+      }
+    }));
+  }
+  // Unregister any old service workers not pointing to our sw.js
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistrations().then(regs=>{
+      regs.forEach(reg=>{
+        const url=reg.active&&reg.active.scriptURL||'';
+        if(url&&!url.endsWith('sw.js')){
+          console.log('[PlantLog] Unregistering old SW:',url);
+          reg.unregister();
+        }
+      });
+    });
+  }
+
   // Dynamic manifest
   const manifest={
     name:'PlantLog',short_name:'PlantLog',
@@ -307,11 +329,13 @@ function rmTemplate(i){S.templates.splice(i,1);sv();renderTemplates();}
 
 // ═══════ UTILS ═══════
 function fmtDate(d){
-  if(!d||d==='—'||d==='undefined'||d==='null')return'—';
+  if(!d||d==='—'||d==='undefined'||d==='null'||d==='')return'—';
+  // Reject time strings like '08:00', '17:30' — these are NOT dates
+  if(/^\d{2}:\d{2}/.test(String(d).trim()))return'—';
   try{
     // Strip any existing time part, keep only YYYY-MM-DD
     const dateOnly=String(d).trim().slice(0,10);
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly))return String(d);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly))return'—';
     const[y,m,day]=dateOnly.split('-').map(Number);
     if(isNaN(y)||isNaN(m)||isNaN(day))return String(d);
     // Use explicit parts to avoid timezone offset issues
