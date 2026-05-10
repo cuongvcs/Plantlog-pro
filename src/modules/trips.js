@@ -260,6 +260,9 @@ function openReport(){
 // ═══════ CALENDAR ═══════
 function renderCalendar(){
   const now=new Date();
+  // Guard: initialize if not set (can happen before init() completes)
+  if(calY===undefined||calY===null||isNaN(calY)){calY=now.getFullYear();}
+  if(calM===undefined||calM===null||isNaN(calM)){calM=now.getMonth();}
   document.getElementById('cal-month-label').textContent=new Date(calY,calM,1).toLocaleDateString(S.lang==='vi'?'vi-VN':'en-US',{month:'long',year:'numeric'});
   const grid=document.getElementById('cal-grid');
   const days=S.lang==='vi'?['CN','T2','T3','T4','T5','T6','T7']:['Su','Mo','Tu','We','Th','Fr','Sa'];

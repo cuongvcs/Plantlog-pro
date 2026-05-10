@@ -784,3 +784,189 @@ input, textarea, select, button { font-family: var(--font); }
   font-size: 13px; font-weight: 500; color: var(--n800);
   line-height: 1.4;
 }
+
+/* ── CALENDAR GRID (cc = calendar cell) ───────────────── */
+#cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  padding: 8px 4px;
+}
+.cc {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--n700);
+  position: relative;
+  transition: background var(--dur-fast);
+  min-height: 36px;
+}
+.cc:active { background: var(--n100); }
+
+/* Day-of-week header row */
+.chdr {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--n400);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: default;
+  aspect-ratio: auto;
+  min-height: unset;
+  padding: 4px 0;
+}
+.chdr:active { background: transparent; }
+
+/* Other-month days (greyed out) */
+.cc.other { color: var(--n300); cursor: default; }
+.cc.other:active { background: transparent; }
+
+/* Today highlight */
+.cc.today {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+}
+.cc.today:active { background: var(--brand-dark); }
+
+/* Leave type backgrounds */
+.cc.leave    { background: #FEF3C7; color: var(--ad); font-weight: 600; }
+.cc.wfh      { background: var(--bl); color: var(--bd); font-weight: 600; }
+.cc.holiday  { background: var(--rl); color: var(--rd); font-weight: 600; }
+.cc.trip     { background: var(--brand-light); color: var(--brand-dark); font-weight: 600; }
+
+/* Task dot indicator */
+.cc.has-task::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--red);
+}
+.cc.today.has-task::after { background: rgba(255,255,255,0.8); }
+
+/* Calendar navigation header */
+.cal-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 0;
+}
+.cal-nav-btn {
+  width: 32px; height: 32px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--n200);
+  background: var(--surface);
+  color: var(--n600);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--dur-fast);
+}
+.cal-nav-btn:active { background: var(--n100); }
+#cal-month-label {
+  font-family: var(--font-hd);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--n900);
+  letter-spacing: -0.01em;
+}
+
+/* Leave legend dots */
+.leave-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 0;
+}
+.ll-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--n500);
+  font-weight: 500;
+}
+.ll-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── CALENDAR LAYOUT HELPERS (from index.html) ────────── */
+
+/* Calendar header row (‹ Month Year ›) */
+.ch2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0 8px;
+}
+
+/* Month label */
+.cm {
+  font-family: var(--font-hd);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--n900);
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+/* Calendar nav button (‹ ›) */
+.cn {
+  width: 34px; height: 34px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--n200);
+  background: var(--surface);
+  color: var(--n600);
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+  line-height: 1;
+}
+.cn:active { background: var(--n100); border-color: var(--n300); }
+
+/* Calendar grid container */
+.cgrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  padding: 4px 0 8px;
+}
+
+/* Day type picker grid */
+.dtg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* Day type button */
+.dtb {
+  padding: 10px 8px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--n200);
+  background: var(--surface);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--n700);
+  cursor: pointer;
+  text-align: center;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+.dtb:active { background: var(--brand-light); border-color: var(--brand); color: var(--brand-dark); }
