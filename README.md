@@ -1,143 +1,180 @@
 # 🏭 PlantLog Pro
 
-**Field Visit & Plant Report App** — Modular PWA for field engineers.
+**Field Visit & Plant Report App** — Modular PWA for field engineers.  
+Deployed via GitHub Pages · Works offline · Google Sheets sync · No build step required.
 
 ---
 
 ## Project Structure
 
 ```
-plantlog-pro/
-├── src/
-│   ├── index.html          ← HTML layout only (~1100 lines)
-│   ├── styles.css          ← Design system (~640 lines)
-│   ├── sw.js               ← Service worker (caches all modules)
-│   ├── 404.html            ← GitHub Pages SPA redirect
-│   └── modules/
-│       ├── core.js         ← State, Store, i18n, navigation    ~360 lines
-│       ├── auth.js         ← PIN security, lock screen         ~320 lines
-│       ├── trips.js        ← Trips, calendar, dashboard        ~460 lines
-│       ├── tasks.js        ← Tasks, kanban, flights            ~580 lines
-│       ├── report.js       ← 6-step report, PDF export         ~650 lines
-│       ├── bills.js        ← Expense bills, bills PDF          ~400 lines
-│       └── sync.js         ← Google Sheets sync                ~575 lines
-├── PlantLog_GoogleAppsScript.gs
-├── .github/workflows/deploy.yml
-└── README.md
+src/
+├── index.html          ← HTML layout only (~1100 lines)
+├── styles.css          ← Design system (~1000 lines)
+├── sw.js               ← Service worker — caches all modules
+├── 404.html            ← GitHub Pages SPA redirect
+└── modules/
+    ├── core.js         ← State (key:plpro1), Store, i18n, navigation     ~380 lines
+    ├── auth.js         ← PIN security, lock screen (key:plprosec1)        ~320 lines
+    ├── trips.js        ← Trips CRUD, calendar, dashboard, filters          ~480 lines
+    ├── tasks.js        ← Tasks, kanban, parts/materials, flights           ~830 lines
+    ├── report.js       ← 6-step report, PDF export                        ~650 lines
+    ├── bills.js        ← Expense bills, bills PDF                         ~400 lines
+    └── sync.js         ← Google Sheets sync (database: PlantLog Pro)      ~575 lines
 ```
 
 ---
 
-## 🚀 How to run on GitHub Pages
+## Changelog
 
-### Step 1 — Create repository
+### v4.3 — Parts & Materials + Export
 
-1. Go to **github.com** → **New repository**
-2. Name it: `plantlog` (or any name)
-3. Set to **Public**
-4. Do NOT initialize with README (you have one)
-5. Click **Create repository**
+**Parts / Materials per Work task**
+- Toggle button "🔩 Add parts / materials required" in Work task modal
+- Each part is a **card** showing all fields clearly:
+  - Part No. (monospace, prominent)
+  - Description (full width)
+  - Brand / Manufacturer
+  - Quantity
+  - Machine / Assembly
+  - Status: ❌ Not Yet · 📦 On Order · ✅ Ready (colour-coded dropdown)
+- Parts visible in task detail view with status badges
+- Parts data saved to localStorage and synced to Google Sheets (PartsJson column)
 
-### Step 2 — Upload files
+**Parts export — Settings**
+- 📊 **Parts List → Excel** — downloads CSV file, opens directly in Microsoft Excel
+  - Columns: No., Task, Date, Trip, Part No., Description, Brand, Qty, Machine/Assembly, Status
+  - UTF-8 BOM for correct Thai/Vietnamese character support in Excel
+- 📄 **Parts List → PDF** — landscape A4 PDF report
+  - Header with engineer name, company, date, total count
+  - Summary: Ready / On Order / Not Yet counts
+  - Full parts table — alternating rows, status colour-coded
+  - Auto page break when table exceeds page height
 
-**Option A — GitHub website (easiest):**
-1. Open your new repo on GitHub
-2. Click **Add file → Upload files**
-3. Drag the entire **contents** of this ZIP (not the ZIP itself):
-   - Upload: `src/` folder, `README.md`, `PlantLog_GoogleAppsScript.gs`
-4. Also create `.github/workflows/deploy.yml` — click **Add file → Create new file**
-   - Type `.github/workflows/deploy.yml` as the filename
-   - Paste the content from the `deploy.yml` file in this ZIP
-5. Click **Commit changes**
-
-**Option B — Git command line:**
-```bash
-git clone https://github.com/YOUR_USERNAME/plantlog.git
-cd plantlog
-# Copy all files from this ZIP into the folder
-git add .
-git commit -m "Initial PlantLog Pro"
-git push origin main
-```
-
-### Step 3 — Enable GitHub Pages
-
-1. In your repo → **Settings** → **Pages** (left sidebar)
-2. Under **Source**: select **GitHub Actions**
-3. Save
-
-### Step 4 — Deploy
-
-- The app deploys **automatically** every time you push to `main`
-- After the first push, wait ~2 minutes
-- Your app is live at: `https://YOUR_USERNAME.github.io/plantlog/`
-
-### Step 5 — Set up Google Sheets (for data sync)
-
-1. Go to **script.google.com** → New project
-2. Paste the contents of `PlantLog_GoogleAppsScript.gs`
-3. Click **Save** → Run **setupSheets** → approve permissions
-4. **Deploy → New deployment → Web app**
-   - Execute as: **Me**
-   - Who has access: **Anyone**
-5. Copy the `/exec` URL
-6. In the app: **Settings → Google Sheets Sync** → paste URL → **Sync**
+**Clarification: MD file = app changelog (this README), not a parts export**
 
 ---
 
-## 🔧 Making changes
+### v4.2 — Security & Trip Status
 
-### Edit a feature
-- **Task logic?** → edit `src/modules/tasks.js`
-- **Trip display?** → edit `src/modules/trips.js`
-- **PDF report?** → edit `src/modules/report.js`
-- **Bills?** → edit `src/modules/bills.js`
-- **Security/PIN?** → edit `src/modules/auth.js`
-- **Google Sheets sync?** → edit `src/modules/sync.js`
-- **Colors/fonts/layout?** → edit `src/styles.css`
-- **HTML structure?** → edit `src/index.html`
+**PIN security fixed**
+- Storage key changed: `pl3` → `plpro1` (separate from old PlantLog app)
+- PIN hash key: `plsec4` → `plprosec1`
+- PIN salt: `pl4salt_` → `plprosalt_`
+- PIN pad now displays correctly as 3×4 grid (`.pin-pad` CSS was missing)
 
-### Add a new feature (example: Equipment tracker)
-1. Create `src/modules/equipment.js`
-2. Add to `index.html`:
-   ```html
-   <script src="modules/equipment.js"></script>
-   ```
-3. Add cache entry in `sw.js`:
-   ```js
-   './modules/equipment.js',
-   ```
-4. Register listeners in `equipment.js`:
-   ```js
-   Store.on('equipment:save', () => renderEquipmentList());
-   ```
+**Trip status change**
+- Status toggle bar added to trip detail: 📋 Planned · 🔄 Active · ✅ Done
+- Tap any status to change — saves immediately, updates trip card colour
+- `setTripStatus()` and `renderTripStatusToggle()` functions added to trips.js
 
-### Module communication rule
-**Modules never call each other directly.**
-They communicate only through the Store:
+**Settings data now persists correctly**
+- Root cause: same `localStorage` key as old app caused data to be overwritten
+- Now fully isolated with `plpro1` key
+
+---
+
+### v4.1 — Database separation
+
+**PlantLog Pro uses its own database**
+- Google Sheets database: `PlantLog Pro Database` (separate from `PlantLog Database`)
+- New Apps Script project: `PlantLog Pro Backend`
+- Run `setupSheets()` to create the new spreadsheet automatically
+- Old app data is never touched
+
+**New helper functions in Apps Script**
+- `getDatabaseUrl()` — logs the spreadsheet URL
+- `testAPI()` — verifies connection and row counts
+
+---
+
+### v4.0 — Modular architecture
+
+**Split from 5000-line single file into 7 modules**
+- `core.js` — state, Store pattern, i18n, navigation
+- `auth.js` — PIN security, lock screen
+- `trips.js` — trips CRUD, calendar, dashboard, filters
+- `tasks.js` — tasks CRUD, kanban, flights (travel), parts (work)
+- `report.js` — 6-step field report, PDF export
+- `bills.js` — expense bills, VND equivalent, bills PDF
+- `sync.js` — Google Sheets push/pull with safe date/time converters
+
+**Data load fixes (Google Sheets)**
+- `safeDate(v)` — handles Date objects, ISO strings, slash dates, Excel serials
+- `safeTime(v)` — only returns `HH:MM`, never a date string
+- Prevents `1899-12-30` bug from corrupted time fields
+
+**New columns added to Google Sheets**
+- Trips: `Flight` (JSON — outbound + return flight details)
+- Tasks: `FlightJson`, `PartsJson`
+- Bills: `VndAmount` (VND equivalent from credit card)
+
+**Cache management**
+- SW cache: `plantlog-pro-v2` (old `plantlog-v4` cache auto-deleted on first load)
+- Forces fresh file download after every update
+
+---
+
+### v3.x — Feature additions (pre-modular, in plantlog_v4.html)
+
+- Bills tab with VND equivalent column and trip linking
+- Flight details on Travel tasks and Trips (outbound + return, PNR)
+- Trip notes — inline textarea per trip, auto-saves
+- Filter + search on Trips and Tasks screens (text search + date range)
+- Parts / Materials section (initial version)
+- Today's Tasks on Home — all categories grouped by status with quick toggle
+- PIN security — SHA-256 hash, auto-lock 5 min
+- Photo picker — Camera vs Gallery bottom sheet
+- `1899-12-30` date bug fixed (time fields leaking into date display)
+- Task stats grid (4 columns: Total / Pending / Active / Done)
+- Calendar CSS fixed (`.cc`, `.cgrid`, `.cn`, `.chdr` classes)
+
+---
+
+## Module Communication
+
+All cross-module calls go through the **Store**:
+
 ```js
-// ✅ Correct — commit to Store
-Store.commit('task:save', task);
+// ✅ Correct
+Store.commit('task:save');        // triggers renderTasks() + renderDash() + sync
 
-// ❌ Wrong — don't call another module's function
-renderTripList(); // from inside tasks.js
+// ❌ Wrong — don't call another module's function directly
+renderTripList();  // from inside tasks.js
 ```
 
+Store events:
+| Event | Triggers |
+|---|---|
+| `trip:save` | `renderTripList()`, `renderDash()` |
+| `trip:delete` | `renderTripList()`, `renderDash()` |
+| `task:save` | `renderTasks()`, `renderDash()`, `renderCalendar()` |
+| `task:status` | `renderTasks()`, `renderDash()` |
+| `bill:save` | `renderBillsScreen()`, `renderDash()` |
+| `leave:save` | `renderCalendar()`, `renderDash()` |
+| `*` (wildcard) | `svAndSync()` — auto-syncs to Google Sheets |
+
 ---
 
-## 📱 Install on phone
+## GitHub Pages Deployment
 
-**Android (Chrome):** ⋮ menu → Add to Home Screen  
-**iPhone (Safari):** Share button → Add to Home Screen
+1. Push to `main` branch → auto-deploys via `.github/workflows/deploy.yml`
+2. URL: `https://YOUR_USERNAME.github.io/plantlog/`
+
+**Files to update after each change:**
+- Bug in trips → upload `src/modules/trips.js`
+- UI change → upload `src/styles.css`
+- New feature → upload relevant module + `src/index.html`
+- Always upload `src/sw.js` with bumped cache version to force refresh
 
 ---
 
-## 🔐 Security
+## Google Sheets Setup
 
-1. Open the app → **Settings → Security → PIN & Security**
-2. Set a 4-digit PIN
-3. App locks automatically after 5 minutes
-4. Settings screen requires PIN to access
+1. **script.google.com** → New project → paste `PlantLog_GoogleAppsScript.gs`
+2. Run `setupSheets()` → creates `PlantLog Pro Database` in Google Drive
+3. Deploy → Web App → Anyone → copy `/exec` URL
+4. PlantLog Pro → Settings → Google Sheets → paste URL → Sync
 
 ---
 

@@ -1,8 +1,8 @@
-'use strict';
-// =====================================================
-// PlantLog — tasks.js
-// Task CRUD, kanban, sub-checklist, flight details
-// =====================================================
+/**
+ * PlantLog v4 — TASKS MODULE
+ * Task manager, kanban, filters
+ * Lines 283–857 of original monolithic file
+ */
 
 // ═══════ TASKS ═══════
 function populateTaskTripSelect(){
@@ -81,7 +81,6 @@ function openNewTaskModal(prefillDate, prefillCat){
   if(prefillDate)document.getElementById('task-date-start').value=prefillDate;
   populateTaskTripSelect();populateMachineSelect();populatePlanSelect();
   resetTaskCheckItems();
-  resetPartRows();
   resetTaskFlightFields();
   openModal('modal-new-task');
 }
@@ -105,8 +104,6 @@ function openEditTaskModal(id){
   populateTaskTripSelect();populateMachineSelect();populatePlanSelect();
   resetTaskCheckItems();
   if(tk.checklist)loadTaskCheckItems(tk.checklist);
-  resetPartRows();
-  if(tk.parts&&tk.parts.length)loadPartRows(tk.parts);
   resetTaskFlightFields();
   if(tk.flight&&tk.category==='travel')loadTaskFlightFields(tk.flight);
   setTimeout(()=>{
@@ -148,14 +145,6 @@ function selectTaskCat(cat){
   // Show flight details only for travel
   const fs=document.getElementById('task-flight-section');
   if(fs)fs.style.display=(cat==='travel')?'':'none';
-  // Show parts toggle only for work
-  const pt=document.getElementById('task-parts-toggle-row');
-  if(pt)pt.style.display=(cat==='work')?'':'none';
-  // Hide parts section if switching away from work
-  if(cat!=='work'){
-    const ps=document.getElementById('task-parts-section');
-    if(ps)ps.style.display='none';
-  }
 }
 function getSelectedCat(){
   for(const c of['work','leave','travel']){
@@ -192,7 +181,6 @@ function saveNewTask(){
     createdAt: editingTaskId?(S.tasks.find(t=>t.id===editingTaskId)||{}).createdAt||now:now,
     updatedAt:now,
     checklist:[...taskCheckItems],
-    parts:[...taskPartsItems],
     flight:(document.getElementById('task-cat-val')&&document.getElementById('task-cat-val').value==='travel')?getTaskFlightFields():null
   };
   if(editingTaskId){
@@ -213,19 +201,10 @@ function calcDuration(tk){
     const h=parseInt(tk.hours)||0,m=parseInt(tk.minutes)||0;
     return h>0&&m>0?`${h}h ${m}m`:h>0?`${h}h`:`${m}m`;
   }
-  // Only calculate from dates if ALL four values are valid non-empty strings
-  const ds=tk.dateStart||tk.date||'';
-  const de=tk.dateEnd||ds;
-  const ts=tk.timeStart||'';
-  const te=tk.timeEnd||'';
-  // Guard: date must match YYYY-MM-DD format
-  const dateRx=/^\d{4}-\d{2}-\d{2}$/;
-  const timeRx=/^\d{2}:\d{2}$/;
-  if(ds&&de&&ts&&te&&dateRx.test(ds)&&dateRx.test(de)&&timeRx.test(ts)&&timeRx.test(te)){
+  if(tk.dateStart&&tk.dateEnd&&tk.timeStart&&tk.timeEnd){
     try{
-      const s=new Date(ds+'T'+ts);
-      const e=new Date(de+'T'+te);
-      if(isNaN(s.getTime())||isNaN(e.getTime()))return'';
+      const s=new Date(tk.dateStart+'T'+tk.timeStart);
+      const e=new Date(tk.dateEnd+'T'+tk.timeEnd);
       const diff=e-s;if(diff<=0)return'';
       const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000);
       return h>0&&m>0?`${h}h ${m}m`:h>0?`${h}h`:`${m}m`;
@@ -289,23 +268,11 @@ function renderTasks(){
   const done=tasks.filter(t=>t.status==='done').length;
   const over=tasks.filter(t=>(t.dateEnd||t.date||t.dateStart||'')< today&&t.status!=='done').length;
 
-  let html=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;">
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
-      <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--n700);line-height:1;">${total}</div>
-      <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Total</div>
-    </div>
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
-      <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--n500);line-height:1;">${pend}</div>
-      <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Pending</div>
-    </div>
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
-      <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--amber);line-height:1;">${inp}</div>
-      <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Active</div>
-    </div>
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
-      <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--brand);line-height:1;">${done}</div>
-      <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Done</div>
-    </div>
+  let html=`<div class="task-stats">
+    <div class="ts-box"><div class="ts-num" style="color:var(--g700);">${total}</div><div class="ts-lbl">Total</div></div>
+    <div class="ts-box"><div class="ts-num" style="color:var(--g500);">${pend}</div><div class="ts-lbl">Pending</div></div>
+    <div class="ts-box"><div class="ts-num" style="color:var(--amber);">${inp}</div><div class="ts-lbl">In Progress</div></div>
+    <div class="ts-box"><div class="ts-num" style="color:var(--green);">${done}</div><div class="ts-lbl">Done</div></div>
   </div>`;
 
   if(!tasks.length){
@@ -320,10 +287,8 @@ function renderTasks(){
     const pc=prioConfig(tk.priority);
     const dur=calcDuration(tk);
     const dStart=tk.dateStart||tk.date||'';
-    // Only use dateEnd if it's a valid YYYY-MM-DD date, not a time or empty string
-    const dateRx=/^\d{4}-\d{2}-\d{2}$/;
-    const dEnd=(tk.dateEnd&&dateRx.test(tk.dateEnd))?tk.dateEnd:dStart;
-    const dateRange=(dStart&&dEnd&&dStart!==dEnd)?`${fmtDate(dStart)} → ${fmtDate(dEnd)}`:fmtDate(dStart);
+    const dEnd=tk.dateEnd||dStart;
+    const dateRange=dStart===dEnd?fmtDate(dStart):`${fmtDate(dStart)} → ${fmtDate(dEnd)}`;
     const trip=tk.tripId?(S.trips.find(tr=>tr.id===tk.tripId)||{}).plant||'':'' ;
     return `<div class="task-card-v4" onclick="openTaskDetail('${tk.id}')">
       <div class="tc-bar ${isOver?'overdue':cat}"></div>
@@ -337,13 +302,13 @@ function renderTasks(){
         </div>
         ${tk.desc?`<div style="font-size:12px;color:var(--g500);margin-bottom:6px;line-height:1.4;">${tk.desc.substring(0,70)}${tk.desc.length>70?'…':''}</div>`:''}
         <div class="tc-meta">
-          <span class="tc-meta-item">📅 ${dateRange}</span>
-          ${tk.timeStart?`<span class="tc-meta-item">⏰ ${tk.timeStart}${tk.timeEnd?' – '+tk.timeEnd:''}</span>`:''}
-          ${dur?`<span class="tc-meta-item">⏱ ${dur}</span>`:''}
-          ${tk.machine?`<span class="tc-meta-item">🔩 ${tk.machine}</span>`:''}
-          ${tk.plan?`<span class="tc-meta-item">📁 ${tk.plan}</span>`:''}
-          ${trip?`<span class="tc-meta-item">🏭 ${trip}</span>`:''}
-          ${isOver?`<span class="tc-meta-item" style="color:var(--red);font-weight:600;">⚠ Overdue</span>`:''}
+          <div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${dateRange}</div>
+          ${tk.timeStart?`<div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${tk.timeStart}${tk.timeEnd?' – '+tk.timeEnd:''}</div>`:''}
+          ${dur?`<div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${dur}</div>`:''}
+          ${tk.machine?`<div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-8l-2 4h12z"/></svg>${tk.machine}</div>`:''}
+          ${tk.plan?`<div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${tk.plan}</div>`:''}
+          ${trip?`<div class="tc-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>${trip}</div>`:''}
+          ${isOver?`<div class="tc-meta-item" style="color:var(--red);">⚠ Overdue</div>`:''}
         </div>
         ${tk.checklist&&tk.checklist.length?`<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
           <div style="flex:1;height:4px;background:var(--g200);border-radius:2px;overflow:hidden;">
@@ -429,13 +394,7 @@ function openTaskDetail(id){
   const dur=calcDuration(tk);
   const trip=tk.tripId?(S.trips.find(tr=>tr.id===tk.tripId)||{}).plant||'':'' ;
   const dStart=tk.dateStart||tk.date||'';
-  // Only use dateEnd if it's a real YYYY-MM-DD, not empty/time string
-  const _dateRx=/^\d{4}-\d{2}-\d{2}$/;
-  const dEnd=(tk.dateEnd&&_dateRx.test(tk.dateEnd))?tk.dateEnd:dStart;
-  // Only show times if they look like HH:MM
-  const _timeRx=/^\d{2}:\d{2}/;
-  const showTimeStart=tk.timeStart&&_timeRx.test(tk.timeStart);
-  const showTimeEnd=tk.timeEnd&&_timeRx.test(tk.timeEnd);
+  const dEnd=tk.dateEnd||dStart;
   document.getElementById('task-detail-content').innerHTML=`
     <div class="detail-hero">
       <span class="detail-cat-badge" style="background:${cc.bg};color:${cc.text};">${cc.icon} ${cc.label}${isOver?' · <span style=color:var(--red)>Overdue</span>':''}</span>
@@ -443,8 +402,8 @@ function openTaskDetail(id){
       ${tk.desc?`<div style="font-size:13px;color:var(--g600);line-height:1.5;">${tk.desc}</div>`:''}
     </div>
     <div class="detail-grid" style="margin-bottom:14px;">
-      <div class="dg-item"><div class="dg-label">Start</div><div class="dg-val">${fmtDate(dStart)}${showTimeStart?' ⏰ '+tk.timeStart:''}</div></div>
-      <div class="dg-item"><div class="dg-label">End</div><div class="dg-val">${fmtDate(dEnd)}${showTimeEnd?' ⏰ '+tk.timeEnd:''}</div></div>
+      <div class="dg-item"><div class="dg-label">Start</div><div class="dg-val">${fmtDate(dStart)}${tk.timeStart?' '+tk.timeStart:''}</div></div>
+      <div class="dg-item"><div class="dg-label">End</div><div class="dg-val">${fmtDate(dEnd)}${tk.timeEnd?' '+tk.timeEnd:''}</div></div>
       ${dur?`<div class="dg-item"><div class="dg-label">Duration</div><div class="dg-val">${dur}</div></div>`:''}
       <div class="dg-item"><div class="dg-label">Priority</div><div class="dg-val">${tk.priority||'—'}</div></div>
       <div class="dg-item"><div class="dg-label">Period</div><div class="dg-val">${periodLabel(tk.period)||'—'}</div></div>
@@ -452,12 +411,6 @@ function openTaskDetail(id){
       ${tk.plan?`<div class="dg-item"><div class="dg-label">Plan</div><div class="dg-val">${tk.plan}</div></div>`:''}
       ${trip?`<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val">${trip}</div></div>`:''}
     </div>
-    ${(tk.parts&&tk.parts.length)?`<div style="margin-bottom:12px;">
-      <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">🔩 PARTS / MATERIALS (${tk.parts.length})</div>
-      <div style="background:var(--n50);border-radius:var(--rs);overflow:hidden;border:1px solid var(--n150);">
-        ${tk.parts.map(p=>{const sc={ready:{bg:'var(--brand-light)',color:'var(--brand-dark)',label:'✅ Ready'},on_order:{bg:'var(--bl)',color:'var(--bd)',label:'📦 On Order'},notyet:{bg:'var(--rl)',color:'var(--rd)',label:'❌ Not Yet'}}[p.status||'notyet'];return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--n150);"><div style="flex:1;min-width:0;">'+(p.partNo?'<div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--brand);">'+p.partNo+'</div>':'')+'<div style="font-size:13px;font-weight:500;color:var(--n800);">'+(p.desc||'(no description)')+'</div><div style="font-size:11px;color:var(--n500);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">'+(p.brand?'<span>🏷 '+p.brand+'</span>':'')+(p.machine?'<span>⚙️ '+p.machine+'</span>':'')+'<span>Qty: '+(p.qty||1)+'</span></div></div><span style="background:'+sc.bg+';color:'+sc.color+';padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;">'+sc.label+'</span></div>';}).join('')}
-      </div>
-    </div>`:''}
     ${tk.checklist&&tk.checklist.length?`
     <div style="font-size:11px;font-weight:600;color:var(--g500);margin-bottom:6px;">CHECKLIST (${tk.checklist.filter(c=>c.done).length}/${tk.checklist.length})</div>
     <div style="background:var(--g100);border-radius:var(--rs);padding:8px 10px;margin-bottom:12px;">
@@ -592,126 +545,6 @@ function loadTaskCheckItems(items){
   }
 }
 
-// ═══════ PARTS / MATERIALS ═══════
-let taskPartsItems = [];  // [{id, partNo, desc, brand, qty, machine, status}]
-
-function togglePartsSection(){
-  const sec = document.getElementById('task-parts-section');
-  const btn = document.getElementById('task-parts-toggle-btn');
-  const cat = document.getElementById('task-cat-val')?.value || 'work';
-  if(cat !== 'work') return;
-  const open = sec.style.display !== 'none';
-  sec.style.display = open ? 'none' : '';
-  btn.textContent = open ? '🔩 Add parts / materials required' : '🔩 Hide parts section';
-  btn.style.borderStyle = open ? 'dashed' : 'solid';
-  btn.style.borderColor = open ? 'var(--n300)' : 'var(--brand)';
-  btn.style.color = open ? 'var(--n500)' : 'var(--brand)';
-  if(!open) renderPartRows();
-}
-
-function addPartRow(){
-  const id = 'part_' + Date.now();
-  taskPartsItems.push({id, partNo:'', desc:'', brand:'', qty:'1', machine:'', status:'notyet'});
-  renderPartRows();
-}
-
-function removePartRow(id){
-  taskPartsItems = taskPartsItems.filter(p => p.id !== id);
-  renderPartRows();
-}
-
-function updatePartField(id, field, value){
-  const p = taskPartsItems.find(p => p.id === id);
-  if(p) p[field] = value;
-}
-
-function renderPartRows(){
-  const container = document.getElementById('task-parts-rows');
-  const empty = document.getElementById('task-parts-empty');
-  if(!container) return;
-  if(!taskPartsItems.length){
-    container.innerHTML = '';
-    if(empty) empty.style.display = '';
-    return;
-  }
-  if(empty) empty.style.display = 'none';
-  const SC = {
-    ready:    {bg:'var(--brand-light)', color:'var(--brand-dark)', label:'✅ Ready'},
-    on_order: {bg:'var(--bl)',          color:'var(--bd)',         label:'📦 On Order'},
-    notyet:   {bg:'var(--rl)',          color:'var(--rd)',         label:'❌ Not Yet'}
-  };
-  container.innerHTML = taskPartsItems.map((p, idx) => {
-    const sc = SC[p.status] || SC.notyet;
-    const num = idx + 1;
-    return `
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--sh);">
-      <!-- Card header: part number + status + delete -->
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--n50);border-bottom:1px solid var(--n150);">
-        <div style="background:var(--brand);color:#fff;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;flex-shrink:0;">#${num}</div>
-        <input class="fi" value="${p.partNo}" placeholder="Part / Item No."
-          style="flex:1;font-size:13px;font-weight:700;padding:5px 8px;font-family:var(--mono);letter-spacing:0.05em;"
-          oninput="updatePartField('${p.id}','partNo',this.value)"
-          title="Part number">
-        <select style="border:none;border-radius:var(--rs);padding:5px 8px;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;background:${sc.bg};color:${sc.color};flex-shrink:0;"
-          onchange="updatePartField('${p.id}','status',this.value);renderPartRows()">
-          <option value="notyet"   ${p.status==='notyet'   ?'selected':''}>❌ Not Yet</option>
-          <option value="on_order" ${p.status==='on_order' ?'selected':''}>📦 On Order</option>
-          <option value="ready"    ${p.status==='ready'    ?'selected':''}>✅ Ready</option>
-        </select>
-        <button onclick="removePartRow('${p.id}')"
-          style="width:28px;height:28px;border-radius:50%;border:none;background:var(--rl);color:var(--rd);cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">×</button>
-      </div>
-      <!-- Card body: all fields in 2-column grid -->
-      <div style="padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div style="grid-column:1/-1;">
-          <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px;">Description *</div>
-          <input class="fi" value="${p.desc}" placeholder="Part description / name"
-            style="font-size:13px;padding:7px 10px;"
-            oninput="updatePartField('${p.id}','desc',this.value)">
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px;">Brand / Mfr.</div>
-          <input class="fi" value="${p.brand}" placeholder="e.g. Fisher, Emerson"
-            style="font-size:13px;padding:7px 10px;"
-            oninput="updatePartField('${p.id}','brand',this.value)">
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px;">Quantity</div>
-          <input class="fi" type="number" value="${p.qty||1}" min="1"
-            style="font-size:13px;padding:7px 10px;"
-            oninput="updatePartField('${p.id}','qty',this.value)">
-        </div>
-        <div style="grid-column:1/-1;">
-          <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px;">Machine / Assembly</div>
-          <input class="fi" value="${p.machine}" placeholder="e.g. Pressco FCV-301, Pump A"
-            style="font-size:13px;padding:7px 10px;"
-            oninput="updatePartField('${p.id}','machine',this.value)">
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function resetPartRows(){
-  taskPartsItems = [];
-  renderPartRows();
-  const sec = document.getElementById('task-parts-section');
-  const btn = document.getElementById('task-parts-toggle-btn');
-  if(sec) sec.style.display = 'none';
-  if(btn){ btn.textContent='🔩 Add parts / materials required'; btn.style.borderStyle='dashed'; btn.style.borderColor='var(--n300)'; btn.style.color='var(--n500)';}
-}
-
-function loadPartRows(parts){
-  taskPartsItems = (parts||[]).map(p=>({...p, id:p.id||'part_'+Date.now()+'_'+Math.random()}));
-  if(taskPartsItems.length){
-    const sec = document.getElementById('task-parts-section');
-    const btn = document.getElementById('task-parts-toggle-btn');
-    if(sec) sec.style.display = '';
-    if(btn){ btn.textContent='🔩 Hide parts section'; btn.style.borderStyle='solid'; btn.style.borderColor='var(--brand)'; btn.style.color='var(--brand)';}
-  }
-  renderPartRows();
-}
-
 function resetTaskFlightFields(){
   ['fl-depart-num','fl-depart-airline','fl-depart-from','fl-depart-to','fl-depart-date','fl-depart-time','fl-arrive-time','fl-depart-terminal','fl-return-num','fl-return-airline','fl-return-from','fl-return-to','fl-return-date','fl-return-time','fl-return-arrive','fl-return-terminal','fl-pnr'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const hasRet=document.getElementById('fl-has-return');if(hasRet)hasRet.checked=false;
@@ -743,153 +576,5 @@ function resetTaskCheckItems(){
   if(itemsEl)itemsEl.innerHTML='';
   const sumEl=document.getElementById('task-cl-summary');
   if(sumEl)sumEl.textContent='';
-}
-
-
-
-
-// ═══════ PARTS EXPORT (Excel + PDF) ═══════
-
-function _collectAllParts(){
-  return S.tasks
-    .filter(tk => tk.parts && tk.parts.length)
-    .sort((a,b)=>(b.dateStart||b.date||'').localeCompare(a.dateStart||a.date||''))
-    .flatMap(tk =>
-      (tk.parts||[]).map(p => {
-        const trip = tk.tripId ? S.trips.find(t=>t.id===tk.tripId) : null;
-        return {
-          task:    tk.title,
-          date:    fmtDate(tk.dateStart||tk.date||''),
-          trip:    trip ? trip.plant : '—',
-          partNo:  p.partNo||'',
-          desc:    p.desc||'',
-          brand:   p.brand||'',
-          qty:     p.qty||1,
-          machine: p.machine||'',
-          status:  {ready:'Ready', on_order:'On Order', notyet:'Not Yet'}[p.status||'notyet']||'Not Yet'
-        };
-      })
-    );
-}
-
-// ── Export to Excel (CSV that opens in Excel) ──────────
-function exportPartsExcel(){
-  const parts = _collectAllParts();
-  if(!parts.length){ showToast('No parts data found'); return; }
-
-  const headers = ['No.','Task','Date','Trip','Part No.','Description','Brand','Qty','Machine/Assembly','Status'];
-  const rows = parts.map((p,i) => [
-    i+1, p.task, p.date, p.trip, p.partNo, p.desc, p.brand, p.qty, p.machine, p.status
-  ]);
-
-  // Build CSV with BOM for Excel UTF-8
-  const esc = v => `"${String(v).replace(/"/g,'""')}"`;
-  let csv = '\uFEFF'; // BOM
-  csv += headers.map(esc).join(',') + '\r\n';
-  rows.forEach(r => { csv += r.map(esc).join(',') + '\r\n'; });
-
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `PlantLog_Parts_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.csv`;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast('Parts list downloaded (Excel CSV) ✓');
-}
-
-// ── Export to PDF ──────────────────────────────────────
-function exportPartsPDF(){
-  if(typeof window.jspdf==='undefined'){ showToast('PDF loading…'); setTimeout(exportPartsPDF,1500); return; }
-  const {jsPDF} = window.jspdf;
-  const parts = _collectAllParts();
-  if(!parts.length){ showToast('No parts data found'); return; }
-
-  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
-  const W=297, mg=12;
-  const p = S.profile;
-  let y = 20;
-
-  // Header
-  doc.setFillColor(10,122,58); doc.rect(0,0,W,28,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFont('helvetica','bold'); doc.setFontSize(14);
-  doc.text('Parts & Materials Report', mg, 12);
-  doc.setFont('helvetica','normal'); doc.setFontSize(8);
-  doc.text(`${p.name||'Engineer'}${p.company?' · '+p.company:''}  ·  ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}`, mg, 19);
-  doc.text(`Total: ${parts.length} part${parts.length!==1?'s':''}`, mg, 24);
-  y = 34;
-
-  // Status summary bar
-  const ready    = parts.filter(p=>p.status==='Ready').length;
-  const onOrder  = parts.filter(p=>p.status==='On Order').length;
-  const notYet   = parts.filter(p=>p.status==='Not Yet').length;
-  doc.setFont('helvetica','bold'); doc.setFontSize(9);
-  doc.setTextColor(10,122,58);  doc.text(`✓ Ready: ${ready}`, mg, y);
-  doc.setTextColor(27,95,180);  doc.text(`⊙ On Order: ${onOrder}`, mg+40, y);
-  doc.setTextColor(192,57,43);  doc.text(`✗ Not Yet: ${notYet}`, mg+90, y);
-  doc.setTextColor(33,37,41); y += 6;
-
-  // Table headers
-  const cols = [
-    {label:'#',       w:8,  key:'_n'},
-    {label:'Task',    w:48, key:'task'},
-    {label:'Date',    w:22, key:'date'},
-    {label:'Trip',    w:22, key:'trip'},
-    {label:'Part No.',w:28, key:'partNo'},
-    {label:'Description',w:52,key:'desc'},
-    {label:'Brand',   w:24, key:'brand'},
-    {label:'Qty',     w:12, key:'qty'},
-    {label:'Machine', w:38, key:'machine'},
-    {label:'Status',  w:22, key:'status'},
-  ];
-  const ROW_H = 7;
-
-  const drawHeader = () => {
-    doc.setFillColor(241,243,245);
-    doc.rect(mg, y-4, W-mg*2, 7, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
-    doc.setTextColor(80,80,80);
-    let x = mg;
-    cols.forEach(c => { doc.text(c.label, x+1, y); x += c.w; });
-    doc.setDrawColor(200,200,200); doc.line(mg, y+2, W-mg, y+2);
-    y += 6;
-  };
-
-  drawHeader();
-
-  const statusColor = {
-    'Ready':    [10,122,58],
-    'On Order': [27,95,180],
-    'Not Yet':  [192,57,43]
-  };
-
-  parts.forEach((p, i) => {
-    if(y > 185){ doc.addPage(); y = 16; drawHeader(); }
-    const row = {...p, _n: i+1};
-    if(i%2===0){ doc.setFillColor(250,250,250); doc.rect(mg, y-4, W-mg*2, ROW_H, 'F'); }
-    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(33,37,41);
-    let x = mg;
-    cols.forEach(c => {
-      const val = String(row[c.key]||'');
-      if(c.key==='status'){
-        const sc = statusColor[val]||[120,120,120];
-        doc.setTextColor(...sc); doc.setFont('helvetica','bold');
-      }
-      const truncated = doc.splitTextToSize(val, c.w-2)[0]||'';
-      doc.text(truncated, x+1, y);
-      if(c.key==='status'){ doc.setTextColor(33,37,41); doc.setFont('helvetica','normal'); }
-      x += c.w;
-    });
-    doc.setDrawColor(235,235,235); doc.line(mg, y+2, W-mg, y+2);
-    y += ROW_H;
-  });
-
-  // Footer
-  doc.setFontSize(7); doc.setTextColor(150,150,150);
-  doc.text(`PlantLog Pro · Parts Report · ${new Date().toLocaleDateString('en-GB')}`, mg, 200);
-
-  doc.save(`PlantLog_Parts_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.pdf`);
-  showToast('Parts PDF downloaded ✓');
 }
 

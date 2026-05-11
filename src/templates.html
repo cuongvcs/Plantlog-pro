@@ -1,22 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="theme-color" content="#00843D">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="PlantLog">
-  <title>PlantLog</title>
-
-  <!-- ── Styles ─────────────────────────────────────── -->
-  <link rel="stylesheet" href="styles.css">
-
-  <!-- ── Third-party libs ───────────────────────────── -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</head>
-<body>
+<!--
+  PlantLog v4 — HTML TEMPLATES
+  All screen HTML, extracted from monolithic index.html
+  Included in index.html via direct copy (no build step needed)
+-->
 
 <!-- ═══ LOCK SCREEN ═══ -->
 <div id="screen-lock" style="display:none;">
@@ -194,8 +180,6 @@
 
     <!-- Bills section in trip detail -->
     <div id="trip-bills-section" style="margin-top:4px;"></div>
-    <!-- Trip status change -->
-    <div style="display:flex;gap:4px;margin-bottom:8px;background:var(--n100);border-radius:var(--r-sm);padding:4px;" id="trip-status-toggle"></div>
     <div class="brow">
       <button class="btn btn-d btn-sm" onclick="deleteTripCurrent()">🗑 <span data-t="delete">Delete</span></button>
       <button class="btn btn-o btn-sm" onclick="openEditTrip()">✏️ Edit</button>
@@ -524,22 +508,6 @@
         <div class="sin"><div class="sil">Leave / Calendar Planner</div><div class="sis">Manage leave, WFH and holiday days</div></div>
         <div style="color:var(--g400);">›</div>
       </div>
-      <div class="si" onclick="exportPartsExcel()">
-        <div class="sic" style="background:#E8F5E9;color:#2E7D32;">📊</div>
-        <div class="sin">
-          <div class="sil">Parts List → Excel</div>
-          <div class="sis">Download all parts as CSV (opens in Excel)</div>
-        </div>
-        <div style="color:var(--g400);">↓</div>
-      </div>
-      <div class="si" onclick="exportPartsPDF()">
-        <div class="sic" style="background:var(--rl);color:var(--rd);">📄</div>
-        <div class="sin">
-          <div class="sil">Parts List → PDF</div>
-          <div class="sis">Download all parts as a formatted PDF report</div>
-        </div>
-        <div style="color:var(--g400);">↓</div>
-      </div>
       <div class="si" onclick="openChangePIN()">
         <div class="sic" style="background:var(--gl);color:var(--gd);">🔐</div>
         <div class="sin">
@@ -798,32 +766,6 @@
   </div>
 
   <!-- TASK SUB-CHECKLIST -->
-  <!-- ══ PARTS REQUIRED SECTION ══ -->
-  <div class="form-section" id="task-parts-section" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <div class="form-section-title" style="margin-bottom:0;">🔩 Parts / Materials</div>
-      <button onclick="addPartRow()"
-        style="background:var(--brand);color:#fff;border:none;border-radius:var(--rs);padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">
-        + Add Part
-      </button>
-    </div>
-    <div id="task-parts-list"></div>
-
-    <div id="task-parts-rows"></div>
-    <div id="task-parts-empty" style="font-size:12px;color:var(--n400);padding:8px 0;text-align:center;">No parts added yet — tap + Add Part</div>
-  </div>
-
-  <!-- Parts toggle button (shown only for Work category) -->
-  <div id="task-parts-toggle-row" style="margin-bottom:8px;">
-    <button onclick="togglePartsSection()" id="task-parts-toggle-btn"
-      style="width:100%;padding:9px;border:1.5px dashed var(--n300);border-radius:var(--rs);
-             background:transparent;font-family:var(--font);font-size:12px;font-weight:600;
-             color:var(--n500);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
-             transition:all 0.15s;">
-      🔩 Add parts / materials required
-    </button>
-  </div>
-
   <div class="form-section">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <div class="form-section-title" style="margin-bottom:0;">Sub-checklist (optional)</div>
@@ -1146,14 +1088,3 @@
 </div>
 <div id="toast" class="toast"></div>
 
-
-  <!-- ── App modules (order matters) ───────────────── -->
-  <script src="modules/core.js"></script>
-  <script src="modules/auth.js"></script>
-  <script src="modules/trips.js"></script>
-  <script src="modules/tasks.js"></script>
-  <script src="modules/report.js"></script>
-  <script src="modules/bills.js"></script>
-  <script src="modules/sync.js"></script>
-</body>
-</html>
