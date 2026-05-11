@@ -524,6 +524,14 @@
         <div class="sin"><div class="sil">Leave / Calendar Planner</div><div class="sis">Manage leave, WFH and holiday days</div></div>
         <div style="color:var(--g400);">›</div>
       </div>
+      <div class="si" onclick="exportPartsMarkdown()">
+        <div class="sic" style="background:var(--bl);color:var(--bd);">🔩</div>
+        <div class="sin">
+          <div class="sil">Export Parts Report</div>
+          <div class="sis">Download .md file of all parts across tasks</div>
+        </div>
+        <div style="color:var(--g400);">↓</div>
+      </div>
       <div class="si" onclick="openChangePIN()">
         <div class="sic" style="background:var(--gl);color:var(--gd);">🔐</div>
         <div class="sin">
@@ -782,6 +790,41 @@
   </div>
 
   <!-- TASK SUB-CHECKLIST -->
+  <!-- ══ PARTS REQUIRED SECTION ══ -->
+  <div class="form-section" id="task-parts-section" style="display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div class="form-section-title" style="margin-bottom:0;">🔩 Parts / Materials</div>
+      <button onclick="addPartRow()"
+        style="background:var(--brand);color:#fff;border:none;border-radius:var(--rs);padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">
+        + Add Part
+      </button>
+    </div>
+    <div id="task-parts-list"></div>
+    <!-- Column headers -->
+    <div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr 0.6fr 2fr 1.2fr 32px;gap:4px;padding:0 2px 4px;border-bottom:1px solid var(--n200);margin-bottom:6px;">
+      <div style="font-size:9px;font-weight:700;color:var(--n400);letter-spacing:0.06em;text-transform:uppercase;">Part No.</div>
+      <div style="font-size:9px;font-weight:700;color:var(--n400);letter-spacing:0.06em;text-transform:uppercase;">Description</div>
+      <div style="font-size:9px;font-weight:700;color:var(--n400);letter-spacing:0.06em;text-transform:uppercase;">Brand</div>
+      <div style="font-size:9px;font-weight:700;color:var(--n400);letter-spacing:0.06em;text-transform:uppercase;">Qty</div>
+      <div style="font-size:9px;font-weight:700;color:var(--n400);letter-spacing:0.06em;text-transform:uppercase;">Machine/Assy</div>
+      <div style="font-size:9px;font-weight:700;color:var(--n400);letter-spacing:0.06em;text-transform:uppercase;">Status</div>
+      <div></div>
+    </div>
+    <div id="task-parts-rows"></div>
+    <div id="task-parts-empty" style="font-size:12px;color:var(--n400);padding:8px 0;text-align:center;">No parts added yet — tap + Add Part</div>
+  </div>
+
+  <!-- Parts toggle button (shown only for Work category) -->
+  <div id="task-parts-toggle-row" style="margin-bottom:8px;">
+    <button onclick="togglePartsSection()" id="task-parts-toggle-btn"
+      style="width:100%;padding:9px;border:1.5px dashed var(--n300);border-radius:var(--rs);
+             background:transparent;font-family:var(--font);font-size:12px;font-weight:600;
+             color:var(--n500);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+             transition:all 0.15s;">
+      🔩 Add parts / materials required
+    </button>
+  </div>
+
   <div class="form-section">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <div class="form-section-title" style="margin-bottom:0;">Sub-checklist (optional)</div>

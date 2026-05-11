@@ -81,6 +81,7 @@ function openNewTaskModal(prefillDate, prefillCat){
   if(prefillDate)document.getElementById('task-date-start').value=prefillDate;
   populateTaskTripSelect();populateMachineSelect();populatePlanSelect();
   resetTaskCheckItems();
+  resetPartRows();
   resetTaskFlightFields();
   openModal('modal-new-task');
 }
@@ -104,6 +105,8 @@ function openEditTaskModal(id){
   populateTaskTripSelect();populateMachineSelect();populatePlanSelect();
   resetTaskCheckItems();
   if(tk.checklist)loadTaskCheckItems(tk.checklist);
+  resetPartRows();
+  if(tk.parts&&tk.parts.length)loadPartRows(tk.parts);
   resetTaskFlightFields();
   if(tk.flight&&tk.category==='travel')loadTaskFlightFields(tk.flight);
   setTimeout(()=>{
@@ -145,6 +148,14 @@ function selectTaskCat(cat){
   // Show flight details only for travel
   const fs=document.getElementById('task-flight-section');
   if(fs)fs.style.display=(cat==='travel')?'':'none';
+  // Show parts toggle only for work
+  const pt=document.getElementById('task-parts-toggle-row');
+  if(pt)pt.style.display=(cat==='work')?'':'none';
+  // Hide parts section if switching away from work
+  if(cat!=='work'){
+    const ps=document.getElementById('task-parts-section');
+    if(ps)ps.style.display='none';
+  }
 }
 function getSelectedCat(){
   for(const c of['work','leave','travel']){
@@ -181,6 +192,7 @@ function saveNewTask(){
     createdAt: editingTaskId?(S.tasks.find(t=>t.id===editingTaskId)||{}).createdAt||now:now,
     updatedAt:now,
     checklist:[...taskCheckItems],
+    parts:[...taskPartsItems],
     flight:(document.getElementById('task-cat-val')&&document.getElementById('task-cat-val').value==='travel')?getTaskFlightFields():null
   };
   if(editingTaskId){
@@ -440,6 +452,12 @@ function openTaskDetail(id){
       ${tk.plan?`<div class="dg-item"><div class="dg-label">Plan</div><div class="dg-val">${tk.plan}</div></div>`:''}
       ${trip?`<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val">${trip}</div></div>`:''}
     </div>
+    ${(tk.parts&&tk.parts.length)?`<div style="margin-bottom:12px;">
+      <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">🔩 PARTS / MATERIALS (${tk.parts.length})</div>
+      <div style="background:var(--n50);border-radius:var(--rs);overflow:hidden;border:1px solid var(--n150);">
+        ${tk.parts.map(p=>{const sc={ready:{bg:'var(--brand-light)',color:'var(--brand-dark)',label:'✅ Ready'},on_order:{bg:'var(--bl)',color:'var(--bd)',label:'📦 On Order'},notyet:{bg:'var(--rl)',color:'var(--rd)',label:'❌ Not Yet'}}[p.status||'notyet'];return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--n150);"><div style="flex:1;min-width:0;">'+(p.partNo?'<div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--brand);">'+p.partNo+'</div>':'')+'<div style="font-size:13px;font-weight:500;color:var(--n800);">'+(p.desc||'(no description)')+'</div><div style="font-size:11px;color:var(--n500);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">'+(p.brand?'<span>🏷 '+p.brand+'</span>':'')+(p.machine?'<span>⚙️ '+p.machine+'</span>':'')+'<span>Qty: '+(p.qty||1)+'</span></div></div><span style="background:'+sc.bg+';color:'+sc.color+';padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;">'+sc.label+'</span></div>';}).join('')}
+      </div>
+    </div>`:''}
     ${tk.checklist&&tk.checklist.length?`
     <div style="font-size:11px;font-weight:600;color:var(--g500);margin-bottom:6px;">CHECKLIST (${tk.checklist.filter(c=>c.done).length}/${tk.checklist.length})</div>
     <div style="background:var(--g100);border-radius:var(--rs);padding:8px 10px;margin-bottom:12px;">
@@ -574,6 +592,99 @@ function loadTaskCheckItems(items){
   }
 }
 
+// ═══════ PARTS / MATERIALS ═══════
+let taskPartsItems = [];  // [{id, partNo, desc, brand, qty, machine, status}]
+
+function togglePartsSection(){
+  const sec = document.getElementById('task-parts-section');
+  const btn = document.getElementById('task-parts-toggle-btn');
+  const cat = document.getElementById('task-cat-val')?.value || 'work';
+  if(cat !== 'work') return;
+  const open = sec.style.display !== 'none';
+  sec.style.display = open ? 'none' : '';
+  btn.textContent = open ? '🔩 Add parts / materials required' : '🔩 Hide parts section';
+  btn.style.borderStyle = open ? 'dashed' : 'solid';
+  btn.style.borderColor = open ? 'var(--n300)' : 'var(--brand)';
+  btn.style.color = open ? 'var(--n500)' : 'var(--brand)';
+  if(!open) renderPartRows();
+}
+
+function addPartRow(){
+  const id = 'part_' + Date.now();
+  taskPartsItems.push({id, partNo:'', desc:'', brand:'', qty:'1', machine:'', status:'notyet'});
+  renderPartRows();
+}
+
+function removePartRow(id){
+  taskPartsItems = taskPartsItems.filter(p => p.id !== id);
+  renderPartRows();
+}
+
+function updatePartField(id, field, value){
+  const p = taskPartsItems.find(p => p.id === id);
+  if(p) p[field] = value;
+}
+
+function renderPartRows(){
+  const container = document.getElementById('task-parts-rows');
+  const empty = document.getElementById('task-parts-empty');
+  if(!container) return;
+  if(!taskPartsItems.length){
+    container.innerHTML = '';
+    if(empty) empty.style.display = '';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  const statusColors = {
+    ready:    {bg:'var(--brand-light)', color:'var(--brand-dark)', label:'✅ Ready'},
+    on_order: {bg:'var(--bl)',          color:'var(--bd)',         label:'📦 On Order'},
+    notyet:   {bg:'var(--rl)',          color:'var(--rd)',         label:'❌ Not Yet'}
+  };
+  container.innerHTML = taskPartsItems.map(p => {
+    const sc = statusColors[p.status] || statusColors.notyet;
+    return `<div style="display:grid;grid-template-columns:2fr 1.5fr 1.5fr 0.6fr 2fr 1.2fr 32px;gap:4px;margin-bottom:5px;align-items:center;">
+      <input class="fi" value="${p.partNo}" placeholder="Part no." style="font-size:11px;padding:6px 8px;font-family:var(--mono);"
+        oninput="updatePartField('${p.id}','partNo',this.value)">
+      <input class="fi" value="${p.desc}" placeholder="Description" style="font-size:11px;padding:6px 8px;"
+        oninput="updatePartField('${p.id}','desc',this.value)">
+      <input class="fi" value="${p.brand}" placeholder="Brand" style="font-size:11px;padding:6px 8px;"
+        oninput="updatePartField('${p.id}','brand',this.value)">
+      <input class="fi" type="number" value="${p.qty}" min="1" style="font-size:11px;padding:6px 4px;text-align:center;"
+        oninput="updatePartField('${p.id}','qty',this.value)">
+      <input class="fi" value="${p.machine}" placeholder="Machine/Assy" style="font-size:11px;padding:6px 8px;"
+        oninput="updatePartField('${p.id}','machine',this.value)">
+      <select style="font-size:10px;padding:4px 4px;border:1.5px solid var(--n200);border-radius:var(--rs);background:${sc.bg};color:${sc.color};font-weight:700;font-family:var(--font);cursor:pointer;appearance:none;text-align:center;"
+        onchange="updatePartField('${p.id}','status',this.value);renderPartRows()">
+        <option value="notyet"   ${p.status==='notyet'   ?'selected':''}>❌ Not Yet</option>
+        <option value="on_order" ${p.status==='on_order' ?'selected':''}>📦 On Order</option>
+        <option value="ready"    ${p.status==='ready'    ?'selected':''}>✅ Ready</option>
+      </select>
+      <button onclick="removePartRow('${p.id}')"
+        style="width:28px;height:28px;border-radius:50%;border:none;background:var(--n100);color:var(--n500);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>`;
+  }).join('');
+}
+
+function resetPartRows(){
+  taskPartsItems = [];
+  renderPartRows();
+  const sec = document.getElementById('task-parts-section');
+  const btn = document.getElementById('task-parts-toggle-btn');
+  if(sec) sec.style.display = 'none';
+  if(btn){ btn.textContent='🔩 Add parts / materials required'; btn.style.borderStyle='dashed'; btn.style.borderColor='var(--n300)'; btn.style.color='var(--n500)';}
+}
+
+function loadPartRows(parts){
+  taskPartsItems = (parts||[]).map(p=>({...p, id:p.id||'part_'+Date.now()+'_'+Math.random()}));
+  if(taskPartsItems.length){
+    const sec = document.getElementById('task-parts-section');
+    const btn = document.getElementById('task-parts-toggle-btn');
+    if(sec) sec.style.display = '';
+    if(btn){ btn.textContent='🔩 Hide parts section'; btn.style.borderStyle='solid'; btn.style.borderColor='var(--brand)'; btn.style.color='var(--brand)';}
+  }
+  renderPartRows();
+}
+
 function resetTaskFlightFields(){
   ['fl-depart-num','fl-depart-airline','fl-depart-from','fl-depart-to','fl-depart-date','fl-depart-time','fl-arrive-time','fl-depart-terminal','fl-return-num','fl-return-airline','fl-return-from','fl-return-to','fl-return-date','fl-return-time','fl-return-arrive','fl-return-terminal','fl-pnr'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const hasRet=document.getElementById('fl-has-return');if(hasRet)hasRet.checked=false;
@@ -608,3 +719,108 @@ function resetTaskCheckItems(){
 }
 
 
+
+
+// ═══════ PARTS MARKDOWN EXPORT ═══════
+function exportPartsMarkdown(){
+  // Collect all tasks that have parts
+  const tasksWithParts = S.tasks.filter(tk => tk.parts && tk.parts.length > 0);
+  if(!tasksWithParts.length){
+    showToast('No parts data found in any task');
+    return;
+  }
+
+  const now = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const engineer = S.profile.name || 'Engineer';
+  const company  = S.profile.company || '';
+
+  let md = `# Parts & Materials Report\n`;
+  md += `**Prepared by:** ${engineer}${company?' · '+company:''}\n`;
+  md += `**Date:** ${now}\n`;
+  md += `**Total tasks with parts:** ${tasksWithParts.length}\n\n`;
+  md += `---\n\n`;
+
+  // Summary table — all parts across all tasks
+  const allParts = [];
+  tasksWithParts.forEach(tk => {
+    (tk.parts||[]).forEach(p => {
+      allParts.push({...p, taskTitle: tk.title, taskDate: tk.dateStart||tk.date||''});
+    });
+  });
+
+  const statusLabel = {ready:'✅ Ready', on_order:'📦 On Order', notyet:'❌ Not Yet'};
+  const byStatus = {notyet:[], on_order:[], ready:[]};
+  allParts.forEach(p => { (byStatus[p.status||'notyet']).push(p); });
+
+  // ── Status summary ──
+  md += `## Summary\n\n`;
+  md += `| Status | Count |\n|---|---|\n`;
+  md += `| ✅ Ready    | ${byStatus.ready.length} |\n`;
+  md += `| 📦 On Order | ${byStatus.on_order.length} |\n`;
+  md += `| ❌ Not Yet  | ${byStatus.notyet.length} |\n\n`;
+
+  // ── Not Yet section (action needed) ──
+  if(byStatus.notyet.length){
+    md += `## ❌ Not Yet Ordered (${byStatus.notyet.length})\n\n`;
+    md += `| Part No. | Description | Brand | Qty | Machine/Assy | Task |\n`;
+    md += `|---|---|---|:---:|---|---|\n`;
+    byStatus.notyet.forEach(p => {
+      md += `| \`${p.partNo||'-'}\` | ${p.desc||'-'} | ${p.brand||'-'} | ${p.qty||1} | ${p.machine||'-'} | ${p.taskTitle} |\n`;
+    });
+    md += `\n`;
+  }
+
+  // ── On Order section ──
+  if(byStatus.on_order.length){
+    md += `## 📦 On Order (${byStatus.on_order.length})\n\n`;
+    md += `| Part No. | Description | Brand | Qty | Machine/Assy | Task |\n`;
+    md += `|---|---|---|:---:|---|---|\n`;
+    byStatus.on_order.forEach(p => {
+      md += `| \`${p.partNo||'-'}\` | ${p.desc||'-'} | ${p.brand||'-'} | ${p.qty||1} | ${p.machine||'-'} | ${p.taskTitle} |\n`;
+    });
+    md += `\n`;
+  }
+
+  // ── Ready section ──
+  if(byStatus.ready.length){
+    md += `## ✅ Ready (${byStatus.ready.length})\n\n`;
+    md += `| Part No. | Description | Brand | Qty | Machine/Assy | Task |\n`;
+    md += `|---|---|---|:---:|---|---|\n`;
+    byStatus.ready.forEach(p => {
+      md += `| \`${p.partNo||'-'}\` | ${p.desc||'-'} | ${p.brand||'-'} | ${p.qty||1} | ${p.machine||'-'} | ${p.taskTitle} |\n`;
+    });
+    md += `\n`;
+  }
+
+  // ── Per-task detail ──
+  md += `---\n\n## Parts by Task\n\n`;
+  tasksWithParts
+    .sort((a,b)=>(b.dateStart||b.date||'').localeCompare(a.dateStart||a.date||''))
+    .forEach(tk => {
+      const trip = tk.tripId ? S.trips.find(t=>t.id===tk.tripId) : null;
+      md += `### ${tk.title}\n`;
+      if(tk.dateStart||tk.date) md += `**Date:** ${fmtDate(tk.dateStart||tk.date)}  \n`;
+      if(trip) md += `**Trip:** ${trip.plant}  \n`;
+      md += `**Parts:** ${tk.parts.length}\n\n`;
+      md += `| Part No. | Description | Brand | Qty | Machine/Assy | Status |\n`;
+      md += `|---|---|---|:---:|---|---|\n`;
+      tk.parts.forEach(p => {
+        md += `| \`${p.partNo||'-'}\` | ${p.desc||'-'} | ${p.brand||'-'} | ${p.qty||1} | ${p.machine||'-'} | ${statusLabel[p.status||'notyet']} |\n`;
+      });
+      md += `\n`;
+    });
+
+  md += `---\n*Generated by PlantLog Pro · ${now}*\n`;
+
+  // Download as .md file
+  const blob = new Blob([md], {type:'text/markdown;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `PlantLog_Parts_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.md`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Parts report downloaded ✓');
+}

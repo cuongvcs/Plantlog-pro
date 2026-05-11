@@ -140,6 +140,7 @@ async function syncToSheets(){
       status:        s(tk.status)||'pending',
       checklist:     cl.map(c=>(c.done?'[x] ':'[ ] ')+s(c.text||c.name)).join(' | '),
       checklistJson: JSON.stringify(cl),
+      partsJson:     tk.parts&&tk.parts.length?JSON.stringify(tk.parts):'',
       flightJson:    tk.flight?JSON.stringify(tk.flight):'',
       createdAt:     s(tk.createdAt),
       updatedAt:     s(tk.updatedAt)||new Date().toISOString()
