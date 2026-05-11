@@ -114,8 +114,8 @@ let photoCtx=null,tmpPhotos=[];
 let taskView='list',taskFilter='all';
 let deferredPrompt=null;
 
-function sv(){try{localStorage.setItem('pl3',JSON.stringify(S));}catch(e){}}
-function ld(){try{const d=localStorage.getItem('pl3');if(d)S={...S,...JSON.parse(d)};}catch(e){}}
+function sv(){try{localStorage.setItem('plpro1',JSON.stringify(S));}catch(e){}}
+function ld(){try{const d=localStorage.getItem('plpro1');if(d)S={...S,...JSON.parse(d)};}catch(e){}}
 function t(k){return T[S.lang][k]||T.en[k]||k;}
 
 // ═══════ PWA ═══════

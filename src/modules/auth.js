@@ -5,7 +5,7 @@
 // =====================================================
 
 // ═══════ SECURITY / AUTH ═══════
-const SEC_KEY = 'plsec4';  // localStorage key for hashed PIN
+const SEC_KEY = 'plprosec1';  // PlantLog Pro PIN key (separate from old app)
 
 // Simple hash — enough for local PIN protection
 // SHA-256 hash via Web Crypto — async but we use sync FNV fallback for instant UI
@@ -22,7 +22,7 @@ function hashPIN(pin) {
 }
 async function hashPINAsync(pin) {
   try {
-    const enc = new TextEncoder().encode('pl4salt_'+pin);
+    const enc = new TextEncoder().encode('plprosalt_'+pin);
     const buf = await crypto.subtle.digest('SHA-256', enc);
     const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
     return 'sha_' + hex;

@@ -144,6 +144,7 @@ function openTripDetail(id){
   // Load trip note
   const noteEl=document.getElementById('trip-note-input');
   if(noteEl)noteEl.value=tr.notes||'';
+  renderTripStatusToggle(tr);
   showScreen('trip-detail');
 }
 function resetTripFlightFields(){
@@ -223,6 +224,35 @@ function openEditTrip(){
   openModal('modal-new-trip');
 }
 function deleteTripCurrent(){if(!confirm('Delete this trip?'))return;S.trips=S.trips.filter(tr=>tr.id!==curTrip);delete S.reports[curTrip];sv();showScreen('trips');renderTripList();}
+
+function setTripStatus(status){
+  const tr=S.trips.find(t=>t.id===curTrip);
+  if(!tr)return;
+  tr.status=status;
+  Store.commit('trip:save');
+  // Re-render the status toggle
+  renderTripStatusToggle(tr);
+  showToast('Status updated: '+{planned:'Planned',in_progress:'In Progress',completed:'Completed'}[status]);
+}
+
+function renderTripStatusToggle(tr){
+  const el=document.getElementById('trip-status-toggle');
+  if(!el||!tr)return;
+  const statuses=[
+    {key:'planned',    label:'📋 Planned',  bg:'var(--al)',          color:'var(--ad)'},
+    {key:'in_progress',label:'🔄 Active',   bg:'var(--bl)',          color:'var(--bd)'},
+    {key:'completed',  label:'✅ Done',     bg:'var(--brand-light)', color:'var(--brand-dark)'}
+  ];
+  el.innerHTML=statuses.map(s=>`
+    <button onclick="setTripStatus('${s.key}')"
+      style="flex:1;padding:8px 4px;border:none;border-radius:5px;cursor:pointer;
+             font-family:var(--font);font-size:11px;font-weight:700;
+             transition:all 0.15s;
+             background:${tr.status===s.key?s.bg:'transparent'};
+             color:${tr.status===s.key?s.color:'var(--n500)'};">
+      ${s.label}
+    </button>`).join('');
+}
 
 let _noteSaveTimer=null;
 function saveTripNote(){
