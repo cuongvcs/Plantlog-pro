@@ -145,6 +145,7 @@ function openTripDetail(id){
   const noteEl=document.getElementById('trip-note-input');
   if(noteEl)noteEl.value=tr.notes||'';
   renderTripStatusToggle(tr);
+  renderTripInspCounts();
   showScreen('trip-detail');
 }
 function resetTripFlightFields(){
@@ -270,21 +271,19 @@ function saveTripNote(){
   },800);
 }
 function openReport(){
-  const tr=S.trips.find(tr=>tr.id===curTrip);if(!tr)return;
-  if(tr.status==='planned'){tr.status='in_progress';sv();}
-  document.getElementById('report-plant-name').textContent=tr.plant;
-  document.getElementById('report-date').textContent=fmtDate(tr.date);
-  curReport=S.reports[tr.id]||{checklist:[],readings:[],issues:[],team:[],signoff:{summary:'',result:'Completed',remarks:''},signature:'',reportTasks:[],reportTaskNotes:{}};
-  if(!curReport.reportTasks)curReport.reportTasks=[];
-  if(!curReport.reportTaskNotes)curReport.reportTaskNotes={};
-  S.reports[tr.id]=curReport;
-  gotoStep(0);showScreen('report');updateSigDate();
-  document.getElementById('signoff-summary').value=curReport.signoff.summary||'';
-  document.getElementById('signoff-remarks').value=curReport.signoff.remarks||'';
-  signoffRes=curReport.signoff.result||'Completed';
-  document.querySelectorAll('.ropt').forEach(b=>b.classList.toggle('sel',b.textContent.includes(signoffRes)));
-  if(curReport.signature){const img=new Image();img.onload=()=>{sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);sigCtx.drawImage(img,0,0);};img.src=curReport.signature;}
-  else sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
+  // Init report if needed, then open inspection picker
+  const tr = S.trips.find(t=>t.id===curTrip);
+  if(!tr) return;
+  if(!S.reports[tr.id]){
+    S.reports[tr.id]={checklist:[],readings:[],issues:[],team:[...S.defaultTeam.map(m=>({...m,id:'tm'+Date.now()+Math.random()}))],signoff:{summary:'',result:'Completed',remarks:''},signature:'',reportTasks:[],reportTaskNotes:{}};
+  }
+  curReport = S.reports[tr.id];
+  if(!curReport.reportTasks) curReport.reportTasks=[];
+  if(!curReport.reportTaskNotes) curReport.reportTaskNotes={};
+  document.getElementById('report-plant-name').textContent = tr.plant;
+  document.getElementById('report-date').textContent = fmtDate(tr.date);
+  // Open inspection picker so user can select items
+  openReportInspPicker();
 }
 
 // ═══════ CALENDAR ═══════

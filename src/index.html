@@ -196,15 +196,303 @@
     <div id="trip-bills-section" style="margin-top:4px;"></div>
     <!-- Trip status change -->
     <div style="display:flex;gap:4px;margin-bottom:8px;background:var(--n100);border-radius:var(--r-sm);padding:4px;" id="trip-status-toggle"></div>
+    <!-- Inspection counts -->
+    <div id="trip-insp-counts" style="display:flex;gap:6px;margin-bottom:8px;"></div>
+    <div class="brow" style="margin-bottom:8px;">
+      <button class="btn btn-o" style="flex:1;" onclick="openInspectionScreen()">
+        📋 Inspections
+      </button>
+    </div>
     <div class="brow">
       <button class="btn btn-d btn-sm" onclick="deleteTripCurrent()">🗑 <span data-t="delete">Delete</span></button>
       <button class="btn btn-o btn-sm" onclick="openEditTrip()">✏️ Edit</button>
-      <button class="btn btn-p" style="flex:1;" onclick="openReport()">📋 <span data-t="openReport">Open Report</span></button>
+      <button class="btn btn-p" style="flex:1;" onclick="openReport()">📄 <span data-t="openReport">Report PDF</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ INSPECTION SCREEN ═══════════════ -->
+<div id="screen-inspection" class="screen">
+  <div class="topbar">
+    <button class="tb-back" onclick="closeInspectionScreen()">←</button>
+    <div><div class="tb-title" id="insp-screen-title">Daily Inspection</div>
+    <div class="tb-sub" id="insp-screen-sub"></div></div>
+    <button class="tb-action" onclick="openAddInspectionItem()" title="Add">＋</button>
+  </div>
+  <!-- Type filter tabs -->
+  <div style="background:#fff;padding:6px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
+    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px;">
+      <button class="tf-btn active" id="insp-tab-all"      onclick="setInspTab('all')">All</button>
+      <button class="tf-btn"        id="insp-tab-check"    onclick="setInspTab('check')">☑ Checklist</button>
+      <button class="tf-btn"        id="insp-tab-reading"  onclick="setInspTab('reading')">📊 Readings</button>
+      <button class="tf-btn"        id="insp-tab-issue"    onclick="setInspTab('issue')">⚠️ Issues</button>
+    </div>
+    <!-- Date + summary bar -->
+    <div style="display:flex;gap:6px;padding-bottom:6px;align-items:center;">
+      <input type="date" id="insp-date-filter" class="fi" style="flex:1;height:32px;font-size:12px;" oninput="renderInspectionScreen()">
+      <button onclick="document.getElementById('insp-date-filter').value='';renderInspectionScreen()"
+        style="height:32px;padding:0 10px;border:1px solid var(--n200);border-radius:var(--rs);background:#fff;font-size:11px;color:var(--n500);cursor:pointer;font-family:var(--font);">All dates</button>
+    </div>
+    <div id="insp-summary-bar" style="font-size:11px;color:var(--n400);padding:0 2px 6px;"></div>
+  </div>
+  <div class="sb" id="insp-body"></div>
+</div>
+
+<!-- ═══════════════ ADD INSPECTION ITEM MODAL ═══════════════ -->
+<div id="modal-add-insp" class="mo">
+  <div class="modal">
+    <div class="mh"></div>
+    <div class="mt" id="insp-modal-title">Add Inspection Item</div>
+
+    <!-- Type selector -->
+    <div class="fg" id="insp-type-row">
+      <label class="fl">Type</label>
+      <div style="display:flex;gap:8px;">
+        <button onclick="setInspType('check')"   id="it-check"   class="cat-opt sel"   style="flex:1;padding:10px;font-size:13px;">☑ Check</button>
+        <button onclick="setInspType('reading')" id="it-reading" class="cat-opt"        style="flex:1;padding:10px;font-size:13px;">📊 Reading</button>
+        <button onclick="setInspType('issue')"   id="it-issue"   class="cat-opt"        style="flex:1;padding:10px;font-size:13px;">⚠️ Issue</button>
+      </div>
+    </div>
+    <input type="hidden" id="insp-type-val" value="check">
+
+    <div class="fg">
+      <label class="fl">Date *</label>
+      <input type="date" class="fi" id="insp-date">
+    </div>
+
+    <!-- ── CHECKLIST FIELDS ── -->
+    <div id="insp-check-fields">
+      <div class="fg"><label class="fl">Item Name *</label>
+        <input class="fi" id="insp-check-name" placeholder="e.g. Safety relief valve checked"></div>
+      <div class="fg"><label class="fl">Result</label>
+        <div style="display:flex;gap:6px;">
+          <button onclick="setInspCheckResult('pass')"   id="icr-pass"   class="ropt" style="flex:1;">✅ Pass</button>
+          <button onclick="setInspCheckResult('fail')"   id="icr-fail"   class="ropt" style="flex:1;">❌ Fail</button>
+          <button onclick="setInspCheckResult('na')"     id="icr-na"     class="ropt" style="flex:1;">— N/A</button>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:0;"><label class="fl">Note</label>
+        <input class="fi" id="insp-check-note" placeholder="Optional note"></div>
+    </div>
+
+    <!-- ── READING FIELDS ── -->
+    <div id="insp-reading-fields" style="display:none;">
+      <div class="frow">
+        <div class="fg"><label class="fl">Name *</label>
+          <input class="fi" id="insp-rd-name" placeholder="e.g. Inlet Pressure"></div>
+        <div class="fg"><label class="fl">Tag / ID</label>
+          <input class="fi" id="insp-rd-tag" placeholder="e.g. PT-101" style="font-family:var(--mono);"></div>
+      </div>
+      <div class="fg"><label class="fl">Reading Type</label>
+        <div style="display:flex;gap:6px;">
+          <button onclick="setRdType('condition')" id="rdt-cond" class="ropt sel" style="flex:1;">Condition</button>
+          <button onclick="setRdType('measurement')" id="rdt-meas" class="ropt" style="flex:1;">Measurement</button>
+        </div>
+      </div>
+      <input type="hidden" id="insp-rd-type" value="condition">
+      <!-- Condition -->
+      <div id="insp-cond-fields" class="fg"><label class="fl">Condition</label>
+        <div style="display:flex;gap:6px;">
+          <button onclick="setCondResult('ok')"    id="cond-ok"    class="ropt sel" style="flex:1;">✅ OK</button>
+          <button onclick="setCondResult('notok')" id="cond-notok" class="ropt"     style="flex:1;">❌ Not OK</button>
+          <button onclick="setCondResult('other')" id="cond-other" class="ropt"     style="flex:1;">⚠ Other</button>
+        </div>
+      </div>
+      <input type="hidden" id="insp-cond-val" value="ok">
+      <!-- Measurement -->
+      <div id="insp-meas-fields" style="display:none;">
+        <div class="frow">
+          <div class="fg"><label class="fl">Value *</label>
+            <input class="fi" type="number" id="insp-rd-value" placeholder="0.00" step="any"></div>
+          <div class="fg"><label class="fl">Unit</label>
+            <input class="fi" id="insp-rd-unit" placeholder="e.g. bar, °C"></div>
+        </div>
+        <div class="fg"><label class="fl">Status</label>
+          <div style="display:flex;gap:6px;">
+            <button onclick="setMeasStatus('ok')"  id="meas-ok"  class="ropt sel" style="flex:1;">✅ In spec</button>
+            <button onclick="setMeasStatus('bad')"  id="meas-bad" class="ropt"     style="flex:1;">❌ Out of spec</button>
+            <button onclick="setMeasStatus('na')"   id="meas-na"  class="ropt"     style="flex:1;">— N/A</button>
+          </div>
+        </div>
+        <input type="hidden" id="insp-meas-status" value="ok">
+      </div>
+      <div class="fg" style="margin-bottom:0;"><label class="fl">Notes</label>
+        <input class="fi" id="insp-rd-notes" placeholder="Optional notes"></div>
+    </div>
+
+    <!-- ── ISSUE FIELDS ── -->
+    <div id="insp-issue-fields" style="display:none;">
+      <div class="fg"><label class="fl">Title *</label>
+        <input class="fi" id="insp-issue-title" placeholder="Brief description of issue"></div>
+      <div class="fg"><label class="fl">Severity</label>
+        <div style="display:flex;gap:5px;">
+          <button onclick="setIssueSev('low')"      id="isev-low"      class="ropt"     style="flex:1;font-size:11px;">Low</button>
+          <button onclick="setIssueSev('medium')"   id="isev-medium"   class="ropt sel" style="flex:1;font-size:11px;">Medium</button>
+          <button onclick="setIssueSev('high')"     id="isev-high"     class="ropt"     style="flex:1;font-size:11px;">High</button>
+          <button onclick="setIssueSev('critical')" id="isev-critical" class="ropt"     style="flex:1;font-size:11px;">Critical</button>
+        </div>
+        <input type="hidden" id="insp-issue-sev" value="medium">
+      </div>
+      <div class="fg"><label class="fl">Description</label>
+        <textarea class="fta" id="insp-issue-desc" placeholder="Detailed description…" style="min-height:60px;"></textarea></div>
+      <div class="fg" style="margin-bottom:0;"><label class="fl">Action required</label>
+        <input class="fi" id="insp-issue-action" placeholder="e.g. Replace seal, schedule maintenance"></div>
+    </div>
+
+    <div class="brow" style="margin-top:14px;">
+      <button class="btn btn-o" onclick="closeModal('modal-add-insp')">Cancel</button>
+      <button class="btn btn-p" style="flex:1;" id="insp-save-btn" onclick="saveInspectionItem()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ REPORT INSPECTION PICKER MODAL ═══════════════ -->
+<div id="modal-report-insp-picker" class="mo">
+  <div class="modal" style="max-height:95vh;">
+    <div class="mh"></div>
+    <div class="mt">Select Items for Report</div>
+    <div style="font-size:12px;color:var(--n500);margin-bottom:10px;" id="rip-trip-name"></div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:5px;margin-bottom:10px;background:var(--n100);border-radius:var(--rs);padding:3px;">
+      <button onclick="setRipTab('check')"   id="rip-tab-check"   style="flex:1;padding:7px;border:none;border-radius:var(--rs);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);background:var(--brand);color:#fff;">☑ Checks</button>
+      <button onclick="setRipTab('reading')" id="rip-tab-reading" style="flex:1;padding:7px;border:none;border-radius:var(--rs);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);background:transparent;color:var(--n500);">📊 Readings</button>
+      <button onclick="setRipTab('issue')"   id="rip-tab-issue"   style="flex:1;padding:7px;border:none;border-radius:var(--rs);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);background:transparent;color:var(--n500);">⚠️ Issues</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+      <button onclick="ripSelectAll()"  style="font-size:11px;color:var(--brand);background:none;border:none;cursor:pointer;font-weight:600;font-family:var(--font);">✓ Select all</button>
+      <button onclick="ripClearAll()"   style="font-size:11px;color:var(--n400);background:none;border:none;cursor:pointer;font-weight:600;font-family:var(--font);">✕ Clear all</button>
+    </div>
+    <div id="rip-list" style="max-height:52vh;overflow-y:auto;"></div>
+    <div class="brow" style="margin-top:12px;">
+      <button class="btn btn-o" onclick="closeModal('modal-report-insp-picker')">Cancel</button>
+      <button class="btn btn-p" style="flex:1;" onclick="applyInspectionPicker()">Apply to Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ LIBRARY SCREEN ═══════════════ -->
+
+<div id="screen-library" class="screen">
+  <div class="topbar">
+    <button class="tb-back" onclick="showScreen('settings')">←</button>
+    <div class="tb-title">📚 Inspection Library</div>
+    <button class="tb-action" onclick="openAddLibraryItem()" title="Add">＋</button>
+  </div>
+  <div style="background:#fff;padding:6px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
+    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px;">
+      <button class="tf-btn active" id="lib-tab-checklist"  onclick="setLibTab('checklist')">☑ Checklists</button>
+      <button class="tf-btn"        id="lib-tab-readings"   onclick="setLibTab('readings')">📊 Readings</button>
+      <button class="tf-btn"        id="lib-tab-issues"     onclick="setLibTab('issues')">⚠️ Issues</button>
+    </div>
+  </div>
+  <div class="sb" id="lib-body"></div>
+</div>
+
+<!-- ═══════════════ REPORT START MODAL ═══════════════ -->
+<div id="modal-report-start" class="mo">
+  <div class="modal">
+    <div class="mh"></div>
+    <div class="mt">📋 Start Report</div>
+    <div style="font-size:13px;color:var(--n500);margin-bottom:14px;" id="report-start-trip-name"></div>
+
+    <!-- Option A: Load from library -->
+    <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">Load from library</div>
+    <div id="report-start-templates" style="margin-bottom:14px;"></div>
+
+    <!-- Option B: Start blank -->
+    <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">Or start fresh</div>
+    <button class="btn btn-o btn-full" onclick="startReportBlank()" style="margin-bottom:10px;">
+      📄 Start with empty checklist
+    </button>
+
+    <!-- Option C: Continue existing -->
+    <div id="report-start-continue" style="display:none;">
+      <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">Continue existing</div>
+      <button class="btn btn-p btn-full" onclick="startReportContinue()" style="margin-bottom:10px;" id="btn-continue-report">
+        ▶ Continue this trip's report
+      </button>
+    </div>
+
+    <button class="btn btn-o btn-full" onclick="closeModal('modal-report-start')">Cancel</button>
+  </div>
+</div>
+
+<!-- ═══════════════ ADD LIBRARY ITEM MODAL ═══════════════ -->
+<div id="modal-add-library" class="mo">
+  <div class="modal">
+    <div class="mh"></div>
+    <div class="mt" id="lib-modal-title">Add Checklist</div>
+
+    <div class="fg">
+      <label class="fl">Name / Title *</label>
+      <input class="fi" id="lib-item-name" placeholder="e.g. Monthly Safety Checklist">
+    </div>
+    <div class="fg" id="lib-type-row">
+      <label class="fl">Type</label>
+      <select class="fsel" id="lib-item-type" onchange="renderLibItemFields()">
+        <option value="checklist">☑ Checklist</option>
+        <option value="readings">📊 Readings</option>
+        <option value="issues">⚠️ Issue Template</option>
+      </select>
+    </div>
+
+    <!-- Checklist items -->
+    <div id="lib-checklist-fields">
+      <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Checklist Items</div>
+      <div id="lib-cl-items"></div>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <input class="fi" id="lib-cl-input" placeholder="Add item…" style="flex:1;font-size:13px;padding:8px 10px;"
+          onkeydown="if(event.key==='Enter'){addLibClItem();event.preventDefault();}">
+        <button onclick="addLibClItem()" style="background:var(--brand);color:#fff;border:none;border-radius:var(--rs);padding:8px 12px;cursor:pointer;font-size:14px;font-weight:600;">+</button>
+      </div>
+    </div>
+
+    <!-- Readings fields -->
+    <div id="lib-readings-fields" style="display:none;">
+      <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Reading Points</div>
+      <div id="lib-rd-items"></div>
+      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+        <input class="fi" id="lib-rd-name" placeholder="Name (e.g. Pressure)" style="flex:2;font-size:12px;padding:8px 10px;">
+        <input class="fi" id="lib-rd-tag"  placeholder="Tag (e.g. PT-101)" style="flex:1;font-size:12px;padding:8px 10px;font-family:var(--mono);">
+        <select class="fsel" id="lib-rd-type" style="flex:1;font-size:12px;padding:8px 10px;">
+          <option value="condition">Condition</option>
+          <option value="measurement">Measurement</option>
+        </select>
+        <input class="fi" id="lib-rd-unit" placeholder="Unit (e.g. bar)" style="flex:1;font-size:12px;padding:8px 10px;">
+        <button onclick="addLibRdItem()" style="background:var(--brand);color:#fff;border:none;border-radius:var(--rs);padding:8px 12px;cursor:pointer;font-size:14px;font-weight:600;flex-shrink:0;">+</button>
+      </div>
+    </div>
+
+    <!-- Issue template fields -->
+    <div id="lib-issues-fields" style="display:none;">
+      <div class="fg">
+        <label class="fl">Default Severity</label>
+        <select class="fsel" id="lib-issue-sev">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+          <option value="critical">Critical</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Description template</label>
+        <textarea class="fta" id="lib-issue-desc" placeholder="Default description for this issue type…" style="min-height:60px;"></textarea>
+      </div>
+      <div class="fg" style="margin-bottom:0;">
+        <label class="fl">Default action</label>
+        <input class="fi" id="lib-issue-action" placeholder="e.g. Inspect and replace seal">
+      </div>
+    </div>
+
+    <div class="brow" style="margin-top:14px;">
+      <button class="btn btn-o" onclick="closeModal('modal-add-library')">Cancel</button>
+      <button class="btn btn-p" style="flex:1;" onclick="saveLibraryItem()">💾 Save</button>
     </div>
   </div>
 </div>
 
 <!-- ═══════════════ FIELD REPORT ═══════════════ -->
+
 <div id="screen-report" class="screen">
   <div class="topbar">
     <button class="tb-back" onclick="showScreen('trip-detail')">←</button>
@@ -517,6 +805,11 @@
       <div class="si" onclick="requestNotifications()">
         <div class="sic">🔔</div>
         <div class="sin"><div class="sil" data-t="notifications">Notifications</div><div class="sis" id="notif-status">Not enabled</div></div>
+        <div style="color:var(--g400);">›</div>
+      </div>
+      <div class="si" onclick="showScreen('library')">
+        <div class="sic" style="background:var(--bl);color:var(--bd);">📚</div>
+        <div class="sin"><div class="sil">Inspection Library</div><div class="sis">Saved checklists, readings &amp; issue templates</div></div>
         <div style="color:var(--g400);">›</div>
       </div>
       <div class="si" onclick="showScreen('leave')">
@@ -1153,6 +1446,8 @@
   <script src="modules/trips.js"></script>
   <script src="modules/tasks.js"></script>
   <script src="modules/report.js"></script>
+  <script src="modules/inspection.js"></script>
+  <script src="modules/library.js"></script>
   <script src="modules/bills.js"></script>
   <script src="modules/sync.js"></script>
 </body>

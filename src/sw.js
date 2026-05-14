@@ -1,5 +1,5 @@
 // PlantLog Service Worker
-const CACHE_NAME = 'plantlog-pro-v2';
+const CACHE_NAME = 'plantlog-pro-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,8 @@ const ASSETS = [
   './modules/tasks.js',
   './modules/report.js',
   './modules/bills.js',
+  './modules/inspection.js',
+  './modules/library.js',
   './modules/sync.js',
   'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'

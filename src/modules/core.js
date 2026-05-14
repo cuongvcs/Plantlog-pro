@@ -104,8 +104,10 @@ const IND={
 let S={
   profile:{name:'',title:'',company:'',empid:''},
   trips:[],reports:{},tasks:[],leaveData:{},
+  trips:[],reports:{},tasks:[],leaveData:{},
   machines:[],plans:[],bills:[],
-  templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],
+  inspections:[],
+  library:[],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
   defaultTeam:[],lang:'en'
 };
 let curTrip=null,curReport=null,sigCanvas,sigCtx,isDrw=false;
@@ -123,7 +125,7 @@ function setupPWA(){
   // ── Clear old PlantLog v4 caches on every load ─────
   if('caches' in window){
     caches.keys().then(keys=>keys.forEach(k=>{
-      if(k!=='plantlog-pro-v2'){
+      if(k!=='plantlog-pro-v4'){
         console.log('[PlantLog] Deleting old cache:',k);
         caches.delete(k);
       }
@@ -270,6 +272,8 @@ function showScreen(n){
   if(n==='bills')renderBillsScreen();
   if(n==='export'){saveSignoff();buildPDFPreview();populateReportName();}
   if(n==='leave')renderCalendar();
+  if(n==='library')renderLibrary();
+  if(n==='inspection')renderInspectionScreen();
   if(n==='bill-export')buildBillPDFPreview();
 }
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
@@ -346,7 +350,7 @@ function fmtDate(d){
     return dt.toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{day:'numeric',month:'short',year:'numeric'});
   }catch(e){return String(d);}
 }
-function clearAllData(){if(!confirm('Delete ALL data? This cannot be undone.'))return;S={profile:{name:'',title:'',company:'',empid:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang};sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();showToast('Data cleared');}
+function clearAllData(){if(!confirm('Delete ALL data? This cannot be undone.'))return;S={profile:{name:'',title:'',company:'',empid:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],inspections:[],library:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang};sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();showToast('Data cleared');}
 
 
 // ═══════ STORE — lightweight reactive state ═══════════════
