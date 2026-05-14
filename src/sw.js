@@ -1,8 +1,9 @@
 // PlantLog Service Worker
-const CACHE_NAME = 'plantlog-pro-v4';
+const CACHE_NAME = 'plantlog-pro-v5';
 const ASSETS = [
   './',
   './index.html',
+  './manifest.json',
   './styles.css',
   './modules/core.js',
   './modules/auth.js',

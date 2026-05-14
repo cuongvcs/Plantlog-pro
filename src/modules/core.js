@@ -125,7 +125,7 @@ function setupPWA(){
   // ── Clear old PlantLog v4 caches on every load ─────
   if('caches' in window){
     caches.keys().then(keys=>keys.forEach(k=>{
-      if(k!=='plantlog-pro-v4'){
+      if(k!=='plantlog-pro-v5'){
         console.log('[PlantLog] Deleting old cache:',k);
         caches.delete(k);
       }
@@ -144,20 +144,8 @@ function setupPWA(){
     });
   }
 
-  // Dynamic manifest
-  const manifest={
-    name:'PlantLog',short_name:'PlantLog',
-    description:'Field Visit & Plant Report App',
-    start_url:'./',display:'standalone',scope:'./',
-    background_color:'#ffffff',theme_color:'#1D9E75',
-    orientation:'portrait-primary',
-    icons:[
-      {src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="80" fill="%231D9E75"/><text y="380" font-size="380" x="66">🏭</text></svg>',sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'},
-      {src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="30" fill="%231D9E75"/><text y="145" font-size="140" x="26">🏭</text></svg>',sizes:'192x192',type:'image/svg+xml'}
-    ]
-  };
-  const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
-  document.getElementById('pwa-manifest').href=URL.createObjectURL(blob);
+  // Manifest is now a static file (manifest.json) — no dynamic blob needed
+  // This ensures reliable PWA install and standalone mode (no address bar)
 
   // Service Worker for offline
   if('serviceWorker' in navigator){
