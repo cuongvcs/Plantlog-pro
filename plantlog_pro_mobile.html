@@ -2252,6 +2252,29 @@ input, textarea, select, button { font-family: var(--font); }
     </button>
   </div>
 
+  <!-- FILE ATTACHMENTS -->
+  <div class="form-section" id="task-files-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div class="form-section-title" style="margin-bottom:0;">📎 Attachments</div>
+      <button onclick="pickTaskFile()" id="task-file-btn"
+        style="background:var(--brand);color:#fff;border:none;border-radius:var(--rs);
+               padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">
+        + Add File
+      </button>
+    </div>
+    <div id="task-files-list"></div>
+    <div id="task-files-empty" style="font-size:12px;color:var(--n400);padding:6px 0;text-align:center;display:none;">
+      No files attached yet
+    </div>
+    <div id="task-file-uploading" style="display:none;font-size:12px;color:var(--brand);padding:6px 0;">
+      ⟳ Uploading to Google Drive…
+    </div>
+    <input type="file" id="task-file-input" multiple
+      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.png,.jpg,.jpeg"
+      style="position:absolute;width:1px;height:1px;opacity:0;left:-9999px;"
+      onchange="handleTaskFiles(event)">
+  </div>
+
   <div class="form-section">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <div class="form-section-title" style="margin-bottom:0;">Sub-checklist (optional)</div>
@@ -3263,24 +3286,42 @@ function updatePINStatusLabel() {
 
 // ── Startup auth check ─────────────────────────────────────
 function authInit() {
+  const appEl  = document.getElementById('app');
+  const lockEl = document.getElementById('screen-lock');
   try {
     if (hasPIN()) {
-      lockApp();
+      // PIN is set — show lock screen, hide app
+      if(lockEl) lockEl.style.display = 'flex';
+      if(appEl)  appEl.style.display  = 'none';
+      _isLocked = true;
+      pinBuffer = '';
+      pinMode   = 'login';
+      // Safely update PIN dots and title
+      try { updatePinDots('lock'); } catch(e){}
+      try {
+        const lt = document.getElementById('lock-title');
+        if(lt) lt.textContent = 'Enter PIN';
+        const le = document.getElementById('lock-error');
+        if(le) le.textContent = '';
+        const lf = document.getElementById('lock-forgot');
+        if(lf) lf.style.display = 'block';
+      } catch(e){}
     } else {
-      document.getElementById('screen-lock').style.display = 'none';
-      document.getElementById('app').style.display = 'flex';
+      // No PIN — show app directly
+      if(lockEl) lockEl.style.display = 'none';
+      if(appEl)  appEl.style.display  = 'flex';
       setTimeout(() => {
         if (!hasPIN()) showToast('💡 Set a PIN in Settings → Security to protect your data');
       }, 3000);
     }
-    updatePINStatusLabel();
+    try { updatePINStatusLabel(); } catch(e){}
   } catch(e) {
-    // Last resort: always show the app even if auth fails
     console.warn('authInit error:', e.message);
-    const app = document.getElementById('app');
-    const lock = document.getElementById('screen-lock');
-    if(app) app.style.display = 'flex';
-    if(lock) lock.style.display = 'none';
+    // Only show app in catch if NO PIN is set
+    if (!hasPIN()) {
+      if(appEl)  appEl.style.display  = 'flex';
+      if(lockEl) lockEl.style.display = 'none';
+    }
   }
 }
 
@@ -3899,6 +3940,7 @@ function openNewTaskModal(prefillDate, prefillCat){
   populateTaskTripSelect();populateMachineSelect();populatePlanSelect();
   resetTaskCheckItems();
   resetPartRows();
+  resetTaskFileItems();
   resetTaskFlightFields();
   openModal('modal-new-task');
 }
@@ -3924,6 +3966,8 @@ function openEditTaskModal(id){
   if(tk.checklist)loadTaskCheckItems(tk.checklist);
   resetPartRows();
   if(tk.parts&&tk.parts.length)loadPartRows(tk.parts);
+  resetTaskFileItems();
+  if(tk.files&&tk.files.length)loadTaskFileItems(tk.files);
   resetTaskFlightFields();
   if(tk.flight&&tk.category==='travel')loadTaskFlightFields(tk.flight);
   setTimeout(()=>{
@@ -4010,6 +4054,7 @@ function saveNewTask(){
     updatedAt:now,
     checklist:[...taskCheckItems],
     parts:[...taskPartsItems],
+    files:[...taskFileItems],
     flight:(document.getElementById('task-cat-val')&&document.getElementById('task-cat-val').value==='travel')?getTaskFlightFields():null
   };
   if(editingTaskId){
@@ -4268,6 +4313,19 @@ function openTaskDetail(id){
       ${tk.plan?`<div class="dg-item"><div class="dg-label">Plan</div><div class="dg-val">${tk.plan}</div></div>`:''}
       ${trip?`<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val">${trip}</div></div>`:''}
     </div>
+    ${(tk.files&&tk.files.length)?`<div style="margin-bottom:12px;">
+      <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">📎 ATTACHMENTS (${tk.files.length})</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        ${tk.files.map(f=>{
+          const icon=f.mimeType&&f.mimeType.includes('pdf')?'📄':f.mimeType&&f.mimeType.includes('sheet')?'📊':f.mimeType&&f.mimeType.includes('word')?'📝':'📎';
+          return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--n50);border-radius:var(--rs);border:1px solid var(--n150);">'
+            +'<span style="font-size:18px;">'+icon+'</span>'
+            +'<div style="flex:1;min-width:0;font-size:13px;font-weight:500;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+f.fileName+'</div>'
+            +(f.fileUrl?'<a href="'+f.fileUrl+'" target="_blank" style="padding:5px 12px;border-radius:var(--rs);background:var(--brand);color:#fff;font-size:11px;font-weight:700;text-decoration:none;display:inline-block;">Open</a>':'')
+            +'</div>';
+        }).join('')}
+      </div>
+    </div>`:''}
     ${(tk.parts&&tk.parts.length)?`<div style="margin-bottom:12px;">
       <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">🔩 PARTS / MATERIALS (${tk.parts.length})</div>
       <div style="background:var(--n50);border-radius:var(--rs);overflow:hidden;border:1px solid var(--n150);">
@@ -4563,6 +4621,130 @@ function resetTaskCheckItems(){
 
 
 
+
+// ═══════ TASK FILE ATTACHMENTS ═══════
+let taskFileItems = []; // {fileId, fileName, fileUrl, mimeType} — loaded for current modal
+
+function pickTaskFile(){
+  const input = document.getElementById('task-file-input');
+  if(input) input.click();
+}
+
+function renderTaskFilesList(){
+  const list = document.getElementById('task-files-list');
+  const empty = document.getElementById('task-files-empty');
+  if(!list) return;
+  if(!taskFileItems.length){
+    list.innerHTML = '';
+    if(empty) empty.style.display = '';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  const iconFor = (mime) => {
+    if(!mime) return '📎';
+    if(mime.includes('pdf')) return '📄';
+    if(mime.includes('word') || mime.includes('document')) return '📝';
+    if(mime.includes('sheet') || mime.includes('excel') || mime.includes('csv')) return '📊';
+    if(mime.includes('presentation') || mime.includes('powerpoint')) return '📑';
+    if(mime.includes('image')) return '🖼️';
+    if(mime.includes('text')) return '📃';
+    return '📎';
+  };
+  list.innerHTML = taskFileItems.map((f,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;
+                background:var(--n50);border-radius:var(--rs);border:1px solid var(--n150);margin-bottom:5px;">
+      <span style="font-size:20px;flex-shrink:0;">${iconFor(f.mimeType)}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--n800);
+                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.fileName}</div>
+        <div style="font-size:10px;color:var(--n400);">${f.fileId?'Saved to Google Drive':'Pending upload…'}</div>
+      </div>
+      ${f.fileUrl ? `<button onclick="window.open('${f.fileUrl}','_blank')"
+        style="flex-shrink:0;padding:5px 10px;border:1px solid var(--brand);border-radius:var(--rs);
+               background:var(--brand-light);color:var(--brand-dark);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">
+        Open</button>` : ''}
+      <button onclick="removeTaskFile(${i})"
+        style="flex-shrink:0;width:26px;height:26px;border-radius:50%;border:none;
+               background:var(--rl);color:var(--rd);cursor:pointer;font-size:14px;font-weight:700;">×</button>
+    </div>`).join('');
+}
+
+function removeTaskFile(idx){
+  taskFileItems.splice(idx, 1);
+  renderTaskFilesList();
+}
+
+async function handleTaskFiles(e){
+  const files = Array.from(e.target.files);
+  if(!files.length) return;
+  const url = getGSUrl();
+  if(!url){ showToast('Set Google Sheets URL first to use file upload'); return; }
+
+  const uploading = document.getElementById('task-file-uploading');
+  const btn = document.getElementById('task-file-btn');
+  if(uploading) uploading.style.display = '';
+  if(btn) btn.disabled = true;
+
+  const taskId = editingTaskId || ('task_' + Date.now());
+
+  for(const file of files){
+    try{
+      showToast('Uploading ' + file.name + '…');
+      const base64 = await fileToBase64(file);
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'text/plain'},
+        body: JSON.stringify({
+          action: 'uploadFile',
+          taskId: taskId,
+          fileName: file.name,
+          mimeType: file.type || 'application/octet-stream',
+          dataBase64: base64
+        })
+      });
+      const data = await resp.json();
+      if(data.ok){
+        taskFileItems.push({
+          fileId:   data.fileId,
+          fileName: data.fileName,
+          fileUrl:  data.fileUrl,
+          mimeType: data.mimeType
+        });
+        showToast('✓ ' + file.name + ' uploaded');
+      } else {
+        showToast('Upload failed: ' + (data.error||'Unknown error'));
+      }
+    } catch(err){
+      showToast('Error: ' + err.message);
+    }
+  }
+
+  if(uploading) uploading.style.display = 'none';
+  if(btn) btn.disabled = false;
+  e.target.value = '';
+  renderTaskFilesList();
+}
+
+function fileToBase64(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload  = e => resolve(e.target.result.split(',')[1]);
+    r.onerror = () => reject(new Error('File read failed'));
+    r.readAsDataURL(file);
+  });
+}
+
+function resetTaskFileItems(){
+  taskFileItems = [];
+  renderTaskFilesList();
+  const empty = document.getElementById('task-files-empty');
+  if(empty) empty.style.display = '';
+}
+
+function loadTaskFileItems(files){
+  taskFileItems = (files || []).map(f => ({...f}));
+  renderTaskFilesList();
+}
 
 // ═══════ PARTS EXPORT (Excel + PDF) ═══════
 

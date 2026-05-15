@@ -1145,6 +1145,29 @@
     </button>
   </div>
 
+  <!-- FILE ATTACHMENTS -->
+  <div class="form-section" id="task-files-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div class="form-section-title" style="margin-bottom:0;">📎 Attachments</div>
+      <button onclick="pickTaskFile()" id="task-file-btn"
+        style="background:var(--brand);color:#fff;border:none;border-radius:var(--rs);
+               padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">
+        + Add File
+      </button>
+    </div>
+    <div id="task-files-list"></div>
+    <div id="task-files-empty" style="font-size:12px;color:var(--n400);padding:6px 0;text-align:center;display:none;">
+      No files attached yet
+    </div>
+    <div id="task-file-uploading" style="display:none;font-size:12px;color:var(--brand);padding:6px 0;">
+      ⟳ Uploading to Google Drive…
+    </div>
+    <input type="file" id="task-file-input" multiple
+      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.png,.jpg,.jpeg"
+      style="position:absolute;width:1px;height:1px;opacity:0;left:-9999px;"
+      onchange="handleTaskFiles(event)">
+  </div>
+
   <div class="form-section">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <div class="form-section-title" style="margin-bottom:0;">Sub-checklist (optional)</div>

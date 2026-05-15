@@ -267,24 +267,42 @@ function updatePINStatusLabel() {
 
 // ── Startup auth check ─────────────────────────────────────
 function authInit() {
+  const appEl  = document.getElementById('app');
+  const lockEl = document.getElementById('screen-lock');
   try {
     if (hasPIN()) {
-      lockApp();
+      // PIN is set — show lock screen, hide app
+      if(lockEl) lockEl.style.display = 'flex';
+      if(appEl)  appEl.style.display  = 'none';
+      _isLocked = true;
+      pinBuffer = '';
+      pinMode   = 'login';
+      // Safely update PIN dots and title
+      try { updatePinDots('lock'); } catch(e){}
+      try {
+        const lt = document.getElementById('lock-title');
+        if(lt) lt.textContent = 'Enter PIN';
+        const le = document.getElementById('lock-error');
+        if(le) le.textContent = '';
+        const lf = document.getElementById('lock-forgot');
+        if(lf) lf.style.display = 'block';
+      } catch(e){}
     } else {
-      document.getElementById('screen-lock').style.display = 'none';
-      document.getElementById('app').style.display = 'flex';
+      // No PIN — show app directly
+      if(lockEl) lockEl.style.display = 'none';
+      if(appEl)  appEl.style.display  = 'flex';
       setTimeout(() => {
         if (!hasPIN()) showToast('💡 Set a PIN in Settings → Security to protect your data');
       }, 3000);
     }
-    updatePINStatusLabel();
+    try { updatePINStatusLabel(); } catch(e){}
   } catch(e) {
-    // Last resort: always show the app even if auth fails
     console.warn('authInit error:', e.message);
-    const app = document.getElementById('app');
-    const lock = document.getElementById('screen-lock');
-    if(app) app.style.display = 'flex';
-    if(lock) lock.style.display = 'none';
+    // Only show app in catch if NO PIN is set
+    if (!hasPIN()) {
+      if(appEl)  appEl.style.display  = 'flex';
+      if(lockEl) lockEl.style.display = 'none';
+    }
   }
 }
 
