@@ -125,7 +125,7 @@ function setupPWA(){
   // ── Clear old PlantLog v4 caches on every load ─────
   if('caches' in window){
     caches.keys().then(keys=>keys.forEach(k=>{
-      if(k!=='plantlog-pro-v5'){
+      if(k!=='plantlog-pro-v6'){
         console.log('[PlantLog] Deleting old cache:',k);
         caches.delete(k);
       }
