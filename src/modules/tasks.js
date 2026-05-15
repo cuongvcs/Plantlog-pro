@@ -48,11 +48,11 @@ function setTaskCat(cat){
   document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
   const tabs=document.getElementById('cat-tabs');
   if(tabs){
-    const idx={'all':0,'work':1,'leave':2,'travel':3,'kanban':4}[cat]??0;
+    const idx={'all':0,'work':1,'leave':2,'travel':3,'kanban':4}[cat]||0;
     tabs.children[idx].classList.add('active');
   }
   // Hide status filter row for kanban
-  const sfRow=document.querySelector('#screen-tasks .task-filter, #screen-tasks .tf-btn')?.parentElement;
+  const sfRowEl=document.querySelector('#screen-tasks .task-filter, #screen-tasks .tf-btn'); const sfRow=sfRowEl?sfRowEl.parentElement:null;
   renderTasks();
 }
 function setStatusFilter(sf){
@@ -261,7 +261,7 @@ function renderTasks(){
   if(taskStatusFilter!=='all')tasks=tasks.filter(tk=>tk.status===taskStatusFilter);
 
   // Text search — title, desc, machine, plan, trip plant
-  const tq=(document.getElementById('task-search')?.value||'').toLowerCase().trim();
+  const tq=((document.getElementById('task-search')||{}).value||'').toLowerCase().trim();
   if(tq)tasks=tasks.filter(tk=>{
     if((tk.title||'').toLowerCase().includes(tq))return true;
     if((tk.desc||'').toLowerCase().includes(tq))return true;
@@ -271,9 +271,8 @@ function renderTasks(){
     return !!(tr&&(tr.plant||'').toLowerCase().includes(tq));
   });
 
-  // Date range filter
-  const tdf=document.getElementById('task-from')?.value||'';
-  const tdt=document.getElementById('task-to')?.value||'';
+  const tdfEl=document.getElementById('task-from'); const tdf=tdfEl?tdfEl.value:'';
+  const tdtEl=document.getElementById('task-to'); const tdt=tdtEl?tdtEl.value:'';
   if(tdf)tasks=tasks.filter(tk=>(tk.dateStart||tk.date||'')>=tdf);
   if(tdt)tasks=tasks.filter(tk=>(tk.dateStart||tk.date||'')<=tdt);
 
@@ -598,7 +597,7 @@ let taskPartsItems = [];  // [{id, partNo, desc, brand, qty, machine, status}]
 function togglePartsSection(){
   const sec = document.getElementById('task-parts-section');
   const btn = document.getElementById('task-parts-toggle-btn');
-  const cat = document.getElementById('task-cat-val')?.value || 'work';
+  const catEl=document.getElementById('task-cat-val'); const cat = catEl?catEl.value:'work';
   if(cat !== 'work') return;
   const open = sec.style.display !== 'none';
   sec.style.display = open ? 'none' : '';

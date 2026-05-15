@@ -89,7 +89,7 @@ function renderTripList(filter){
   let trips=S.trips.filter(tr=>f==='all'||tr.status===f);
 
   // Text search
-  const q=(document.getElementById('trip-search')?.value||'').toLowerCase().trim();
+  const q=((document.getElementById('trip-search')||{}).value||'').toLowerCase().trim();
   if(q)trips=trips.filter(tr=>
     (tr.plant||'').toLowerCase().includes(q)||
     (tr.location||'').toLowerCase().includes(q)||
@@ -98,8 +98,8 @@ function renderTripList(filter){
   );
 
   // Date range
-  const df=document.getElementById('trip-from')?.value||'';
-  const dt=document.getElementById('trip-to')?.value||'';
+  const dfEl=document.getElementById('trip-from'); const df=dfEl?dfEl.value:'';
+  const dtEl=document.getElementById('trip-to'); const dt=dtEl?dtEl.value:'';
   if(df)trips=trips.filter(tr=>(tr.dateEnd||tr.date||'')>=df);
   if(dt)trips=trips.filter(tr=>(tr.date||'')<=dt);
 
