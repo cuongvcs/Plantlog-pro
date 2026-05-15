@@ -255,6 +255,15 @@ function init(){
   // Auth MUST run last — it controls app visibility
   // Do NOT hide app before this — a crash would leave it blank
   safeRun(authInit, 'authInit');
+
+  // Auto-load from Google Sheets on start if URL is configured
+  if(S.gsUrl){
+    setTimeout(()=>{
+      safeRun(()=>{
+        loadFromSheets(true); // true = silent (no toast on success)
+      }, 'autoLoad');
+    }, 800); // Small delay so UI renders first
+  }
 }
 
 // ═══════ SCREEN NAV ═══════
@@ -285,6 +294,11 @@ function showScreen(n){
   if(n==='leave')renderCalendar();
   if(n==='library')renderLibrary();
   if(n==='inspection')renderInspectionScreen();
+  if(n==='settings'&&hasPIN()&&!_settingsUnlocked){
+    _pendingScreen='settings';
+    openModal('modal-pin');
+    return; // Don't navigate yet — openModal will navigate after PIN
+  }
   if(n==='bill-export')buildBillPDFPreview();
 }
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}

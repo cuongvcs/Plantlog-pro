@@ -251,10 +251,10 @@ async function syncToSheets(){
   }
 }
 
-async function loadFromSheets(){
+async function loadFromSheets(silent){
   const url=getGSUrl();
-  if(!url){showToast('Set your Google Sheet URL first');openModal('modal-gsheet');return;}
-  showToast('Loading from Google Sheets…');
+  if(!url){if(!silent){showToast('Set your Google Sheet URL first');openModal('modal-gsheet');}return;}
+  if(!silent)showToast('Loading from Google Sheets…');
   try{
     const data=await gsGet(url,{action:'getAll'});
     if(data.ok&&data.data){
