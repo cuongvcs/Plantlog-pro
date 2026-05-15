@@ -1,5 +1,5 @@
 // PlantLog Pro Service Worker v6
-const CACHE = 'plantlog-pro-v6';
+const CACHE = 'plantlog-pro-v7';
 
 // Only cache LOCAL files — never CDN resources that might fail
 const LOCAL_ASSETS = [

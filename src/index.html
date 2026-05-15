@@ -12,6 +12,31 @@
   <meta name="apple-mobile-web-app-title" content="PlantLog Pro">
   <link rel="manifest" href="./manifest.json">
   <title>PlantLog Pro</title>
+  <script>
+    // Force clear old service workers and caches on load
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        regs.forEach(function(reg){
+          // If this SW is from old plantlog_v4, unregister it
+          reg.update();
+        });
+      });
+    }
+    // Force reload if cached version is stale (key mismatch)
+    var BUILD = 'v7-20260515';
+    if(localStorage.getItem('plpro_build') !== BUILD){
+      localStorage.setItem('plpro_build', BUILD);
+      if(localStorage.getItem('plpro_build_prev')){
+        // Not first run — do a hard cache-busting reload
+        if('caches' in window){
+          caches.keys().then(function(keys){
+            keys.forEach(function(k){ caches.delete(k); });
+          });
+        }
+      }
+      localStorage.setItem('plpro_build_prev','1');
+    }
+  </script>
 
   <!-- ── Styles ─────────────────────────────────────── -->
   <link rel="stylesheet" href="styles.css">

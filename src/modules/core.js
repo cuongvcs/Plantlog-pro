@@ -125,7 +125,7 @@ function setupPWA(){
   // ── Clear old PlantLog v4 caches on every load ─────
   if('caches' in window){
     caches.keys().then(keys=>keys.forEach(k=>{
-      if(k!=='plantlog-pro-v6'){
+      if(k!=='plantlog-pro-v7'){
         console.log('[PlantLog] Deleting old cache:',k);
         caches.delete(k);
       }
@@ -257,13 +257,15 @@ function init(){
   safeRun(authInit, 'authInit');
 
   // Auto-load from Google Sheets on start if URL is configured
-  if(S.gsUrl){
-    setTimeout(()=>{
-      safeRun(()=>{
-        loadFromSheets(true); // true = silent (no toast on success)
-      }, 'autoLoad');
-    }, 800); // Small delay so UI renders first
-  }
+  setTimeout(()=>{
+    try{
+      const gsUrl = (S && S.gsUrl) ? S.gsUrl : '';
+      if(gsUrl && gsUrl.includes('/exec')){
+        showToast('⟳ Syncing data…');
+        loadFromSheets(false);
+      }
+    }catch(e){ console.warn('Auto-load error:', e); }
+  }, 1000);
 }
 
 // ═══════ SCREEN NAV ═══════

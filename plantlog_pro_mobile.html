@@ -10,8 +10,32 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PlantLog Pro">
-  <link rel="manifest" href="./manifest.json">
   <title>PlantLog Pro</title>
+  <script>
+    // Force clear old service workers and caches on load
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        regs.forEach(function(reg){
+          // If this SW is from old plantlog_v4, unregister it
+          reg.update();
+        });
+      });
+    }
+    // Force reload if cached version is stale (key mismatch)
+    var BUILD = 'v7-20260515';
+    if(localStorage.getItem('plpro_build') !== BUILD){
+      localStorage.setItem('plpro_build', BUILD);
+      if(localStorage.getItem('plpro_build_prev')){
+        // Not first run — do a hard cache-busting reload
+        if('caches' in window){
+          caches.keys().then(function(keys){
+            keys.forEach(function(k){ caches.delete(k); });
+          });
+        }
+      }
+      localStorage.setItem('plpro_build_prev','1');
+    }
+  </script>
 
   <!-- ── Styles ─────────────────────────────────────── -->
 <style>
@@ -2681,7 +2705,7 @@ function setupPWA(){
   // ── Clear old PlantLog v4 caches on every load ─────
   if('caches' in window){
     caches.keys().then(keys=>keys.forEach(k=>{
-      if(k!=='plantlog-pro-v6'){
+      if(k!=='plantlog-pro-v7'){
         console.log('[PlantLog] Deleting old cache:',k);
         caches.delete(k);
       }
@@ -2813,13 +2837,15 @@ function init(){
   safeRun(authInit, 'authInit');
 
   // Auto-load from Google Sheets on start if URL is configured
-  if(S.gsUrl){
-    setTimeout(()=>{
-      safeRun(()=>{
-        loadFromSheets(true); // true = silent (no toast on success)
-      }, 'autoLoad');
-    }, 800); // Small delay so UI renders first
-  }
+  setTimeout(()=>{
+    try{
+      const gsUrl = (S && S.gsUrl) ? S.gsUrl : '';
+      if(gsUrl && gsUrl.includes('/exec')){
+        showToast('⟳ Syncing data…');
+        loadFromSheets(false);
+      }
+    }catch(e){ console.warn('Auto-load error:', e); }
+  }, 1000);
 }
 
 // ═══════ SCREEN NAV ═══════
