@@ -267,17 +267,25 @@ function updatePINStatusLabel() {
 
 // ── Startup auth check ─────────────────────────────────────
 function authInit() {
-  if (hasPIN()) {
-    lockApp();
-  } else {
-    document.getElementById('screen-lock').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    // Gentle first-time nudge
-    setTimeout(() => {
-      if (!hasPIN()) showToast('💡 Set a PIN in Settings → Security to protect your data');
-    }, 3000);
+  try {
+    if (hasPIN()) {
+      lockApp();
+    } else {
+      document.getElementById('screen-lock').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      setTimeout(() => {
+        if (!hasPIN()) showToast('💡 Set a PIN in Settings → Security to protect your data');
+      }, 3000);
+    }
+    updatePINStatusLabel();
+  } catch(e) {
+    // Last resort: always show the app even if auth fails
+    console.warn('authInit error:', e.message);
+    const app = document.getElementById('app');
+    const lock = document.getElementById('screen-lock');
+    if(app) app.style.display = 'flex';
+    if(lock) lock.style.display = 'none';
   }
-  updatePINStatusLabel();
 }
 
 // ── pinDel alias (used by old HTML references) ──────────────

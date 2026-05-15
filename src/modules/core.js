@@ -220,18 +220,41 @@ function setLang(l){
 function applyT(){document.querySelectorAll('[data-t]').forEach(el=>{const v=T[S.lang][el.getAttribute('data-t')];if(v)el.textContent=v;});}
 
 // ═══════ INIT ═══════
+function safeRun(fn, name){
+  try { fn(); }
+  catch(e) { console.warn('PlantLog init error in '+name+':', e.message); }
+}
+
 function init(){
-  ld();setupPWA();
-  // ALWAYS initialize calendar vars first — before any render calls
-  const now=new Date();
-  calY=now.getFullYear();
-  calM=now.getMonth();
-  // Hide app initially — authInit() will show it after PIN check
-  document.getElementById('app').style.display='none';
-  document.getElementById('today-date').textContent=now.toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();
-  initSig();renderTemplates();renderDefaultTeam();
-  setLang(S.lang||'en');checkNotifPrompt();updateGSStatus();
+  ld(); setupPWA();
+  // ALWAYS initialize calendar vars first
+  const now = new Date();
+  calY = now.getFullYear();
+  calM  = now.getMonth();
+
+  // Set today label safely
+  const todayEl = document.getElementById('today-date');
+  if(todayEl) todayEl.textContent = now.toLocaleDateString(
+    S.lang==='vi'?'vi-VN':'en-GB',
+    {weekday:'long',day:'numeric',month:'long',year:'numeric'}
+  );
+
+  // Run all render functions safely — a crash in one won't stop the rest
+  safeRun(loadProfile,      'loadProfile');
+  safeRun(renderDash,       'renderDash');
+  safeRun(renderTripList,   'renderTripList');
+  safeRun(renderCalendar,   'renderCalendar');
+  safeRun(renderTasks,      'renderTasks');
+  safeRun(initSig,          'initSig');
+  safeRun(renderTemplates,  'renderTemplates');
+  safeRun(renderDefaultTeam,'renderDefaultTeam');
+  safeRun(() => setLang(S.lang||'en'), 'setLang');
+  safeRun(checkNotifPrompt, 'checkNotifPrompt');
+  safeRun(updateGSStatus,   'updateGSStatus');
+
+  // Auth MUST run last — it controls app visibility
+  // Do NOT hide app before this — a crash would leave it blank
+  safeRun(authInit, 'authInit');
 }
 
 // ═══════ SCREEN NAV ═══════
@@ -374,4 +397,3 @@ Store.on('*',            ({ action }) => {
 });
 
 init();
-authInit();
