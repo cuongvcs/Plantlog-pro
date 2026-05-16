@@ -9,9 +9,9 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="PlantLog Pro">
+  <meta name="apple-mobile-web-app-title" content="VCS PlantLog Pro">
   <link rel="manifest" href="./manifest.json">
-  <title>PlantLog Pro</title>
+  <title>VCS PlantLog Pro</title>
   <script>
     // Force clear old service workers and caches on load
     if('serviceWorker' in navigator){
@@ -23,7 +23,7 @@
       });
     }
     // Force reload if cached version is stale (key mismatch)
-    var BUILD = 'v8-20260516';
+    var BUILD = 'v9-20260517';
     if(localStorage.getItem('plpro_build') !== BUILD){
       localStorage.setItem('plpro_build', BUILD);
       if(localStorage.getItem('plpro_build_prev')){
@@ -716,8 +716,8 @@ input, textarea, select, button { font-family: var(--font); }
 
 <!-- ═══ LOCK SCREEN ═══ -->
 <div id="screen-lock" style="display:none;">
-  <div class="lock-logo">🏭</div>
-  <div class="lock-app-name">PlantLog</div>
+  <div class="lock-logo" style="background:transparent;border:none;padding:0;overflow:hidden;border-radius:14px;"><img src="data:image/png;base64,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" style="width:72px;height:72px;object-fit:cover;" alt="VCS"></div>
+  <div class="lock-app-name">PlantLog Pro</div>
   <div class="lock-sub">Field Visit & Report App</div>
   <div class="lock-title" id="lock-title">Enter PIN</div>
   <div class="pin-dots" id="pin-dots">
@@ -2160,6 +2160,50 @@ input, textarea, select, button { font-family: var(--font); }
 
 
   <!-- ── App modules (order matters) ───────────────── -->
+
+<script>
+// ── Emergency blank screen recovery ──────────────────────
+// If init() fails for any reason, force the app to show
+(function(){
+  var TIMEOUT = 4000; // 4 seconds
+  var timer = setTimeout(function(){
+    var app = document.getElementById('app');
+    var lock = document.getElementById('screen-lock');
+    if(app && app.style.display === 'none' || (app && !app.style.display)){
+      // App still hidden after 4s = something went wrong
+      console.warn('[PlantLog] Recovery: forcing app visible');
+      if(app) app.style.display = 'flex';
+      if(lock) lock.style.display = 'none';
+    }
+  }, TIMEOUT);
+
+  // Cancel recovery if app becomes visible normally
+  var observer = new MutationObserver(function(){
+    var app = document.getElementById('app');
+    if(app && (app.style.display === 'flex' || app.style.display === 'block')){
+      clearTimeout(timer);
+      observer.disconnect();
+    }
+  });
+  document.addEventListener('DOMContentLoaded', function(){
+    var app = document.getElementById('app');
+    if(app) observer.observe(app, {attributes:true, attributeFilter:['style']});
+  });
+
+  // Global error handler — show app if JS crashes
+  window.onerror = function(msg, src, line, col, err){
+    console.error('[PlantLog] JS Error:', msg, 'at', src, line);
+    clearTimeout(timer);
+    var app = document.getElementById('app');
+    var lock = document.getElementById('screen-lock');
+    if(app && app.style.display !== 'flex'){
+      app.style.display = 'flex';
+      if(lock) lock.style.display = 'none';
+    }
+  };
+})();
+</script>
+
 <script>
 'use strict';
 // ====== core.js ======

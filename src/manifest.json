@@ -1,13 +1,13 @@
 {
-  "name": "PlantLog Pro",
+  "name": "VCS PlantLog Pro",
   "short_name": "PlantLog",
-  "description": "Field Visit & Plant Report App for Field Engineers",
+  "description": "VCS Automation \u2014 Field Visit & Plant Report App",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#00843D",
-  "theme_color": "#00843D",
+  "background_color": "#0A5C2D",
+  "theme_color": "#0A5C2D",
   "categories": [
     "productivity",
     "utilities"
