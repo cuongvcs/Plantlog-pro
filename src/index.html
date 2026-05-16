@@ -76,7 +76,7 @@
   <div id="lock-forgot" class="lock-forgot" onclick="pinForgot()" style="display:none;">Forgot PIN?</div>
 </div>
 
-<div id="app">
+<div id="app" style="display:none;">
 
 <!-- ═══════════════ HOME ═══════════════ -->
 <div id="screen-home" class="screen active">
@@ -1012,8 +1012,8 @@
     </div>
   </div>
 
-  <!-- CLASSIFICATION -->
-  <div class="form-section">
+  <!-- CLASSIFICATION (Work only) -->
+  <div class="form-section" id="task-classification-section" style="display:none;">
     <div class="form-section-title">Classification</div>
     <div class="frow">
       <div class="fg">
@@ -1052,7 +1052,7 @@
   </div>
 
   <!-- TRIP LINK (shown for work/travel) -->
-  <div class="form-section" id="task-trip-section">
+  <div class="form-section" id="task-trip-section" style="display:none;">
     <div class="form-section-title">Linked Trip (optional)</div>
     <select class="fsel" id="task-trip"><option value="">None</option></select>
   </div>
@@ -1135,7 +1135,7 @@
   </div>
 
   <!-- Parts toggle button (shown only for Work category) -->
-  <div id="task-parts-toggle-row" style="margin-bottom:8px;">
+  <div id="task-parts-toggle-row" style="display:none;margin-bottom:8px;">
     <button onclick="togglePartsSection()" id="task-parts-toggle-btn"
       style="width:100%;padding:9px;border:1.5px dashed var(--n300);border-radius:var(--rs);
              background:transparent;font-family:var(--font);font-size:12px;font-weight:600;
@@ -1146,7 +1146,7 @@
   </div>
 
   <!-- FILE ATTACHMENTS -->
-  <div class="form-section" id="task-files-section">
+  <div class="form-section" id="task-files-section" style="display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
       <div class="form-section-title" style="margin-bottom:0;">📎 Attachments</div>
       <button onclick="pickTaskFile()" id="task-file-btn"
@@ -1168,7 +1168,7 @@
       onchange="handleTaskFiles(event)">
   </div>
 
-  <div class="form-section">
+  <div class="form-section" id="task-checklist-section" style="display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <div class="form-section-title" style="margin-bottom:0;">Sub-checklist (optional)</div>
       <button onclick="toggleTaskChecklist()" id="task-cl-toggle" style="font-size:11px;color:var(--green);background:none;border:none;cursor:pointer;font-weight:600;">＋ Add items</button>

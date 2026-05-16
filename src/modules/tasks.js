@@ -140,25 +140,38 @@ function toggleReturnFlight(){
 }
 
 function selectTaskCat(cat){
+  // Update active button
   ['work','leave','travel'].forEach(c=>{
     const btn=document.getElementById('cat-'+c);
     if(btn){btn.classList.remove('sel');btn.classList.toggle('sel',c===cat);}
   });
-  if(document.getElementById('task-cat-val'))document.getElementById('task-cat-val').value=cat;
-  // Show/hide trip section (hide for leave)
-  const ts=document.getElementById('task-trip-section');
-  if(ts)ts.style.display=(cat==='leave')?'none':'';
-  // Show flight details only for travel
-  const fs=document.getElementById('task-flight-section');
-  if(fs)fs.style.display=(cat==='travel')?'':'none';
-  // Show parts toggle only for work
-  const pt=document.getElementById('task-parts-toggle-row');
-  if(pt)pt.style.display=(cat==='work')?'':'none';
-  // Hide parts section if switching away from work
-  if(cat!=='work'){
-    const ps=document.getElementById('task-parts-section');
-    if(ps)ps.style.display='none';
-  }
+  const catEl=document.getElementById('task-cat-val');
+  if(catEl) catEl.value=cat;
+
+  // Helper: show/hide element by id
+  const show=(id,visible)=>{const e=document.getElementById(id);if(e)e.style.display=visible?'':'none';};
+
+  // Classification (priority/period/machine/plan) — work only
+  const classEl=document.getElementById('task-classification-section');
+  if(classEl) classEl.style.display=(cat==='work')?'':'none';
+
+  // Trip link — work and travel only
+  show('task-trip-section', cat!=='leave');
+
+  // Flight details — travel only
+  show('task-flight-section', cat==='travel');
+  if(cat!=='travel') resetTaskFlightFields();
+
+  // Parts toggle + section — work only
+  show('task-parts-toggle-row', cat==='work');
+  if(cat!=='work') show('task-parts-section', false);
+
+  // Files — work only
+  show('task-files-section', cat==='work');
+
+  // Sub-checklist — work only
+  const clEl=document.getElementById('task-checklist-section');
+  if(clEl) clEl.style.display=(cat==='work')?'':'none';
 }
 function getSelectedCat(){
   for(const c of['work','leave','travel']){

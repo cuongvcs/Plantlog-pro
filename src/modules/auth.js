@@ -269,41 +269,37 @@ function updatePINStatusLabel() {
 function authInit() {
   const appEl  = document.getElementById('app');
   const lockEl = document.getElementById('screen-lock');
-  try {
-    if (hasPIN()) {
-      // PIN is set — show lock screen, hide app
-      if(lockEl) lockEl.style.display = 'flex';
-      if(appEl)  appEl.style.display  = 'none';
-      _isLocked = true;
-      pinBuffer = '';
-      pinMode   = 'login';
-      // Safely update PIN dots and title
-      try { updatePinDots('lock'); } catch(e){}
+
+  // App starts hidden — we MUST show it either behind lock or directly
+  function showApp()  { if(appEl)  appEl.style.display  = 'flex'; }
+  function showLock() { if(lockEl) lockEl.style.display = 'flex'; }
+  function hideLock() { if(lockEl) lockEl.style.display = 'none'; }
+
+  if (hasPIN()) {
+    // Show lock screen — app stays hidden behind it
+    showLock();
+    // Don't show app — user must unlock first
+    _isLocked = true;
+    pinBuffer = '';
+    pinMode   = 'login';
+    const lt = document.getElementById('lock-title');
+    if(lt) lt.textContent = 'Enter PIN';
+    const le = document.getElementById('lock-error');
+    if(le) le.textContent = '';
+    const lf = document.getElementById('lock-forgot');
+    if(lf) lf.style.display = 'block';
+    try { updatePinDots('lock'); } catch(e){}
+  } else {
+    // No PIN — show app directly
+    hideLock();
+    showApp();
+    setTimeout(() => {
       try {
-        const lt = document.getElementById('lock-title');
-        if(lt) lt.textContent = 'Enter PIN';
-        const le = document.getElementById('lock-error');
-        if(le) le.textContent = '';
-        const lf = document.getElementById('lock-forgot');
-        if(lf) lf.style.display = 'block';
-      } catch(e){}
-    } else {
-      // No PIN — show app directly
-      if(lockEl) lockEl.style.display = 'none';
-      if(appEl)  appEl.style.display  = 'flex';
-      setTimeout(() => {
-        if (!hasPIN()) showToast('💡 Set a PIN in Settings → Security to protect your data');
-      }, 3000);
-    }
-    try { updatePINStatusLabel(); } catch(e){}
-  } catch(e) {
-    console.warn('authInit error:', e.message);
-    // Only show app in catch if NO PIN is set
-    if (!hasPIN()) {
-      if(appEl)  appEl.style.display  = 'flex';
-      if(lockEl) lockEl.style.display = 'none';
-    }
+        if (!hasPIN()) showToast('💡 Tip: Set a PIN in Settings to protect your data');
+      } catch(e) {}
+    }, 3000);
   }
+  try { updatePINStatusLabel(); } catch(e){}
 }
 
 // ── pinDel alias (used by old HTML references) ──────────────

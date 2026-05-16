@@ -1183,7 +1183,7 @@ input, textarea, select, button { font-family: var(--font); }
   <div id="lock-forgot" class="lock-forgot" onclick="pinForgot()" style="display:none;">Forgot PIN?</div>
 </div>
 
-<div id="app">
+<div id="app" style="display:none;">
 
 <!-- ═══════════════ HOME ═══════════════ -->
 <div id="screen-home" class="screen active">
@@ -2119,8 +2119,8 @@ input, textarea, select, button { font-family: var(--font); }
     </div>
   </div>
 
-  <!-- CLASSIFICATION -->
-  <div class="form-section">
+  <!-- CLASSIFICATION (Work only) -->
+  <div class="form-section" id="task-classification-section" style="display:none;">
     <div class="form-section-title">Classification</div>
     <div class="frow">
       <div class="fg">
@@ -2159,7 +2159,7 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 
   <!-- TRIP LINK (shown for work/travel) -->
-  <div class="form-section" id="task-trip-section">
+  <div class="form-section" id="task-trip-section" style="display:none;">
     <div class="form-section-title">Linked Trip (optional)</div>
     <select class="fsel" id="task-trip"><option value="">None</option></select>
   </div>
@@ -2242,7 +2242,7 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 
   <!-- Parts toggle button (shown only for Work category) -->
-  <div id="task-parts-toggle-row" style="margin-bottom:8px;">
+  <div id="task-parts-toggle-row" style="display:none;margin-bottom:8px;">
     <button onclick="togglePartsSection()" id="task-parts-toggle-btn"
       style="width:100%;padding:9px;border:1.5px dashed var(--n300);border-radius:var(--rs);
              background:transparent;font-family:var(--font);font-size:12px;font-weight:600;
@@ -2253,7 +2253,7 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 
   <!-- FILE ATTACHMENTS -->
-  <div class="form-section" id="task-files-section">
+  <div class="form-section" id="task-files-section" style="display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
       <div class="form-section-title" style="margin-bottom:0;">📎 Attachments</div>
       <button onclick="pickTaskFile()" id="task-file-btn"
@@ -2275,7 +2275,7 @@ input, textarea, select, button { font-family: var(--font); }
       onchange="handleTaskFiles(event)">
   </div>
 
-  <div class="form-section">
+  <div class="form-section" id="task-checklist-section" style="display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <div class="form-section-title" style="margin-bottom:0;">Sub-checklist (optional)</div>
       <button onclick="toggleTaskChecklist()" id="task-cl-toggle" style="font-size:11px;color:var(--green);background:none;border:none;cursor:pointer;font-weight:600;">＋ Add items</button>
@@ -3288,41 +3288,37 @@ function updatePINStatusLabel() {
 function authInit() {
   const appEl  = document.getElementById('app');
   const lockEl = document.getElementById('screen-lock');
-  try {
-    if (hasPIN()) {
-      // PIN is set — show lock screen, hide app
-      if(lockEl) lockEl.style.display = 'flex';
-      if(appEl)  appEl.style.display  = 'none';
-      _isLocked = true;
-      pinBuffer = '';
-      pinMode   = 'login';
-      // Safely update PIN dots and title
-      try { updatePinDots('lock'); } catch(e){}
+
+  // App starts hidden — we MUST show it either behind lock or directly
+  function showApp()  { if(appEl)  appEl.style.display  = 'flex'; }
+  function showLock() { if(lockEl) lockEl.style.display = 'flex'; }
+  function hideLock() { if(lockEl) lockEl.style.display = 'none'; }
+
+  if (hasPIN()) {
+    // Show lock screen — app stays hidden behind it
+    showLock();
+    // Don't show app — user must unlock first
+    _isLocked = true;
+    pinBuffer = '';
+    pinMode   = 'login';
+    const lt = document.getElementById('lock-title');
+    if(lt) lt.textContent = 'Enter PIN';
+    const le = document.getElementById('lock-error');
+    if(le) le.textContent = '';
+    const lf = document.getElementById('lock-forgot');
+    if(lf) lf.style.display = 'block';
+    try { updatePinDots('lock'); } catch(e){}
+  } else {
+    // No PIN — show app directly
+    hideLock();
+    showApp();
+    setTimeout(() => {
       try {
-        const lt = document.getElementById('lock-title');
-        if(lt) lt.textContent = 'Enter PIN';
-        const le = document.getElementById('lock-error');
-        if(le) le.textContent = '';
-        const lf = document.getElementById('lock-forgot');
-        if(lf) lf.style.display = 'block';
-      } catch(e){}
-    } else {
-      // No PIN — show app directly
-      if(lockEl) lockEl.style.display = 'none';
-      if(appEl)  appEl.style.display  = 'flex';
-      setTimeout(() => {
-        if (!hasPIN()) showToast('💡 Set a PIN in Settings → Security to protect your data');
-      }, 3000);
-    }
-    try { updatePINStatusLabel(); } catch(e){}
-  } catch(e) {
-    console.warn('authInit error:', e.message);
-    // Only show app in catch if NO PIN is set
-    if (!hasPIN()) {
-      if(appEl)  appEl.style.display  = 'flex';
-      if(lockEl) lockEl.style.display = 'none';
-    }
+        if (!hasPIN()) showToast('💡 Tip: Set a PIN in Settings to protect your data');
+      } catch(e) {}
+    }, 3000);
   }
+  try { updatePINStatusLabel(); } catch(e){}
 }
 
 // ── pinDel alias (used by old HTML references) ──────────────
@@ -3998,25 +3994,38 @@ function toggleReturnFlight(){
 }
 
 function selectTaskCat(cat){
+  // Update active button
   ['work','leave','travel'].forEach(c=>{
     const btn=document.getElementById('cat-'+c);
     if(btn){btn.classList.remove('sel');btn.classList.toggle('sel',c===cat);}
   });
-  if(document.getElementById('task-cat-val'))document.getElementById('task-cat-val').value=cat;
-  // Show/hide trip section (hide for leave)
-  const ts=document.getElementById('task-trip-section');
-  if(ts)ts.style.display=(cat==='leave')?'none':'';
-  // Show flight details only for travel
-  const fs=document.getElementById('task-flight-section');
-  if(fs)fs.style.display=(cat==='travel')?'':'none';
-  // Show parts toggle only for work
-  const pt=document.getElementById('task-parts-toggle-row');
-  if(pt)pt.style.display=(cat==='work')?'':'none';
-  // Hide parts section if switching away from work
-  if(cat!=='work'){
-    const ps=document.getElementById('task-parts-section');
-    if(ps)ps.style.display='none';
-  }
+  const catEl=document.getElementById('task-cat-val');
+  if(catEl) catEl.value=cat;
+
+  // Helper: show/hide element by id
+  const show=(id,visible)=>{const e=document.getElementById(id);if(e)e.style.display=visible?'':'none';};
+
+  // Classification (priority/period/machine/plan) — work only
+  const classEl=document.getElementById('task-classification-section');
+  if(classEl) classEl.style.display=(cat==='work')?'':'none';
+
+  // Trip link — work and travel only
+  show('task-trip-section', cat!=='leave');
+
+  // Flight details — travel only
+  show('task-flight-section', cat==='travel');
+  if(cat!=='travel') resetTaskFlightFields();
+
+  // Parts toggle + section — work only
+  show('task-parts-toggle-row', cat==='work');
+  if(cat!=='work') show('task-parts-section', false);
+
+  // Files — work only
+  show('task-files-section', cat==='work');
+
+  // Sub-checklist — work only
+  const clEl=document.getElementById('task-checklist-section');
+  if(clEl) clEl.style.display=(cat==='work')?'':'none';
 }
 function getSelectedCat(){
   for(const c of['work','leave','travel']){
