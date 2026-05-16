@@ -20,10 +20,17 @@ function hashPIN(pin) {
   }
   return 'fnv_' + h.toString(16).padStart(8,'0');
 }
-async function hashPINAsync(pin) {
-  // Always use FNV for consistency across all devices
-  // (crypto.subtle not reliable on all mobile browsers)
-  return hashPIN(pin);
+async function hashPINAsync(pin, salt) {
+  // Try crypto.subtle SHA-256 for compatibility with older stored hashes
+  const s = (salt !== undefined) ? salt : 'plprosalt_';
+  try {
+    const enc = new TextEncoder().encode(s + pin);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    return 'sha_' + hex;
+  } catch(e) {
+    return hashPIN(pin); // FNV fallback
+  }
 }
 
 function getStoredHash() {
@@ -103,44 +110,41 @@ function updatePinDots(which) {
 function checkPIN() {
   const stored = getStoredHash();
   const entered = pinBuffer;
-
-  // Clear buffer immediately to prevent double-submit
-  pinBuffer = '';
+  pinBuffer = ''; // clear immediately
 
   if (!stored) { unlockApp(); return; }
 
-  // Compute hash of what was entered (FNV — works on all devices)
-  const enteredHash = hashPIN(entered);
-
-  // Accept match against fnv_ hash (new format)
-  // Also accept if stored somehow has sha_ prefix but fnv matches the digits
-  const isMatch = (enteredHash === stored) ||
-                  (stored.startsWith('sha_') && enteredHash === hashPIN(entered)) ||
-                  (stored === enteredHash);
-
-  if (enteredHash === stored || (!stored.startsWith('fnv_') && !stored.startsWith('sha_') && stored === enteredHash)) {
-    unlockApp();
-    updatePinDots('lock');
-    return;
+  // Try FNV hash first (current format)
+  const fnvHash = hashPIN(entered);
+  if (fnvHash === stored) {
+    unlockApp(); updatePinDots('lock'); return;
   }
 
-  // If stored is sha_ format, also try FNV match
-  // (handles case where PIN was stored with old async hash)
+  // Try all SHA-256 variants (from older app versions)
+  // This handles PINs set with old code using crypto.subtle
+  const salts = ['plprosalt_', 'pl4salt_', 'plsalt_', ''];
+  let matched = false;
+
   if (stored.startsWith('sha_')) {
-    // Upgrade: re-store as FNV so next login works cleanly
-    hashPINAsync(entered).then(shaHash => {
-      if (shaHash === stored || enteredHash === stored) {
-        // Store as FNV going forward
-        storeHash(enteredHash);
-        unlockApp();
-        updatePinDots('lock');
-      } else {
-        showPINError();
-      }
-    }).catch(() => showPINError());
+    // Try each salt variant
+    const shaChecks = salts.map(salt =>
+      hashPINAsync(entered, salt).then(h => {
+        if (h === stored && !matched) {
+          matched = true;
+          // Upgrade to FNV so future logins are instant
+          storeHash(fnvHash);
+          unlockApp();
+          updatePinDots('lock');
+        }
+      }).catch(() => {})
+    );
+    Promise.all(shaChecks).then(() => {
+      if (!matched) showPINError();
+    });
     return;
   }
 
+  // No match found
   showPINError();
 }
 

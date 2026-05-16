@@ -812,7 +812,9 @@ function renderTaskFilesList(){
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:var(--n800);
                     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.fileName}</div>
-        <div style="font-size:10px;color:var(--n400);">${f.fileId?'Saved to Google Drive':'Pending upload…'}</div>
+        <div style="font-size:10px;color:${f.fileId?'var(--brand)':'var(--amber)'};">
+          ${f.fileId?'✓ Saved to Google Drive':'⚠ Local only — no Drive URL'}
+        </div>
       </div>
       ${f.fileUrl ? `<button onclick="window.open('${f.fileUrl}','_blank')"
         style="flex-shrink:0;padding:5px 10px;border:1px solid var(--brand);border-radius:var(--rs);
@@ -833,7 +835,7 @@ async function handleTaskFiles(e){
   const files = Array.from(e.target.files);
   if(!files.length) return;
   const url = getGSUrl();
-  if(!url){ showToast('Set Google Sheets URL first to use file upload'); return; }
+  const canUpload = url && url.includes('/exec');
 
   const uploading = document.getElementById('task-file-uploading');
   const btn = document.getElementById('task-file-btn');
@@ -844,55 +846,47 @@ async function handleTaskFiles(e){
 
   for(const file of files){
     try{
-      // Check file size — Apps Script has a 50MB limit
       if(file.size > 10 * 1024 * 1024){
         showToast('File too large (max 10MB): ' + file.name);
         continue;
       }
-      showToast('Uploading ' + file.name + '…');
-      const base64 = await fileToBase64(file);
-      const payload = JSON.stringify({
-        action: 'uploadFile',
-        taskId: taskId,
-        fileName: file.name,
-        mimeType: file.type || 'application/octet-stream',
-        dataBase64: base64
-      });
-      // Apps Script requires Content-Type: text/plain to avoid CORS preflight
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: {'Content-Type': 'text/plain'},
-        body: payload
-      });
-      let data;
-      try { data = await resp.json(); }
-      catch(e) { data = {ok:false, error:'Invalid response from server'}; }
-      if(data && data.ok){
-        taskFileItems.push({
-          fileId:   data.fileId,
-          fileName: data.fileName,
-          fileUrl:  data.fileUrl,
-          mimeType: data.mimeType || file.type
-        });
-        showToast('✓ ' + file.name + ' saved to Drive');
-      } else {
-        // Save locally even if upload fails
-        taskFileItems.push({
-          fileId: '',
+      if(canUpload){
+        showToast('Uploading ' + file.name + '…');
+        const base64 = await fileToBase64(file);
+        const payload = JSON.stringify({
+          action: 'uploadFile',
+          taskId: taskId,
           fileName: file.name,
-          fileUrl: '',
-          mimeType: file.type
+          mimeType: file.type || 'application/octet-stream',
+          dataBase64: base64
         });
-        showToast('⚠ Could not upload to Drive — saved locally only');
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {'Content-Type': 'text/plain'},
+          body: payload
+        });
+        let data;
+        try { data = await resp.json(); }
+        catch(e) { data = {ok:false, error:'Invalid response'}; }
+        if(data && data.ok){
+          taskFileItems.push({
+            fileId:   data.fileId,
+            fileName: data.fileName,
+            fileUrl:  data.fileUrl,
+            mimeType: data.mimeType || file.type
+          });
+          showToast('✓ ' + file.name + ' saved to Drive');
+        } else {
+          taskFileItems.push({fileId:'', fileName:file.name, fileUrl:'', mimeType:file.type});
+          showToast('⚠ Upload failed: ' + (data?data.error:'No response'));
+        }
+      } else {
+        // No GS URL — save file reference locally only
+        taskFileItems.push({fileId:'', fileName:file.name, fileUrl:'', mimeType:file.type||''});
+        showToast('📎 ' + file.name + ' added (set GS URL to upload to Drive)');
       }
     } catch(err){
-      // Save reference locally so it's not lost
-      taskFileItems.push({
-        fileId: '',
-        fileName: file.name,
-        fileUrl: '',
-        mimeType: file.type||''
-      });
+      taskFileItems.push({fileId:'', fileName:file.name, fileUrl:'', mimeType:file.type||''});
       showToast('⚠ Upload error — file saved locally: ' + (err.message||''));
     }
   }
