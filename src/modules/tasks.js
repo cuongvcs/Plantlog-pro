@@ -878,7 +878,9 @@ async function handleTaskFiles(e){
           showToast('✓ ' + file.name + ' saved to Drive');
         } else {
           taskFileItems.push({fileId:'', fileName:file.name, fileUrl:'', mimeType:file.type});
-          showToast('⚠ Upload failed: ' + (data?data.error:'No response'));
+          const errMsg = data ? (data.error||JSON.stringify(data)) : 'No response from server';
+          showToast('⚠ ' + file.name + ' failed: ' + errMsg.substring(0,80));
+          console.error('Upload error:', errMsg, 'Response:', data);
         }
       } else {
         // No GS URL — save file reference locally only

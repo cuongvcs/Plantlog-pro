@@ -142,6 +142,7 @@ async function syncToSheets(){
       checklistJson: JSON.stringify(cl),
       partsJson:     tk.parts&&tk.parts.length?JSON.stringify(tk.parts):'',
       flightJson:    tk.flight?JSON.stringify(tk.flight):'',
+      filesJson:     tk.files&&tk.files.length?JSON.stringify(tk.files):'',
       createdAt:     s(tk.createdAt),
       updatedAt:     s(tk.updatedAt)||new Date().toISOString()
     };
@@ -355,6 +356,7 @@ async function loadFromSheets(silent){
             status:       ss(tk.Status)||'pending',
             checklist:    cl,
             flight:       tk.FlightJson?(()=>{try{return JSON.parse(ss(tk.FlightJson));}catch(e){return null;}})():null,
+            files:        tk.FilesJson?(()=>{try{return JSON.parse(ss(tk.FilesJson));}catch(e){return [];}})():[],
             date:         ds,
             time:         ts,
             createdAt:    ss(tk.CreatedAt),
