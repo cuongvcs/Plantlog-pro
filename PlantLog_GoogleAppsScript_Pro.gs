@@ -18,7 +18,7 @@ const SN={TRIPS:'Trips',TASKS:'Tasks',LEAVE:'Leave',REPORTS:'Reports',
 
 const COLS={
   trips:    ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','CreatedAt'],
-  tasks:    ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','FlightJson','CreatedAt','UpdatedAt'],
+  tasks:    ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','PartsJson','FlightJson','FilesJson','CreatedAt','UpdatedAt'],
   leave:    ['Date','Type','Note'],
   reports:  ['TripID','SignoffSummary','SignoffResult','SignoffRemarks','SignedAt'],
   checklist:['TripID','ItemID','Name','Result','Note'],
@@ -139,7 +139,10 @@ function syncAll(p){
       t.dateStart,t.timeStart,t.dateEnd,t.timeEnd,
       t.hours,t.minutes,
       t.priority,t.period,t.machine,t.plan,t.tripId,t.status,
-      t.checklist,t.checklistJson, t.flightJson||'',
+      t.checklist,t.checklistJson,
+      t.partsJson||'',
+      t.flightJson||'',
+      t.filesJson||'',
       t.createdAt,t.updatedAt
     ]));r.tasks=p.tasks.length;
   }
