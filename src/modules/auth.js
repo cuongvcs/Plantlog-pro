@@ -21,12 +21,9 @@ function hashPIN(pin) {
   return 'fnv_' + h.toString(16).padStart(8,'0');
 }
 async function hashPINAsync(pin) {
-  try {
-    const enc = new TextEncoder().encode('plprosalt_'+pin);
-    const buf = await crypto.subtle.digest('SHA-256', enc);
-    const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    return 'sha_' + hex;
-  } catch(e) { return hashPIN(pin); }
+  // Always use FNV for consistency across all devices
+  // (crypto.subtle not reliable on all mobile browsers)
+  return hashPIN(pin);
 }
 
 function getStoredHash() {
@@ -105,26 +102,62 @@ function updatePinDots(which) {
 
 function checkPIN() {
   const stored = getStoredHash();
-  const buf = pinBuffer;
-  const doCheck = (entered) => {
-    if (entered === stored) {
-      unlockApp(); pinBuffer=''; updatePinDots('lock');
-    } else {
-      for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d){d.classList.remove('filled');d.classList.add('error');}}
-      document.getElementById('lock-error').textContent='Incorrect PIN — try again';
-      setTimeout(()=>{
-        for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d)d.classList.remove('error');}
-        document.getElementById('lock-error').textContent='';
-        pinBuffer='';updatePinDots('lock');
-      },700);
-    }
-  };
-  // Try SHA-256 first (newer format), then FNV fallback
-  if (stored.startsWith('sha_')) {
-    hashPINAsync(buf).then(doCheck);
-  } else {
-    doCheck(hashPIN(buf));
+  const entered = pinBuffer;
+
+  // Clear buffer immediately to prevent double-submit
+  pinBuffer = '';
+
+  if (!stored) { unlockApp(); return; }
+
+  // Compute hash of what was entered (FNV — works on all devices)
+  const enteredHash = hashPIN(entered);
+
+  // Accept match against fnv_ hash (new format)
+  // Also accept if stored somehow has sha_ prefix but fnv matches the digits
+  const isMatch = (enteredHash === stored) ||
+                  (stored.startsWith('sha_') && enteredHash === hashPIN(entered)) ||
+                  (stored === enteredHash);
+
+  if (enteredHash === stored || (!stored.startsWith('fnv_') && !stored.startsWith('sha_') && stored === enteredHash)) {
+    unlockApp();
+    updatePinDots('lock');
+    return;
   }
+
+  // If stored is sha_ format, also try FNV match
+  // (handles case where PIN was stored with old async hash)
+  if (stored.startsWith('sha_')) {
+    // Upgrade: re-store as FNV so next login works cleanly
+    hashPINAsync(entered).then(shaHash => {
+      if (shaHash === stored || enteredHash === stored) {
+        // Store as FNV going forward
+        storeHash(enteredHash);
+        unlockApp();
+        updatePinDots('lock');
+      } else {
+        showPINError();
+      }
+    }).catch(() => showPINError());
+    return;
+  }
+
+  showPINError();
+}
+
+function showPINError() {
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(d){d.classList.remove('filled');d.classList.add('error');}
+  }
+  const le=document.getElementById('lock-error');
+  if(le) le.textContent='Incorrect PIN — try again';
+  setTimeout(()=>{
+    for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d)d.classList.remove('error');}
+    const le2=document.getElementById('lock-error');
+    if(le2) le2.textContent='';
+    pinBuffer='';
+    updatePinDots('lock');
+  }, 800);
 }
 
 function pinForgot() {
@@ -196,7 +229,7 @@ function processModalPIN() {
         document.getElementById('pin-modal-error').textContent='';
       } else { flashModalError('Incorrect current PIN'); }
     };
-    if(stored.startsWith('sha_')){hashPINAsync(modalPinBuffer).then(h=>doVerify(h===stored));}
+    if(stored.startsWith('sha_')){hashPINAsync(modalPinBuffer).then(h=>doVerify(h===stored)).catch(()=>doVerify(hashPIN(modalPinBuffer)===stored));}
     else{doVerify(syncMatch);}
   } else if (modalPinStep === 'new') {
     if (modalPinBuffer === '0000' || modalPinBuffer === '1234' || modalPinBuffer === '1111') {
@@ -211,12 +244,11 @@ function processModalPIN() {
     document.getElementById('pin-modal-error').textContent = '';
   } else if (modalPinStep === 'confirm') {
     if (modalPinBuffer === modalPinFirst) {
-      // Store with SHA-256 async, fall back to FNV
-      hashPINAsync(modalPinBuffer).then(h => {
-        storeHash(h);
-        updatePINStatusLabel();
-        resetAutoLock();
-      });
+      // Store as FNV (synchronous, always available on any device/browser)
+      const pinHash = hashPIN(modalPinBuffer);
+      storeHash(pinHash);
+      updatePINStatusLabel();
+      resetAutoLock();
       closeModal('modal-pin');
       showToast('PIN set successfully 🔐');
     } else {

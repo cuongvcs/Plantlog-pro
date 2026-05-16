@@ -96,7 +96,7 @@ function log_(a,e,id,d){
 
 function doGet(e){
   try{
-    const act=(e.parameter&&e.parameter.action)||'getAll';
+    const act=(e.parameter&&e.parameter.action)||'ping';
     const s=db_();
     if(act==='ping')return json_({ok:true,result:{message:'PlantLog API running',ts:new Date().toISOString()}});
     const d={};
@@ -112,9 +112,12 @@ function doGet(e){
 function doPost(e){
   try{
     const body=JSON.parse(e.postData?e.postData.contents:'{}');
-    const act=body.action,p=body.payload;
-    if(act==='syncAll')return json_({ok:true,result:syncAll(p)});
-    if(act==='ping')return json_({ok:true,result:{message:'PlantLog API running'}});
+    const act=body.action;
+    // syncAll uses body.payload, file actions use body directly
+    if(act==='syncAll')  return json_({ok:true,result:syncAll(body.payload)});
+    if(act==='ping')     return json_({ok:true,result:{message:'PlantLog Pro API running'}});
+    if(act==='uploadFile') return json_(uploadFileToDrive(body));
+    if(act==='listFiles')  return json_(listTaskFiles(body));
     return json_({ok:false,error:'Unknown action: '+act});
   }catch(x){return json_({ok:false,error:x.message+'|'+x.stack});}
 }
