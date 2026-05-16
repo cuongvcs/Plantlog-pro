@@ -219,12 +219,18 @@ function uploadFileToDrive(p){
     // Create file in folder
     var file = folder.createFile(blob);
     file.setDescription('PlantLog Task: ' + (p.taskId||''));
+    // Make file accessible to anyone with the link
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    // Use direct download URL format for better compatibility
+    var fileId = file.getId();
+    var viewUrl = 'https://drive.google.com/file/d/' + fileId + '/view';
 
     return {
-      ok: true,
-      fileId:   file.getId(),
+      ok:       true,
+      fileId:   fileId,
       fileName: file.getName(),
-      fileUrl:  file.getUrl(),
+      fileUrl:  viewUrl,
       mimeType: p.mimeType,
       taskId:   p.taskId
     };
@@ -261,6 +267,22 @@ function listTaskFiles(p){
   } catch(e){
     return {ok:false, error:e.message};
   }
+}
+
+/**
+ * Run this to test file upload is working.
+ * Check Execution Log for result.
+ */
+function testUpload(){
+  var result = uploadFileToDrive({
+    taskId: 'test_123',
+    fileName: 'test.txt',
+    mimeType: 'text/plain',
+    dataBase64: Utilities.base64Encode('PlantLog test file')
+  });
+  Logger.log(JSON.stringify(result));
+  if(result.ok) Logger.log('SUCCESS! File URL: ' + result.fileUrl);
+  else Logger.log('FAILED: ' + result.error);
 }
 
 function json_(o){return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);}

@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PlantLog Pro">
+  <link rel="manifest" href="./manifest.json">
   <title>PlantLog Pro</title>
   <script>
     // Force clear old service workers and caches on load
@@ -2753,18 +2754,52 @@ function setupPWA(){
   // Service Worker for offline
   if('serviceWorker' in navigator){
     // Try relative sw.js first (GitHub Pages), fall back to inline
-    navigator.serviceWorker.register('./sw.js').catch(()=>{
-      // Inline SW for single-file mode
-      const swCode=`const CACHE='pl4';const A=['./'];self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(A)).then(()=>self.skipWaiting()));});self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim());});self.addEventListener('fetch',e=>{if(e.request.url.includes('script.google.com'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
-      const swBlob=new Blob([swCode],{type:'application/javascript'});
-      navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
-    });
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => {
+        // SW registered — check for updates
+        reg.update();
+        console.log('[PlantLog] SW registered:', reg.scope);
+      })
+      .catch(err => {
+        console.warn('[PlantLog] SW registration failed:', err);
+        // For single-file mode: try registering an inline SW
+        // This enables PWA install prompt on Android
+        try {
+          const swCode = [
+            "const C='plpro-v8';",
+            "self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./'])).then(()=>self.skipWaiting()));});",
+            "self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});",
+            "self.addEventListener('fetch',e=>{",
+            "  if(e.request.url.includes('script.google.com')||e.request.url.includes('googleapis.com'))return;",
+            "  if(e.request.mode==='navigate'){",
+            "    e.respondWith(fetch(e.request).catch(()=>caches.match('./index.html')||caches.match('./')));",
+            "    return;",
+            "  }",
+            "  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));",
+            "});"
+          ].join('\n');
+          const blob = new Blob([swCode], {type:'application/javascript'});
+          const url = URL.createObjectURL(blob);
+          navigator.serviceWorker.register(url).catch(e=>console.warn('[PlantLog] Inline SW failed:',e));
+        } catch(e2) {}
+      });
   }
 
-  // Install prompt
-  window.addEventListener('beforeinstallprompt',e=>{
-    e.preventDefault();deferredPrompt=e;
-    document.getElementById('pwa-install-bar').style.display='flex';
+  // Install prompt — fires when app meets PWA criteria
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log('[PlantLog] Install prompt available');
+    const bar = document.getElementById('pwa-install-bar');
+    if(bar) bar.style.display = 'flex';
+  });
+  // Also listen for successful install
+  window.addEventListener('appinstalled', () => {
+    console.log('[PlantLog] App installed!');
+    deferredPrompt = null;
+    const bar = document.getElementById('pwa-install-bar');
+    if(bar) bar.style.display = 'none';
+    showToast('✓ PlantLog Pro installed!');
   });
   window.addEventListener('appinstalled',()=>{
     document.getElementById('pwa-install-bar').style.display='none';
@@ -4768,7 +4803,9 @@ async function handleTaskFiles(e){
           showToast('✓ ' + file.name + ' saved to Drive');
         } else {
           taskFileItems.push({fileId:'', fileName:file.name, fileUrl:'', mimeType:file.type});
-          showToast('⚠ Upload failed: ' + (data?data.error:'No response'));
+          const errMsg = data ? (data.error||JSON.stringify(data)) : 'No response from server';
+          showToast('⚠ ' + file.name + ' failed: ' + errMsg.substring(0,80));
+          console.error('Upload error:', errMsg, 'Response:', data);
         }
       } else {
         // No GS URL — save file reference locally only
