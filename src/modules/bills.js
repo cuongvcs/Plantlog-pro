@@ -441,7 +441,9 @@ function exportBillsPDF() {
   const safeName=reportTitle.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,40);
   const safeName2=reportTitle.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,40);
   const bFileName=`Bills_${safeName2}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.pdf`;
-  showPdfSaveOptions(doc, bFileName, 'bills');
+  // Pass tripId so the Drive upload links to correct trip
+  const billsTripId = (tripFilter && tripFilter !== 'all') ? tripFilter : (curTrip||null);
+  showPdfSaveOptions(doc, bFileName, 'bills', billsTripId);
 }
 
 function emailBillsReport() {
