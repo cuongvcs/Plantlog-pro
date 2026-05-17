@@ -541,6 +541,7 @@ function viewBillPhoto(billId, photoIdx){
 function openAddBill(tripId){
   editingBillId=null;
   tmpBillPhotos=[];
+  _savingBill=false;  // reset guard when opening modal
   document.getElementById('bill-modal-title').textContent='Add Bill';
   document.getElementById('bill-edit-id').textContent='';
   document.getElementById('bill-save-btn').textContent='💾 Save Bill';
@@ -563,6 +564,7 @@ function openAddBill(tripId){
 function openEditBill(id){
   const b=S.bills.find(x=>x.id===id);if(!b)return;
   editingBillId=id;
+  _savingBill=false;  // reset guard when opening modal
   // Load photos: use photoMeta (with Drive URLs) if available, else fall back to photos array
   if(b.photoMeta && b.photoMeta.length){
     tmpBillPhotos = b.photoMeta.map(m=>({src:m.src||m.driveUrl, driveUrl:m.driveUrl||'', fileId:m.fileId||''}));
@@ -599,7 +601,8 @@ async function saveBill(){
   _savingBill = true;
 
   const saveBtn = document.getElementById('bill-save-btn');
-  const origText = saveBtn ? saveBtn.textContent : '';
+  // origText captured below after origBtnText
+  const origBtnText = saveBtn ? saveBtn.textContent : '💾 Save Bill';
   if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = '⟳ Saving…'; }
 
   try{
@@ -608,7 +611,7 @@ async function saveBill(){
     if(!detail||!amount){
       showToast('Detail and amount are required');
       _savingBill=false;
-      if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=origText; }
+      if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 '+( editingBillId?'Update':'Save')+' Bill'; }
       return;
     }
     const ts=document.getElementById('bill-trip-select');
@@ -683,7 +686,7 @@ async function saveBill(){
   } catch(e) {
     console.error('[saveBill]', e);
     showToast('Error saving bill: '+e.message);
-    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=origText; }
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 '+( editingBillId?'Update':'Save')+' Bill'; }
   } finally {
     _savingBill = false;
   }

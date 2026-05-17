@@ -347,54 +347,45 @@ function pickPhotoSource(source){
 }
 
 function handlePhoto(e){
-  const files=Array.from(e.target.files);if(!files.length)return;
-  const ctx=e.target.dataset&&e.target.dataset.context;
-  let loaded=0;const photos=[];
-  files.forEach(f=>{
-    const r=new FileReader();
-    r.onload=ev=>{
+  const files = Array.from(e.target.files);
+  if(!files.length) return;
+  const context = (e.target.dataset && e.target.dataset.context) || '';
+  let loaded = 0;
+  const photos = [];
+
+  files.forEach(f => {
+    const r = new FileReader();
+    r.onload = ev => {
       photos.push(ev.target.result);
-      if(++loaded===files.length){
-        if(ctx==='bill'){
-          tmpBillPhotos.push(...photos);
-          renderBillPhotoGrid();
-        } else if(ctx==='issue'&&typeof photoCtx==='number'){
-          if(!curReport.issues[photoCtx].photos)curReport.issues[photoCtx].photos=[];
+      if(++loaded === files.length){
+        if(context === 'bill'){
+          // Get trip + bill IDs from the open modal
+          const ts     = document.getElementById('bill-trip-select');
+          const tripId = (ts && ts.value) || (document.getElementById('bill-save-btn').dataset.tripid||'');
+          const billId = editingBillId || '';
+          // Call Drive-aware handler
+          handleBillPhotos(photos, billId, tripId);
+          e.target.dataset.context = '';
+          _photoCtxPending = null;
+        } else if(context === 'issue' && typeof photoCtx === 'number'){
+          if(!curReport.issues[photoCtx].photos) curReport.issues[photoCtx].photos = [];
           curReport.issues[photoCtx].photos.push(...photos);
-          sv();renderIssues();photoCtx=null;
+          sv(); renderIssues(); photoCtx = null;
+          e.target.dataset.context = '';
+          _photoCtxPending = null;
         } else {
-          tmpPhotos.push(...photos);renderTmpPhotos();
+          tmpPhotos.push(...photos);
+          renderTmpPhotos();
         }
-        // Reset
-        e.target.dataset.context='';
-        _photoCtxPending=null;
       }
     };
     r.readAsDataURL(f);
   });
-  e.target.value='';
+  e.target.value = '';
 }
 function addPhotoToIssue(idx){photoCtx=idx;_photoCtxPending='issue';openPhotoSheet('issue');}
 function delIPhoto(iIdx,pIdx){curReport.issues[iIdx].photos.splice(pIdx,1);sv();renderIssues();}
-function handlePhoto(e){
-  const files=Array.from(e.target.files);if(!files.length)return;
-  const context=e.target.dataset&&e.target.dataset.context;
-  let loaded=0;const photos=[];
-  files.forEach(f=>{const r=new FileReader();r.onload=ev=>{photos.push(ev.target.result);if(++loaded===files.length){
-    if(context==='bill'){
-      tmpBillPhotos.push(...photos);
-      renderBillPhotoGrid();
-      e.target.dataset.context='';
-    } else if(photoCtx!==null&&typeof photoCtx==='number'){
-      if(!curReport.issues[photoCtx].photos)curReport.issues[photoCtx].photos=[];
-      curReport.issues[photoCtx].photos.push(...photos);
-      sv();renderIssues();photoCtx=null;
-    } else {
-      tmpPhotos.push(...photos);renderTmpPhotos();
-    }
-  }};r.readAsDataURL(f);});
-  e.target.value='';
-}
+
 function renderTmpPhotos(){
   const g=document.getElementById('issue-photo-grid');if(!g)return;
   g.innerHTML=tmpPhotos.map((p,i)=>`<div class="pthumb"><img src="${p}"><button class="pdel" onclick="delTmpPhoto(${i})">×</button></div>`).join('')+`<div class="padd" onclick="triggerPhoto()"><span>📷</span><span>${t('addPhoto')}</span></div>`;
