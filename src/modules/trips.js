@@ -146,6 +146,7 @@ function openTripDetail(id){
   if(noteEl)noteEl.value=tr.notes||'';
   renderTripStatusToggle(tr);
   renderTripInspCounts();
+  if(typeof renderTripSavedReports==='function') renderTripSavedReports();
   showScreen('trip-detail');
 }
 function resetTripFlightFields(){

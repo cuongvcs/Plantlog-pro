@@ -214,6 +214,11 @@ function uploadFileToDrive(p){
     var folderName = 'PlantLog Raw Data';
     var folders = DriveApp.getFoldersByName(folderName);
     var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+    // If a subfolder is specified (e.g. 'Reports'), create/get it inside
+    if(p.folder){
+      var subFolders = folder.getFoldersByName(p.folder);
+      folder = subFolders.hasNext() ? subFolders.next() : folder.createFolder(p.folder);
+    }
 
     // Decode base64 data
     var bytes = Utilities.base64Decode(p.dataBase64);

@@ -653,7 +653,113 @@ function exportPDF(){
   if(r.signature&&r.signature.length>100){try{doc.addImage(r.signature,'PNG',mg+40,y+4,65,25);}catch(e){}}
   addPN();
   const safePlant=(trip.plant||'Report').replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,30);
-  doc.save(`PlantLog_${safePlant}_${(trip.date||'').replace(/-/g,'')}.pdf`);showToast('PDF downloaded ✓');
+  const fileName=`PlantLog_${safePlant}_${(trip.date||'').replace(/-/g,'')}.pdf`;
+  // Store PDF blob for Drive upload option
+  window._lastPdfDoc = doc;
+  window._lastPdfName = fileName;
+  window._lastPdfType = 'report';
+  // Show save options modal
+  showPdfSaveOptions(doc, fileName, 'report');
+}
+
+// ── PDF Save Options ────────────────────────────────────
+function showPdfSaveOptions(doc, fileName, type){
+  // Always download locally
+  doc.save(fileName);
+  // Show Drive upload option
+  const gsUrl = getGSUrl ? getGSUrl() : (S.gsUrl||'');
+  if(gsUrl && gsUrl.includes('/exec')){
+    // Brief delay then offer Drive save
+    setTimeout(()=>{
+      if(confirm('✅ PDF downloaded!\n\nAlso save to Google Drive (PlantLog Raw Data/Reports)?')){
+        savePdfToDrive(doc, fileName, type);
+      }
+    }, 500);
+  } else {
+    showToast('PDF downloaded ✓');
+  }
+}
+
+async function savePdfToDrive(doc, fileName, type){
+  showToast('Uploading to Google Drive…');
+  try{
+    const gsUrl = getGSUrl ? getGSUrl() : (S.gsUrl||'');
+    if(!gsUrl) return;
+
+    // Convert PDF to base64
+    const pdfBlob = doc.output('arraybuffer');
+    const uint8 = new Uint8Array(pdfBlob);
+    let binary = '';
+    uint8.forEach(b => binary += String.fromCharCode(b));
+    const base64 = btoa(binary);
+
+    const trip = S.trips.find(t => t.id === curTrip);
+    const resp = await fetch(gsUrl, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain'},
+      body: JSON.stringify({
+        action:    'uploadFile',
+        taskId:    'report_' + (curTrip||''),
+        fileName:  fileName,
+        mimeType:  'application/pdf',
+        dataBase64: base64,
+        folder:    'Reports'
+      })
+    });
+    const data = await resp.json();
+    if(data && data.ok){
+      showToast('Saved to Google Drive ✓');
+      // Save file reference to trip
+      if(trip){
+        if(!trip.savedReports) trip.savedReports = [];
+        // Remove old report of same type
+        trip.savedReports = trip.savedReports.filter(r => r.type !== type);
+        trip.savedReports.push({
+          type:      type,  // 'report' or 'bills'
+          name:      fileName,
+          fileId:    data.fileId,
+          fileUrl:   data.fileUrl,
+          createdAt: new Date().toISOString()
+        });
+        sv();
+        // Re-render trip detail if open
+        if(typeof renderTripInspCounts === 'function') renderTripInspCounts();
+        renderTripSavedReports();
+      }
+    } else {
+      showToast('Drive upload failed: '+(data?data.error:'No response'));
+    }
+  } catch(e){
+    showToast('Upload error: '+e.message);
+    console.error('Drive upload error:', e);
+  }
+}
+
+function renderTripSavedReports(){
+  const el = document.getElementById('trip-saved-reports');
+  if(!el || !curTrip) return;
+  const trip = S.trips.find(t => t.id === curTrip);
+  if(!trip || !trip.savedReports || !trip.savedReports.length){
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = '<div class="sec" style="margin-top:12px;">📁 SAVED REPORTS</div>' +
+    trip.savedReports.map(r => {
+      const icon = r.type==='bills' ? '💰' : '📋';
+      const label = r.type==='bills' ? 'Expense Report' : 'Trip Report';
+      const date = r.createdAt ? fmtDate(r.createdAt.slice(0,10)) : '';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:var(--r-sm);border:1px solid var(--n150);margin-bottom:6px;">
+        <span style="font-size:20px;">${icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--n800);">${label}</div>
+          <div style="font-size:11px;color:var(--n400);margin-top:1px;">${date} · ${r.name}</div>
+        </div>
+        <a href="${r.fileUrl}" target="_blank"
+          style="padding:5px 12px;background:var(--brand);color:#fff;border-radius:var(--rs);font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">
+          Open ↗
+        </a>
+      </div>`;
+    }).join('');
 }
 
 function emailPDF(){
@@ -671,5 +777,15 @@ function sendEmail(){
   window.location.href=`mailto:${to}${cc?'?cc='+cc+'&':'?'}subject=${subj}&body=${body}`;
   closeModal('modal-email');showToast('Opening email... attach the PDF');
 }
-function markCompleted(){const trip=S.trips.find(tr=>tr.id===curTrip);if(trip){trip.status='completed';sv();showToast('Completed ✓');renderDash();renderTripList();svAndSync('trip_complete');}}
+function markCompleted(){
+  const trip=S.trips.find(tr=>tr.id===curTrip);
+  if(trip){
+    trip.status='completed'; sv();
+    showToast('Trip marked as completed ✓');
+    renderDash(); renderTripList();
+    svAndSync('trip_complete');
+    showScreen('trip-detail');
+    if(typeof renderTripSavedReports==='function') renderTripSavedReports();
+  }
+}
 

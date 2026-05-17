@@ -158,9 +158,10 @@ async function syncToSheets(){
     contact:    s(tr.contact),
     transport:  s(tr.transport),
     status:     s(tr.status)||'planned',
-    notes:      s(tr.notes),
-    flight:     tr.flight?JSON.stringify(tr.flight):'',
-    createdAt:  s(tr.createdAt)
+    notes:         s(tr.notes),
+    flight:        tr.flight?JSON.stringify(tr.flight):'',
+    savedReports:  tr.savedReports&&tr.savedReports.length?JSON.stringify(tr.savedReports):'',
+    createdAt:     s(tr.createdAt)
   }));
 
   // Compress bill photos to small JPEG thumbnails (max 200px) before sending
@@ -314,7 +315,8 @@ async function loadFromSheets(silent){
           transport: ss(tr.Transport),
           status:    ss(tr.Status)||'planned',
           notes:     ss(tr.Notes),
-          flight:    tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
+          flight:       tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
+          savedReports: tr.SavedReports?(()=>{try{return JSON.parse(ss(tr.SavedReports));}catch(e){return [];}})():[],
           createdAt: ss(tr.CreatedAt)
         }));
       }

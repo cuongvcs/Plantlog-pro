@@ -379,7 +379,9 @@ function exportBillsPDF() {
   doc.setDrawColor(0,132,61);doc.line(mg,y,W-mg,y);y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text('GRAND TOTAL',mg+2,y+1);rtxt(fmtAmt(grandVND,'VND')+' VND',y+1,[146,64,14]);y+=7;doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(120,120,120);const brkAll=Object.entries(allByCur).map(([c,t])=>fmtAmt(t,c)+' '+c).join('  ·  ');if(brkAll){doc.text(brkAll,mg+2,y);y+=5;}
   addPN();
   const safeName=reportTitle.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,40);
-  doc.save(`Bills_${safeName}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.pdf`);showToast('Bills PDF downloaded ✓');
+  const safeName2=reportTitle.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,40);
+  const bFileName=`Bills_${safeName2}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.pdf`;
+  showPdfSaveOptions(doc, bFileName, 'bills');
 }
 
 function emailBillsReport() {
