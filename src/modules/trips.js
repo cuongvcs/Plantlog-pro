@@ -271,19 +271,32 @@ function saveTripNote(){
   },800);
 }
 function openReport(){
-  // Init report if needed, then open inspection picker
   const tr = S.trips.find(t=>t.id===curTrip);
-  if(!tr) return;
+  if(!tr){ showToast('No trip selected'); return; }
+
+  // Init report data
   if(!S.reports[tr.id]){
-    S.reports[tr.id]={checklist:[],readings:[],issues:[],team:[...S.defaultTeam.map(m=>({...m,id:'tm'+Date.now()+Math.random()}))],signoff:{summary:'',result:'Completed',remarks:''},signature:'',reportTasks:[],reportTaskNotes:{}};
+    const defTeam = (S.defaultTeam||[]).map(m=>({...m,id:'tm'+Date.now()+'_'+Math.random()}));
+    S.reports[tr.id]={
+      checklist:[],readings:[],issues:[],team:defTeam,
+      signoff:{summary:'',result:'Completed',remarks:''},
+      signature:'',reportTasks:[],reportTaskNotes:{}
+    };
   }
-  curReport = S.reports[tr.id];
-  if(!curReport.reportTasks) curReport.reportTasks=[];
+  curReport=S.reports[tr.id];
+  if(!curReport.reportTasks)     curReport.reportTasks=[];
   if(!curReport.reportTaskNotes) curReport.reportTaskNotes={};
-  document.getElementById('report-plant-name').textContent = tr.plant;
-  document.getElementById('report-date').textContent = fmtDate(tr.date);
-  // Open inspection picker so user can select items
-  openReportInspPicker();
+  if(!curReport.signoff)         curReport.signoff={summary:'',result:'Completed',remarks:''};
+  S.reports[tr.id]=curReport;
+
+  // Check if trip has inspection records → show picker
+  // Otherwise go straight to report
+  const hasInspections=(S.inspections||[]).some(i=>i.tripId===curTrip);
+  if(hasInspections){
+    openReportInspPicker();
+  } else {
+    openReportDirect(0);
+  }
 }
 
 // ═══════ CALENDAR ═══════

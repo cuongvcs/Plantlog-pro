@@ -569,6 +569,12 @@ input, textarea, select, button { font-family: var(--font); }
 .rpt-task-notes:focus { border-color:var(--brand); }
 
 /* ── STEP TABS (report) ────────────────────────────────── */
+.stabs {
+  display:flex; overflow-x:auto; scrollbar-width:none;
+  border-bottom:1px solid var(--n150); background:var(--surface);
+  flex-shrink:0; padding:0 var(--sp4);
+}
+.stabs::-webkit-scrollbar { display:none; }
 .stab { padding:8px 10px; font-size:11px; font-weight:600; border:none; background:transparent; cursor:pointer; color:var(--n400); font-family:var(--font); border-bottom:2px solid transparent; transition:color var(--dur-fast), border-color var(--dur-fast); white-space:nowrap; }
 .stab.active { color:var(--brand); border-bottom-color:var(--brand); }
 .stab.done   { color:var(--brand); opacity:0.6; }

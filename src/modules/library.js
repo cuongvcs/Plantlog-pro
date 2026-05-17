@@ -336,29 +336,56 @@ function startReportContinue(){
 
 function openReportDirect(step){
   const tr = S.trips.find(t=>t.id===curTrip);
-  if(!tr) return;
+  if(!tr){ showToast('No trip selected'); return; }
+
   if(tr.status==='planned'){ tr.status='in_progress'; sv(); }
-  document.getElementById('report-plant-name').textContent = tr.plant;
-  document.getElementById('report-date').textContent = fmtDate(tr.date);
+
+  const plantEl=document.getElementById('report-plant-name');
+  const dateEl=document.getElementById('report-date');
+  if(plantEl) plantEl.textContent=tr.plant;
+  if(dateEl)  dateEl.textContent=fmtDate(tr.date);
+
   if(!S.reports[tr.id]){
-    S.reports[tr.id]={checklist:[],readings:[],issues:[],team:[],signoff:{summary:'',result:'Completed',remarks:''},signature:'',reportTasks:[],reportTaskNotes:{}};
+    S.reports[tr.id]={checklist:[],readings:[],issues:[],team:[],
+      signoff:{summary:'',result:'Completed',remarks:''},
+      signature:'',reportTasks:[],reportTaskNotes:{}};
   }
-  curReport = S.reports[tr.id];
-  if(!curReport.reportTasks) curReport.reportTasks=[];
+  curReport=S.reports[tr.id];
+  if(!curReport.reportTasks)     curReport.reportTasks=[];
   if(!curReport.reportTaskNotes) curReport.reportTaskNotes={};
-  S.reports[tr.id] = curReport;
-  gotoStep(step);
+  if(!curReport.signoff)         curReport.signoff={summary:'',result:'Completed',remarks:''};
+  S.reports[tr.id]=curReport;
+
+  // Show screen FIRST so all DOM elements exist
   showScreen('report');
-  updateSigDate();
-  document.getElementById('signoff-summary').value = curReport.signoff.summary||'';
-  document.getElementById('signoff-remarks').value = curReport.signoff.remarks||'';
-  signoffRes = curReport.signoff.result||'Completed';
-  document.querySelectorAll('.ropt').forEach(b=>b.classList.toggle('sel',b.textContent.includes(signoffRes)));
-  if(curReport.signature){
-    const img=new Image();
-    img.onload=()=>{sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);sigCtx.drawImage(img,0,0);};
-    img.src=curReport.signature;
-  } else {
-    sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
-  }
+
+  // Go to step
+  gotoStep(step||0);
+
+  // Fill signoff fields
+  try{
+    const s=document.getElementById('signoff-summary');
+    const r=document.getElementById('signoff-remarks');
+    if(s) s.value=curReport.signoff.summary||'';
+    if(r) r.value=curReport.signoff.remarks||'';
+    signoffRes=curReport.signoff.result||'Completed';
+    document.querySelectorAll('.ropt').forEach(b=>
+      b.classList.toggle('sel',b.textContent.trim().includes(signoffRes))
+    );
+  }catch(e){console.warn('signoff fields:',e);}
+
+  // Signature
+  try{
+    updateSigDate();
+    if(!sigCanvas||!sigCanvas.getContext) initSig();
+    if(sigCtx){
+      sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
+      if(curReport.signature&&curReport.signature.length>100){
+        const img=new Image();
+        img.onload=()=>{ try{sigCtx.drawImage(img,0,0,sigCanvas.width,sigCanvas.height);}catch(e){} };
+        img.src=curReport.signature;
+      }
+    }
+  }catch(e){console.warn('sig init:',e);}
 }
+

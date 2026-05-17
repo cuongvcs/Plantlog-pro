@@ -7,16 +7,27 @@
 // ═══════ STEPS ═══════
 function gotoStep(n){
   for(let i=0;i<6;i++){
-    const el=document.getElementById('step-'+i);if(el)el.style.display=i===n?'':'none';
-    const tab=document.getElementById('step-tabs').children[i];
-    if(tab){tab.classList.remove('active','done');if(i===n)tab.classList.add('active');else if(i<n)tab.classList.add('done');}
+    const el=document.getElementById('step-'+i);
+    if(el) el.style.display=(i===n)?'':'none';
+    const tabsEl=document.getElementById('step-tabs');
+    if(tabsEl&&tabsEl.children[i]){
+      const tab=tabsEl.children[i];
+      tab.classList.remove('active','done');
+      if(i===n) tab.classList.add('active');
+      else if(i<n) tab.classList.add('done');
+    }
   }
-  if(n===0)renderChecklist();
-  if(n===1)renderReadings();
-  if(n===2)renderIssues();
-  if(n===3)renderTeam();
-  if(n===4)renderReportTaskPicker();
-  if(n===5)saveSignoff();
+  try{
+    if(n===0) renderChecklist();
+    if(n===1) renderReadings();
+    if(n===2) renderIssues();
+    if(n===3) renderTeam();
+    if(n===4) renderReportTaskPicker();
+    if(n===5){
+      // Step 5 = Sign-off: just update date, don't auto-save
+      try{ updateSigDate(); }catch(e){}
+    }
+  }catch(e){ console.warn('gotoStep render error step'+n+':', e.message); }
 }
 
 // ═══════ REPORT TASK PICKER ═══════
@@ -447,7 +458,21 @@ function rmDefaultMember(i){S.defaultTeam.splice(i,1);sv();renderDefaultTeam();}
 
 // ═══════ SIGNOFF ═══════
 function selRes(btn,val){signoffRes=val;document.querySelectorAll('.ropt').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');}
-function saveSignoff(){if(!curReport)return;curReport.signoff={summary:document.getElementById('signoff-summary').value,result:signoffRes,remarks:document.getElementById('signoff-remarks').value};curReport.signature=sigCanvas.toDataURL();sv();svAndSync('report');}
+function saveSignoff(){
+  if(!curReport) return;
+  const sumEl=document.getElementById('signoff-summary');
+  const remEl=document.getElementById('signoff-remarks');
+  curReport.signoff={
+    summary: sumEl?sumEl.value:'',
+    result:  signoffRes||'Completed',
+    remarks: remEl?remEl.value:''
+  };
+  try{
+    if(sigCanvas&&sigCtx) curReport.signature=sigCanvas.toDataURL();
+  }catch(e){ curReport.signature=''; }
+  sv();
+  svAndSync('report');
+}
 
 function checkAndExport(){
   // Work summary is required before export
@@ -473,7 +498,10 @@ function checkAndExport(){
 
 // ═══════ SIGNATURE ═══════
 function initSig(){
-  sigCanvas=document.getElementById('sigCanvas');sigCtx=sigCanvas.getContext('2d');
+  sigCanvas=document.getElementById('sigCanvas');
+  if(!sigCanvas){ console.warn('sigCanvas not found'); return; }
+  sigCtx=sigCanvas.getContext('2d');
+  if(!sigCtx){ console.warn('Cannot get 2d context'); return; }
   sigCtx.strokeStyle='#1E3A5F';sigCtx.lineWidth=2;sigCtx.lineCap='round';sigCtx.lineJoin='round';
   const gp=e=>{const r=sigCanvas.getBoundingClientRect();const sc=sigCanvas.width/r.width;return e.touches?{x:(e.touches[0].clientX-r.left)*sc,y:(e.touches[0].clientY-r.top)*sc}:{x:(e.clientX-r.left)*sc,y:(e.clientY-r.top)*sc};};
   sigCanvas.addEventListener('mousedown',e=>{isDrw=true;const p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);});

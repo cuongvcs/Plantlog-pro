@@ -461,8 +461,8 @@ function applyInspectionPicker(){
   sv();
   closeModal('modal-report-insp-picker');
   const total = selChecks.length + selReadings.length + selIssues.length;
-  showToast(`${total} item${total!==1?'s':''} added to report ✓`);
+  showToast(total + ' item' + (total!==1?'s':'') + ' added to report ✓');
 
-  // Go back to report at checklist step
-  gotoStep(0);
+  // Navigate to report screen properly
+  openReportDirect(0);
 }
