@@ -216,10 +216,16 @@ function uploadFileToDrive(p){
     var folderName = 'PlantLog Raw Data';
     var folders = DriveApp.getFoldersByName(folderName);
     var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
-    // If a subfolder is specified (e.g. 'Reports'), create/get it inside
+    // If a subfolder path is specified, create/get each level
+    // Supports nested paths like "Bills Images/TripName_Date"
     if(p.folder){
-      var subFolders = folder.getFoldersByName(p.folder);
-      folder = subFolders.hasNext() ? subFolders.next() : folder.createFolder(p.folder);
+      var parts = p.folder.split('/');
+      for(var pi=0; pi<parts.length; pi++){
+        var part = parts[pi].trim();
+        if(!part) continue;
+        var subFolders = folder.getFoldersByName(part);
+        folder = subFolders.hasNext() ? subFolders.next() : folder.createFolder(part);
+      }
     }
 
     // Decode base64 data

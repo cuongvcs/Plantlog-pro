@@ -517,13 +517,19 @@ function renderTripBills(tripId){
 
 function viewBillPhoto(billId, photoIdx){
   const b=S.bills.find(x=>x.id===billId);
-  if(!b||!b.photos||!b.photos[photoIdx])return;
-  // Open photo in a simple overlay
+  if(!b||!b.photos||!b.photos[photoIdx]) return;
+  const src = b.photos[photoIdx];
+  // If it's a Drive URL → open directly in browser
+  if(src.startsWith('https://')){
+    window.open(src,'_blank');
+    return;
+  }
+  // Otherwise show inline overlay for base64 images
   const overlay=document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
   overlay.onclick=()=>overlay.remove();
   const img=document.createElement('img');
-  img.src=b.photos[photoIdx];
+  img.src=src;
   img.style.cssText='max-width:95vw;max-height:80vh;border-radius:8px;object-fit:contain;';
   const close=document.createElement('div');
   close.textContent='✕ Tap anywhere to close';
@@ -557,7 +563,12 @@ function openAddBill(tripId){
 function openEditBill(id){
   const b=S.bills.find(x=>x.id===id);if(!b)return;
   editingBillId=id;
-  tmpBillPhotos=[...(b.photos||[])];
+  // Load photos: use photoMeta (with Drive URLs) if available, else fall back to photos array
+  if(b.photoMeta && b.photoMeta.length){
+    tmpBillPhotos = b.photoMeta.map(m=>({src:m.src||m.driveUrl, driveUrl:m.driveUrl||'', fileId:m.fileId||''}));
+  } else {
+    tmpBillPhotos = (b.photos||[]).map(p=>({src:p, driveUrl:p.startsWith('https://')?p:'', fileId:''}));
+  }
   document.getElementById('bill-modal-title').textContent='Edit Bill';
   document.getElementById('bill-edit-id').textContent='#'+id.slice(-6);
   document.getElementById('bill-save-btn').textContent='💾 Update Bill';
@@ -580,7 +591,7 @@ function openEditBill(id){
   openModal('modal-add-bill');
 }
 
-function saveBill(){
+async function saveBill(){
   const detail=document.getElementById('bill-detail').value.trim();
   const amount=document.getElementById('bill-amount').value;
   if(!detail||!amount){showToast('Detail and amount are required');return;}
@@ -589,8 +600,32 @@ function saveBill(){
   const cur=document.getElementById('bill-currency').value;
   const vndEl=document.getElementById('bill-vnd');
   const vndAmt=cur==='VND'?parseFloat(amount)||0:(vndEl&&vndEl.value?parseFloat(vndEl.value)||0:0);
+  const billId = editingBillId||('bill_'+Date.now());
+
+  // Upload any remaining local base64 photos before saving
+  const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
+  if(gsUrl && gsUrl.includes('/exec')){
+    const hasLocal = tmpBillPhotos.some(p => (p.src||p||'').toString().startsWith('data:'));
+    if(hasLocal){
+      showToast('Uploading photos to Drive…');
+      for(let i=0;i<tmpBillPhotos.length;i++){
+        const p=tmpBillPhotos[i];
+        const src=p.src||(typeof p==='string'?p:'');
+        if(!src.startsWith('data:')) continue;
+        const result = await uploadBillPhotoToDrive(p, billId, tripId);
+        if(result) tmpBillPhotos[i]=result;
+      }
+    }
+  }
+
+  // Save photos: use driveUrl if available, fall back to src (base64)
+  const savedPhotos = tmpBillPhotos.map(p=>{
+    if(typeof p==='string') return p; // legacy base64
+    return p.driveUrl || p.src || '';
+  }).filter(Boolean);
+
   const bill={
-    id:editingBillId||('bill_'+Date.now()),
+    id:billId,
     tripId,
     date:document.getElementById('bill-date').value,
     billNumber:document.getElementById('bill-number').value,
@@ -600,7 +635,8 @@ function saveBill(){
     vndAmount:vndAmt,
     category:document.getElementById('bill-category').value,
     notes:document.getElementById('bill-notes').value,
-    photos:[...tmpBillPhotos],
+    photos:savedPhotos,
+    photoMeta:tmpBillPhotos.filter(p=>p&&p.fileId).map(p=>({src:p.driveUrl||p.src,driveUrl:p.driveUrl,fileId:p.fileId})),
     createdAt:editingBillId?(S.bills.find(b=>b.id===editingBillId)||{}).createdAt||new Date().toISOString():new Date().toISOString()
   };
   if(editingBillId){
@@ -630,12 +666,133 @@ function triggerBillPhoto(){
   openPhotoSheet('bill');
 }
 
+// ── tmpBillPhotos format:
+// {src: 'data:...' or 'https://drive...', driveUrl:'', fileId:'', uploading:false}
+// Items with driveUrl are already on Drive; others are local base64
+
 function renderBillPhotoGrid(){
-  const g=document.getElementById('bill-photo-grid');if(!g)return;
-  g.innerHTML=tmpBillPhotos.map((p,i)=>`<div class="pthumb"><img src="${p}"><button class="pdel" onclick="removeBillPhoto(${i})">×</button></div>`).join('')
-    +`<div class="padd" onclick="triggerBillPhoto()"><span style="font-size:20px;">📷</span><span>Add photo</span></div>`;
+  const g=document.getElementById('bill-photo-grid');
+  if(!g) return;
+  g.innerHTML = tmpBillPhotos.map((p,i)=>{
+    const src = p.driveUrl || p.src || (typeof p==='string'?p:'');
+    const isDrive = !!(p.driveUrl || p.fileId);
+    const isUploading = p.uploading;
+    return `<div class="pthumb" style="position:relative;">
+      <img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" onclick="viewBillPhotoTemp(${i})">
+      ${isUploading
+        ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;border-radius:var(--rs);">
+             <span style="font-size:10px;color:#fff;font-weight:700;">⟳</span>
+           </div>`
+        : `<button class="pdel" onclick="removeBillPhoto(${i})" style="position:absolute;top:3px;right:3px;">×</button>
+           ${isDrive ? '<span style="position:absolute;bottom:3px;left:3px;background:rgba(15,123,62,0.85);border-radius:3px;padding:1px 4px;font-size:9px;color:#fff;font-weight:700;">✓Drive</span>' : ''}`
+      }
+    </div>`;
+  }).join('')
+  + `<div class="padd" onclick="triggerBillPhoto()">
+       <span style="font-size:20px;">📷</span>
+       <span style="font-size:10px;">Add photo</span>
+     </div>`;
 }
 
-function removeBillPhoto(i){tmpBillPhotos.splice(i,1);renderBillPhotoGrid();}
+function viewBillPhotoTemp(i){
+  const p = tmpBillPhotos[i];
+  if(!p) return;
+  const src = p.driveUrl || p.src || (typeof p==='string'?p:'');
+  if(p.driveUrl){
+    window.open(p.driveUrl, '_blank');
+    return;
+  }
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
+  overlay.onclick=()=>overlay.remove();
+  const img=document.createElement('img');
+  img.src=src;
+  img.style.cssText='max-width:95vw;max-height:80vh;border-radius:8px;object-fit:contain;';
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+}
+
+function removeBillPhoto(i){
+  tmpBillPhotos.splice(i,1);
+  renderBillPhotoGrid();
+}
+
+// ── Upload a single photo to Drive ──────────────────────
+async function uploadBillPhotoToDrive(photoObj, billId, tripId){
+  const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
+  if(!gsUrl || !gsUrl.includes('/exec')) return null;
+
+  // Build folder path: Bills Images/TripName_Date
+  let folderName = 'No Trip';
+  if(tripId){
+    const trip = (S.trips||[]).find(t=>t.id===tripId);
+    if(trip){
+      const safe = (trip.plant||'Trip').replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,30);
+      const d = (trip.date||'').replace(/-/g,'');
+      folderName = safe + (d?'_'+d:'');
+    }
+  }
+
+  const src = photoObj.src || (typeof photoObj==='string' ? photoObj : '');
+  if(!src) return null;
+
+  // Extract base64 from data URI
+  const base64 = src.includes(',') ? src.split(',')[1] : src;
+  const mimeType = src.startsWith('data:') ? src.split(';')[0].replace('data:','') : 'image/jpeg';
+  const ext = mimeType.includes('png')?'png':'jpg';
+  const fileName = `bill_${billId||'x'}_${Date.now()}.${ext}`;
+
+  try{
+    const resp = await fetch(gsUrl, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({
+        action:    'uploadFile',
+        taskId:    'bill_'+billId,
+        fileName:  fileName,
+        mimeType:  mimeType,
+        dataBase64: base64,
+        folder:    'Bills Images/' + folderName
+      })
+    });
+    const data = await resp.json();
+    if(data && data.ok){
+      return {src:data.fileUrl, driveUrl:data.fileUrl, fileId:data.fileId};
+    }
+  }catch(e){
+    console.warn('[Bills] Photo upload error:', e.message);
+  }
+  return null;
+}
+
+// ── Handle photo selection: upload immediately if GS URL set ──
+async function handleBillPhotos(newPhotos, billId, tripId){
+  const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
+  const canUpload = gsUrl && gsUrl.includes('/exec');
+
+  for(const src of newPhotos){
+    const photoObj = {src, driveUrl:'', fileId:'', uploading:canUpload};
+    tmpBillPhotos.push(photoObj);
+  }
+  renderBillPhotoGrid();
+
+  if(!canUpload) return; // Save as local base64 only
+
+  // Upload each new local photo
+  for(let i=0; i<tmpBillPhotos.length; i++){
+    const p = tmpBillPhotos[i];
+    if(p.driveUrl || !p.src || !p.src.startsWith('data:')) continue; // already on Drive or not a data URI
+    p.uploading = true;
+    renderBillPhotoGrid();
+
+    const result = await uploadBillPhotoToDrive(p, billId||('bill_'+Date.now()), tripId);
+    if(result){
+      tmpBillPhotos[i] = {...result, uploading:false};
+    } else {
+      tmpBillPhotos[i].uploading = false;
+    }
+    renderBillPhotoGrid();
+  }
+}
 
 
