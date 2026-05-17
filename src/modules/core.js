@@ -108,7 +108,8 @@ let S={
   machines:[],plans:[],bills:[],
   inspections:[],
   library:[],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
-  defaultTeam:[],lang:'en'
+  defaultTeam:[],lang:'en',
+  telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true}
 };
 let curTrip=null,curReport=null,sigCanvas,sigCtx,isDrw=false;
 let calY,calM,selDay=null,signoffRes='Completed';
@@ -289,6 +290,12 @@ function init(){
   // Auth MUST run last — it controls app visibility
   // Do NOT hide app before this — a crash would leave it blank
   safeRun(authInit, 'authInit');
+  // Telegram: update status label + schedule daily notification check
+  try{
+    updateTelegramStatusLabel();
+    // Check once on startup (after 3s delay so UI is ready)
+    setTimeout(()=>{ try{checkAndSendDailyNotifications();}catch(e){} }, 3000);
+  }catch(e){}
 
   // Auto-load from Google Sheets on start if URL is configured
   setTimeout(()=>{

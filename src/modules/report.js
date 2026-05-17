@@ -709,20 +709,23 @@ async function savePdfToDrive(doc, fileName, type){
     const data = await resp.json();
     if(data && data.ok){
       showToast('Saved to Google Drive ✓');
-      // Save file reference to trip
+      // Save file reference to trip — persist to BOTH localStorage AND Google Sheets
       if(trip){
         if(!trip.savedReports) trip.savedReports = [];
-        // Remove old report of same type
+        // Keep only latest per type (replace old one)
         trip.savedReports = trip.savedReports.filter(r => r.type !== type);
         trip.savedReports.push({
-          type:      type,  // 'report' or 'bills'
+          type:      type,
           name:      fileName,
           fileId:    data.fileId,
           fileUrl:   data.fileUrl,
           createdAt: new Date().toISOString()
         });
+        // Persist to localStorage immediately
         sv();
-        // Re-render trip detail if open
+        // Also push to Google Sheets so it survives app reload + sync
+        svAndSync('trip_report_saved');
+        // Re-render trip detail
         if(typeof renderTripInspCounts === 'function') renderTripInspCounts();
         renderTripSavedReports();
       }

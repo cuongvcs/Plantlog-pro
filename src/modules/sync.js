@@ -316,7 +316,12 @@ async function loadFromSheets(silent){
           status:    ss(tr.Status)||'planned',
           notes:     ss(tr.Notes),
           flight:       tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
-          savedReports: tr.SavedReports?(()=>{try{return JSON.parse(ss(tr.SavedReports));}catch(e){return [];}})():[],
+          savedReports: (()=>{
+            const raw = ss(tr.SavedReports||tr.savedReports||'');
+            if(!raw) return [];
+            try{ const p=JSON.parse(raw); return Array.isArray(p)?p:[]; }
+            catch(e){ return []; }
+          })(),
           createdAt: ss(tr.CreatedAt)
         }));
       }
@@ -399,6 +404,7 @@ async function loadFromSheets(silent){
         });
       }
       sv();renderDash();renderTripList();renderTasks();renderCalendar();
+      if(typeof renderTripSavedReports==='function') renderTripSavedReports();
       showGSResult('✅ Data loaded from Google Sheets successfully!','ok');
       showToast('Loaded from Google Sheets ✓');
     } else {

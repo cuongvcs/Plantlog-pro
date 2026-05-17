@@ -46,6 +46,48 @@ function updateVNDHint(){
 // ═══════ BILLS SCREEN ═══════
 let billFilter = 'all';
 
+function populateBillSelectors(){
+  // Trip selector
+  const tripSel = document.getElementById('bf-trip-select');
+  if(tripSel){
+    const trips = [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const cur = tripSel.value;
+    tripSel.innerHTML = '<option value="">— All Trips —</option>' +
+      trips.map(t=>`<option value="${t.id}" ${t.id===cur?'selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
+  }
+  // Year selector
+  updateBillYearOptions();
+}
+
+function updateBillYearOptions(){
+  const yearSel = document.getElementById('bf-year-select');
+  if(!yearSel) return;
+  const years = [...new Set((S.bills||[]).map(b=>(b.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  const now = new Date().getFullYear().toString();
+  if(!years.includes(now)) years.unshift(now);
+  const cur = yearSel.value || now;
+  yearSel.innerHTML = years.map(y=>`<option value="${y}" ${y===cur?'selected':''}>${y}</option>`).join('');
+  updateBillMonthOptions();
+}
+
+function updateBillMonthOptions(){
+  const yearSel  = document.getElementById('bf-year-select');
+  const monthSel = document.getElementById('bf-month-select');
+  if(!monthSel) return;
+  const year = (yearSel && yearSel.value) || new Date().getFullYear().toString();
+  const months = [
+    ['01','January'],['02','February'],['03','March'],['04','April'],
+    ['05','May'],['06','June'],['07','July'],['08','August'],
+    ['09','September'],['10','October'],['11','November'],['12','December']
+  ];
+  const now = new Date();
+  const curMonth = year === now.getFullYear().toString()
+    ? String(now.getMonth()+1).padStart(2,'0')
+    : '01';
+  const cur = monthSel.value || curMonth;
+  monthSel.innerHTML = months.map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${l} ${year}</option>`).join('');
+}
+
 function setBillFilter(f) {
   billFilter = f;
   ['all','trip','month'].forEach(id => {
@@ -91,8 +133,17 @@ function renderBillsScreen() {
 
   let bills = [...(S.bills || [])];
 
+  if (billFilter === 'trip') {
+    const selTrip = document.getElementById('bf-trip-select');
+    const tripVal = selTrip ? selTrip.value : '';
+    if(tripVal) bills = bills.filter(b => b.tripId === tripVal);
+  }
   if (billFilter === 'month') {
-    bills = bills.filter(b => (b.date || '').startsWith(thisMonth));
+    const yearSel  = document.getElementById('bf-year-select');
+    const monthSel = document.getElementById('bf-month-select');
+    const year  = (yearSel  && yearSel.value)  || new Date().getFullYear().toString();
+    const month = (monthSel && monthSel.value) || String(new Date().getMonth()+1).padStart(2,'0');
+    bills = bills.filter(b => (b.date||'').startsWith(`${year}-${month}`));
   }
 
   bills.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
