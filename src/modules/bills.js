@@ -90,10 +90,19 @@ function updateBillMonthOptions(){
 
 function setBillFilter(f) {
   billFilter = f;
+  // Update active tab
   ['all','trip','month'].forEach(id => {
     const el = document.getElementById('bf-' + id);
-    if (el) el.classList.toggle('active', id === f);
+    if(el) el.classList.toggle('active', id === f);
   });
+  // Show/hide selectors
+  const tripDiv  = document.getElementById('bf-trip-selector');
+  const monthDiv = document.getElementById('bf-month-selector');
+  if(tripDiv)  tripDiv.style.display  = f === 'trip'  ? '' : 'none';
+  if(monthDiv) monthDiv.style.display = f === 'month' ? '' : 'none';
+  // Populate options when switching to that view
+  if(f === 'trip')  populateBillSelectors();
+  if(f === 'month') updateBillYearOptions();
   renderBillsScreen();
 }
 
