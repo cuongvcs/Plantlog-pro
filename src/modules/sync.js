@@ -591,66 +591,102 @@ function openEditBill(id){
   openModal('modal-add-bill');
 }
 
-async function saveBill(){
-  const detail=document.getElementById('bill-detail').value.trim();
-  const amount=document.getElementById('bill-amount').value;
-  if(!detail||!amount){showToast('Detail and amount are required');return;}
-  const ts=document.getElementById('bill-trip-select');
-  const tripId=(ts&&ts.value)||document.getElementById('bill-save-btn').dataset.tripid||'';
-  const cur=document.getElementById('bill-currency').value;
-  const vndEl=document.getElementById('bill-vnd');
-  const vndAmt=cur==='VND'?parseFloat(amount)||0:(vndEl&&vndEl.value?parseFloat(vndEl.value)||0:0);
-  const billId = editingBillId||('bill_'+Date.now());
+let _savingBill = false;  // guard against double-submit
 
-  // Upload any remaining local base64 photos before saving
-  const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
-  if(gsUrl && gsUrl.includes('/exec')){
-    const hasLocal = tmpBillPhotos.some(p => (p.src||p||'').toString().startsWith('data:'));
-    if(hasLocal){
-      showToast('Uploading photos to Drive…');
-      for(let i=0;i<tmpBillPhotos.length;i++){
-        const p=tmpBillPhotos[i];
-        const src=p.src||(typeof p==='string'?p:'');
-        if(!src.startsWith('data:')) continue;
-        const result = await uploadBillPhotoToDrive(p, billId, tripId);
-        if(result) tmpBillPhotos[i]=result;
+async function saveBill(){
+  // ── Prevent double-submit (async function runs over multiple seconds) ──
+  if(_savingBill) return;
+  _savingBill = true;
+
+  const saveBtn = document.getElementById('bill-save-btn');
+  const origText = saveBtn ? saveBtn.textContent : '';
+  if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = '⟳ Saving…'; }
+
+  try{
+    const detail=document.getElementById('bill-detail').value.trim();
+    const amount=document.getElementById('bill-amount').value;
+    if(!detail||!amount){
+      showToast('Detail and amount are required');
+      _savingBill=false;
+      if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=origText; }
+      return;
+    }
+    const ts=document.getElementById('bill-trip-select');
+    const tripId=(ts&&ts.value)||document.getElementById('bill-save-btn').dataset.tripid||'';
+    const cur=document.getElementById('bill-currency').value;
+    const vndEl=document.getElementById('bill-vnd');
+    const vndAmt=cur==='VND'?parseFloat(amount)||0:(vndEl&&vndEl.value?parseFloat(vndEl.value)||0:0);
+
+    // Lock billId at start — never changes even during async uploads
+    const billId = editingBillId || ('bill_'+Date.now());
+
+    // Upload any remaining local base64 photos before saving
+    const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
+    if(gsUrl && gsUrl.includes('/exec')){
+      const hasLocal = tmpBillPhotos.some(p => (p.src||p||'').toString().startsWith('data:'));
+      if(hasLocal){
+        showToast('Uploading photos…');
+        if(saveBtn) saveBtn.textContent = '⟳ Uploading photos…';
+        for(let i=0;i<tmpBillPhotos.length;i++){
+          const p=tmpBillPhotos[i];
+          const src=p.src||(typeof p==='string'?p:'');
+          if(!src.startsWith('data:')) continue;
+          const result = await uploadBillPhotoToDrive(p, billId, tripId);
+          if(result) tmpBillPhotos[i]=result;
+        }
       }
     }
-  }
 
-  // Save photos: use driveUrl if available, fall back to src (base64)
-  const savedPhotos = tmpBillPhotos.map(p=>{
-    if(typeof p==='string') return p; // legacy base64
-    return p.driveUrl || p.src || '';
-  }).filter(Boolean);
+    // Build photos array: Drive URL where available, else base64
+    const savedPhotos = tmpBillPhotos.map(p=>{
+      if(typeof p==='string') return p;
+      return p.driveUrl || p.src || '';
+    }).filter(Boolean);
 
-  const bill={
-    id:billId,
-    tripId,
-    date:document.getElementById('bill-date').value,
-    billNumber:document.getElementById('bill-number').value,
-    detail,
-    amount:parseFloat(amount)||0,
-    currency:cur,
-    vndAmount:vndAmt,
-    category:document.getElementById('bill-category').value,
-    notes:document.getElementById('bill-notes').value,
-    photos:savedPhotos,
-    photoMeta:tmpBillPhotos.filter(p=>p&&p.fileId).map(p=>({src:p.driveUrl||p.src,driveUrl:p.driveUrl,fileId:p.fileId})),
-    createdAt:editingBillId?(S.bills.find(b=>b.id===editingBillId)||{}).createdAt||new Date().toISOString():new Date().toISOString()
-  };
-  if(editingBillId){
-    const idx=S.bills.findIndex(b=>b.id===editingBillId);
-    if(idx>=0)S.bills[idx]=bill;else S.bills.push(bill);
-  } else {
-    if(!S.bills)S.bills=[];
-    S.bills.push(bill);
+    const bill={
+      id: billId,
+      tripId,
+      date:       document.getElementById('bill-date').value,
+      billNumber: document.getElementById('bill-number').value,
+      detail,
+      amount:     parseFloat(amount)||0,
+      currency:   cur,
+      vndAmount:  vndAmt,
+      category:   document.getElementById('bill-category').value,
+      notes:      document.getElementById('bill-notes').value,
+      photos:     savedPhotos,
+      photoMeta:  tmpBillPhotos.filter(p=>p&&p.fileId).map(p=>({
+        src:      p.driveUrl||p.src,
+        driveUrl: p.driveUrl,
+        fileId:   p.fileId
+      })),
+      createdAt: editingBillId
+        ? (S.bills.find(b=>b.id===editingBillId)||{}).createdAt || new Date().toISOString()
+        : new Date().toISOString()
+    };
+
+    if(editingBillId){
+      const idx=S.bills.findIndex(b=>b.id===editingBillId);
+      if(idx>=0) S.bills[idx]=bill; else S.bills.push(bill);
+    } else {
+      if(!S.bills) S.bills=[];
+      S.bills.push(bill);
+    }
+
+    editingBillId=null;
+    tmpBillPhotos=[];
+    Store.commit('bill:save');
+    closeModal('modal-add-bill');
+    showToast('Bill saved ✓');
+    if(tripId) renderTripBills(tripId);
+
+  } catch(e) {
+    console.error('[saveBill]', e);
+    showToast('Error saving bill: '+e.message);
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=origText; }
+  } finally {
+    _savingBill = false;
   }
-  editingBillId=null;tmpBillPhotos=[];
-  Store.commit('bill:save');
-  closeModal('modal-add-bill');
-  showToast('Bill saved ✓');
-  if(tripId)renderTripBills(tripId);
 }
 
 function deleteBill(id){
