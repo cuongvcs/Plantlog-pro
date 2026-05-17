@@ -110,6 +110,9 @@ function openAddBillFromScreen() {
   // Open add bill modal without pre-selecting a trip
   editingBillId = null;
   tmpBillPhotos = [];
+  _savingBill = false;
+  const _sb3=document.getElementById('bill-save-btn');
+  if(_sb3){ _sb3.disabled=false; _sb3.textContent='💾 Save Bill'; }
   document.getElementById('bill-modal-title').textContent = 'Add Bill';
   document.getElementById('bill-edit-id').textContent = '';
   document.getElementById('bill-save-btn').textContent = '💾 Save Bill';

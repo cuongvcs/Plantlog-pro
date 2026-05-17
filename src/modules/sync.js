@@ -542,6 +542,9 @@ function openAddBill(tripId){
   editingBillId=null;
   tmpBillPhotos=[];
   _savingBill=false;  // reset guard when opening modal
+  // Always re-enable button when opening add
+  const _sb2=document.getElementById('bill-save-btn');
+  if(_sb2){ _sb2.disabled=false; _sb2.textContent='💾 Save Bill'; }
   document.getElementById('bill-modal-title').textContent='Add Bill';
   document.getElementById('bill-edit-id').textContent='';
   document.getElementById('bill-save-btn').textContent='💾 Save Bill';
@@ -565,6 +568,9 @@ function openEditBill(id){
   const b=S.bills.find(x=>x.id===id);if(!b)return;
   editingBillId=id;
   _savingBill=false;  // reset guard when opening modal
+  // Always re-enable button when opening edit (may have been left disabled)
+  const _sb=document.getElementById('bill-save-btn');
+  if(_sb){ _sb.disabled=false; _sb.textContent='💾 Update Bill'; }
   // Load photos: normalise to {src, driveUrl, fileId} format
   tmpBillPhotos = (b.photos||[]).map(p => {
     if(typeof p === 'object' && p.src) return p;
@@ -682,6 +688,8 @@ async function saveBill(){
 
     editingBillId=null;
     tmpBillPhotos=[];
+    // Re-enable button BEFORE closing modal (important!)
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 Save Bill'; }
     Store.commit('bill:save');
     closeModal('modal-add-bill');
     showToast('Bill saved ✓');
