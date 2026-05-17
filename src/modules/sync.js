@@ -565,12 +565,12 @@ function openEditBill(id){
   const b=S.bills.find(x=>x.id===id);if(!b)return;
   editingBillId=id;
   _savingBill=false;  // reset guard when opening modal
-  // Load photos: use photoMeta (with Drive URLs) if available, else fall back to photos array
-  if(b.photoMeta && b.photoMeta.length){
-    tmpBillPhotos = b.photoMeta.map(m=>({src:m.src||m.driveUrl, driveUrl:m.driveUrl||'', fileId:m.fileId||''}));
-  } else {
-    tmpBillPhotos = (b.photos||[]).map(p=>({src:p, driveUrl:p.startsWith('https://')?p:'', fileId:''}));
-  }
+  // Load photos: normalise to {src, driveUrl, fileId} format
+  tmpBillPhotos = (b.photos||[]).map(p => {
+    if(typeof p === 'object' && p.src) return p;
+    const url = typeof p==='string' ? p : (p.driveUrl||p.src||'');
+    return {src:url, driveUrl:url.startsWith('https://')?url:'', fileId:''};
+  });
   document.getElementById('bill-modal-title').textContent='Edit Bill';
   document.getElementById('bill-edit-id').textContent='#'+id.slice(-6);
   document.getElementById('bill-save-btn').textContent='💾 Update Bill';
@@ -623,25 +623,29 @@ async function saveBill(){
     // Lock billId at start — never changes even during async uploads
     const billId = editingBillId || ('bill_'+Date.now());
 
-    // Upload any remaining local base64 photos before saving
+    // Upload local photos to Drive now (at save time — reliable, no race conditions)
     const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
-    if(gsUrl && gsUrl.includes('/exec')){
-      const hasLocal = tmpBillPhotos.some(p => (p.src||p||'').toString().startsWith('data:'));
-      if(hasLocal){
-        showToast('Uploading photos…');
-        if(saveBtn) saveBtn.textContent = '⟳ Uploading photos…';
-        for(let i=0;i<tmpBillPhotos.length;i++){
-          const p=tmpBillPhotos[i];
-          const src=p.src||(typeof p==='string'?p:'');
-          if(!src.startsWith('data:')) continue;
-          const result = await uploadBillPhotoToDrive(p, billId, tripId);
-          if(result) tmpBillPhotos[i]=result;
+    const canUpload = gsUrl && gsUrl.includes('/exec');
+    const localPhotos = tmpBillPhotos.filter(p => {
+      const src = (typeof p==='string') ? p : (p.src||'');
+      return src.startsWith('data:');
+    });
+
+    if(canUpload && localPhotos.length){
+      if(saveBtn) saveBtn.textContent = '⟳ Uploading '+localPhotos.length+' photo'+(localPhotos.length>1?'s':'')+'…';
+      for(let i=0; i<tmpBillPhotos.length; i++){
+        const p = tmpBillPhotos[i];
+        const src = (typeof p==='string') ? p : (p.src||'');
+        if(!src.startsWith('data:')) continue;  // skip already-uploaded
+        const result = await uploadBillPhotoToDrive(src, billId, tripId);
+        if(result){
+          tmpBillPhotos[i] = result;  // replace with Drive URL object
         }
       }
     }
 
-    // Build photos array: Drive URL where available, else base64
-    const savedPhotos = tmpBillPhotos.map(p=>{
+    // Build final photos array: Drive URL or base64 fallback
+    const savedPhotos = tmpBillPhotos.map(p => {
       if(typeof p==='string') return p;
       return p.driveUrl || p.src || '';
     }).filter(Boolean);
@@ -705,26 +709,24 @@ function triggerBillPhoto(){
   openPhotoSheet('bill');
 }
 
-// ── tmpBillPhotos format:
-// {src: 'data:...' or 'https://drive...', driveUrl:'', fileId:'', uploading:false}
-// Items with driveUrl are already on Drive; others are local base64
+// ── tmpBillPhotos: array of {src, driveUrl, fileId}
+// src  = local base64 (data:...) or Drive URL (https://...)
+// Photos are kept locally until Save — uploaded ONLY during saveBill()
 
 function renderBillPhotoGrid(){
   const g=document.getElementById('bill-photo-grid');
   if(!g) return;
   g.innerHTML = tmpBillPhotos.map((p,i)=>{
-    const src = p.driveUrl || p.src || (typeof p==='string'?p:'');
-    const isDrive = !!(p.driveUrl || p.fileId);
-    const isUploading = p.uploading;
+    const src    = (typeof p==='string') ? p : (p.driveUrl||p.src||'');
+    const isDrive = src.startsWith('https://');
     return `<div class="pthumb" style="position:relative;">
-      <img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;" onclick="viewBillPhotoTemp(${i})">
-      ${isUploading
-        ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;border-radius:var(--rs);">
-             <span style="font-size:10px;color:#fff;font-weight:700;">⟳</span>
-           </div>`
-        : `<button class="pdel" onclick="removeBillPhoto(${i})" style="position:absolute;top:3px;right:3px;">×</button>
-           ${isDrive ? '<span style="position:absolute;bottom:3px;left:3px;background:rgba(15,123,62,0.85);border-radius:3px;padding:1px 4px;font-size:9px;color:#fff;font-weight:700;">✓Drive</span>' : ''}`
-      }
+      <img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;"
+        onclick="${isDrive ? `window.open('`+src+`','_blank')` : `viewBillPhotoLocal(${i})`}">
+      <button class="pdel" onclick="removeBillPhoto(${i})"
+        style="position:absolute;top:3px;right:3px;">×</button>
+      ${isDrive ? `<span style="position:absolute;bottom:2px;left:2px;
+        background:rgba(15,123,62,0.85);border-radius:3px;padding:1px 4px;
+        font-size:8px;color:#fff;font-weight:700;">✓</span>` : ''}
     </div>`;
   }).join('')
   + `<div class="padd" onclick="triggerBillPhoto()">
@@ -733,21 +735,20 @@ function renderBillPhotoGrid(){
      </div>`;
 }
 
-function viewBillPhotoTemp(i){
+function viewBillPhotoLocal(i){
   const p = tmpBillPhotos[i];
-  if(!p) return;
-  const src = p.driveUrl || p.src || (typeof p==='string'?p:'');
-  if(p.driveUrl){
-    window.open(p.driveUrl, '_blank');
-    return;
-  }
+  const src = (typeof p==='string') ? p : (p.src||'');
+  if(!src) return;
   const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
   overlay.onclick=()=>overlay.remove();
   const img=document.createElement('img');
   img.src=src;
   img.style.cssText='max-width:95vw;max-height:80vh;border-radius:8px;object-fit:contain;';
-  overlay.appendChild(img);
+  const hint=document.createElement('div');
+  hint.textContent='Tap anywhere to close';
+  hint.style.cssText='color:rgba(255,255,255,0.5);font-size:12px;';
+  overlay.appendChild(img); overlay.appendChild(hint);
   document.body.appendChild(overlay);
 }
 
@@ -756,82 +757,49 @@ function removeBillPhoto(i){
   renderBillPhotoGrid();
 }
 
-// ── Upload a single photo to Drive ──────────────────────
-async function uploadBillPhotoToDrive(photoObj, billId, tripId){
+// ── Upload one photo to Drive ─────────────────────────────
+async function uploadBillPhotoToDrive(src, billId, tripId){
   const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
-  if(!gsUrl || !gsUrl.includes('/exec')) return null;
+  if(!gsUrl||!gsUrl.includes('/exec')) return null;
+  if(!src||!src.startsWith('data:')) return null;
 
-  // Build folder path: Bills Images/TripName_Date
-  let folderName = 'No Trip';
+  let folderName = 'No_Trip';
   if(tripId){
-    const trip = (S.trips||[]).find(t=>t.id===tripId);
+    const trip=(S.trips||[]).find(t=>t.id===tripId);
     if(trip){
-      const safe = (trip.plant||'Trip').replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,30);
-      const d = (trip.date||'').replace(/-/g,'');
-      folderName = safe + (d?'_'+d:'');
+      const safe=(trip.plant||'Trip').replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').slice(0,25);
+      const d=(trip.date||'').replace(/-/g,'');
+      folderName = safe+(d?'_'+d:'');
     }
   }
 
-  const src = photoObj.src || (typeof photoObj==='string' ? photoObj : '');
-  if(!src) return null;
-
-  // Extract base64 from data URI
-  const base64 = src.includes(',') ? src.split(',')[1] : src;
-  const mimeType = src.startsWith('data:') ? src.split(';')[0].replace('data:','') : 'image/jpeg';
-  const ext = mimeType.includes('png')?'png':'jpg';
-  const fileName = `bill_${billId||'x'}_${Date.now()}.${ext}`;
+  const base64   = src.split(',')[1];
+  const mimeType = src.split(';')[0].replace('data:','');
+  const ext      = mimeType.includes('png')?'png':'jpg';
+  const fileName = `bill_${(billId||'x').slice(-8)}_${Date.now()}.${ext}`;
 
   try{
-    const resp = await fetch(gsUrl, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
+    const resp = await fetch(gsUrl,{
+      method:'POST', headers:{'Content-Type':'text/plain'},
       body: JSON.stringify({
-        action:    'uploadFile',
-        taskId:    'bill_'+billId,
-        fileName:  fileName,
-        mimeType:  mimeType,
-        dataBase64: base64,
-        folder:    'Bills Images/' + folderName
+        action:'uploadFile', taskId:'bill_'+billId,
+        fileName, mimeType, dataBase64:base64,
+        folder:'Bills Images/'+folderName
       })
     });
     const data = await resp.json();
-    if(data && data.ok){
-      return {src:data.fileUrl, driveUrl:data.fileUrl, fileId:data.fileId};
-    }
-  }catch(e){
-    console.warn('[Bills] Photo upload error:', e.message);
-  }
+    if(data&&data.ok) return {src:data.fileUrl, driveUrl:data.fileUrl, fileId:data.fileId};
+  }catch(e){ console.warn('[Bill photo]',e.message); }
   return null;
 }
 
-// ── Handle photo selection: upload immediately if GS URL set ──
-async function handleBillPhotos(newPhotos, billId, tripId){
-  const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
-  const canUpload = gsUrl && gsUrl.includes('/exec');
-
+// ── Simple add: just store locally, no background upload ─
+function handleBillPhotos(newPhotos, billId, tripId){
+  // Store as simple objects — uploaded during saveBill()
   for(const src of newPhotos){
-    const photoObj = {src, driveUrl:'', fileId:'', uploading:canUpload};
-    tmpBillPhotos.push(photoObj);
+    tmpBillPhotos.push({src, driveUrl:'', fileId:''});
   }
   renderBillPhotoGrid();
-
-  if(!canUpload) return; // Save as local base64 only
-
-  // Upload each new local photo
-  for(let i=0; i<tmpBillPhotos.length; i++){
-    const p = tmpBillPhotos[i];
-    if(p.driveUrl || !p.src || !p.src.startsWith('data:')) continue; // already on Drive or not a data URI
-    p.uploading = true;
-    renderBillPhotoGrid();
-
-    const result = await uploadBillPhotoToDrive(p, billId||('bill_'+Date.now()), tripId);
-    if(result){
-      tmpBillPhotos[i] = {...result, uploading:false};
-    } else {
-      tmpBillPhotos[i].uploading = false;
-    }
-    renderBillPhotoGrid();
-  }
 }
 
 
