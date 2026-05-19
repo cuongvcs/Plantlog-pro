@@ -109,7 +109,9 @@ let S={
   inspections:[],
   library:[],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
   defaultTeam:[],lang:'en',
-  telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true}
+  telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
+  calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
+  reminders:[]  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
 };
 let curTrip=null,curReport=null,sigCanvas,sigCtx,isDrw=false;
 let calY,calM,selDay=null,signoffRes='Completed';
@@ -293,6 +295,9 @@ function init(){
   // Telegram: update status label + schedule daily notification check
   try{
     updateTelegramStatusLabel();
+    if(typeof updateCalendarStatusLabel==='function') updateCalendarStatusLabel();
+    // Check reminders on startup
+    setTimeout(()=>{ try{if(typeof checkRemindersToday==='function')checkRemindersToday();}catch(e){} }, 2000);
     // Check once on startup (after 3s delay so UI is ready)
     setTimeout(()=>{ try{checkAndSendDailyNotifications();}catch(e){} }, 3000);
   }catch(e){}
@@ -307,6 +312,12 @@ function init(){
       }
     }catch(e){ console.warn('Auto-load error:', e); }
   }, 1000);
+
+  // Auto-sync Google Calendar events (silent, 5s delay)
+  setTimeout(()=>{
+    try{ if(typeof autoSyncCalendar==='function') autoSyncCalendar(); }
+    catch(e){}
+  }, 5000);
 }
 
 // ═══════ SCREEN NAV ═══════
@@ -336,6 +347,7 @@ function showScreen(n){
   if(n==='export'){saveSignoff();buildPDFPreview();populateReportName();}
   if(n==='leave')renderCalendar();
   if(n==='library')renderLibrary();
+  if(n==='reminders')renderRemindersScreen();
   if(n==='inspection')renderInspectionScreen();
   if(n==='settings'&&hasPIN()&&!_settingsUnlocked){
     _pendingScreen='settings';

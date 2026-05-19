@@ -491,6 +491,8 @@ input, textarea, select, button { font-family: var(--font); }
 .cc.trip     { background:var(--brand-light); color:var(--brand-dark); font-weight:600; }
 .cc.has-task::after { content:''; position:absolute; bottom:3px; width:4px; height:4px; border-radius:50%; background:var(--red); }
 .cc.today.has-task::after { background:rgba(255,255,255,0.8); }
+.cc.has-reminder::before { content:''; position:absolute; bottom:3px; left:50%; transform:translateX(4px); width:4px; height:4px; border-radius:50%; background:var(--am); }
+.cc.today.has-reminder::before { background:rgba(255,255,255,0.7); }
 .ch2 { display:flex; align-items:center; justify-content:space-between; padding:4px 0 10px; }
 .cm { font-family:var(--font-hd); font-size:16px; font-weight:700; color:var(--n900); letter-spacing:-0.01em; text-align:center; }
 .cn { width:34px; height:34px; border-radius:var(--r-sm); border:1.5px solid var(--n200); background:var(--surface); color:var(--n600); cursor:pointer; font-size:18px; font-weight:500; display:flex; align-items:center; justify-content:center; transition:background var(--dur-fast); }

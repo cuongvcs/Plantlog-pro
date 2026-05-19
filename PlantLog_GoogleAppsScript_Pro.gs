@@ -20,13 +20,14 @@
 
 const SN={TRIPS:'Trips',TASKS:'Tasks',LEAVE:'Leave',REPORTS:'Reports',
   CHECKLIST:'Checklist',READINGS:'Readings',ISSUES:'Issues',TEAM:'Team',
-  BILLS:'Bills',MACHINES:'Machines',PLANS:'Plans',LOG:'SyncLog'};
+  BILLS:'Bills',MACHINES:'Machines',PLANS:'Plans',LOG:'SyncLog',REMINDERS:'Reminders'};
 
 const COLS={
   trips:    ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','SavedReports','CreatedAt'],
   tasks:    ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','PartsJson','FlightJson','FilesJson','AutoDuration','DurationMins','CreatedAt','UpdatedAt'],
   leave:    ['Date','Type','Note'],
-  reports:  ['TripID','SignoffSummary','SignoffResult','SignoffRemarks','SignedAt'],
+  reports:   ['TripID','SignoffSummary','SignoffResult','SignoffRemarks','SignedAt'],
+  reminders: ['ID','Title','Freq','Weekday','Monthday','YearMonth','YearDay','Time','Note','NotifyTele','NotifyCalendar','Status','CreatedAt'],
   checklist:['TripID','ItemID','Name','Result','Note'],
   readings: ['TripID','Type','Name','Tag','Value','Unit','Status','Condition','Notes'],
   issues:   ['TripID','Title','Description','Severity','IssueStatus','Action','PhotoCount'],
@@ -121,6 +122,7 @@ function doPost(e){
     const act=body.action;
     // syncAll uses body.payload, file actions use body directly
     if(act==='syncAll')  return json_({ok:true,result:syncAll(body.payload)});
+    if(act==='syncReminders') return json_(syncReminders(body.payload));
     if(act==='ping')     return json_({ok:true,result:{message:'PlantLog Pro API running'}});
     if(act==='uploadFile') return json_(uploadFileToDrive(body));
     if(act==='listFiles')  return json_(listTaskFiles(body));
@@ -204,7 +206,7 @@ function syncAll(p){
 
 function setupSheets(){
   const s=db_();
-  [['Trips',COLS.trips],['Tasks',COLS.tasks],['Leave',COLS.leave],['Reports',COLS.reports],
+  [['Trips',COLS.trips],['Tasks',COLS.tasks],['Leave',COLS.leave],['Reports',COLS.reports],['Reminders',COLS.reminders],
    ['Checklist',COLS.checklist],['Readings',COLS.readings],['Issues',COLS.issues],['Team',COLS.team],
    ['Bills',COLS.bills],['Machines',COLS.machines],['Plans',COLS.plans],['SyncLog',COLS.log]
   ].forEach(([n,h])=>ensureSheet(s,n,h));
@@ -472,6 +474,9 @@ function sendDailyTelegramNotifications() {
     if (ok) sent++;
     Utilities.sleep(500); // small delay between messages
   });
+  // Also check recurring reminders
+  try { checkAndSendReminders_(cfg, today); } catch(e) { Logger.log('Reminders error: ' + e.message); }
+
   Logger.log('Sent ' + sent + '/' + msgs.length + ' Telegram messages for ' + today);
 }
 
@@ -901,4 +906,139 @@ function findCalEventById_(cal, plpId, nearDate) {
 function testCalendarSync() {
   var result = syncPlantLogToCalendar({});
   Logger.log(JSON.stringify(result));
+}
+
+// ─── REMINDERS via GAS trigger ──────────────────────────────
+// Called by sendDailyTelegramNotifications() — checks reminders
+// and sends Telegram messages for ones due today
+
+function checkAndSendReminders_(cfg, today) {
+  var ss = db_();
+  if (!ss) return;
+  // Read reminders from Settings sheet (synced from app)
+  var sheet = ss.getSheetByName('Reminders');
+  if (!sheet) return;
+  var rows = sheet.getDataRange().getValues();
+  if (rows.length <= 1) return; // header only
+
+  var msgs = [];
+  rows.slice(1).forEach(function(row) {
+    var id = row[0], title = row[1], freq = row[2];
+    var weekday = row[3], monthday = row[4], yearMonth = row[5], yearDay = row[6];
+    var time = row[7]||'08:00', note = row[8], notifyTele = row[9], status = row[11];
+
+    if (status === 'paused' || !notifyTele) return;
+
+    var d = new Date(today);
+    var isDue = false;
+    if (freq === 'daily') isDue = true;
+    if (freq === 'weekly')  isDue = (d.getDay() === parseInt(weekday||1));
+    if (freq === 'monthly') isDue = (parseInt(today.split('-')[2]) === parseInt(monthday||1));
+    if (freq === 'yearly')  isDue = (today.slice(5,7) === String(yearMonth||'01').padStart(2,'0') &&
+                                     parseInt(today.split('-')[2]) === parseInt(yearDay||1));
+
+    if (isDue) {
+      var parts = ['🔔 Reminder - PlantLog', '', title];
+      if (note) parts.push(note);
+      parts.push('Time: ' + time);
+      var msg = parts.join('\n');
+      msgs.push(msg);
+    }
+  });
+
+  msgs.forEach(function(m) {
+    sendTelegramMsg_(cfg.token, cfg.chatId, m);
+    Utilities.sleep(300);
+  });
+}
+
+// ─── Sync Reminders ─────────────────────────────────────────
+function syncReminders(p) {
+  var s = db_();
+  if (!s || !p || !p.reminders) return {reminders: 0};
+  writeSheet(s, SN.REMINDERS, COLS.reminders, p.reminders.map(function(r) {
+    return [
+      r.id, r.title, r.freq,
+      r.weekday||'', r.monthday||'', r.yearMonth||'', r.yearDay||'',
+      r.time||'', r.note||'',
+      r.notifyTele?'true':'false',
+      r.notifyCalendar?'true':'false',
+      r.status||'active',
+      r.createdAt||new Date().toISOString()
+    ];
+  }));
+  return {reminders: p.reminders.length};
+}
+
+// ─── Check and send reminders (runs on schedule) ─────────────
+function sendScheduledReminders() {
+  var ss  = db_();
+  var cfg = getTelegramConfig_(ss);
+  if (!cfg || !cfg.token || !cfg.chatId) return;
+
+  var today = formatDate_(new Date());
+  var now   = new Date();
+  var hour  = now.getHours();
+
+  var reminders = readSheet(ss, SN.REMINDERS, COLS.reminders);
+
+  reminders.forEach(function(r) {
+    if (r.Status === 'paused') return;
+    if (r.NotifyTele !== 'true') return;
+    if (!isDueToday_(r, today)) return;
+
+    // Only send within 1 hour of reminder time
+    var remHour = r.Time ? parseInt(r.Time.split(':')[0]) : 8;
+    if (Math.abs(hour - remHour) > 1) return;
+
+    var freqLabel = {daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'}[r.Freq] || r.Freq;
+    
+    // Build message using array join to avoid newline literal issues
+    var parts = [
+      '🔔 Reminder - PlantLog',
+      '',
+      r.Title || 'Reminder',
+      'Repeat: ' + freqLabel
+    ];
+    if (r.Time) parts.push('Time: ' + r.Time);
+    if (r.Note) parts.push('');
+    if (r.Note) parts.push(r.Note);
+
+    var msg = parts.join('\n');
+    sendTelegramMsg_(cfg.token, cfg.chatId, msg);
+    Utilities.sleep(300);
+  });
+}
+
+
+function isDueToday_(r, today) {
+  var d = new Date(today);
+  var freq = r.Freq;
+  if (freq === 'daily') return true;
+  if (freq === 'weekly') {
+    var dow = d.getDay(); // 0=Sun
+    return String(dow) === String(r.Weekday);
+  }
+  if (freq === 'monthly') {
+    return String(d.getDate()) === String(r.Monthday);
+  }
+  if (freq === 'yearly') {
+    var mm = String(d.getMonth()+1).padStart(2,'0');
+    var dd = String(d.getDate()).padStart(2,'0');
+    return mm === String(r.YearMonth) && dd === String(r.YearDay).padStart(2,'0');
+  }
+  return false;
+}
+
+/**
+ * Set up a trigger to check reminders every hour.
+ * Run this once after setupTelegramTrigger().
+ */
+function setupReminderTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'sendScheduledReminders') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('sendScheduledReminders')
+    .timeBased().everyHours(1).create();
+  Logger.log('Reminder trigger set: checks every hour');
 }

@@ -320,8 +320,10 @@ function renderCalendar(){
     const type=S.leaveData[key];
     const isToday=calY===now.getFullYear()&&calM===now.getMonth()&&d===now.getDate();
     const hasTask=S.tasks.some(tk=>tk.date===key&&tk.status!=='done');
+    const hasReminder=typeof getRemindersForDate==='function'&&getRemindersForDate(key).length>0;
     let cls='cc'+(isToday&&!type?' today':type?' '+type:'')+(hasTask?' has-task':'');
-    html+=`<div class="${cls}" onclick="selCalDay('${key}',${d})">${d}</div>`;
+    const reminderDot=hasReminder?'<div style="position:absolute;bottom:2px;right:2px;width:5px;height:5px;border-radius:50%;background:var(--am);"></div>':'';
+    html+=`<div class="${cls}" style="position:relative;" onclick="selCalDay('${key}',${d})">${d}${reminderDot}</div>`;
   }
   grid.innerHTML=html;updateLeaveSummary();
 }
@@ -342,6 +344,22 @@ function selCalDay(key,d){
 
   const dtl=document.getElementById('day-task-list');
   let html='';
+
+  // Reminders for this day
+  const dayReminders = typeof getRemindersForDate==='function' ? getRemindersForDate(key) : [];
+  if(dayReminders.length){
+    html+=`<div style="background:var(--al);border-radius:var(--rs);padding:8px 10px;margin-bottom:8px;">`;
+    dayReminders.forEach(r=>{
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:3px 0;">
+        <span style="font-size:14px;">🔔</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--ad);">${r.title}</div>
+          ${r.note?`<div style="font-size:11px;color:var(--am);">${r.note}</div>`:''}
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  }
 
   // Leave / day type banner
   if(leaveType){

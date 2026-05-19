@@ -244,7 +244,8 @@ async function syncToSheets(){
     trips:enrichedTrips, tasks:enrichedTasks,
     leaveData:S.leaveData||{}, reports,
     machines:S.machines||[], plans:S.plans||[],
-    bills:enrichedBills
+    bills:enrichedBills,
+    reminders:(S.reminders||[])
   };
 
   try{
