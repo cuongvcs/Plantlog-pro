@@ -788,6 +788,12 @@ input, textarea, select, button { font-family: var(--font); }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       <span data-t="leave">Leave</span>
     </button>
+    <button class="nb" onclick="showScreen('reminders')" id="nb-reminders">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+      </svg>
+      <span>Reminders</span>
+    </button>
     <button class="nb" onclick="showScreen('settings')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       <span data-t="settings">Settings</span>
@@ -1925,11 +1931,11 @@ input, textarea, select, button { font-family: var(--font); }
     <div class="form-section-title">Date &amp; Time</div>
     <div class="frow">
       <div class="fg"><label class="fl">Start date *</label><input class="fi" type="date" id="task-date-start"></div>
-      <div class="fg"><label class="fl">Start time</label><input class="fi" type="time" id="task-time-start" value="08:00"></div>
+      <div class="fg"><label class="fl">Start time</label><input class="fi" type="time" id="task-time-start"></div>
     </div>
     <div class="frow">
       <div class="fg"><label class="fl">End date</label><input class="fi" type="date" id="task-date-end"></div>
-      <div class="fg"><label class="fl">End time</label><input class="fi" type="time" id="task-time-end" value="17:00"></div>
+      <div class="fg"><label class="fl">End time</label><input class="fi" type="time" id="task-time-end"></div>
     </div>
     <!-- Duration with auto-calc toggle -->
     <div class="fg" style="margin-bottom:0;">
@@ -3907,7 +3913,7 @@ function openNewTaskModal(prefillDate, prefillCat){
   document.getElementById('task-modal-title').textContent='New Task';
   document.getElementById('task-edit-id').textContent='';
   // Clear all fields
-  ['task-title','task-desc','task-date-start','task-time-start','task-date-end','task-time-end','task-hours','task-minutes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=id.includes('time-start')?'08:00':id.includes('time-end')?'17:00':'';});
+  ['task-title','task-desc','task-date-start','task-time-start','task-date-end','task-time-end','task-hours','task-minutes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('task-priority').value='medium';
   document.getElementById('task-period').value='weekly';
   selectTaskCat(prefillCat||'work');
@@ -3929,9 +3935,9 @@ function openEditTaskModal(id){
   document.getElementById('task-title').value=tk.title||'';
   document.getElementById('task-desc').value=tk.desc||'';
   document.getElementById('task-date-start').value=tk.dateStart||tk.date||'';
-  document.getElementById('task-time-start').value=tk.timeStart||tk.time||'08:00';
+  document.getElementById('task-time-start').value=(tk.timeStart!==undefined&&tk.timeStart!==null)?tk.timeStart:(tk.time||'');
   document.getElementById('task-date-end').value=tk.dateEnd||'';
-  document.getElementById('task-time-end').value=tk.timeEnd||'17:00';
+  document.getElementById('task-time-end').value=(tk.timeEnd!==undefined&&tk.timeEnd!==null)?tk.timeEnd:'';  setTimeout(updateAutoDurationPreview,50);
   setAutoDuration(tk.autoDuration===true);
   if(!tk.autoDuration){
     document.getElementById('task-hours').value=tk.hours||'';

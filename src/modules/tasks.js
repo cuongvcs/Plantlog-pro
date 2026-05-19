@@ -74,7 +74,7 @@ function openNewTaskModal(prefillDate, prefillCat){
   document.getElementById('task-modal-title').textContent='New Task';
   document.getElementById('task-edit-id').textContent='';
   // Clear all fields
-  ['task-title','task-desc','task-date-start','task-time-start','task-date-end','task-time-end','task-hours','task-minutes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=id.includes('time-start')?'08:00':id.includes('time-end')?'17:00':'';});
+  ['task-title','task-desc','task-date-start','task-time-start','task-date-end','task-time-end','task-hours','task-minutes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('task-priority').value='medium';
   document.getElementById('task-period').value='weekly';
   selectTaskCat(prefillCat||'work');
@@ -96,9 +96,9 @@ function openEditTaskModal(id){
   document.getElementById('task-title').value=tk.title||'';
   document.getElementById('task-desc').value=tk.desc||'';
   document.getElementById('task-date-start').value=tk.dateStart||tk.date||'';
-  document.getElementById('task-time-start').value=tk.timeStart||tk.time||'08:00';
+  document.getElementById('task-time-start').value=(tk.timeStart!==undefined&&tk.timeStart!==null)?tk.timeStart:(tk.time||'');
   document.getElementById('task-date-end').value=tk.dateEnd||'';
-  document.getElementById('task-time-end').value=tk.timeEnd||'17:00';
+  document.getElementById('task-time-end').value=(tk.timeEnd!==undefined&&tk.timeEnd!==null)?tk.timeEnd:'';  setTimeout(updateAutoDurationPreview,50);
   setAutoDuration(tk.autoDuration===true);
   if(!tk.autoDuration){
     document.getElementById('task-hours').value=tk.hours||'';

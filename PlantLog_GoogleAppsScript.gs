@@ -938,11 +938,10 @@ function checkAndSendReminders_(cfg, today) {
                                      parseInt(today.split('-')[2]) === parseInt(yearDay||1));
 
     if (isDue) {
-      var msg = '🔔 <b>Reminder: ' + title + '</b>';
-      if (note) msg += '
-' + note;
-      msg += '
-⏰ ' + time;
+      var parts = ['🔔 Reminder - PlantLog', '', title];
+      if (note) parts.push(note);
+      parts.push('Time: ' + time);
+      var msg = parts.join('\n');
       msgs.push(msg);
     }
   });
@@ -988,28 +987,29 @@ function sendScheduledReminders() {
     if (r.NotifyTele !== 'true') return;
     if (!isDueToday_(r, today)) return;
 
-    // Only send at the right time (within 1 hour of reminder time)
+    // Only send within 1 hour of reminder time
     var remHour = r.Time ? parseInt(r.Time.split(':')[0]) : 8;
     if (Math.abs(hour - remHour) > 1) return;
 
     var freqLabel = {daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'}[r.Freq] || r.Freq;
-    var msg = '🔔 <b>Reminder — PlantLog</b>
+    
+    // Build message using array join to avoid newline literal issues
+    var parts = [
+      '🔔 Reminder - PlantLog',
+      '',
+      r.Title || 'Reminder',
+      'Repeat: ' + freqLabel
+    ];
+    if (r.Time) parts.push('Time: ' + r.Time);
+    if (r.Note) parts.push('');
+    if (r.Note) parts.push(r.Note);
 
-'
-      + '<b>' + (r.Title||'Reminder') + '</b>
-'
-      + 'Repeat: ' + freqLabel + '
-'
-      + (r.Time ? 'Time: ' + r.Time + '
-' : '')
-      + (r.Note ? '
-' + r.Note + '
-' : '');
-
+    var msg = parts.join('\n');
     sendTelegramMsg_(cfg.token, cfg.chatId, msg);
     Utilities.sleep(300);
   });
 }
+
 
 function isDueToday_(r, today) {
   var d = new Date(today);
