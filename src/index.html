@@ -8295,6 +8295,13 @@ async function loadFromSheets(silent){
           const de=safeDate(tk.DateEnd)||ds;
           const ts=safeTime(tk.TimeStart||tk.Time);
           const te=safeTime(tk.TimeEnd);
+          // Parse parts JSON
+          let pts=[];
+          try{
+            const pj=ss(tk.PartsJson||'');
+            if(pj.startsWith('['))pts=JSON.parse(pj);
+          }catch(e){pts=[];}
+
           return {
             id:           ss(tk.ID),
             title:        ss(tk.Title),
@@ -8306,6 +8313,8 @@ async function loadFromSheets(silent){
             timeEnd:      te,
             hours:        ss(tk.Hours),
             minutes:      ss(tk.Minutes),
+            autoDuration: ss(tk.AutoDuration)==='true',
+            durationMins: ss(tk.DurationMins)?parseInt(ss(tk.DurationMins))||0:0,
             priority:     ss(tk.Priority)||'medium',
             period:       ss(tk.Period),
             machine:      ss(tk.Machine),
@@ -8313,8 +8322,10 @@ async function loadFromSheets(silent){
             tripId:       ss(tk.TripID),
             status:       ss(tk.Status)||'pending',
             checklist:    cl,
+            parts:        pts,
             flight:       tk.FlightJson?(()=>{try{return JSON.parse(ss(tk.FlightJson));}catch(e){return null;}})():null,
             files:        tk.FilesJson?(()=>{try{return JSON.parse(ss(tk.FilesJson));}catch(e){return [];}})():[],
+            savedReports: tk.SavedReports?(()=>{try{const p=JSON.parse(ss(tk.SavedReports));return Array.isArray(p)?p:[];}catch(e){return [];}})():[],
             date:         ds,
             time:         ts,
             createdAt:    ss(tk.CreatedAt),
