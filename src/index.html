@@ -1741,13 +1741,42 @@ input, textarea, select, button { font-family: var(--font); }
       <div class="fg"><label class="fl">End date</label><input class="fi" type="date" id="task-date-end"></div>
       <div class="fg"><label class="fl">End time</label><input class="fi" type="time" id="task-time-end" value="17:00"></div>
     </div>
+    <!-- Duration with auto-calc toggle -->
     <div class="fg" style="margin-bottom:0;">
-      <label class="fl">Work hours (planned)</label>
-      <div class="time-dur">
-        <input class="fi" type="number" id="task-hours" placeholder="0" min="0" max="24" step="0.5" style="max-width:90px;">
-        <span style="font-size:13px;color:var(--g500);">hours</span>
-        <input class="fi" type="number" id="task-minutes" placeholder="0" min="0" max="59" step="15" style="max-width:90px;">
-        <span style="font-size:13px;color:var(--g500);">min</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <label class="fl" style="margin-bottom:0;">Duration</label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+          <span style="font-size:11px;color:var(--n500);font-weight:600;">Auto-calculate</span>
+          <div style="position:relative;width:38px;height:22px;" onclick="toggleAutoDuration()">
+            <input type="checkbox" id="task-auto-duration" style="opacity:0;width:0;height:0;position:absolute;">
+            <div id="task-auto-duration-track"
+              style="position:absolute;inset:0;border-radius:11px;background:var(--n300);transition:background 0.2s;cursor:pointer;">
+              <div id="task-auto-duration-thumb"
+                style="position:absolute;width:18px;height:18px;top:2px;left:2px;border-radius:50%;background:#fff;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+              </div>
+            </div>
+          </div>
+        </label>
+      </div>
+      <!-- Manual entry (shown when auto is OFF) -->
+      <div id="task-manual-duration">
+        <div class="time-dur">
+          <input class="fi" type="number" id="task-hours" placeholder="0" min="0" max="999" step="0.5" style="max-width:90px;">
+          <span style="font-size:13px;color:var(--n500);">hrs</span>
+          <input class="fi" type="number" id="task-minutes" placeholder="0" min="0" max="59" step="15" style="max-width:90px;">
+          <span style="font-size:13px;color:var(--n500);">min</span>
+        </div>
+      </div>
+      <!-- Auto preview (shown when auto is ON) -->
+      <div id="task-auto-duration-preview" style="display:none;">
+        <div style="background:var(--brand-light);border-radius:var(--rs);padding:10px 12px;
+                    display:flex;align-items:center;gap:8px;border:1px solid rgba(15,123,62,0.2);">
+          <span style="font-size:16px;">⏱</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--brand-dark);" id="task-auto-duration-result">—</div>
+            <div style="font-size:10px;color:var(--n500);">Calculated from start → end time</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -3668,6 +3697,7 @@ function openNewTaskModal(prefillDate, prefillCat){
   resetPartRows();
   resetTaskFileItems();
   resetTaskFlightFields();
+  setAutoDuration(false);  // default: manual
   openModal('modal-new-task');
 }
 
@@ -3682,8 +3712,11 @@ function openEditTaskModal(id){
   document.getElementById('task-time-start').value=tk.timeStart||tk.time||'08:00';
   document.getElementById('task-date-end').value=tk.dateEnd||'';
   document.getElementById('task-time-end').value=tk.timeEnd||'17:00';
-  document.getElementById('task-hours').value=tk.hours||'';
-  document.getElementById('task-minutes').value=tk.minutes||'';
+  setAutoDuration(tk.autoDuration===true);
+  if(!tk.autoDuration){
+    document.getElementById('task-hours').value=tk.hours||'';
+    document.getElementById('task-minutes').value=tk.minutes||'';
+  }
   document.getElementById('task-priority').value=tk.priority||'medium';
   document.getElementById('task-period').value=tk.period||'weekly';
   selectTaskCat(tk.category||'work');
@@ -3723,6 +3756,56 @@ function toggleReturnFlight(){
   if(sec)sec.style.display=(chk&&chk.checked)?'':'none';
 }
 
+// ═══════ AUTO DURATION TOGGLE ═══════
+function toggleAutoDuration(){
+  const cb  = document.getElementById('task-auto-duration');
+  const on  = cb ? !cb.checked : false;
+  setAutoDuration(on);
+}
+
+function setAutoDuration(on){
+  const cb      = document.getElementById('task-auto-duration');
+  const track   = document.getElementById('task-auto-duration-track');
+  const thumb   = document.getElementById('task-auto-duration-thumb');
+  const manual  = document.getElementById('task-manual-duration');
+  const preview = document.getElementById('task-auto-duration-preview');
+  if(cb)    cb.checked = on;
+  if(track) track.style.background = on ? 'var(--brand)' : 'var(--n300)';
+  if(thumb) thumb.style.transform  = on ? 'translateX(16px)' : 'translateX(0)';
+  if(manual)  manual.style.display  = on ? 'none' : '';
+  if(preview) preview.style.display = on ? '' : 'none';
+  if(on) updateAutoDurationPreview();
+}
+
+function updateAutoDurationPreview(){
+  const cb = document.getElementById('task-auto-duration');
+  if(!cb || !cb.checked) return;
+  const ds = (document.getElementById('task-date-start')||{}).value||'';
+  const de = (document.getElementById('task-date-end')||{}).value||ds;
+  const ts = (document.getElementById('task-time-start')||{}).value||'';
+  const te = (document.getElementById('task-time-end')||{}).value||'';
+  const el = document.getElementById('task-auto-duration-result');
+  if(!el) return;
+  if(!ds||!ts||!te){el.textContent='—';return;}
+  const d = calcDurationFromTimes(ds, de||ds, ts, te);
+  el.textContent = d ? d.label : 'Invalid time range';
+}
+
+function calcDurationFromTimes(ds, de, ts, te){
+  try{
+    const start = new Date(ds+'T'+ts);
+    const end   = new Date((de||ds)+'T'+te);
+    if(isNaN(start)||isNaN(end)) return null;
+    const diff = end - start;
+    if(diff <= 0) return null;
+    const totalMins = Math.round(diff/60000);
+    const h = Math.floor(totalMins/60);
+    const m = totalMins % 60;
+    const label = h>0&&m>0 ? h+'h '+m+'m' : h>0 ? h+'h' : m+'m';
+    return {totalMins, h, m, label};
+  }catch(e){ return null; }
+}
+
 function selectTaskCat(cat){
   // Update active button
   ['work','leave','travel'].forEach(c=>{
@@ -3744,6 +3827,14 @@ function selectTaskCat(cat){
 
   // Flight details — travel only
   show('task-flight-section', cat==='travel');
+  // Wire time fields to update auto-duration preview when changed
+  ['task-time-start','task-time-end','task-date-start','task-date-end'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&!el._autoDurBound){
+      el.addEventListener('change', updateAutoDurationPreview);
+      el._autoDurBound=true;
+    }
+  });
   if(cat!=='travel') resetTaskFlightFields();
 
   // Parts toggle + section — work only
@@ -3778,8 +3869,9 @@ function saveNewTask(){
     timeStart:document.getElementById('task-time-start').value,
     dateEnd:document.getElementById('task-date-end').value||dateStart,
     timeEnd:document.getElementById('task-time-end').value,
-    hours:document.getElementById('task-hours').value,
-    minutes:document.getElementById('task-minutes').value,
+    autoDuration: (document.getElementById('task-auto-duration')||{}).checked || false,
+    hours:   (document.getElementById('task-auto-duration')||{}).checked ? '' : (document.getElementById('task-hours').value||''),
+    minutes: (document.getElementById('task-auto-duration')||{}).checked ? '' : (document.getElementById('task-minutes').value||''),
     priority:document.getElementById('task-priority').value,
     period:document.getElementById('task-period').value,
     machine:document.getElementById('task-machine').value,
@@ -5228,21 +5320,55 @@ function buildPDFPreview(){
     <div class="ps">${(()=>{
       const sel=(r.reportTasks||[]);
       if(!sel.length)return'<div class="pst" style="color:var(--g400);">Tasks (none selected)</div>';
-      const tasks=sel.map(id=>S.tasks.find(t=>t.id===id)).filter(Boolean).sort((a,b)=>(b.dateStart||b.date||'').localeCompare(a.dateStart||a.date||'')||a.title.localeCompare(b.title));
+      const tasks=sel.map(id=>S.tasks.find(t=>t.id===id)).filter(Boolean).sort((a,b)=>(a.dateStart||a.date||'').localeCompare(b.dateStart||b.date||'')||a.title.localeCompare(b.title));
       const catIcon=c=>({work:'🔧',leave:'🌴',travel:'✈️'}[c]||'📋');
       const statusIcon=s=>s==='done'?'✅':s==='in_progress'?'🔄':'⏳';
+
+      // ── Calculate total duration for work tasks with autoDuration ON ──
+      let totalAutoMins = 0;
+      let autoCount = 0;
+      tasks.forEach(tk=>{
+        if(tk.category==='work' && tk.autoDuration){
+          const d = calcDurationFromTimes(tk.dateStart||tk.date, tk.dateEnd||tk.dateStart||tk.date, tk.timeStart, tk.timeEnd);
+          if(d){ totalAutoMins += d.totalMins; autoCount++; }
+        }
+      });
+      const totalH = Math.floor(totalAutoMins/60);
+      const totalM = totalAutoMins % 60;
+      const totalLabel = totalAutoMins > 0
+        ? (totalH>0&&totalM>0 ? totalH+'h '+totalM+'m' : totalH>0 ? totalH+'h' : totalM+'m')
+        : '—';
+
       // Group by date
       const byDate={};
       tasks.forEach(tk=>{const d=tk.dateStart||tk.date||'';if(!byDate[d])byDate[d]=[];byDate[d].push(tk);});
       let out=`<div class="pst">Tasks in Report (${tasks.length})</div>`;
+
+      // ── Total work hours summary banner ──
+      if(autoCount>0){
+        out+=`<div style="background:var(--brand-light);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px;
+                          display:flex;justify-content:space-between;align-items:center;
+                          border:1px solid rgba(15,123,62,0.2);">
+          <span style="font-size:12px;color:var(--brand-dark);font-weight:600;">⏱ Total Work Hours (${autoCount} tasks)</span>
+          <span style="font-size:16px;font-weight:800;color:var(--brand);font-family:var(--font-hd);">${totalLabel}</span>
+        </div>`;
+      }
+
       Object.entries(byDate).forEach(([dateKey,dayTasks])=>{
         if(dateKey)out+=`<div style="font-size:11px;font-weight:700;color:#00843D;padding:4px 0;border-bottom:1px solid #e8f5ee;margin-bottom:4px;">${fmtDate(dateKey)}</div>`;
         dayTasks.forEach(tk=>{
           const note=(r.reportTaskNotes||{})[tk.id]||'';
-          const dur=calcDuration(tk);
+          // Use auto-calculated duration if enabled, else manual
+          let dur='', autoTag='';
+          if(tk.category==='work' && tk.autoDuration){
+            const d = calcDurationFromTimes(tk.dateStart||tk.date, tk.dateEnd||tk.dateStart||tk.date, tk.timeStart, tk.timeEnd);
+            if(d){ dur=d.label; autoTag='<span style="background:var(--brand-light);color:var(--brand-dark);border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;">AUTO</span>'; }
+          } else {
+            dur = calcDuration(tk);
+          }
           const timeStr=tk.timeStart?(tk.timeEnd?`${tk.timeStart}–${tk.timeEnd}`:tk.timeStart):'';
           out+=`<div style="margin-bottom:8px;padding:6px 8px;background:var(--g50);border-radius:6px;border-left:3px solid ${tk.category==='leave'?'var(--amber)':tk.category==='travel'?'var(--blue)':'var(--green)'};">
-            <div style="font-size:12px;font-weight:500;">${statusIcon(tk.status)} ${tk.title}</div>
+            <div style="font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;">${statusIcon(tk.status)} ${tk.title} ${autoTag}</div>
             <div style="font-size:11px;color:var(--g500);margin-top:2px;display:flex;flex-wrap:wrap;gap:6px;">
               ${timeStr?`<span>⏰ ${timeStr}</span>`:''}
               ${dur?`<span>⏱ ${dur}</span>`:''}
@@ -7228,6 +7354,19 @@ async function syncToSheets(){
       partsJson:     tk.parts&&tk.parts.length?JSON.stringify(tk.parts):'',
       flightJson:    tk.flight?JSON.stringify(tk.flight):'',
       filesJson:     tk.files&&tk.files.length?JSON.stringify(tk.files):'',
+      autoDuration:  tk.autoDuration?'true':'false',
+      durationMins:  (()=>{
+        if(tk.autoDuration&&tk.category==='work'){
+          try{
+            const s=new Date((tk.dateStart||tk.date)+'T'+(tk.timeStart||'00:00'));
+            const e=new Date((tk.dateEnd||tk.dateStart||tk.date)+'T'+(tk.timeEnd||'00:00'));
+            const d=e-s;
+            return d>0?Math.round(d/60000):'';
+          }catch(ex){return '';}
+        }
+        if(tk.hours||tk.minutes) return (parseInt(tk.hours||0)*60)+(parseInt(tk.minutes||0));
+        return '';
+      })(),
       createdAt:     s(tk.createdAt),
       updatedAt:     s(tk.updatedAt)||new Date().toISOString()
     };

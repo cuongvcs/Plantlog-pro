@@ -576,21 +576,55 @@ function buildPDFPreview(){
     <div class="ps">${(()=>{
       const sel=(r.reportTasks||[]);
       if(!sel.length)return'<div class="pst" style="color:var(--g400);">Tasks (none selected)</div>';
-      const tasks=sel.map(id=>S.tasks.find(t=>t.id===id)).filter(Boolean).sort((a,b)=>(b.dateStart||b.date||'').localeCompare(a.dateStart||a.date||'')||a.title.localeCompare(b.title));
+      const tasks=sel.map(id=>S.tasks.find(t=>t.id===id)).filter(Boolean).sort((a,b)=>(a.dateStart||a.date||'').localeCompare(b.dateStart||b.date||'')||a.title.localeCompare(b.title));
       const catIcon=c=>({work:'🔧',leave:'🌴',travel:'✈️'}[c]||'📋');
       const statusIcon=s=>s==='done'?'✅':s==='in_progress'?'🔄':'⏳';
+
+      // ── Calculate total duration for work tasks with autoDuration ON ──
+      let totalAutoMins = 0;
+      let autoCount = 0;
+      tasks.forEach(tk=>{
+        if(tk.category==='work' && tk.autoDuration){
+          const d = calcDurationFromTimes(tk.dateStart||tk.date, tk.dateEnd||tk.dateStart||tk.date, tk.timeStart, tk.timeEnd);
+          if(d){ totalAutoMins += d.totalMins; autoCount++; }
+        }
+      });
+      const totalH = Math.floor(totalAutoMins/60);
+      const totalM = totalAutoMins % 60;
+      const totalLabel = totalAutoMins > 0
+        ? (totalH>0&&totalM>0 ? totalH+'h '+totalM+'m' : totalH>0 ? totalH+'h' : totalM+'m')
+        : '—';
+
       // Group by date
       const byDate={};
       tasks.forEach(tk=>{const d=tk.dateStart||tk.date||'';if(!byDate[d])byDate[d]=[];byDate[d].push(tk);});
       let out=`<div class="pst">Tasks in Report (${tasks.length})</div>`;
+
+      // ── Total work hours summary banner ──
+      if(autoCount>0){
+        out+=`<div style="background:var(--brand-light);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px;
+                          display:flex;justify-content:space-between;align-items:center;
+                          border:1px solid rgba(15,123,62,0.2);">
+          <span style="font-size:12px;color:var(--brand-dark);font-weight:600;">⏱ Total Work Hours (${autoCount} tasks)</span>
+          <span style="font-size:16px;font-weight:800;color:var(--brand);font-family:var(--font-hd);">${totalLabel}</span>
+        </div>`;
+      }
+
       Object.entries(byDate).forEach(([dateKey,dayTasks])=>{
         if(dateKey)out+=`<div style="font-size:11px;font-weight:700;color:#00843D;padding:4px 0;border-bottom:1px solid #e8f5ee;margin-bottom:4px;">${fmtDate(dateKey)}</div>`;
         dayTasks.forEach(tk=>{
           const note=(r.reportTaskNotes||{})[tk.id]||'';
-          const dur=calcDuration(tk);
+          // Use auto-calculated duration if enabled, else manual
+          let dur='', autoTag='';
+          if(tk.category==='work' && tk.autoDuration){
+            const d = calcDurationFromTimes(tk.dateStart||tk.date, tk.dateEnd||tk.dateStart||tk.date, tk.timeStart, tk.timeEnd);
+            if(d){ dur=d.label; autoTag='<span style="background:var(--brand-light);color:var(--brand-dark);border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;">AUTO</span>'; }
+          } else {
+            dur = calcDuration(tk);
+          }
           const timeStr=tk.timeStart?(tk.timeEnd?`${tk.timeStart}–${tk.timeEnd}`:tk.timeStart):'';
           out+=`<div style="margin-bottom:8px;padding:6px 8px;background:var(--g50);border-radius:6px;border-left:3px solid ${tk.category==='leave'?'var(--amber)':tk.category==='travel'?'var(--blue)':'var(--green)'};">
-            <div style="font-size:12px;font-weight:500;">${statusIcon(tk.status)} ${tk.title}</div>
+            <div style="font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;">${statusIcon(tk.status)} ${tk.title} ${autoTag}</div>
             <div style="font-size:11px;color:var(--g500);margin-top:2px;display:flex;flex-wrap:wrap;gap:6px;">
               ${timeStr?`<span>⏰ ${timeStr}</span>`:''}
               ${dur?`<span>⏱ ${dur}</span>`:''}

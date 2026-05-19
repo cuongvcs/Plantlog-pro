@@ -143,6 +143,19 @@ async function syncToSheets(){
       partsJson:     tk.parts&&tk.parts.length?JSON.stringify(tk.parts):'',
       flightJson:    tk.flight?JSON.stringify(tk.flight):'',
       filesJson:     tk.files&&tk.files.length?JSON.stringify(tk.files):'',
+      autoDuration:  tk.autoDuration?'true':'false',
+      durationMins:  (()=>{
+        if(tk.autoDuration&&tk.category==='work'){
+          try{
+            const s=new Date((tk.dateStart||tk.date)+'T'+(tk.timeStart||'00:00'));
+            const e=new Date((tk.dateEnd||tk.dateStart||tk.date)+'T'+(tk.timeEnd||'00:00'));
+            const d=e-s;
+            return d>0?Math.round(d/60000):'';
+          }catch(ex){return '';}
+        }
+        if(tk.hours||tk.minutes) return (parseInt(tk.hours||0)*60)+(parseInt(tk.minutes||0));
+        return '';
+      })(),
       createdAt:     s(tk.createdAt),
       updatedAt:     s(tk.updatedAt)||new Date().toISOString()
     };

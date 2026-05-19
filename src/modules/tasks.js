@@ -84,6 +84,7 @@ function openNewTaskModal(prefillDate, prefillCat){
   resetPartRows();
   resetTaskFileItems();
   resetTaskFlightFields();
+  setAutoDuration(false);  // default: manual
   openModal('modal-new-task');
 }
 
@@ -98,8 +99,11 @@ function openEditTaskModal(id){
   document.getElementById('task-time-start').value=tk.timeStart||tk.time||'08:00';
   document.getElementById('task-date-end').value=tk.dateEnd||'';
   document.getElementById('task-time-end').value=tk.timeEnd||'17:00';
-  document.getElementById('task-hours').value=tk.hours||'';
-  document.getElementById('task-minutes').value=tk.minutes||'';
+  setAutoDuration(tk.autoDuration===true);
+  if(!tk.autoDuration){
+    document.getElementById('task-hours').value=tk.hours||'';
+    document.getElementById('task-minutes').value=tk.minutes||'';
+  }
   document.getElementById('task-priority').value=tk.priority||'medium';
   document.getElementById('task-period').value=tk.period||'weekly';
   selectTaskCat(tk.category||'work');
@@ -139,6 +143,56 @@ function toggleReturnFlight(){
   if(sec)sec.style.display=(chk&&chk.checked)?'':'none';
 }
 
+// ═══════ AUTO DURATION TOGGLE ═══════
+function toggleAutoDuration(){
+  const cb  = document.getElementById('task-auto-duration');
+  const on  = cb ? !cb.checked : false;
+  setAutoDuration(on);
+}
+
+function setAutoDuration(on){
+  const cb      = document.getElementById('task-auto-duration');
+  const track   = document.getElementById('task-auto-duration-track');
+  const thumb   = document.getElementById('task-auto-duration-thumb');
+  const manual  = document.getElementById('task-manual-duration');
+  const preview = document.getElementById('task-auto-duration-preview');
+  if(cb)    cb.checked = on;
+  if(track) track.style.background = on ? 'var(--brand)' : 'var(--n300)';
+  if(thumb) thumb.style.transform  = on ? 'translateX(16px)' : 'translateX(0)';
+  if(manual)  manual.style.display  = on ? 'none' : '';
+  if(preview) preview.style.display = on ? '' : 'none';
+  if(on) updateAutoDurationPreview();
+}
+
+function updateAutoDurationPreview(){
+  const cb = document.getElementById('task-auto-duration');
+  if(!cb || !cb.checked) return;
+  const ds = (document.getElementById('task-date-start')||{}).value||'';
+  const de = (document.getElementById('task-date-end')||{}).value||ds;
+  const ts = (document.getElementById('task-time-start')||{}).value||'';
+  const te = (document.getElementById('task-time-end')||{}).value||'';
+  const el = document.getElementById('task-auto-duration-result');
+  if(!el) return;
+  if(!ds||!ts||!te){el.textContent='—';return;}
+  const d = calcDurationFromTimes(ds, de||ds, ts, te);
+  el.textContent = d ? d.label : 'Invalid time range';
+}
+
+function calcDurationFromTimes(ds, de, ts, te){
+  try{
+    const start = new Date(ds+'T'+ts);
+    const end   = new Date((de||ds)+'T'+te);
+    if(isNaN(start)||isNaN(end)) return null;
+    const diff = end - start;
+    if(diff <= 0) return null;
+    const totalMins = Math.round(diff/60000);
+    const h = Math.floor(totalMins/60);
+    const m = totalMins % 60;
+    const label = h>0&&m>0 ? h+'h '+m+'m' : h>0 ? h+'h' : m+'m';
+    return {totalMins, h, m, label};
+  }catch(e){ return null; }
+}
+
 function selectTaskCat(cat){
   // Update active button
   ['work','leave','travel'].forEach(c=>{
@@ -160,6 +214,14 @@ function selectTaskCat(cat){
 
   // Flight details — travel only
   show('task-flight-section', cat==='travel');
+  // Wire time fields to update auto-duration preview when changed
+  ['task-time-start','task-time-end','task-date-start','task-date-end'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&!el._autoDurBound){
+      el.addEventListener('change', updateAutoDurationPreview);
+      el._autoDurBound=true;
+    }
+  });
   if(cat!=='travel') resetTaskFlightFields();
 
   // Parts toggle + section — work only
@@ -194,8 +256,9 @@ function saveNewTask(){
     timeStart:document.getElementById('task-time-start').value,
     dateEnd:document.getElementById('task-date-end').value||dateStart,
     timeEnd:document.getElementById('task-time-end').value,
-    hours:document.getElementById('task-hours').value,
-    minutes:document.getElementById('task-minutes').value,
+    autoDuration: (document.getElementById('task-auto-duration')||{}).checked || false,
+    hours:   (document.getElementById('task-auto-duration')||{}).checked ? '' : (document.getElementById('task-hours').value||''),
+    minutes: (document.getElementById('task-auto-duration')||{}).checked ? '' : (document.getElementById('task-minutes').value||''),
     priority:document.getElementById('task-priority').value,
     period:document.getElementById('task-period').value,
     machine:document.getElementById('task-machine').value,

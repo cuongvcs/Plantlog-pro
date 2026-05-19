@@ -2,6 +2,12 @@
  * PlantLog PRO — Google Apps Script Backend
  * Database: 'PlantLog Pro Database' (separate from old PlantLog Database)
  *
+ * REQUIRED: After pasting this code, go to:
+ *   Project Settings (⚙️) → Script Properties
+ *   OR just run any function — it will prompt you to authorize
+ *   Click "Review Permissions" → "Advanced" → "Go to PlantLog (unsafe)" → Allow
+ *   This grants: Drive, Spreadsheets, and External URL fetch permissions.
+ *
  * SETUP STEPS:
  * 1. Go to script.google.com → New project → name it 'PlantLog Pro Backend'
  * 2. Paste this entire file → Save (Ctrl+S)
@@ -18,7 +24,7 @@ const SN={TRIPS:'Trips',TASKS:'Tasks',LEAVE:'Leave',REPORTS:'Reports',
 
 const COLS={
   trips:    ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','SavedReports','CreatedAt'],
-  tasks:    ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','PartsJson','FlightJson','FilesJson','CreatedAt','UpdatedAt'],
+  tasks:    ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','PartsJson','FlightJson','FilesJson','AutoDuration','DurationMins','CreatedAt','UpdatedAt'],
   leave:    ['Date','Type','Note'],
   reports:  ['TripID','SignoffSummary','SignoffResult','SignoffRemarks','SignedAt'],
   checklist:['TripID','ItemID','Name','Result','Note'],
@@ -145,6 +151,8 @@ function syncAll(p){
       t.partsJson||'',
       t.flightJson||'',
       t.filesJson||'',
+      t.autoDuration||'false',
+      t.durationMins||'',
       t.createdAt,t.updatedAt
     ]));r.tasks=p.tasks.length;
   }
@@ -322,4 +330,273 @@ function testAPI(){
   Logger.log('Trips: '+readSheet(s,SN.TRIPS,COLS.trips).length+' rows');
   Logger.log('Tasks: '+readSheet(s,SN.TASKS,COLS.tasks).length+' rows');
   Logger.log('Bills: '+readSheet(s,SN.BILLS,COLS.bills).length+' rows');
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// TELEGRAM DAILY NOTIFICATIONS
+// Runs on a schedule — sends reminders WITHOUT the app being open
+//
+// SETUP:
+// 1. Run setupTelegramTrigger() ONCE to create the daily trigger
+// 2. Run deleteTelegramTrigger() to remove it
+// 3. Edit NOTIFY_HOUR below to change what time you get notifications
+// ═══════════════════════════════════════════════════════════
+
+var NOTIFY_HOUR = 7;  // 7 AM — change this to your preferred hour (0-23)
+
+/**
+ * Run this ONCE to set up the daily notification trigger.
+ * After running, notifications will send automatically every day.
+ */
+function setupTelegramTrigger() {
+  // Remove any existing triggers for sendDailyNotifications
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'sendDailyTelegramNotifications') {
+      ScriptApp.deleteTrigger(t);
+    }
+  });
+
+  // Create new daily trigger at NOTIFY_HOUR
+  ScriptApp.newTrigger('sendDailyTelegramNotifications')
+    .timeBased()
+    .everyDays(1)
+    .atHour(NOTIFY_HOUR)
+    .create();
+
+  Logger.log('✓ Daily Telegram trigger set for ' + NOTIFY_HOUR + ':00 every day');
+  Logger.log('  Run deleteTelegramTrigger() to remove it');
+}
+
+/**
+ * Remove the daily trigger.
+ */
+function deleteTelegramTrigger() {
+  var removed = 0;
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'sendDailyTelegramNotifications') {
+      ScriptApp.deleteTrigger(t);
+      removed++;
+    }
+  });
+  Logger.log(removed > 0 ? '✓ Trigger removed' : 'No trigger found');
+}
+
+/**
+ * Main function called by the daily trigger.
+ * Reads data from Google Sheets and sends Telegram messages.
+ */
+function sendDailyTelegramNotifications() {
+  var ss = db_();
+  if (!ss) { Logger.log('Cannot open database'); return; }
+
+  // Read Telegram config from a Settings sheet (or hardcode below)
+  var cfg = getTelegramConfig_(ss);
+  if (!cfg || !cfg.token || !cfg.chatId) {
+    Logger.log('Telegram not configured. Run saveTelegramConfig() first.');
+    return;
+  }
+
+  var today    = formatDate_(new Date());
+  var tomorrow = formatDate_(new Date(Date.now() + 86400000));
+  var msgs     = [];
+
+  // ── Read trips ──────────────────────────────────────────
+  var trips = readSheet(ss, SN.TRIPS, COLS.trips);
+
+  // Trips starting tomorrow
+  var upcomingTrips = trips.filter(function(t) {
+    return t.Date === tomorrow && t.Status !== 'completed';
+  });
+  if (upcomingTrips.length) {
+    var msg = '🏭 <b>Trip Tomorrow — PlantLog Reminder</b>\n\n';
+    upcomingTrips.forEach(function(t) {
+      msg += '<b>Plant:</b>     ' + (t.Plant||'—') + '\n';
+      if (t.Location)  msg += '<b>Location:</b>  ' + t.Location + '\n';
+      msg += '<b>Date:</b>      ' + formatDateDisplay_(t.Date) + '\n';
+      if (t.Purpose)   msg += '<b>Purpose:</b>   ' + t.Purpose + '\n';
+      if (t.Contact)   msg += '<b>Contact:</b>   ' + t.Contact + '\n';
+      if (t.Transport) msg += '<b>Transport:</b> ' + t.Transport + '\n';
+      msg += '\n';
+    });
+    msgs.push(msg);
+  }
+
+  // ── Read tasks ───────────────────────────────────────────
+  var tasks = readSheet(ss, SN.TASKS, COLS.tasks);
+
+  // Tasks starting today (not done)
+  var todayTasks = tasks.filter(function(t) {
+    return t.DateStart === today && t.Status !== 'done';
+  });
+  if (todayTasks.length) {
+    var msg2 = '✅ <b>Tasks Today — PlantLog</b>\n\n';
+    todayTasks.slice(0, 8).forEach(function(t) {
+      var cat = t.Category || 'work';
+      var icon = cat==='leave' ? '🌴' : cat==='travel' ? '✈️' : '🔧';
+      msg2 += icon + ' <b>' + (t.Title||'Task') + '</b>\n';
+      if (t.TimeStart) msg2 += '   ⏰ ' + t.TimeStart + (t.TimeEnd?' – '+t.TimeEnd:'') + '\n';
+      if (t.Machine)   msg2 += '   ⚙️ ' + t.Machine + '\n';
+    });
+    if (todayTasks.length > 8) msg2 += '   ...and ' + (todayTasks.length-8) + ' more\n';
+    msgs.push(msg2);
+  }
+
+  // Trips active today (in progress)
+  var activeTrips = trips.filter(function(t) {
+    return t.Date <= today && (t.DateEnd||t.Date) >= today && t.Status === 'in_progress';
+  });
+  if (activeTrips.length) {
+    var msg3 = '📍 <b>Active Trip Today — PlantLog</b>\n\n';
+    activeTrips.forEach(function(t) {
+      msg3 += '<b>' + (t.Plant||'—') + '</b>\n';
+      msg3 += 'Day ' + (daysBetween_(t.Date, today)+1) + ' of trip\n';
+      if (t.Contact) msg3 += 'Contact: ' + t.Contact + '\n';
+      msg3 += '\n';
+    });
+    msgs.push(msg3);
+  }
+
+  // Send all messages
+  if (msgs.length === 0) {
+    Logger.log('Nothing to notify today (' + today + ')');
+    return;
+  }
+
+  var sent = 0;
+  msgs.forEach(function(m) {
+    var ok = sendTelegramMsg_(cfg.token, cfg.chatId, m);
+    if (ok) sent++;
+    Utilities.sleep(500); // small delay between messages
+  });
+  Logger.log('Sent ' + sent + '/' + msgs.length + ' Telegram messages for ' + today);
+}
+
+// ── Save Telegram config to the database spreadsheet ────────
+// Run this once after updating token/chatId below
+function saveTelegramConfig() {
+  // ┌─────────────────────────────────────────────────┐
+  // │  EDIT YOUR TOKEN AND CHAT ID HERE               │
+  var TOKEN   = 'YOUR_BOT_TOKEN_HERE';   // from @BotFather
+  var CHAT_ID = 'YOUR_CHAT_ID_HERE';     // your Telegram user ID
+  // └─────────────────────────────────────────────────┘
+
+  var ss = db_();
+  if (!ss) return;
+
+  // Store in a Settings sheet
+  var sheetName = 'Settings';
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) sheet = ss.insertSheet(sheetName);
+  sheet.clearContents();
+  sheet.getRange('A1:B3').setValues([
+    ['Key', 'Value'],
+    ['tele_token', TOKEN],
+    ['tele_chatid', CHAT_ID]
+  ]);
+  Logger.log('✓ Telegram config saved to Settings sheet');
+}
+
+// ── Internal helpers ─────────────────────────────────────────
+function getTelegramConfig_(ss) {
+  // First try Settings sheet
+  try {
+    var sheet = ss.getSheetByName('Settings');
+    if (sheet) {
+      var data = sheet.getDataRange().getValues();
+      var cfg = {};
+      data.forEach(function(row) {
+        if (row[0]==='tele_token')  cfg.token  = row[1];
+        if (row[0]==='tele_chatid') cfg.chatId = String(row[1]);
+      });
+      if (cfg.token && cfg.chatId) return cfg;
+    }
+  } catch(e) {}
+  return null;
+}
+
+function sendTelegramMsg_(token, chatId, text) {
+  try {
+    var url = 'https://api.telegram.org/bot' + token + '/sendMessage';
+    var payload = { chat_id: chatId, text: text, parse_mode: 'HTML' };
+    var resp = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    });
+    var data = JSON.parse(resp.getContentText());
+    if (!data.ok) Logger.log('Telegram API error: ' + data.description);
+    return data.ok === true;
+  } catch(e) {
+    Logger.log('Telegram send error: ' + e.message);
+    return false;
+  }
+}
+
+function formatDate_(d) {
+  // Returns YYYY-MM-DD
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var day = String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+
+function formatDateDisplay_(dateStr) {
+  if (!dateStr) return '—';
+  try {
+    var parts = dateStr.split('-');
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return parts[2]+' '+months[parseInt(parts[1])-1]+' '+parts[0];
+  } catch(e) { return dateStr; }
+}
+
+function daysBetween_(dateStr1, dateStr2) {
+  try {
+    var d1 = new Date(dateStr1);
+    var d2 = new Date(dateStr2);
+    return Math.floor((d2-d1)/(1000*60*60*24));
+  } catch(e) { return 0; }
+}
+
+/**
+ * Test the notification system manually.
+ * Run this to check it works before setting up the trigger.
+ */
+function testDailyNotifications() {
+  Logger.log('Testing daily notifications...');
+  sendDailyTelegramNotifications();
+  Logger.log('Done.');
+}
+
+/**
+ * Run THIS function first to trigger the authorization popup.
+ * It will ask for permission to access external URLs (needed for Telegram).
+ * After authorizing, run testDailyNotifications() again.
+ */
+function authorizeScript() {
+  // This forces the authorization dialog to appear for ALL required permissions
+  try {
+    // Test Drive access
+    DriveApp.getRootFolder();
+    Logger.log('✓ Drive: authorized');
+  } catch(e) { Logger.log('Drive: ' + e.message); }
+
+  try {
+    // Test Sheets access
+    SpreadsheetApp.getActiveSpreadsheet();
+    Logger.log('✓ Sheets: authorized');
+  } catch(e) { Logger.log('Sheets: may be ok'); }
+
+  try {
+    // Test URL Fetch access — this is what was missing
+    UrlFetchApp.fetch('https://api.telegram.org', {
+      method: 'get', muteHttpExceptions: true
+    });
+    Logger.log('✓ UrlFetch: authorized');
+  } catch(e) {
+    Logger.log('UrlFetch error: ' + e.message);
+  }
+
+  Logger.log('Authorization complete. Now run testDailyNotifications()');
 }
