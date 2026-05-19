@@ -1103,6 +1103,56 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 </div>
 
+<!-- ═══════════════ CALENDAR SYNC MODAL ═══════════════ -->
+<div id="modal-calendar" class="mo">
+  <div class="modal">
+    <div class="mh"></div>
+    <div class="mt">📅 Google Calendar Sync</div>
+    <p style="font-size:13px;color:var(--n500);margin-bottom:14px;line-height:1.6;">
+      Sync your PlantLog trips, tasks, and leave to Google Calendar — and pull external calendar events into PlantLog.
+    </p>
+    <div style="background:var(--brand-light);border-radius:var(--r-sm);padding:12px;margin-bottom:14px;font-size:12px;color:var(--brand-dark);line-height:1.7;">
+      <strong>One-time setup in Apps Script:</strong><br>
+      1. Open your GAS project → run <code>setupCalendarSync()</code><br>
+      2. Copy the Calendar ID from the Execution Log<br>
+      3. Paste it below and tap Save
+    </div>
+    <div class="fg">
+      <label class="fl">Calendar ID (from setupCalendarSync)</label>
+      <input class="fi" id="cal-id-input" placeholder="xxxxx@group.calendar.google.com" style="font-size:12px;font-family:var(--mono);">
+    </div>
+    <div class="form-section" style="margin-bottom:12px;">
+      <div class="form-section-title">Sync Options</div>
+      <label style="display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;">
+        <input type="checkbox" id="cal-push-trips" checked style="width:16px;height:16px;accent-color:var(--brand);">
+        <span style="font-size:13px;">🏭 Push Trips to Google Calendar</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;">
+        <input type="checkbox" id="cal-push-tasks" checked style="width:16px;height:16px;accent-color:var(--brand);">
+        <span style="font-size:13px;">✅ Push Tasks to Google Calendar</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;">
+        <input type="checkbox" id="cal-pull-events" checked style="width:16px;height:16px;accent-color:var(--brand);">
+        <span style="font-size:13px;">📥 Show external events in PlantLog calendar</span>
+      </label>
+    </div>
+    <!-- Sync actions -->
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="btn btn-o" style="flex:1;" onclick="syncToGoogleCalendar()">
+        📤 Push to Calendar
+      </button>
+      <button class="btn btn-o" style="flex:1;" onclick="syncFromGoogleCalendar()">
+        📥 Pull from Calendar
+      </button>
+    </div>
+    <div id="cal-sync-result" style="display:none;font-size:12px;padding:8px 10px;border-radius:var(--rs);margin-bottom:10px;"></div>
+    <div class="brow">
+      <button class="btn btn-o" onclick="closeModal('modal-calendar')">Close</button>
+      <button class="btn btn-p" style="flex:1;" onclick="saveCalendarSettings()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════ LIBRARY SCREEN ═══════════════ -->
 
 <div id="screen-library" class="screen">
@@ -1578,6 +1628,11 @@ input, textarea, select, button { font-family: var(--font); }
       <div class="si" onclick="openTelegramSettings()">
         <div class="sic" style="background:#E3F2FD;color:#1565C0;">✈️</div>
         <div class="sin"><div class="sil">Telegram Notifications</div><div class="sis" id="tele-status">Not configured</div></div>
+        <div style="color:var(--g400);">›</div>
+      </div>
+      <div class="si" onclick="openCalendarSettings()">
+        <div class="sic" style="background:#FCE4EC;color:#C62828;">📅</div>
+        <div class="sin"><div class="sil">Google Calendar Sync</div><div class="sis" id="cal-sync-status">Not configured</div></div>
         <div style="color:var(--g400);">›</div>
       </div>
       <div class="si" onclick="showScreen('leave')">
@@ -2380,7 +2435,8 @@ let S={
   inspections:[],
   library:[],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
   defaultTeam:[],lang:'en',
-  telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true}
+  telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
+  calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true}
 };
 let curTrip=null,curReport=null,sigCanvas,sigCtx,isDrw=false;
 let calY,calM,selDay=null,signoffRes='Completed';
@@ -2564,6 +2620,7 @@ function init(){
   // Telegram: update status label + schedule daily notification check
   try{
     updateTelegramStatusLabel();
+    if(typeof updateCalendarStatusLabel==='function') updateCalendarStatusLabel();
     // Check once on startup (after 3s delay so UI is ready)
     setTimeout(()=>{ try{checkAndSendDailyNotifications();}catch(e){} }, 3000);
   }catch(e){}
@@ -2578,6 +2635,12 @@ function init(){
       }
     }catch(e){ console.warn('Auto-load error:', e); }
   }, 1000);
+
+  // Auto-sync Google Calendar events (silent, 5s delay)
+  setTimeout(()=>{
+    try{ if(typeof autoSyncCalendar==='function') autoSyncCalendar(); }
+    catch(e){}
+  }, 5000);
 }
 
 // ═══════ SCREEN NAV ═══════
@@ -6741,6 +6804,163 @@ async function sendTripToTelegram(tripId){
   } else {
     showToast('❌ Send failed — check Telegram settings');
   }
+}
+
+// ====== calendar.js ======
+// =====================================================
+// PlantLog Pro — calendar.js
+// Google Calendar bidirectional sync
+// Pushes trips/tasks/leave to Google Calendar
+// Pulls external calendar events into PlantLog
+// =====================================================
+
+// ═══════ STATE ═══════
+let externalCalEvents = [];  // events pulled from Google Calendar
+
+// ═══════ SETTINGS ═══════
+function openCalendarSettings(){
+  const cfg = S.calendarConfig || {};
+  const el = id => document.getElementById(id);
+  if(el('cal-id-input'))     el('cal-id-input').value     = cfg.calId  || '';
+  if(el('cal-push-trips'))   el('cal-push-trips').checked  = cfg.pushTrips  !== false;
+  if(el('cal-push-tasks'))   el('cal-push-tasks').checked  = cfg.pushTasks  !== false;
+  if(el('cal-pull-events'))  el('cal-pull-events').checked = cfg.pullEvents !== false;
+  const res = document.getElementById('cal-sync-result');
+  if(res) res.style.display = 'none';
+  openModal('modal-calendar');
+}
+
+function saveCalendarSettings(){
+  const calId = (document.getElementById('cal-id-input')||{}).value || '';
+  if(!S.calendarConfig) S.calendarConfig = {};
+  S.calendarConfig = {
+    calId:       calId.trim(),
+    pushTrips:   document.getElementById('cal-push-trips')  ? document.getElementById('cal-push-trips').checked   : true,
+    pushTasks:   document.getElementById('cal-push-tasks')  ? document.getElementById('cal-push-tasks').checked   : true,
+    pullEvents:  document.getElementById('cal-pull-events') ? document.getElementById('cal-pull-events').checked  : true,
+  };
+  sv();
+  updateCalendarStatusLabel();
+  showToast(calId ? '✓ Calendar sync configured' : 'Calendar settings cleared');
+  if(calId) {
+    // Auto-run first sync
+    syncToGoogleCalendar();
+  } else {
+    closeModal('modal-calendar');
+  }
+}
+
+function updateCalendarStatusLabel(){
+  const el = document.getElementById('cal-sync-status');
+  if(!el) return;
+  const cfg = S.calendarConfig || {};
+  el.textContent = cfg.calId
+    ? '✓ Connected · tap to sync'
+    : 'Not configured';
+}
+
+// ═══════ PUSH: PlantLog → Google Calendar ═══════
+async function syncToGoogleCalendar(){
+  const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
+  if(!gsUrl){ showToast('Set Google Sheets URL first'); return; }
+  const cfg = S.calendarConfig || {};
+  if(!cfg.calId){ showToast('Configure calendar in Settings first'); openCalendarSettings(); return; }
+
+  showCalResult('⟳ Pushing to Google Calendar…', 'info');
+  showToast('Syncing to Google Calendar…');
+
+  try{
+    const resp = await fetch(gsUrl, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'syncToCalendar', calId:cfg.calId})
+    });
+    const data = await resp.json();
+    if(data && data.ok){
+      const r = data.result || data;
+      showCalResult(
+        `✓ Synced to Google Calendar\n+${r.created||0} created · ~${r.updated||0} updated`,
+        'ok'
+      );
+      showToast('✓ Calendar synced!');
+      closeModal('modal-calendar');
+    } else {
+      showCalResult('❌ Sync failed: '+(data?data.error:'No response'), 'error');
+    }
+  }catch(e){
+    showCalResult('❌ Error: '+e.message, 'error');
+  }
+}
+
+// ═══════ PULL: Google Calendar → PlantLog ═══════
+async function syncFromGoogleCalendar(){
+  const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
+  if(!gsUrl){ showToast('Set Google Sheets URL first'); return; }
+  const cfg = S.calendarConfig || {};
+
+  showCalResult('⟳ Pulling events from Google Calendar…', 'info');
+
+  try{
+    const resp = await fetch(gsUrl, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({
+        action: 'syncFromCalendar',
+        from: new Date(Date.now() - 7*24*60*60*1000).toISOString().slice(0,10),
+        to:   new Date(Date.now() + 90*24*60*60*1000).toISOString().slice(0,10)
+      })
+    });
+    const data = await resp.json();
+    if(data && data.ok){
+      externalCalEvents = data.events || [];
+      showCalResult(
+        `✓ Pulled ${externalCalEvents.length} event${externalCalEvents.length!==1?'s':''} from your calendars`,
+        'ok'
+      );
+      showToast(`✓ ${externalCalEvents.length} calendar events loaded`);
+      // Re-render calendar to show external events
+      if(typeof renderCalendar === 'function') renderCalendar();
+      closeModal('modal-calendar');
+    } else {
+      showCalResult('❌ Pull failed: '+(data?data.error:'No response'), 'error');
+    }
+  }catch(e){
+    showCalResult('❌ Error: '+e.message, 'error');
+  }
+}
+
+// ═══════ CALENDAR DISPLAY HELPERS ═══════
+
+// Get external events for a specific date
+function getExternalEventsForDate(dateStr){
+  return externalCalEvents.filter(e => e.start === dateStr);
+}
+
+// Called during app auto-load to fetch calendar events silently
+async function autoSyncCalendar(){
+  const cfg = S.calendarConfig || {};
+  if(!cfg.calId || !cfg.pullEvents) return;
+  const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
+  if(!gsUrl) return;
+  try{
+    const resp = await fetch(gsUrl, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'getCalendarEvents'})
+    });
+    const data = await resp.json();
+    if(data && data.ok && data.events){
+      externalCalEvents = data.events;
+      if(typeof renderCalendar === 'function') renderCalendar();
+    }
+  }catch(e){ console.warn('[Calendar] Auto-sync failed:', e.message); }
+}
+
+// Show result in the modal
+function showCalResult(msg, type){
+  const el = document.getElementById('cal-sync-result');
+  if(!el) return;
+  el.style.display = '';
+  el.style.background = type==='ok' ? 'var(--brand-light)' : type==='error' ? 'var(--rl)' : 'var(--bl)';
+  el.style.color = type==='ok' ? 'var(--brand-dark)' : type==='error' ? 'var(--rd)' : 'var(--bd)';
+  el.textContent = msg;
 }
 
 // ====== bills.js ======

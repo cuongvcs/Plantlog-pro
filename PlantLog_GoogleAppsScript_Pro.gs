@@ -124,6 +124,9 @@ function doPost(e){
     if(act==='ping')     return json_({ok:true,result:{message:'PlantLog Pro API running'}});
     if(act==='uploadFile') return json_(uploadFileToDrive(body));
     if(act==='listFiles')  return json_(listTaskFiles(body));
+    if(act==='syncToCalendar')   return json_(syncPlantLogToCalendar(body));
+    if(act==='syncFromCalendar') return json_(syncCalendarToPlantLog(body));
+    if(act==='getCalendarEvents') return json_(getUpcomingCalendarEvents(body));
     return json_({ok:false,error:'Unknown action: '+act});
   }catch(x){return json_({ok:false,error:x.message+'|'+x.stack});}
 }
@@ -599,4 +602,303 @@ function authorizeScript() {
   }
 
   Logger.log('Authorization complete. Now run testDailyNotifications()');
+}
+
+// ═══════════════════════════════════════════════════════════
+// GOOGLE CALENDAR SYNC
+// Bidirectional sync between PlantLog Pro and Google Calendar
+//
+// SETUP:
+// 1. Run setupCalendarSync() once to configure
+// 2. The app will call syncToCalendar/syncFromCalendar via the API
+// 3. Or run syncPlantLogToCalendar() manually to push all data
+// ═══════════════════════════════════════════════════════════
+
+var CALENDAR_NAME = 'PlantLog Pro';      // Name for the PlantLog calendar
+var EVENT_PREFIX  = '[PLP] ';            // Prefix to identify PlantLog events
+
+/**
+ * Setup: creates a dedicated Google Calendar for PlantLog events.
+ * Run once. Returns the calendar ID to configure in the app.
+ */
+function setupCalendarSync() {
+  // Check if PlantLog calendar already exists
+  var calendars = CalendarApp.getAllCalendars();
+  var plpCal = null;
+  calendars.forEach(function(c) {
+    if (c.getName() === CALENDAR_NAME) plpCal = c;
+  });
+
+  if (!plpCal) {
+    plpCal = CalendarApp.createCalendar(CALENDAR_NAME, {
+      summary: 'PlantLog Pro — Field Visits & Tasks',
+      color:   CalendarApp.Color.SAGE
+    });
+    Logger.log('✓ Created calendar: ' + CALENDAR_NAME);
+  } else {
+    Logger.log('✓ Calendar already exists: ' + CALENDAR_NAME);
+  }
+
+  var calId = plpCal.getId();
+  Logger.log('Calendar ID: ' + calId);
+  Logger.log('Copy this ID into PlantLog Settings → Calendar Sync');
+
+  // Save to Settings sheet
+  var ss = db_();
+  if (ss) {
+    var sheet = ss.getSheetByName('Settings') || ss.insertSheet('Settings');
+    var data = sheet.getDataRange().getValues();
+    var found = false;
+    data.forEach(function(row, i) {
+      if (row[0] === 'cal_id') { sheet.getRange(i+1,2).setValue(calId); found = true; }
+    });
+    if (!found) sheet.appendRow(['cal_id', calId]);
+    Logger.log('✓ Calendar ID saved to Settings sheet');
+  }
+  return calId;
+}
+
+// ── Get PlantLog calendar ────────────────────────────────────
+function getPlantLogCalendar_() {
+  var ss = db_();
+  var calId = null;
+
+  // Try Settings sheet first
+  if (ss) {
+    try {
+      var sheet = ss.getSheetByName('Settings');
+      if (sheet) {
+        var data = sheet.getDataRange().getValues();
+        data.forEach(function(row) {
+          if (row[0] === 'cal_id') calId = String(row[1]);
+        });
+      }
+    } catch(e) {}
+  }
+
+  if (calId) {
+    try { return CalendarApp.getCalendarById(calId); } catch(e) {}
+  }
+
+  // Fall back to finding by name
+  var calendars = CalendarApp.getAllCalendars();
+  for (var i = 0; i < calendars.length; i++) {
+    if (calendars[i].getName() === CALENDAR_NAME) return calendars[i];
+  }
+
+  // Create if not found
+  return CalendarApp.createCalendar(CALENDAR_NAME, {color: CalendarApp.Color.SAGE});
+}
+
+// ── PUSH: PlantLog → Google Calendar ────────────────────────
+function syncPlantLogToCalendar(p) {
+  try {
+    var cal = getPlantLogCalendar_();
+    var ss  = db_();
+    var created = 0, updated = 0, skipped = 0;
+
+    // ── Sync Trips ──────────────────────────────────────────
+    var trips = readSheet(ss, SN.TRIPS, COLS.trips);
+    trips.forEach(function(t) {
+      if (!t.Date || t.Status === 'completed') return;
+      try {
+        var title    = EVENT_PREFIX + '[Trip] ' + (t.Plant || 'Trip');
+        var startDt  = new Date(t.Date + 'T08:00:00');
+        var endDt    = t.DateEnd ? new Date(t.DateEnd + 'T18:00:00') : new Date(t.Date + 'T18:00:00');
+        var desc = '';
+        if (t.Location)  desc += 'Location: '  + t.Location  + '\n';
+        if (t.Purpose)   desc += 'Purpose: '   + t.Purpose   + '\n';
+        if (t.Contact)   desc += 'Contact: '   + t.Contact   + '\n';
+        if (t.Transport) desc += 'Transport: ' + t.Transport + '\n';
+        desc += 'PlantLog ID: ' + t.ID;
+
+        // Check if event already exists (by PlantLog ID in description)
+        var existing = findCalEventById_(cal, t.ID, startDt);
+        if (existing) {
+          existing.setTitle(title);
+          existing.setDescription(desc);
+          updated++;
+        } else {
+          var ev = cal.createEvent(title, startDt, endDt, {description: desc, location: t.Location||''});
+          ev.setColor(CalendarApp.EventColor.GREEN);
+          created++;
+        }
+      } catch(e) { skipped++; Logger.log('Trip sync error: ' + e.message); }
+    });
+
+    // ── Sync Tasks ──────────────────────────────────────────
+    var tasks = readSheet(ss, SN.TASKS, COLS.tasks);
+    var today = new Date(); today.setHours(0,0,0,0);
+    // Only sync future and recent tasks (within 30 days past)
+    var cutoff = new Date(today.getTime() - 30*24*60*60*1000);
+
+    tasks.forEach(function(t) {
+      if (!t.DateStart || t.Status === 'done') return;
+      try {
+        var taskDate = new Date(t.DateStart);
+        if (taskDate < cutoff) return;
+
+        var catIcon  = t.Category==='leave'?'🌴':t.Category==='travel'?'✈️':'🔧';
+        var title    = EVENT_PREFIX + catIcon + ' ' + (t.Title||'Task');
+        var ts       = t.TimeStart||'08:00';
+        var te       = t.TimeEnd  ||'17:00';
+        var startDt  = new Date(t.DateStart + 'T' + ts + ':00');
+        var endDt    = new Date((t.DateEnd||t.DateStart) + 'T' + te + ':00');
+        if (endDt <= startDt) endDt = new Date(startDt.getTime() + 3600000);
+
+        var desc = '';
+        if (t.Machine)     desc += 'Machine: '     + t.Machine     + '\n';
+        if (t.Plan)        desc += 'Plan: '        + t.Plan        + '\n';
+        if (t.Priority)    desc += 'Priority: '    + t.Priority    + '\n';
+        if (t.Description) desc += t.Description                   + '\n';
+        desc += 'PlantLog ID: ' + t.ID;
+
+        var color = t.Category==='leave'  ? CalendarApp.EventColor.YELLOW
+                  : t.Category==='travel' ? CalendarApp.EventColor.CYAN
+                  : CalendarApp.EventColor.GREEN;
+
+        var existing = findCalEventById_(cal, t.ID, startDt);
+        if (existing) {
+          existing.setTitle(title);
+          existing.setDescription(desc);
+          updated++;
+        } else {
+          var ev = cal.createEvent(title, startDt, endDt, {description: desc});
+          ev.setColor(color);
+          created++;
+        }
+      } catch(e) { skipped++; Logger.log('Task sync error: ' + e.message); }
+    });
+
+    // ── Sync Leave ───────────────────────────────────────────
+    var leave = readSheet(ss, SN.LEAVE, COLS.leave);
+    leave.forEach(function(l) {
+      if (!l.Date) return;
+      try {
+        var lDate   = new Date(l.Date);
+        if (lDate < cutoff) return;
+        var lType   = l.Type || 'leave';
+        var lIcon   = lType==='wfh'?'[WFH]':lType==='holiday'?'[Holiday]':'🌴';
+        var title   = EVENT_PREFIX + lIcon + ' ' + (lType==='wfh'?'WFH':lType==='holiday'?'Holiday':'Annual Leave');
+        var startDt = new Date(l.Date + 'T00:00:00');
+        var endDt   = new Date(l.Date + 'T23:59:00');
+        var existing = findCalEventById_(cal, 'leave_'+l.Date, startDt);
+        if (!existing) {
+          var ev = cal.createAllDayEvent(title, new Date(l.Date));
+          ev.setColor(CalendarApp.EventColor.YELLOW);
+          ev.setDescription('PlantLog ID: leave_'+l.Date);
+          created++;
+        }
+      } catch(e) { skipped++; }
+    });
+
+    Logger.log('Calendar sync complete: +'+created+' created, ~'+updated+' updated, '+skipped+' errors');
+    return {ok:true, created:created, updated:updated, skipped:skipped};
+  } catch(e) {
+    Logger.log('syncToCalendar error: ' + e.message);
+    return {ok:false, error:e.message};
+  }
+}
+
+// ── PULL: Google Calendar → PlantLog ────────────────────────
+function syncCalendarToPlantLog(p) {
+  try {
+    // Get all user calendars (not just PlantLog one)
+    var now      = new Date();
+    var start    = p && p.from ? new Date(p.from) : new Date(now.getTime() - 7*24*60*60*1000);
+    var end      = p && p.to   ? new Date(p.to)   : new Date(now.getTime() + 90*24*60*60*1000);
+    var events   = [];
+
+    // Get events from ALL calendars (user's full calendar)
+    var calendars = CalendarApp.getAllCalendars();
+    calendars.forEach(function(cal) {
+      // Skip PlantLog calendar (those are our own events pushed there)
+      if (cal.getName() === CALENDAR_NAME) return;
+      if (cal.isHidden()) return;
+
+      try {
+        var calEvents = cal.getEvents(start, end);
+        calEvents.forEach(function(ev) {
+          var title = ev.getTitle();
+          // Skip PlantLog-generated events
+          if (title.indexOf(EVENT_PREFIX) === 0) return;
+
+          events.push({
+            id:          ev.getId(),
+            title:       title,
+            start:       formatDate_(ev.getStartTime()),
+            end:         formatDate_(ev.getEndTime()),
+            startTime:   Utilities.formatDate(ev.getStartTime(), Session.getScriptTimeZone(), 'HH:mm'),
+            endTime:     Utilities.formatDate(ev.getEndTime(),   Session.getScriptTimeZone(), 'HH:mm'),
+            allDay:      ev.isAllDayEvent(),
+            location:    ev.getLocation() || '',
+            description: ev.getDescription() || '',
+            calendar:    cal.getName(),
+            color:       cal.getColor() || '#0F7B3E'
+          });
+        });
+      } catch(e) { Logger.log('Calendar read error: '+cal.getName()+': '+e.message); }
+    });
+
+    return {ok:true, events:events, count:events.length};
+  } catch(e) {
+    return {ok:false, error:e.message};
+  }
+}
+
+// ── Get upcoming events (for app home screen) ────────────────
+function getUpcomingCalendarEvents(p) {
+  try {
+    var now   = new Date();
+    var start = now;
+    var end   = new Date(now.getTime() + 30*24*60*60*1000); // 30 days ahead
+    var events = [];
+
+    CalendarApp.getAllCalendars().forEach(function(cal) {
+      if (cal.isHidden()) return;
+      try {
+        cal.getEvents(start, end).forEach(function(ev) {
+          var title = ev.getTitle();
+          if (title.indexOf(EVENT_PREFIX) === 0) return; // skip our own
+          events.push({
+            title:    title,
+            start:    formatDate_(ev.getStartTime()),
+            startTime:Utilities.formatDate(ev.getStartTime(),Session.getScriptTimeZone(),'HH:mm'),
+            allDay:   ev.isAllDayEvent(),
+            calendar: cal.getName(),
+            color:    cal.getColor() || '#666'
+          });
+        });
+      } catch(e) {}
+    });
+
+    // Sort by start date
+    events.sort(function(a,b){ return a.start.localeCompare(b.start); });
+    return {ok:true, events:events.slice(0,50)}; // max 50 events
+  } catch(e) {
+    return {ok:false, error:e.message};
+  }
+}
+
+// ── Helper: find existing calendar event by PlantLog ID ─────
+function findCalEventById_(cal, plpId, nearDate) {
+  try {
+    var start = new Date(nearDate.getTime() - 24*60*60*1000);
+    var end   = new Date(nearDate.getTime() + 7*24*60*60*1000);
+    var events = cal.getEvents(start, end);
+    for (var i = 0; i < events.length; i++) {
+      if ((events[i].getDescription()||'').indexOf('PlantLog ID: ' + plpId) >= 0) {
+        return events[i];
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+/**
+ * Manual test: push all data to Google Calendar now.
+ */
+function testCalendarSync() {
+  var result = syncPlantLogToCalendar({});
+  Logger.log(JSON.stringify(result));
 }
