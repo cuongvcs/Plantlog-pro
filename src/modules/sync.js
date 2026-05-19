@@ -310,7 +310,22 @@ async function loadFromSheets(silent){
       const safeTime=v=>{
         if(!v&&v!==0)return'';
         const s=String(v).trim();
-        if(/^\d{2}:\d{2}/.test(s))return s.slice(0,5);
+        // HH:MM format (normal case)
+        if(/^\d{1,2}:\d{2}/.test(s)){
+          const parts=s.split(':');
+          return parts[0].padStart(2,'0')+':'+parts[1].slice(0,2);
+        }
+        // ISO date string from Sheets (e.g. "1899-12-30T06:45:00.000Z")
+        const isoMatch=s.match(/T(\d{2}:\d{2})/);
+        if(isoMatch)return isoMatch[1];
+        // Excel serial time (decimal fraction of day, e.g. 0.28125 = 06:45)
+        const num=parseFloat(s);
+        if(!isNaN(num)&&num>=0&&num<1){
+          const totalMins=Math.round(num*24*60);
+          const h=Math.floor(totalMins/60);
+          const m=totalMins%60;
+          return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+        }
         return'';
       };
       // Safe string
