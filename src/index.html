@@ -8200,6 +8200,12 @@ async function loadFromSheets(silent){
 
       // ── Universal safe converters ─────────────────────────
       // Converts any value to a clean YYYY-MM-DD string or ''
+      // safeNum: strips locale formatting (commas, spaces) before parseFloat
+      const safeNum=v=>{
+        if(v===null||v===undefined||v==='')return 0;
+        const cleaned=String(v).replace(/,/g,'').replace(/\s/g,'').trim();
+        return parseFloat(cleaned)||0;
+      };
       const safeDate=v=>{
         if(v===null||v===undefined||v==='')return'';
         if(v instanceof Date){
@@ -8329,9 +8335,9 @@ async function loadFromSheets(silent){
             timeStart:    ts,
             dateEnd:      de,
             timeEnd:      te,
-            hours:        ss(tk.Hours),
-            minutes:      ss(tk.Minutes),
-            autoDuration: ss(tk.AutoDuration)==='true',
+            hours:        safeNum(tk.Hours)||ss(tk.Hours),
+            minutes:      safeNum(tk.Minutes)||ss(tk.Minutes),
+            autoDuration: (ss(tk.AutoDuration)||'').toLowerCase()==='true',
             durationMins: ss(tk.DurationMins)?parseInt(ss(tk.DurationMins))||0:0,
             priority:     ss(tk.Priority)||'medium',
             period:       ss(tk.Period),
@@ -8373,9 +8379,9 @@ async function loadFromSheets(silent){
             date:       safeDate(b.Date)||ss(b.Date),
             billNumber: strB(b.BillNumber),
             detail:     strB(b.Detail),
-            amount:     parseFloat(strB(b.Amount))||0,
+            amount:     safeNum(b.Amount),
             currency:   strB(b.Currency)||'VND',
-            vndAmount:  parseFloat(strB(b.VndAmount||b.vndAmount))||0,
+            vndAmount:  safeNum(b.VndAmount||b.vndAmount),
             category:   strB(b.Category)||'other',
             notes:      strB(b.Notes),
             photos:     photos,
