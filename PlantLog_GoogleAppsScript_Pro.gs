@@ -44,8 +44,19 @@ function db_(){
 }
 
 function cellStr(v){
-  if(v===null||v===undefined||v==='')return'';
-  if(v instanceof Date){return isNaN(v.getTime())?'':Utilities.formatDate(v,Session.getScriptTimeZone(),'yyyy-MM-dd');}
+  if(v===null||v===undefined||v==='') return '';
+  if(v instanceof Date){
+    if(isNaN(v.getTime())) return '';
+    // Time-only values: Google Sheets stores times as 1899-12-30 dates
+    // Detect by year (1899 = Excel/GAS time serial, no real date)
+    var yr = v.getFullYear();
+    if(yr === 1899 || yr === 1900){
+      // Return as HH:mm string
+      return Utilities.formatDate(v, Session.getScriptTimeZone(), 'HH:mm');
+    }
+    // Regular date
+    return Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
   return String(v);
 }
 
