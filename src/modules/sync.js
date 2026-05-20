@@ -311,24 +311,38 @@ async function loadFromSheets(silent){
         if(!v&&v!==0)return'';
         const s=String(v).trim();
         if(!s||s==='null'||s==='undefined')return'';
-        // HH:MM format — "06:45" or "6:45"
-        if(/^\d{1,2}:\d{2}/.test(s)){
-          const parts=s.split(':');
-          return parts[0].padStart(2,'0')+':'+parts[1].slice(0,2);
+
+        // ── 12-hour format from getDisplayValues(): "6:30 AM" / "6:30 PM" ──
+        const ampm=s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+        if(ampm){
+          let h=parseInt(ampm[1]);
+          const m=ampm[2];
+          const period=ampm[3].toUpperCase();
+          if(period==='AM'&&h===12)h=0;
+          if(period==='PM'&&h!==12)h+=12;
+          return String(h).padStart(2,'0')+':'+m;
         }
-        // ISO with time — "1899-12-30T06:45:00.000Z" or "2026-05-20T06:45:00"
+
+        // ── 24-hour format: "06:30" / "6:30" / "06:30:00" ──
+        const h24=s.match(/^(\d{1,2}):(\d{2})/);
+        if(h24){
+          return h24[1].padStart(2,'0')+':'+h24[2];
+        }
+
+        // ── ISO with T: "1899-12-30T06:30:00.000Z" ──
         const isoT=s.match(/T(\d{2}:\d{2})/);
         if(isoT)return isoT[1];
-        // Date object string from GAS getValues() like "Sat Dec 30 1899 06:45:00 GMT+0700"
-        const dateObjMatch=s.match(/(\d{2}):(\d{2}):(\d{2})/);
-        if(dateObjMatch)return dateObjMatch[1]+':'+dateObjMatch[2];
-        // Excel serial time decimal — 0.28125 = 06:45
+
+        // ── Date object toString: "Sat Dec 30 1899 06:30:00 GMT+0700" ──
+        const dobj=s.match(/(\d{2}):(\d{2}):(\d{2})/);
+        if(dobj)return dobj[1]+':'+dobj[2];
+
+        // ── Excel serial decimal: 0.270833 = 06:30 ──
         const num=parseFloat(s);
         if(!isNaN(num)&&num>0&&num<1){
           const totalMins=Math.round(num*24*60);
-          const h=Math.floor(totalMins/60);
-          const m=totalMins%60;
-          return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+          return String(Math.floor(totalMins/60)).padStart(2,'0')+':'
+                +String(totalMins%60).padStart(2,'0');
         }
         return'';
       };

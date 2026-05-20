@@ -83,12 +83,25 @@ function ensureSheet(ss,name,hdrs){
 
 function readSheet(ss,name,hdrs){
   const sh=ensureSheet(ss,name,hdrs);
-  const data=sh.getDataRange().getValues();
-  if(data.length<=1)return[];
-  const h=data[0].map(String);
-  return data.slice(1).filter(r=>r[0]!==''&&r[0]!==null&&r[0]!==undefined).map(r=>{
-    const o={};h.forEach((k,i)=>{o[k]=cellStr(r[i]);});return o;
-  });
+  const lastRow=sh.getLastRow();
+  const lastCol=sh.getLastColumn();
+  if(lastRow<=1||lastCol<1) return[];
+
+  // Use getValues() for header row (plain strings, no conversion needed)
+  const headers=sh.getRange(1,1,1,lastCol).getValues()[0].map(String);
+
+  // Use getDisplayValues() for data rows — returns what the user SEES
+  // This avoids Date object timezone conversion issues for time cells
+  // e.g. "6:30 AM" instead of a Date(1899-12-30T23:30:00Z) that loses time info
+  const dispData=sh.getRange(2,1,lastRow-1,lastCol).getDisplayValues();
+
+  return dispData
+    .filter(r=>r[0]!==''&&r[0]!==null&&r[0]!==undefined)
+    .map(r=>{
+      const o={};
+      headers.forEach((k,i)=>{ o[k]=String(r[i]||'').trim(); });
+      return o;
+    });
 }
 
 function writeSheet(ss,name,hdrs,rows){
