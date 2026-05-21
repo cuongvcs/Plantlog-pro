@@ -417,12 +417,23 @@ async function loadFromSheets(silent){
             minutes:      safeNum(tk.Minutes)||ss(tk.Minutes),
             autoDuration: (ss(tk.AutoDuration)||'').toLowerCase()==='true',
             durationMins: ss(tk.DurationMins)?parseInt(ss(tk.DurationMins))||0:0,
-            priority:     ss(tk.Priority)||'medium',
+            priority:     (()=>{
+              const raw=(ss(tk.Priority)||'medium').toLowerCase().trim();
+              if(raw==='high') return 'high';
+              if(raw==='low')  return 'low';
+              return 'medium';
+            })(),
             period:       ss(tk.Period),
             machine:      ss(tk.Machine),
             plan:         ss(tk.Plan),
             tripId:       ss(tk.TripID),
-            status:       ss(tk.Status)||'pending',
+            status:       (()=>{
+              const raw=(ss(tk.Status)||'pending').toLowerCase().trim();
+              // Normalize: "in progress"→"in_progress", "done"→"done", etc.
+              if(raw.includes('progress')||raw==='in_progress') return 'in_progress';
+              if(raw==='done'||raw==='complete'||raw==='completed') return 'done';
+              return 'pending';
+            })(),
             checklist:    cl,
             parts:        pts,
             flight:       tk.FlightJson?(()=>{try{return JSON.parse(ss(tk.FlightJson));}catch(e){return null;}})():null,
