@@ -379,36 +379,22 @@ var NOTIFY_HOUR = 7;  // 7 AM — change this to your preferred hour (0-23)
  * After running, notifications will send automatically every day.
  */
 function setupTelegramTrigger() {
-  // Remove ALL existing triggers for daily notifications
+  // Remove any existing triggers for sendDailyNotifications
   ScriptApp.getProjectTriggers().forEach(function(t) {
-    var fn = t.getHandlerFunction();
-    if (fn === 'sendDailyTelegramNotifications' || fn === 'sendDailyNotifications') {
+    if (t.getHandlerFunction() === 'sendDailyTelegramNotifications') {
       ScriptApp.deleteTrigger(t);
-      Logger.log('Removed old trigger: ' + fn);
     }
   });
 
-  // Create trigger — runs at NOTIFY_HOUR every day
+  // Create new daily trigger at NOTIFY_HOUR
   ScriptApp.newTrigger('sendDailyTelegramNotifications')
     .timeBased()
     .everyDays(1)
     .atHour(NOTIFY_HOUR)
-    .nearMinute(0)
-    .inTimezone(Session.getScriptTimeZone())
     .create();
 
-  Logger.log('✓ Daily Telegram trigger set: ' + NOTIFY_HOUR + ':00 ' + Session.getScriptTimeZone());
-  Logger.log('Run listTriggers() to verify, testDailyNotifications() to test now');
-}
-
-// Helper: list all current triggers so you can verify they are set correctly
-function listTriggers() {
-  var triggers = ScriptApp.getProjectTriggers();
-  Logger.log('Active triggers (' + triggers.length + '):');
-  triggers.forEach(function(t) {
-    Logger.log('  ' + t.getHandlerFunction() + ' → ' + t.getTriggerSourceId() + 
-               ' [' + t.getEventType() + ']');
-  });
+  Logger.log('✓ Daily Telegram trigger set for ' + NOTIFY_HOUR + ':00 every day');
+  Logger.log('  Run deleteTelegramTrigger() to remove it');
 }
 
 /**

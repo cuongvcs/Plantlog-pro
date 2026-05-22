@@ -278,12 +278,6 @@ async function loadFromSheets(silent){
 
       // ── Universal safe converters ─────────────────────────
       // Converts any value to a clean YYYY-MM-DD string or ''
-      // safeNum: strips locale formatting (commas, spaces) before parseFloat
-      const safeNum=v=>{
-        if(v===null||v===undefined||v==='')return 0;
-        const cleaned=String(v).replace(/,/g,'').replace(/\s/g,'').trim();
-        return parseFloat(cleaned)||0;
-      };
       const safeDate=v=>{
         if(v===null||v===undefined||v==='')return'';
         if(v instanceof Date){
@@ -413,27 +407,16 @@ async function loadFromSheets(silent){
             timeStart:    ts,
             dateEnd:      de,
             timeEnd:      te,
-            hours:        safeNum(tk.Hours)||ss(tk.Hours),
-            minutes:      safeNum(tk.Minutes)||ss(tk.Minutes),
-            autoDuration: (ss(tk.AutoDuration)||'').toLowerCase()==='true',
+            hours:        ss(tk.Hours),
+            minutes:      ss(tk.Minutes),
+            autoDuration: ss(tk.AutoDuration)==='true',
             durationMins: ss(tk.DurationMins)?parseInt(ss(tk.DurationMins))||0:0,
-            priority:     (()=>{
-              const raw=(ss(tk.Priority)||'medium').toLowerCase().trim();
-              if(raw==='high') return 'high';
-              if(raw==='low')  return 'low';
-              return 'medium';
-            })(),
+            priority:     ss(tk.Priority)||'medium',
             period:       ss(tk.Period),
             machine:      ss(tk.Machine),
             plan:         ss(tk.Plan),
             tripId:       ss(tk.TripID),
-            status:       (()=>{
-              const raw=(ss(tk.Status)||'pending').toLowerCase().trim();
-              // Normalize: "in progress"→"in_progress", "done"→"done", etc.
-              if(raw.includes('progress')||raw==='in_progress') return 'in_progress';
-              if(raw==='done'||raw==='complete'||raw==='completed') return 'done';
-              return 'pending';
-            })(),
+            status:       ss(tk.Status)||'pending',
             checklist:    cl,
             parts:        pts,
             flight:       tk.FlightJson?(()=>{try{return JSON.parse(ss(tk.FlightJson));}catch(e){return null;}})():null,
@@ -468,9 +451,9 @@ async function loadFromSheets(silent){
             date:       safeDate(b.Date)||ss(b.Date),
             billNumber: strB(b.BillNumber),
             detail:     strB(b.Detail),
-            amount:     safeNum(b.Amount),
+            amount:     parseFloat(strB(b.Amount))||0,
             currency:   strB(b.Currency)||'VND',
-            vndAmount:  safeNum(b.VndAmount||b.vndAmount),
+            vndAmount:  parseFloat(strB(b.VndAmount||b.vndAmount))||0,
             category:   strB(b.Category)||'other',
             notes:      strB(b.Notes),
             photos:     photos,

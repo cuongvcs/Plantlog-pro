@@ -449,85 +449,36 @@ function renderTasks(){
 }
 
 function renderKanban(body, today){
-  // Priority order: high=1, medium=2, low=3 (high first)
-  const prioOrder={high:1,medium:2,low:3};
-
-  const statuses=[
-    {key:'pending',    label:'⏳ Pending'},
-    {key:'in_progress',label:'🔄 In Progress'},
-    {key:'done',       label:'✅ Done'}
-  ];
-
-  let html='<div class="kanban-board">';
+  const cats=taskCat==='all'?['work','leave','travel']:['work','leave','travel'].filter(c=>c===taskCat||taskCat==='all');
+  const statuses=[{key:'pending',label:'Pending'},{key:'in_progress',label:'In Progress'},{key:'done',label:'Done'}];
+  let html=`<div class="kanban-board">`;
   statuses.forEach(st=>{
-    // Case-insensitive status match (getDisplayValues may return "Done" or "In_Progress")
-    const items=(S.tasks||[]).filter(tk=>{
-      const s=(tk.status||'pending').toLowerCase().replace(/[^a-z]/g,'_');
-      const match = s===st.key || s===st.key.replace('_','');
-      const catMatch = taskCat==='all'||(tk.category||'work')===taskCat;
-      return match && catMatch;
-    })
-    // Sort: 1st priority (high→low), 2nd date (earliest first)
-    .sort((a,b)=>{
-      const pa=prioOrder[a.priority||'medium']||2;
-      const pb=prioOrder[b.priority||'medium']||2;
-      if(pa!==pb) return pa-pb;
-      return (a.dateStart||a.date||'').localeCompare(b.dateStart||b.date||'');
-    });
-
-    const overdue=st.key!=='done'
-      ? items.filter(tk=>{
-          const endDate=tk.dateEnd||tk.dateStart||tk.date||'';
-          return endDate && endDate<today;
-        }).length
-      : 0;
-
-    html+='<div class="kb-col">';
-    html+='<div class="kb-col-hdr">';
-    html+='<span class="kb-col-title">'+st.label+'</span>';
-    html+='<div style="display:flex;gap:4px;">';
-    if(overdue) html+='<span class="kb-count" style="background:var(--rl);color:var(--red);">⚠'+overdue+'</span>';
-    html+='<span class="kb-count">'+items.length+'</span>';
-    html+='</div></div>';
-
-    if(items.length){
-      items.forEach(tk=>{
-        const isOver=st.key!=='done'&&(tk.dateEnd||tk.dateStart||tk.date||'')<today;
-        const cat=tk.category||'work';
-        const cc=catConfig(cat);
-        const prio=tk.priority||'medium';
-        const prioColor=prio==='high'?'#DC2626':prio==='low'?'#6B7280':'#D97706';
-        const prioLabel=prio==='high'?'🔴 High':prio==='low'?'⚪ Low':'🟡 Medium';
-        const dur=tk.autoDuration&&tk.timeStart&&tk.timeEnd
-          ? (()=>{const d=calcDurationFromTimes(tk.dateStart||tk.date,tk.dateEnd||tk.dateStart||tk.date,tk.timeStart,tk.timeEnd);return d?'⏱ '+d.label:'';})()
-          : (tk.hours||tk.minutes?(parseInt(tk.hours||0)+'h '+(tk.minutes||0)+'m'):'');
-
-        const cardId=tk.id;
-        html+='<div class="kb-card '+(isOver?'overdue':cat)+'" onclick="openTaskDetail(\'' + cardId + '\')" style="position:relative;">'+
-          // Priority stripe
-          '<div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:'+prioColor+';border-radius:4px 0 0 4px;"></div>'+
-          '<div style="padding-left:6px;">'+
-          // Title
-          '<div class="kb-card-title">'+tk.title+'</div>'+
-          // Date + time
-          '<div class="kb-card-meta">'+fmtDate(tk.dateStart||tk.date||'')+(tk.timeStart?' · '+tk.timeStart+(tk.timeEnd?'–'+tk.timeEnd:''):'')+
-          (dur?' · '+dur:'')+'</div>'+
-          // Badges row
-          '<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;">'+
-          '<span style="background:'+prioColor+'22;color:'+prioColor+';border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;">'+prioLabel+'</span>'+
-          '<span class="badge" style="background:'+cc.bg+';color:'+cc.text+';font-size:9px;padding:2px 6px;">'+cc.icon+' '+cc.label+'</span>'+
-          (tk.period?'<span class="period-badge">'+periodLabel(tk.period)+'</span>':'')+
-          (tk.machine?'<span style="background:#EFF6FF;color:#1D4ED8;border-radius:3px;padding:1px 5px;font-size:9px;">⚙️ '+tk.machine+'</span>':'')+
-          '</div>'+
-          '</div>'+
-          '</div>';
-      });
-    } else {
-      html+='<div style="text-align:center;padding:20px 10px;font-size:11px;color:var(--g400);">No tasks</div>';
-    }
-    html+='</div>';
+    const items=S.tasks.filter(tk=>tk.status===st.key&&(taskCat==='all'||(tk.category||'work')===taskCat))
+      .sort((a,b)=>(b.dateStart||b.date||'').localeCompare(a.dateStart||a.date||''));
+    const overdue=items.filter(tk=>(tk.dateEnd||tk.date||tk.dateStart||'')<today&&st.key!=='done').length;
+    html+=`<div class="kb-col">
+      <div class="kb-col-hdr">
+        <span class="kb-col-title">${st.label}</span>
+        <div style="display:flex;gap:4px;">
+          ${overdue?`<span class="kb-count" style="background:var(--rl);color:var(--red);">⚠${overdue}</span>`:''}
+          <span class="kb-count">${items.length}</span>
+        </div>
+      </div>
+      ${items.length?items.map(tk=>{
+        const isOver=(tk.dateEnd||tk.date||tk.dateStart||'')<today&&st.key!=='done';
+        const cat=tk.category||'work';const cc=catConfig(cat);
+        return`<div class="kb-card ${isOver?'overdue':cat}" onclick="openTaskDetail('${tk.id}')">
+          <div class="kb-card-title">${tk.title}</div>
+          <div class="kb-card-meta">${fmtDate(tk.dateStart||tk.date||'')}${tk.timeStart?' · '+tk.timeStart:''}</div>
+          <div style="display:flex;gap:4px;margin-top:5px;">
+            <span class="badge" style="background:${cc.bg};color:${cc.text};font-size:9px;padding:2px 6px;">${cc.icon} ${cc.label}</span>
+            ${tk.period?`<span class="period-badge">${periodLabel(tk.period)}</span>`:''}
+          </div>
+        </div>`;
+      }).join(''):`<div style="text-align:center;padding:20px 10px;font-size:11px;color:var(--g400);">Empty</div>`}
+    </div>`;
   });
-  html+='</div>';
+  html+=`</div>`;
   body.innerHTML=html;
 }
 
