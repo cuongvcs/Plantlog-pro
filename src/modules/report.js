@@ -306,13 +306,24 @@ function renderIssues(){
         </div>
       </div>
       ${is.description?`<div style="font-size:12px;color:var(--g600);margin-bottom:6px;">${is.description}</div>`:''}
-      <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:${is.action?'4px':'0'};">
-        <span style="font-size:10px;font-weight:600;color:var(--g500);">STATUS:</span>
-        ${['pending','waiting_part','processing','done'].map(st=>{
-          const sc=isStatusCfg[st];
-          const active=((is.istatus||'pending')===st);
-          return `<button onclick="setIssueStatus(${i},'${st}')" style="padding:3px 8px;border-radius:12px;border:1px solid ${active?'transparent':'var(--g300)'};background:${active?sc.bg:'#fff'};color:${active?sc.color:'var(--g500)'};font-size:10px;font-weight:${active?'600':'400'};cursor:pointer;font-family:var(--font);transition:all 0.15s;">${sc.label}</button>`;
-        }).join('')}
+      <div style="margin:6px 0 4px;">
+        <div style="font-size:10px;font-weight:700;color:var(--n500);letter-spacing:0.06em;margin-bottom:5px;">STATUS</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          ${['pending','waiting_part','processing','done'].map(st=>{
+            const sc=isStatusCfg[st];
+            const active=((is.istatus||'pending')===st);
+            return `<button data-ii="${i}" data-st="${st}" onclick="setIssueStatusBtn(this)"
+              style="padding:6px 10px;border-radius:8px;
+              border:2px solid ${active?sc.color:'var(--n200)'};
+              background:${active?sc.bg:'#fff'};
+              color:${active?sc.color:'var(--n400)'};
+              font-size:11px;font-weight:${active?'700':'400'};
+              cursor:pointer;font-family:var(--font);
+              transition:all 0.15s;
+              box-shadow:${active?'0 1px 4px rgba(0,0,0,0.12)':'none'};
+            ">${sc.label}</button>`;
+          }).join('')}
+        </div>
       </div>
       ${is.action?`<div style="font-size:11px;color:var(--g500);margin-top:2px;font-style:italic;">→ ${is.action}</div>`:''}
       ${is.photos&&is.photos.length?`<div class="pgrid" style="margin-top:6px;">${is.photos.map((p,pi)=>`<div class="pthumb"><img src="${p}"><button class="pdel" onclick="delIPhoto(${i},${pi})">×</button></div>`).join('')}<div class="padd" onclick="addPhotoToIssue(${i})"><span>📷</span></div></div>`:''}
@@ -416,6 +427,12 @@ function addIssue(){
   tmpPhotos=[];renderIssues();
 }
 function delIssue(i){curReport.issues.splice(i,1);sv();renderIssues();}
+function setIssueStatusBtn(btn){
+  const i = parseInt(btn.dataset.ii);
+  const status = btn.dataset.st;
+  setIssueStatus(i, status);
+}
+
 function setIssueStatus(i,status){
   if(!curReport||!curReport.issues[i])return;
   curReport.issues[i].istatus=status;

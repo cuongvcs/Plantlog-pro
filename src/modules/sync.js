@@ -233,7 +233,7 @@ async function syncToSheets(){
     reports[id]={
       checklist:(rep.checklist||[]).map(c=>({id:s(c.id),name:s(c.name),result:s(c.result),note:s(c.note)})),
       readings: (rep.readings||[]).map(r=>({name:s(r.name),tag:s(r.tag),value:s(r.value),unit:s(r.unit),status:s(r.status),type:s(r.type),condition:s(r.condition),notes:s(r.notes)})),
-      issues:   (rep.issues||[]).map(i=>({title:s(i.title),description:s(i.description),severity:s(i.severity),istatus:s(i.istatus)||'pending',action:s(i.action)})),
+      issues:   (rep.issues||[]).map(i=>({title:s(i.title||i.Title),description:s(i.description||i.Description),severity:s(i.severity||i.Severity)||'medium',istatus:s(i.IssueStatus||i.istatus)||'pending',action:s(i.action||i.Action),photos:[]})),
       team:     (rep.team||[]).map(m=>({name:s(m.name),role:s(m.role),org:s(m.org),signoff:s(m.signoff)})),
       signoff:  {summary:s(rep.signoff&&rep.signoff.summary),result:s(rep.signoff&&rep.signoff.result),remarks:s(rep.signoff&&rep.signoff.remarks)},
       signature:''
