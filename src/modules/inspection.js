@@ -175,6 +175,7 @@ function openAddInspectionItem(){
   setInspCheckResult('');
   setRdType('condition'); setCondResult('ok'); setMeasStatus('ok');
   setIssueSev('medium');
+  setInspIssueStatus('pending');
   document.getElementById('insp-type-row').style.display = '';
   openModal('modal-add-insp');
 }
@@ -205,6 +206,7 @@ function editInspectionItem(id){
     document.getElementById('insp-issue-desc').value   = item.description||'';
     document.getElementById('insp-issue-action').value = item.action||'';
     setIssueSev(item.severity||'medium');
+    setInspIssueStatus(item.istatus||'pending');
   }
   openModal('modal-add-insp');
 }
@@ -260,6 +262,15 @@ function setIssueSev(sev){
   ['low','medium','high','critical'].forEach(v=>{const b=document.getElementById('isev-'+v);if(b)b.classList.toggle('sel',v===sev);});
 }
 
+function setInspIssueStatus(v){
+  const el=document.getElementById('insp-issue-status');
+  if(el) el.value=v;
+  ['pending','processing','waiting_part','done'].forEach(s=>{
+    const b=document.getElementById('iist-'+s);
+    if(b) b.classList.toggle('sel',s===v);
+  });
+}
+
 // ═══════ SAVE ═══════
 function saveInspectionItem(){
   const type = document.getElementById('insp-type-val').value;
@@ -299,7 +310,7 @@ function saveInspectionItem(){
     item.severity    = document.getElementById('insp-issue-sev').value;
     item.description = document.getElementById('insp-issue-desc').value.trim();
     item.action      = document.getElementById('insp-issue-action').value.trim();
-    item.istatus     = 'pending';
+    item.istatus     = (document.getElementById('insp-issue-status')||{value:'pending'}).value||'pending';
     item.photos      = [];
   }
 

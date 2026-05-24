@@ -1040,6 +1040,16 @@ input, textarea, select, button { font-family: var(--font); }
         <textarea class="fta" id="insp-issue-desc" placeholder="Detailed description…" style="min-height:60px;"></textarea></div>
       <div class="fg" style="margin-bottom:0;"><label class="fl">Action required</label>
         <input class="fi" id="insp-issue-action" placeholder="e.g. Replace seal, schedule maintenance"></div>
+      <div class="fg" style="margin-top:10px;margin-bottom:0;">
+        <label class="fl">Issue Status</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="setInspIssueStatus('pending')"      id="iist-pending"      class="ropt sel" style="flex:1;font-size:11px;min-width:80px;">⏳ Pending</button>
+          <button onclick="setInspIssueStatus('processing')"   id="iist-processing"   class="ropt"     style="flex:1;font-size:11px;min-width:80px;">🔄 Processing</button>
+          <button onclick="setInspIssueStatus('waiting_part')" id="iist-waiting_part" class="ropt"     style="flex:1;font-size:11px;min-width:80px;">🔧 Waiting part</button>
+          <button onclick="setInspIssueStatus('done')"         id="iist-done"         class="ropt"     style="flex:1;font-size:11px;min-width:80px;">✅ Done</button>
+        </div>
+        <input type="hidden" id="insp-issue-status" value="pending">
+      </div>
     </div>
 
     <div class="brow" style="margin-top:14px;">
@@ -6159,6 +6169,7 @@ function openAddInspectionItem(){
   setInspCheckResult('');
   setRdType('condition'); setCondResult('ok'); setMeasStatus('ok');
   setIssueSev('medium');
+  setInspIssueStatus('pending');
   document.getElementById('insp-type-row').style.display = '';
   openModal('modal-add-insp');
 }
@@ -6189,6 +6200,7 @@ function editInspectionItem(id){
     document.getElementById('insp-issue-desc').value   = item.description||'';
     document.getElementById('insp-issue-action').value = item.action||'';
     setIssueSev(item.severity||'medium');
+    setInspIssueStatus(item.istatus||'pending');
   }
   openModal('modal-add-insp');
 }
@@ -6244,6 +6256,15 @@ function setIssueSev(sev){
   ['low','medium','high','critical'].forEach(v=>{const b=document.getElementById('isev-'+v);if(b)b.classList.toggle('sel',v===sev);});
 }
 
+function setInspIssueStatus(v){
+  const el=document.getElementById('insp-issue-status');
+  if(el) el.value=v;
+  ['pending','processing','waiting_part','done'].forEach(s=>{
+    const b=document.getElementById('iist-'+s);
+    if(b) b.classList.toggle('sel',s===v);
+  });
+}
+
 // ═══════ SAVE ═══════
 function saveInspectionItem(){
   const type = document.getElementById('insp-type-val').value;
@@ -6283,7 +6304,7 @@ function saveInspectionItem(){
     item.severity    = document.getElementById('insp-issue-sev').value;
     item.description = document.getElementById('insp-issue-desc').value.trim();
     item.action      = document.getElementById('insp-issue-action').value.trim();
-    item.istatus     = 'pending';
+    item.istatus     = (document.getElementById('insp-issue-status')||{value:'pending'}).value||'pending';
     item.photos      = [];
   }
 
