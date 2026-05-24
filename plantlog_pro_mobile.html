@@ -18,7 +18,10 @@
 
 
   <!-- ── Third-party libs ───────────────────────────── -->
-<style>/* ═══════════════════════════════════════════════════════════
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
    PlantLog Pro — Professional UI v2
    Inspired by Trello/Linear/Notion: clean, confident, fast
    
@@ -700,6 +703,7 @@ input, textarea, select, button { font-family: var(--font); }
   padding-top:7px;
   border-top:1px solid var(--n100);
 }
+
 </style>
 </head>
 <body>
@@ -5144,12 +5148,20 @@ function renderReportTaskPicker(){
   const preview=document.getElementById('report-tasks-preview');
   if(!pickerList)return;
 
-  // All tasks — show all, sorted by date then category
-  const allTasks=[...S.tasks].sort((a,b)=>{
-    const da=a.dateStart||a.date||'';
-    const db=b.dateStart||b.date||'';
-    return db.localeCompare(da)||a.title.localeCompare(b.title);
-  });
+  // Only tasks belonging to curTrip — sorted by date ascending
+  const allTasks=[...S.tasks]
+    .filter(tk=>tk.tripId===curTrip)
+    .sort((a,b)=>{
+      const da=a.dateStart||a.date||'';
+      const db=b.dateStart||b.date||'';
+      return da.localeCompare(db)||a.title.localeCompare(b.title);
+    });
+
+  // Auto-select all trip tasks that haven't been explicitly deselected
+  if(allTasks.length && curReport.reportTasks.length===0){
+    curReport.reportTasks=allTasks.map(tk=>tk.id);
+    sv();
+  }
 
   if(!allTasks.length){
     pickerList.innerHTML='';
@@ -5750,7 +5762,21 @@ function buildPDFPreview(){
 }
 function pr(l,v){return `<div class="pr"><span>${l}</span><span>${v}</span></div>`;}
 function exportPDF(){
-  if(typeof window.jspdf==='undefined'){showToast('PDF loading...');setTimeout(exportPDF,1500);return;}
+  if(typeof window.jspdf==='undefined'){
+    // Try loading jsPDF dynamically if CDN missed
+    showToast('Loading PDF library…');
+    if(!document._jspdfLoading){
+      document._jspdfLoading=true;
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload=()=>{ document._jspdfLoading=false; setTimeout(exportPDF,300); };
+      s.onerror=()=>{ document._jspdfLoading=false; showToast('PDF failed to load. Check internet connection.'); };
+      document.head.appendChild(s);
+    } else {
+      setTimeout(exportPDF,1000);
+    }
+    return;
+  }
   const{jsPDF}=window.jspdf;
   const trip=S.trips.find(tr=>tr.id===curTrip);const r=curReport;const p=S.profile;
   if(!trip||!r)return;

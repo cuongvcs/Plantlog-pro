@@ -449,38 +449,145 @@ function renderTasks(){
 }
 
 function renderKanban(body, today){
-  const cats=taskCat==='all'?['work','leave','travel']:['work','leave','travel'].filter(c=>c===taskCat||taskCat==='all');
-  const statuses=[{key:'pending',label:'Pending'},{key:'in_progress',label:'In Progress'},{key:'done',label:'Done'}];
-  let html=`<div class="kanban-board">`;
-  statuses.forEach(st=>{
-    const items=S.tasks.filter(tk=>tk.status===st.key&&(taskCat==='all'||(tk.category||'work')===taskCat))
-      .sort((a,b)=>(b.dateStart||b.date||'').localeCompare(a.dateStart||a.date||''));
-    const overdue=items.filter(tk=>(tk.dateEnd||tk.date||tk.dateStart||'')<today&&st.key!=='done').length;
-    html+=`<div class="kb-col">
-      <div class="kb-col-hdr">
-        <span class="kb-col-title">${st.label}</span>
-        <div style="display:flex;gap:4px;">
-          ${overdue?`<span class="kb-count" style="background:var(--rl);color:var(--red);">⚠${overdue}</span>`:''}
-          <span class="kb-count">${items.length}</span>
-        </div>
-      </div>
-      ${items.length?items.map(tk=>{
-        const isOver=(tk.dateEnd||tk.date||tk.dateStart||'')<today&&st.key!=='done';
-        const cat=tk.category||'work';const cc=catConfig(cat);
-        return`<div class="kb-card ${isOver?'overdue':cat}" onclick="openTaskDetail('${tk.id}')">
-          <div class="kb-card-title">${tk.title}</div>
-          <div class="kb-card-meta">${fmtDate(tk.dateStart||tk.date||'')}${tk.timeStart?' · '+tk.timeStart:''}</div>
-          <div style="display:flex;gap:4px;margin-top:5px;">
-            <span class="badge" style="background:${cc.bg};color:${cc.text};font-size:9px;padding:2px 6px;">${cc.icon} ${cc.label}</span>
-            ${tk.period?`<span class="period-badge">${periodLabel(tk.period)}</span>`:''}
-          </div>
-        </div>`;
-      }).join(''):`<div style="text-align:center;padding:20px 10px;font-size:11px;color:var(--g400);">Empty</div>`}
-    </div>`;
+  const PRIO = {high:1, medium:2, low:3};
+
+  const COLS = [
+    {key:'pending',     label:'Pending',     color:'#6B7280'},
+    {key:'in_progress', label:'In Progress', color:'#D97706'},
+    {key:'done',        label:'Done',        color:'#10B981'},
+  ];
+
+  // Normalise a raw status string → one of the three keys
+  function normStatus(raw){
+    const s=(raw||'').toLowerCase().replace(/[\s_-]+/g,'');
+    if(s==='done'||s==='completed'||s==='complete') return 'done';
+    if(s==='inprogress'||s==='active'||s==='started') return 'in_progress';
+    return 'pending';
+  }
+
+  // All tasks, no category filter (board shows everything)
+  const allTasks = (S.tasks||[]);
+
+  // Sort: priority first (high→medium→low), then date ascending
+  const sorted = allTasks.slice().sort((a,b)=>{
+    const pa = PRIO[a.priority||'medium']||2;
+    const pb = PRIO[b.priority||'medium']||2;
+    if(pa !== pb) return pa - pb;
+    const da = a.dateStart||a.date||'';
+    const db = b.dateStart||b.date||'';
+    return da.localeCompare(db);
   });
-  html+=`</div>`;
-  body.innerHTML=html;
+
+  // Build 3 columns
+  const cols = {};
+  COLS.forEach(c=>{ cols[c.key]=[]; });
+  sorted.forEach(tk=>{
+    const st = normStatus(tk.status);
+    if(cols[st]) cols[st].push(tk);
+  });
+
+  let html = '<div class="kanban-board">';
+
+  COLS.forEach(col=>{
+    const items = cols[col.key];
+    const overdue = col.key !== 'done'
+      ? items.filter(tk=>{
+          const d = tk.dateEnd||tk.dateStart||tk.date||'';
+          return d && d < today;
+        }).length
+      : 0;
+
+    html += '<div class="kb-col">';
+    // Column header
+    html += '<div class="kb-col-hdr">';
+    html += '<span class="kb-col-title" style="color:'+col.color+';">'+
+      (col.key==='pending'?'⏳':col.key==='in_progress'?'🔄':'✅')+' '+col.label+'</span>';
+    html += '<div style="display:flex;gap:4px;align-items:center;">';
+    if(overdue) html += '<span class="kb-count" style="background:#FEE2E2;color:#DC2626;">⚠ '+overdue+'</span>';
+    html += '<span class="kb-count">'+items.length+'</span>';
+    html += '</div></div>'; // close header
+
+    // Cards
+    if(items.length === 0){
+      html += '<div style="text-align:center;padding:24px 8px;font-size:11px;color:var(--n400);">No tasks</div>';
+    } else {
+      items.forEach(tk=>{
+        const cat    = tk.category||'work';
+        const cc     = catConfig(cat);
+        const prio   = tk.priority||'medium';
+        const isOver = col.key!=='done' && (tk.dateEnd||tk.dateStart||tk.date||'') < today;
+        const prioColor = prio==='high'?'#DC2626':prio==='low'?'#9CA3AF':'#D97706';
+        const prioLabel = prio==='high'?'🔴 High':prio==='low'?'⚪ Low':'🟡 Med';
+        const catIcon   = cat==='leave'?'🌴':cat==='travel'?'✈️':'🔧';
+        const trip = tk.tripId ? (S.trips||[]).find(t=>t.id===tk.tripId) : null;
+
+        // Duration string
+        let durStr = '';
+        if(tk.autoDuration && tk.timeStart && tk.timeEnd){
+          const d = calcDurationFromTimes(tk.dateStart||tk.date, tk.dateEnd||tk.dateStart||tk.date, tk.timeStart, tk.timeEnd);
+          if(d) durStr = d.label;
+        } else if(tk.hours||tk.minutes){
+          durStr = (parseInt(tk.hours||0)>0?tk.hours+'h ':'')+((parseInt(tk.minutes||0)>0)?tk.minutes+'m':'');
+        }
+
+        html += '<div class="kb-card" onclick="openTaskDetail(this.dataset.id)" data-id="'+tk.id+'" '+
+          'style="position:relative;cursor:pointer;border-left:4px solid '+prioColor+';">';
+
+        // Title
+        html += '<div style="font-size:13px;font-weight:600;color:var(--n800);margin-bottom:4px;line-height:1.3;">'+
+          (isOver?'<span style="color:#DC2626;">⚠ </span>':'')+tk.title+'</div>';
+
+        // Date + time
+        const dateStr = fmtDate(tk.dateStart||tk.date||'');
+        const timeStr = tk.timeStart?(tk.timeStart+(tk.timeEnd?' – '+tk.timeEnd:'')):'';
+        if(dateStr||timeStr){
+          html += '<div style="font-size:11px;color:var(--n500);margin-bottom:5px;">'+
+            (dateStr?'📅 '+dateStr:'')+
+            (timeStr?' · ⏰ '+timeStr:'')+
+            (durStr?' · ⏱ '+durStr:'')+
+          '</div>';
+        }
+
+        // Badges row
+        html += '<div style="display:flex;flex-wrap:wrap;gap:3px;">';
+        html += '<span style="background:'+prioColor+'20;color:'+prioColor+
+          ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:700;">'+prioLabel+'</span>';
+        html += '<span style="background:'+cc.bg+';color:'+cc.text+
+          ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:600;">'+catIcon+' '+cc.label+'</span>';
+        if(tk.machine) html += '<span style="background:#EFF6FF;color:#2563EB;border-radius:4px;padding:2px 5px;font-size:9px;">⚙️ '+tk.machine+'</span>';
+        if(trip)       html += '<span style="background:#F0FDF4;color:#15803D;border-radius:4px;padding:2px 5px;font-size:9px;">🏭 '+trip.plant+'</span>';
+        html += '</div>';
+
+        // Status buttons - use data attributes to avoid quote escaping
+        const isPend = col.key==='pending';
+        const isInP  = col.key==='in_progress';
+        const isDone = col.key==='done';
+        html += '<div class="kb-status-row" data-id="'+tk.id+'">';
+        html += '<button data-st="pending"   onclick="kbSetStatus(this)" '+
+          'style="flex:1;padding:4px 2px;border:1px solid '+(isPend?'#6B7280':'var(--n200)')+';border-radius:4px;'+
+          'background:'+(isPend?'#F3F4F6':'#fff')+';font-size:10px;font-weight:600;cursor:pointer;'+
+          'color:'+(isPend?'#374151':'var(--n400)')+';">○ Pend</button>';
+        html += '<button data-st="in_progress" onclick="kbSetStatus(this)" '+
+          'style="flex:1;padding:4px 2px;border:1px solid '+(isInP?'#D97706':'var(--n200)')+';border-radius:4px;'+
+          'background:'+(isInP?'#FFFBEB':'#fff')+';font-size:10px;font-weight:600;cursor:pointer;'+
+          'color:'+(isInP?'#D97706':'var(--n400)')+';">◑ Active</button>';
+        html += '<button data-st="done" onclick="kbSetStatus(this)" '+
+          'style="flex:1;padding:4px 2px;border:1px solid '+(isDone?'#10B981':'var(--n200)')+';border-radius:4px;'+
+          'background:'+(isDone?'#ECFDF5':'#fff')+';font-size:10px;font-weight:600;cursor:pointer;'+
+          'color:'+(isDone?'#10B981':'var(--n400)')+';">● Done</button>';
+        html += '</div>';
+
+        html += '</div>'; // close kb-card
+      });
+    }
+
+    html += '</div>'; // close kb-col
+  });
+
+  html += '</div>'; // close kanban-board
+  body.innerHTML = html;
 }
+
 
 function setTaskStatus(id,status){
   const tk=S.tasks.find(t=>t.id===id);if(!tk)return;
@@ -1128,3 +1235,13 @@ function exportPartsPDF(){
   showToast('Parts PDF downloaded ✓');
 }
 
+
+// Kanban helper: set status from button click (avoids quote escaping)
+function kbSetStatus(btn){
+  event.stopPropagation();
+  const row = btn.closest('[data-id]');
+  if(!row) return;
+  const id = row.getAttribute('data-id');
+  const st = btn.getAttribute('data-st');
+  if(id && st) setTaskStatus(id, st);
+}

@@ -672,3 +672,11 @@ input, textarea, select, button { font-family: var(--font); }
 /* ── TASK CHECKLIST CHIP ───────────────────────────────── */
 .task-link-chip { display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:10px; font-size:10px; font-weight:600; background:var(--brand-light); color:var(--brand-dark); text-transform:uppercase; letter-spacing:0.04em; }
 
+
+.kb-status-row {
+  display:flex;
+  gap:4px;
+  margin-top:7px;
+  padding-top:7px;
+  border-top:1px solid var(--n100);
+}

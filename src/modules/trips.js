@@ -103,7 +103,16 @@ function renderTripList(filter){
   if(df)trips=trips.filter(tr=>(tr.dateEnd||tr.date||'')>=df);
   if(dt)trips=trips.filter(tr=>(tr.date||'')<=dt);
 
-  trips.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  // Status order: in_progress first, planned second, completed last
+  const statusOrder={in_progress:0,planned:1,completed:2};
+  trips.sort((a,b)=>{
+    const sa=statusOrder[a.status||'planned']??1;
+    const sb=statusOrder[b.status||'planned']??1;
+    if(sa!==sb) return sa-sb;
+    // Within same status: in_progress/planned → earliest date first; completed → latest first
+    const dateA=new Date(a.date||0), dateB=new Date(b.date||0);
+    return sa===2 ? dateB-dateA : dateA-dateB;
+  });
 
   // Active filter label
   const lbl=document.getElementById('trip-active-filter');
