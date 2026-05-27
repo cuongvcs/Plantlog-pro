@@ -2789,6 +2789,9 @@ function init(){
     setTimeout(()=>{ try{checkAndSendDailyNotifications();}catch(e){} }, 3000);
   }catch(e){}
 
+  // ── Auto-start trips and tasks whose date has arrived (once per day) ──
+  try{ autoStartTodayItems(); }catch(e){ console.warn('autoStart:',e); }
+
   // Auto-load from Google Sheets on start if URL is configured
   setTimeout(()=>{
     try{
@@ -2917,6 +2920,54 @@ function fmtDate(d){
     return dt.toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{day:'numeric',month:'short',year:'numeric'});
   }catch(e){return String(d);}
 }
+// ── Auto-start trips and tasks whose date has arrived ────────
+function autoStartTodayItems(){
+  const today = new Date().toISOString().slice(0,10);
+  const lastRun = localStorage.getItem('plpro_autostart_date');
+  if(lastRun === today) return; // already ran today
+
+  let changed = false;
+
+  // ── Trips: planned → in_progress if start date reached ──
+  (S.trips||[]).forEach(tr=>{
+    if(tr.status !== 'planned') return;
+    const start = tr.date||'';
+    const end   = tr.dateEnd||tr.date||'';
+    if(!start) return;
+    // Trip starts today or has already started and not ended yet
+    if(start <= today && end >= today){
+      tr.status = 'in_progress';
+      changed = true;
+      console.log('[AutoStart] Trip started:', tr.plant, start);
+    }
+  });
+
+  // ── Tasks: pending → in_progress if start date reached ──
+  (S.tasks||[]).forEach(tk=>{
+    if(tk.status !== 'pending') return;
+    const start = tk.dateStart||tk.date||'';
+    if(!start) return;
+    const end = tk.dateEnd||tk.dateStart||tk.date||'';
+    // Task starts today or is overdue (started in the past, not yet done)
+    if(start <= today && end >= today){
+      tk.status = 'in_progress';
+      changed = true;
+    }
+  });
+
+  if(changed){
+    sv();
+    // Re-render affected screens
+    try{ renderDash(); }catch(e){}
+    try{ renderTripList(); }catch(e){}
+    try{ renderTasks(); }catch(e){}
+    showToast('📅 Schedule updated — tasks & trips set to Active');
+  }
+
+  // Mark as run today
+  localStorage.setItem('plpro_autostart_date', today);
+}
+
 function clearAllData(){if(!confirm('Delete ALL data? This cannot be undone.'))return;S={profile:{name:'',title:'',company:'',empid:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],inspections:[],library:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang};sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();showToast('Data cleared');}
 
 
