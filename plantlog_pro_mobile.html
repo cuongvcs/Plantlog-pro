@@ -2921,10 +2921,10 @@ function fmtDate(d){
   }catch(e){return String(d);}
 }
 // ── Auto-start trips and tasks whose date has arrived ────────
-function autoStartTodayItems(){
+function autoStartTodayItems(forceRun){
   const today = new Date().toISOString().slice(0,10);
   const lastRun = localStorage.getItem('plpro_autostart_date');
-  if(lastRun === today) return; // already ran today
+  if(!forceRun && lastRun === today) return; // already ran today
 
   let changed = false;
 
@@ -2957,6 +2957,8 @@ function autoStartTodayItems(){
 
   if(changed){
     sv();
+    // ── Push to Google Sheets immediately so status persists after reload ──
+    try{ svAndSync('auto_start'); }catch(e){ console.warn('autoStart sync:',e); }
     // Re-render affected screens
     try{ renderDash(); }catch(e){}
     try{ renderTripList(); }catch(e){}
@@ -8649,6 +8651,8 @@ async function loadFromSheets(silent){
       }
       sv();renderDash();renderTripList();renderTasks();renderCalendar();
       if(typeof renderTripSavedReports==='function') renderTripSavedReports();
+      // Re-run auto-start after Sheet load — Sheets may have old 'pending' status
+      if(typeof autoStartTodayItems==='function') autoStartTodayItems(true);
       showGSResult('✅ Data loaded from Google Sheets successfully!','ok');
       showToast('Loaded from Google Sheets ✓');
     } else {
