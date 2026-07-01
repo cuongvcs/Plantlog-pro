@@ -6266,7 +6266,7 @@ y += R0H;
   // ════════════════════════════════════════════════════
   const R1H = 16;
 
-  doc.setFillColor(255,235,59);
+  doc.setFillColor(255,255,0);
   doc.setLineWidth(0.25);
   doc.rect(ML, y, TW, R1H, 'FD');
   colDefs.forEach(c=>{ doc.rect(c.x, y, c.w, R1H, 'S'); });
@@ -6378,7 +6378,7 @@ y += R0H;
   // ════════════════════════════════════════════════════
   // EMPTY ROWS filling rest of page
   // ════════════════════════════════════════════════════
-  const EH = 7;
+  const EH = 5;
   doc.setLineWidth(0.25);
   while(y + EH <= PH - 5){
     colDefs.forEach(c=>doc.rect(c.x, y, c.w, EH, 'S'));
