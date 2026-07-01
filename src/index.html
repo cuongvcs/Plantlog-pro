@@ -6360,7 +6360,7 @@ y += R0H;
   y += DH;
 
   // ── Signature spanning both data rows ──
-  const sigTotalH = DH*2;
+  const sigTotalH = DH*2.5;
   const rc = colDefs[reqIdx];
   try{
     if(typeof STORED_SIG_B64!=='undefined'&&STORED_SIG_B64){
