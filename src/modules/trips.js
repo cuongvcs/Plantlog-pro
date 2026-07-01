@@ -227,7 +227,8 @@ function getTripTAFields(){
     taClass:     gv('nt-ta-class')||'E',
     allocation:  gv('nt-ta-allocation'),
     entity:      gv('nt-ta-entity'),
-    extension:   gv('nt-ta-extension')
+    extension:   gv('nt-ta-extension'),
+    requestDate: gv('nt-ta-reqdate')
   };
 }
 
@@ -239,6 +240,7 @@ function loadTripTAFields(ta){
   sv('nt-ta-allocation', ta.allocation);
   sv('nt-ta-entity', ta.entity);
   sv('nt-ta-extension', ta.extension);
+  sv('nt-ta-reqdate', ta.requestDate);
 }
 
 function resetTripTAFields(){

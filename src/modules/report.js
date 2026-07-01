@@ -898,185 +898,229 @@ function generateTAPdf(tripId){
 
   const trip=S.trips.find(tr=>tr.id===tripId);
   if(!trip){ showToast('Trip not found'); return; }
-  if(!trip.flight){ showToast('No flight info on this trip — add flight details first'); return; }
+  if(!trip.flight){ showToast('No flight info — add flight details first'); return; }
 
   const{jsPDF}=window.jspdf;
-  const p=S.profile||{};
-  const fl=trip.flight||{};
-  const ta=trip.ta||{};
+  const p  = S.profile||{};
+  const fl = trip.flight||{};
+  const ta = trip.ta||{};
 
-  // Landscape A4 to match the wide table layout of the form
-  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  // ── Helper: convert 24h time to AM/PM period ──
+  function timePeriod(t){
+    if(!t) return '';
+    const h = parseInt((t||'').split(':')[0]);
+    return isNaN(h) ? '' : h < 12 ? 'AM' : 'PM';
+  }
+
+  // ── Helper: format flight number with space (FD635 → FD 635) ──
+  function fmtFlight(num){
+    if(!num) return '';
+    // Insert space between letters and digits: "FD635" → "FD 635"
+    return num.replace(/^([A-Za-z]+)(\d+)$/, '$1 $2');
+  }
+
+  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
   const W=297, H=210, mg=10;
   const R=W-mg;
+  const tableW = R-mg;
 
-  // ── Title ──
+  // ── TITLE ──
   doc.setFont('helvetica','bold');
   doc.setFontSize(13);
-  doc.setTextColor(20,20,20);
-  doc.text('TRAVEL REQUEST AUTHORISATION', mg, 16);
-  doc.setDrawColor(20,20,20);
-  doc.setLineWidth(0.4);
-  doc.line(mg, 18, mg+95, 18);
+  doc.setTextColor(0,0,0);
+  doc.text('TRAVEL REQUEST AUTHORISATION', mg, 14);
+  doc.setLineWidth(0.5);
+  doc.setDrawColor(0,0,0);
+  doc.line(mg, 16, mg+100, 16);
 
-  // Month box (top right)
+  // ── MONTH box ──
   const tripMonth = trip.date ? new Date(trip.date+'T00:00').toLocaleDateString('en-US',{month:'short'}) : '';
   doc.setFontSize(9);
-  doc.setFont('helvetica','normal');
-  doc.text('MONTH :', R-38, 13);
-  doc.rect(R-22, 8, 22, 7);
   doc.setFont('helvetica','bold');
-  doc.text(tripMonth, R-11, 13, {align:'center'});
+  doc.text('MONTH :', R-38, 12);
+  doc.setLineWidth(0.4);
+  doc.rect(R-22, 7, 22, 7);
+  doc.text(tripMonth, R-11, 12, {align:'center'});
 
-  // ── Table setup ──
-  // Columns: TA No | Traveller | Date of Travel | From | To | Flight | Class |
-  //          Plant visited | Purpose | Allocation% | Entity | Extension | Requested By | Approved By
+  // ── COLUMN DEFINITIONS ──
+  // Match exact sample: TA No | Traveller | Date of Travel | [Destination: From | To] | Flight | Class | Plant | Purpose | Allocation | Entity | Extension | Requested By | Approved By
   const cols = [
-    {key:'ta',    label:'TA No',           w:14},
-    {key:'trav',  label:'Traveller',       w:28},
-    {key:'date',  label:'Date of Travel',  w:20},
-    {key:'from',  label:'From',            w:18},
-    {key:'to',    label:'To',              w:18},
-    {key:'flight',label:'Flight',          w:24},
-    {key:'class', label:'Class',           w:12},
-    {key:'plant', label:'Plant visited',   w:26},
-    {key:'purp',  label:'Purpose of visit',w:38},
-    {key:'alloc', label:'Allocation %',    w:16},
-    {key:'ent',   label:'Entity recharged',w:20},
-    {key:'ext',   label:'Ext. date',       w:18},
-    {key:'reqby', label:'Requested By',    w:26},
-    {key:'appby', label:'Approved By',     w:26},
+    {key:'ta',    label:'TA No',                    w:14,  bold:false},
+    {key:'trav',  label:'Traveller',                w:26,  bold:false},
+    {key:'date',  label:'Date of Travel',           w:22,  bold:false},
+    {key:'from',  label:'From',                     w:18,  bold:false},
+    {key:'to',    label:'To',                       w:18,  bold:false},
+    {key:'flight',label:'Flight',                   w:26,  bold:false},
+    {key:'class', label:'Class',                    w:11,  bold:false},
+    {key:'plant', label:'Plant visited',            w:28,  bold:false},
+    {key:'purp',  label:'Purpose of visit',         w:40,  bold:false},
+    {key:'alloc', label:'Allocation by\n%\nto each plant', w:18, bold:false},
+    {key:'ent',   label:'Entity to be\nrecharged',  w:18,  bold:false},
+    {key:'ext',   label:'Date of Extension\nof travel\n(if any)', w:22, bold:false},
+    {key:'reqby', label:'REQUESTED BY\n(Signature) / Date', w:27, bold:true},
+    {key:'appby', label:'APPROVED BY\n(Signature) / Date',  w:27, bold:true},
   ];
-  const totalW = cols.reduce((s,c)=>s+c.w,0);
-  const scale = (R-mg)/totalW; // fit to page width
+  const totalW = cols.reduce((s,c)=>s+c.w, 0);
+  const scale  = tableW / totalW;
   cols.forEach(c=>c.w = c.w*scale);
 
-  let x = mg, y = 24;
-  const headerH = 14;
-  const rowH = 26; // tall enough for 2-leg flight + signature
+  // Find From/To column indices for "Destination" spanning header
+  const fromIdx   = cols.findIndex(c=>c.key==='from');
+  const toIdx     = cols.findIndex(c=>c.key==='to');
+  const destSpanW = cols[fromIdx].w + cols[toIdx].w;
+  let   destX     = mg + cols.slice(0, fromIdx).reduce((s,c)=>s+c.w, 0);
 
-  // ── Header row ──
-  doc.setFillColor(255,235,59); // yellow like the sample
+  let y = 20;
+  const hdr1H = 6;  // "Destination" sub-header row height
+  const hdr2H = 12; // main column labels row height
+  const dataRowH = 22; // data row — tall enough for sig
+
+  // ── HEADER ROW 1: "Destination" spanning From+To ──
+  doc.setFillColor(255,235,59);
   doc.setDrawColor(0,0,0);
   doc.setLineWidth(0.25);
-  doc.rect(mg, y, R-mg, headerH, 'FD');
+
+  // Draw full yellow background for both header rows
+  doc.rect(mg, y, tableW, hdr1H+hdr2H, 'F');
+
+  // "Destination" label centered over From+To
   doc.setFont('helvetica','bold');
-  doc.setFontSize(7);
-  doc.setTextColor(20,20,20);
-  x = mg;
-  cols.forEach(c=>{
-    doc.rect(x, y, c.w, headerH);
-    const lines = doc.splitTextToSize(c.label, c.w-2);
-    doc.text(lines, x+c.w/2, y+headerH/2 - (lines.length-1)*1.3, {align:'center'});
+  doc.setFontSize(6.5);
+  doc.setTextColor(0,0,0);
+  doc.text('Destination', destX + destSpanW/2, y + hdr1H/2 + 1, {align:'center'});
+  // Draw border of Destination span
+  doc.rect(destX, y, destSpanW, hdr1H);
+
+  // ── HEADER ROW 2: Column labels ──
+  y += hdr1H;
+  let x = mg;
+  cols.forEach((c,i)=>{
+    doc.rect(x, y, c.w, hdr2H);
+    if(c.bold) doc.setFont('helvetica','bold');
+    else        doc.setFont('helvetica','bold');
+    doc.setFontSize(6);
+    const lines = c.label.split('\n');
+    const lineH = 3.4;
+    let ty = y + hdr2H/2 - (lines.length-1)*lineH/2;
+    lines.forEach(l=>{
+      doc.text(l, x+c.w/2, ty, {align:'center'});
+      ty += lineH;
+    });
     x += c.w;
   });
-  y += headerH;
+  y += hdr2H;
 
-  // ── Data row ──
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(0,0,0);
-  doc.rect(mg, y, R-mg, rowH);
-  x = mg;
-
-  const dateOut = fmtDate(trip.date);
-  const dateRet = trip.dateEnd && trip.dateEnd!==trip.date ? fmtDate(trip.dateEnd) : '';
+  // ── DATA ROW ──
+  const hasReturn = !!(fl.ret_num||fl.ret_from);
+  const dateOut = trip.date ? trip.date.split('-').reverse().join('-') : '';   // DD-MM-YYYY
+  const dateRet = (trip.dateEnd&&trip.dateEnd!==trip.date) ? trip.dateEnd.split('-').reverse().join('-') : '';
   const fromCity = fl.from||'';
   const toCity   = fl.to||'';
-  const hasReturn = !!(fl.ret_num||fl.ret_from);
-  const flightOut = (fl.num||'')+(fl.depart?' '+fl.depart:'');
-  const flightRet = hasReturn ? (fl.ret_num||'')+(fl.ret_depart?' '+fl.ret_depart:'') : '';
+  const retFrom  = fl.ret_from||toCity;
+  const retTo    = fl.ret_to||fromCity;
+
+  // Flight: "FD 635   AM"  format (number + spaces + period)
+  const flightOut = fmtFlight(fl.num||'') + (fl.depart ? '   ' + timePeriod(fl.depart) : '');
+  const flightRet = hasReturn
+    ? (fmtFlight(fl.ret_num||'') + (fl.ret_depart ? '   ' + timePeriod(fl.ret_depart) : ''))
+    : '';
+
   const classCode = ta.taClass||'E';
-  const requestedDate = trip.createdAt ? fmtDate(trip.createdAt.slice(0,10)) : '';
 
-  function cellMultiline(lines, cw, cy, ch){
-    // vertically center 1 or 2 lines in a cell
-    const ls = Array.isArray(lines) ? lines : [lines];
-    const lineH = 4.2;
-    const totalH = ls.length*lineH;
-    let startY = cy + ch/2 - totalH/2 + lineH*0.7;
-    ls.forEach(l=>{
-      if(l) doc.text(String(l), 0, 0); // placeholder, real draw below
-    });
-    return {ls, lineH, startY};
-  }
+  // Request date: use ta.requestDate if set, else trip.createdAt
+  const reqDate = ta.requestDate
+    ? ta.requestDate.split('-').reverse().join('-')
+    : (trip.createdAt ? trip.createdAt.slice(0,10).split('-').reverse().join('-') : '');
 
-  function drawCell(idx, lines){
+  // Draw data row border
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(0,0,0);
+  doc.setLineWidth(0.25);
+  doc.rect(mg, y, tableW, dataRowH);
+
+  // Helper: draw text in a cell, vertically centered for single-value cells
+  // For 2-line cells (outbound/return) draw top and bottom halves
+  function cell(idx, line1, line2){
     const c = cols[idx];
-    const ls = (Array.isArray(lines)?lines:[lines]).filter(Boolean);
-    const lineH = 4.2;
-    const totalH = Math.max(ls.length,1)*lineH;
-    let cy = y + rowH/2 - totalH/2 + lineH*0.7;
-    ls.forEach(l=>{
-      const wrapped = doc.splitTextToSize(String(l), c.w-2);
-      wrapped.forEach(wl=>{
-        doc.text(wl, x+1, cy);
-        cy += lineH;
-      });
-    });
+    const cx = mg + cols.slice(0,idx).reduce((s,cv)=>s+cv.w, 0);
+    doc.rect(cx, y, c.w, dataRowH);
+    const lineH = 4;
+    if(line2){
+      // Two rows: outbound on top half, return on bottom half
+      const topY    = y + dataRowH/4 + 1;
+      const bottomY = y + dataRowH*3/4 + 1;
+      if(line1){
+        const w1 = doc.splitTextToSize(String(line1), c.w-2);
+        doc.text(w1, cx+1, topY);
+      }
+      if(line2){
+        const w2 = doc.splitTextToSize(String(line2), c.w-2);
+        doc.text(w2, cx+1, bottomY);
+      }
+    } else {
+      // Single value: vertically centered
+      if(line1){
+        const wrapped = doc.splitTextToSize(String(line1), c.w-2);
+        const ty = y + dataRowH/2 - (wrapped.length-1)*lineH/2 + 1;
+        wrapped.forEach((wl,wi)=>doc.text(wl, cx+1, ty+wi*lineH));
+      }
+    }
   }
 
-  x = mg;
-  // TA No
-  drawCell(0, ta.taNo||''); x+=cols[0].w;
-  // Traveller
-  drawCell(1, p.name||''); x+=cols[1].w;
-  // Date of Travel (2 lines if return)
-  drawCell(2, hasReturn?[dateOut,dateRet]:[dateOut]); x+=cols[2].w;
-  // From (2 lines if return, swapped)
-  drawCell(3, hasReturn?[fromCity,toCity]:[fromCity]); x+=cols[3].w;
-  // To
-  drawCell(4, hasReturn?[toCity,fromCity]:[toCity]); x+=cols[4].w;
-  // Flight
-  drawCell(5, hasReturn?[flightOut,flightRet]:[flightOut]); x+=cols[5].w;
-  // Class
-  drawCell(6, hasReturn?[classCode,classCode]:[classCode]); x+=cols[6].w;
-  // Plant visited
-  drawCell(7, trip.plant||''); x+=cols[7].w;
-  // Purpose
-  drawCell(8, trip.purpose||''); x+=cols[8].w;
-  // Allocation %
-  drawCell(9, ta.allocation||''); x+=cols[9].w;
-  // Entity
-  drawCell(10, ta.entity||''); x+=cols[10].w;
-  // Extension date
-  drawCell(11, ta.extension?fmtDate(ta.extension):''); x+=cols[11].w;
+  cell(0, ta.taNo||'');
+  cell(1, p.name||'');
+  cell(2, dateOut, hasReturn?dateRet:'');
+  cell(3, fromCity, hasReturn?retFrom:'');
+  cell(4, toCity,   hasReturn?retTo:'');
+  cell(5, flightOut, hasReturn?flightRet:'');
+  cell(6, classCode, hasReturn?classCode:'');
+  cell(7, trip.plant||'');
+  cell(8, trip.purpose||'');
+  cell(9, ta.allocation||'');
+  cell(10, ta.entity||'');
+  cell(11, ta.extension ? ta.extension.split('-').reverse().join('-') : '');
 
-  // Requested By — signature image + date
-  const reqCol = cols[12];
-  doc.rect(x, y, reqCol.w, rowH);
+  // Requested By — signature + date below
+  const reqIdx = 12;
+  const reqC   = cols[reqIdx];
+  const reqX   = mg + cols.slice(0,reqIdx).reduce((s,c)=>s+c.w, 0);
+  doc.rect(reqX, y, reqC.w, dataRowH);
   try{
-    if(typeof STORED_SIG_B64 !== 'undefined' && STORED_SIG_B64){
-      doc.addImage(STORED_SIG_B64, 'PNG', x+2, y+2, reqCol.w-4, rowH-10);
+    if(typeof STORED_SIG_B64!=='undefined'&&STORED_SIG_B64){
+      doc.addImage(STORED_SIG_B64,'PNG', reqX+1, y+1, reqC.w-2, dataRowH-7);
     }
   }catch(e){}
-  doc.setFontSize(6.5);
-  doc.text(requestedDate, x+reqCol.w/2, y+rowH-2, {align:'center'});
-  x += reqCol.w;
-
-  // Approved By — blank box for wet-ink signature
-  const appCol = cols[13];
-  doc.rect(x, y, appCol.w, rowH);
-  // leave blank intentionally
-
-  y += rowH;
-
-  // ── Extra empty rows for additional travel entries (matches sample form style) ──
-  doc.setFont('helvetica','normal');
-  for(let i=0;i<8;i++){
-    doc.rect(mg, y, R-mg, 7);
-    let xx = mg;
-    cols.forEach(c=>{ doc.rect(xx, y, c.w, 7); xx+=c.w; });
-    y += 7;
+  if(reqDate){
+    doc.setFontSize(6);
+    doc.text(reqDate, reqX+reqC.w/2, y+dataRowH-2, {align:'center'});
   }
 
-  // ── Footer ──
-  doc.setFontSize(7);
-  doc.setTextColor(140,140,140);
-  doc.text('Generated by VCS PlantLog Pro · '+new Date().toLocaleDateString('en-GB'), mg, H-6);
+  // Approved By — blank for wet-ink
+  const appIdx = 13;
+  const appC   = cols[appIdx];
+  const appX   = mg + cols.slice(0,appIdx).reduce((s,c)=>s+c.w, 0);
+  doc.rect(appX, y, appC.w, dataRowH);
 
-  const safePlant=(trip.plant||'TA').replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,30);
-  const fileName=`TA_${ta.taNo?ta.taNo.replace(/[^a-zA-Z0-9]/g,''):'NoNum'}_${safePlant}_${(trip.date||'').replace(/-/g,'')}.pdf`;
+  y += dataRowH;
 
+  // ── EMPTY ROWS (match sample form) ──
+  const emptyRowH = 8;
+  const numEmpty  = Math.floor((H - y - 10) / emptyRowH);
+  for(let i=0; i<Math.max(numEmpty,12); i++){
+    doc.rect(mg, y, tableW, emptyRowH);
+    let ex = mg;
+    cols.forEach(c=>{ doc.rect(ex, y, c.w, emptyRowH); ex+=c.w; });
+    y += emptyRowH;
+  }
+
+  // ── FOOTER ──
+  doc.setFontSize(6.5);
+  doc.setTextColor(150,150,150);
+  doc.text('Generated by VCS PlantLog Pro · '+new Date().toLocaleDateString('en-GB'), mg, H-3);
+
+  const safePlant=(trip.plant||'TA').replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,25);
+  const fileName=`TA_${(ta.taNo||'NoNum').replace(/[^a-zA-Z0-9]/g,'')}_${safePlant}_${(trip.date||'').replace(/-/g,'')}.pdf`;
   showPdfSaveOptions(doc, fileName, 'ta', tripId);
 }
+
