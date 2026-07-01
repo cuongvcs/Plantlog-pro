@@ -13,6 +13,7 @@ function saveNewTrip(){
     ['nt-plant','nt-location','nt-date','nt-date-end','nt-purpose','nt-contact'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('nt-transport').value='';
     resetTripFlightFields();
+    resetTripTAFields();
     document.getElementById('trip-modal-title').textContent='New Trip';
     document.getElementById('trip-edit-badge').textContent='';
     document.getElementById('trip-save-btn').textContent='Save trip';
@@ -27,6 +28,7 @@ function saveNewTrip(){
       tr.contact=document.getElementById('nt-contact').value;
       tr.transport=document.getElementById('nt-transport').value;
       tr.flight=tr.transport.toLowerCase().includes('flight')?getTripFlightFields():null;
+      tr.ta=tr.transport.toLowerCase().includes('flight')?getTripTAFields():(tr.ta||null);
       tr.updatedAt=new Date().toISOString();
       // notes preserved — not in the edit modal, edited inline
     }
@@ -38,13 +40,21 @@ function saveNewTrip(){
     return;
   }
   const tripTransport=document.getElementById('nt-transport').value;
-  const trip={id:'trip_'+Date.now(),plant,date,dateEnd:document.getElementById('nt-date-end').value||date,location:document.getElementById('nt-location').value,purpose:document.getElementById('nt-purpose').value,contact:document.getElementById('nt-contact').value,transport:tripTransport,flight:tripTransport.toLowerCase().includes('flight')?getTripFlightFields():null,status:'planned',createdAt:new Date().toISOString()};
+  const trip={id:'trip_'+Date.now(),plant,date,dateEnd:document.getElementById('nt-date-end').value||date,location:document.getElementById('nt-location').value,purpose:document.getElementById('nt-purpose').value,contact:document.getElementById('nt-contact').value,transport:tripTransport,flight:tripTransport.toLowerCase().includes('flight')?getTripFlightFields():null,ta:tripTransport.toLowerCase().includes('flight')?getTripTAFields():null,status:'planned',createdAt:new Date().toISOString()};
   S.trips.push(trip);
   S.reports[trip.id]={checklist:S.templates.map((tmpl,i)=>({id:'ci'+i+Date.now(),name:tmpl,result:'',note:''})),readings:[],issues:[],team:[...S.defaultTeam.map(m=>({...m,id:'tm'+Date.now()+Math.random()}))],signoff:{summary:'',result:'Completed',remarks:''},signature:'',reportTasks:[],reportTaskNotes:{}};
   sv();closeModal('modal-new-trip');clearForm();
   Store.commit('trip:save');
   showToast(t('saveTrip')+' ✓');
   if(Notification.permission==='granted')scheduleNotifications();
+  // Offer to generate TA PDF immediately if this trip has flight info
+  if(trip.flight && trip.ta && trip.ta.taNo){
+    setTimeout(()=>{
+      if(confirm('✈️ Flight trip created!\n\nGenerate Travel Authorization PDF now?')){
+        generateTAPdf(trip.id);
+      }
+    }, 600);
+  }
 }
 // ── FILTER HELPERS ──────────────────────────────────────────
 function toggleTripDateRow(){
@@ -199,7 +209,40 @@ function loadTripFlightFields(flight){
 }
 
 function getTripFlightFields(){
-  return {'num':document.getElementById('nt-fl-num')?document.getElementById('nt-fl-num').value:'', 'airline':document.getElementById('nt-fl-airline')?document.getElementById('nt-fl-airline').value:'', 'from':document.getElementById('nt-fl-from')?document.getElementById('nt-fl-from').value:'', 'to':document.getElementById('nt-fl-to')?document.getElementById('nt-fl-to').value:'', 'depart':document.getElementById('nt-fl-depart')?document.getElementById('nt-fl-depart').value:'', 'arrive':document.getElementById('nt-fl-arrive')?document.getElementById('nt-fl-arrive').value:'', 'ret_num':document.getElementById('nt-fl-ret-num')?document.getElementById('nt-fl-ret-num').value:'', 'ret_airline':document.getElementById('nt-fl-ret-airline')?document.getElementById('nt-fl-ret-airline').value:'', 'ret_from':document.getElementById('nt-fl-ret-from')?document.getElementById('nt-fl-ret-from').value:'', 'ret_to':document.getElementById('nt-fl-ret-to')?document.getElementById('nt-fl-ret-to').value:'', 'ret_depart':document.getElementById('nt-fl-ret-depart')?document.getElementById('nt-fl-ret-depart').value:'', 'ret_arrive':document.getElementById('nt-fl-ret-arrive')?document.getElementById('nt-fl-ret-arrive').value:'', 'pnr':document.getElementById('nt-fl-pnr')?document.getElementById('nt-fl-pnr').value:''};
+  const gv=id=>{const e=document.getElementById(id);return e?e.value:'';};
+  return {
+    num:gv('nt-fl-num'), airline:gv('nt-fl-airline'), from:gv('nt-fl-from'), to:gv('nt-fl-to'),
+    depart:gv('nt-fl-depart'), arrive:gv('nt-fl-arrive'),
+    ret_num:gv('nt-fl-ret-num'), ret_airline:gv('nt-fl-ret-airline'), ret_from:gv('nt-fl-ret-from'),
+    ret_to:gv('nt-fl-ret-to'), ret_depart:gv('nt-fl-ret-depart'), ret_arrive:gv('nt-fl-ret-arrive'),
+    pnr:gv('nt-fl-pnr')
+  };
+}
+
+// ── Travel Authorization (TA) fields — separate from flight ──
+function getTripTAFields(){
+  const gv=id=>{const e=document.getElementById(id);return e?e.value:'';};
+  return {
+    taNo:        gv('nt-ta-no'),
+    taClass:     gv('nt-ta-class')||'E',
+    allocation:  gv('nt-ta-allocation'),
+    entity:      gv('nt-ta-entity'),
+    extension:   gv('nt-ta-extension')
+  };
+}
+
+function loadTripTAFields(ta){
+  const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
+  ta=ta||{};
+  sv('nt-ta-no', ta.taNo);
+  sv('nt-ta-class', ta.taClass||'E');
+  sv('nt-ta-allocation', ta.allocation);
+  sv('nt-ta-entity', ta.entity);
+  sv('nt-ta-extension', ta.extension);
+}
+
+function resetTripTAFields(){
+  loadTripTAFields({});
 }
 
 function kv(l,v){return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g100);font-size:13px;"><span style="color:var(--g500);">${l}</span><span style="font-weight:500;text-align:right;max-width:60%;">${v}</span></div>`;}
@@ -214,6 +257,7 @@ function openNewTripModal(){
   });
   document.getElementById('nt-transport').value='';
   resetTripFlightFields();
+  resetTripTAFields();
   openModal('modal-new-trip');
 }
 function openEditTrip(){
@@ -230,8 +274,10 @@ function openEditTrip(){
   document.getElementById('nt-contact').value=tr.contact||'';
   document.getElementById('nt-transport').value=tr.transport||'';
   resetTripFlightFields();
+  resetTripTAFields();
   if(tr.flight)loadTripFlightFields(tr.flight);
   else toggleTripFlight();
+  if(tr.ta)loadTripTAFields(tr.ta);
   openModal('modal-new-trip');
 }
 function deleteTripCurrent(){if(!confirm('Delete this trip?'))return;S.trips=S.trips.filter(tr=>tr.id!==curTrip);delete S.reports[curTrip];sv();showScreen('trips');renderTripList();}

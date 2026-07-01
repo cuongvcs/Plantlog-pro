@@ -831,8 +831,8 @@ function renderTripSavedReports(){
   }
   el.innerHTML = '<div class="sec" style="margin-top:12px;">📁 SAVED REPORTS</div>' +
     trip.savedReports.map(r => {
-      const icon = r.type==='bills' ? '💰' : '📋';
-      const label = r.type==='bills' ? 'Expense Report' : 'Trip Report';
+      const icon = r.type==='bills' ? '💰' : r.type==='ta' ? '🛫' : '📋';
+      const label = r.type==='bills' ? 'Expense Report' : r.type==='ta' ? 'Travel Authorization' : 'Trip Report';
       const date = r.createdAt ? fmtDate(r.createdAt.slice(0,10)) : '';
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:var(--r-sm);border:1px solid var(--n150);margin-bottom:6px;">
         <span style="font-size:20px;">${icon}</span>
@@ -875,3 +875,208 @@ function markCompleted(){
   }
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// TRAVEL AUTHORIZATION (TA) PDF
+// Generates a landscape table matching the company TA form
+// ═══════════════════════════════════════════════════════════
+function generateTAPdf(tripId){
+  if(typeof window.jspdf==='undefined'){
+    showToast('Loading PDF library…');
+    if(!document._jspdfLoading){
+      document._jspdfLoading=true;
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s.onload=()=>{ document._jspdfLoading=false; setTimeout(()=>generateTAPdf(tripId),300); };
+      s.onerror=()=>{ document._jspdfLoading=false; showToast('PDF failed to load. Check internet connection.'); };
+      document.head.appendChild(s);
+    } else {
+      setTimeout(()=>generateTAPdf(tripId),1000);
+    }
+    return;
+  }
+
+  const trip=S.trips.find(tr=>tr.id===tripId);
+  if(!trip){ showToast('Trip not found'); return; }
+  if(!trip.flight){ showToast('No flight info on this trip — add flight details first'); return; }
+
+  const{jsPDF}=window.jspdf;
+  const p=S.profile||{};
+  const fl=trip.flight||{};
+  const ta=trip.ta||{};
+
+  // Landscape A4 to match the wide table layout of the form
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const W=297, H=210, mg=10;
+  const R=W-mg;
+
+  // ── Title ──
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.setTextColor(20,20,20);
+  doc.text('TRAVEL REQUEST AUTHORISATION', mg, 16);
+  doc.setDrawColor(20,20,20);
+  doc.setLineWidth(0.4);
+  doc.line(mg, 18, mg+95, 18);
+
+  // Month box (top right)
+  const tripMonth = trip.date ? new Date(trip.date+'T00:00').toLocaleDateString('en-US',{month:'short'}) : '';
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.text('MONTH :', R-38, 13);
+  doc.rect(R-22, 8, 22, 7);
+  doc.setFont('helvetica','bold');
+  doc.text(tripMonth, R-11, 13, {align:'center'});
+
+  // ── Table setup ──
+  // Columns: TA No | Traveller | Date of Travel | From | To | Flight | Class |
+  //          Plant visited | Purpose | Allocation% | Entity | Extension | Requested By | Approved By
+  const cols = [
+    {key:'ta',    label:'TA No',           w:14},
+    {key:'trav',  label:'Traveller',       w:28},
+    {key:'date',  label:'Date of Travel',  w:20},
+    {key:'from',  label:'From',            w:18},
+    {key:'to',    label:'To',              w:18},
+    {key:'flight',label:'Flight',          w:24},
+    {key:'class', label:'Class',           w:12},
+    {key:'plant', label:'Plant visited',   w:26},
+    {key:'purp',  label:'Purpose of visit',w:38},
+    {key:'alloc', label:'Allocation %',    w:16},
+    {key:'ent',   label:'Entity recharged',w:20},
+    {key:'ext',   label:'Ext. date',       w:18},
+    {key:'reqby', label:'Requested By',    w:26},
+    {key:'appby', label:'Approved By',     w:26},
+  ];
+  const totalW = cols.reduce((s,c)=>s+c.w,0);
+  const scale = (R-mg)/totalW; // fit to page width
+  cols.forEach(c=>c.w = c.w*scale);
+
+  let x = mg, y = 24;
+  const headerH = 14;
+  const rowH = 26; // tall enough for 2-leg flight + signature
+
+  // ── Header row ──
+  doc.setFillColor(255,235,59); // yellow like the sample
+  doc.setDrawColor(0,0,0);
+  doc.setLineWidth(0.25);
+  doc.rect(mg, y, R-mg, headerH, 'FD');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(7);
+  doc.setTextColor(20,20,20);
+  x = mg;
+  cols.forEach(c=>{
+    doc.rect(x, y, c.w, headerH);
+    const lines = doc.splitTextToSize(c.label, c.w-2);
+    doc.text(lines, x+c.w/2, y+headerH/2 - (lines.length-1)*1.3, {align:'center'});
+    x += c.w;
+  });
+  y += headerH;
+
+  // ── Data row ──
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(0,0,0);
+  doc.rect(mg, y, R-mg, rowH);
+  x = mg;
+
+  const dateOut = fmtDate(trip.date);
+  const dateRet = trip.dateEnd && trip.dateEnd!==trip.date ? fmtDate(trip.dateEnd) : '';
+  const fromCity = fl.from||'';
+  const toCity   = fl.to||'';
+  const hasReturn = !!(fl.ret_num||fl.ret_from);
+  const flightOut = (fl.num||'')+(fl.depart?' '+fl.depart:'');
+  const flightRet = hasReturn ? (fl.ret_num||'')+(fl.ret_depart?' '+fl.ret_depart:'') : '';
+  const classCode = ta.taClass||'E';
+  const requestedDate = trip.createdAt ? fmtDate(trip.createdAt.slice(0,10)) : '';
+
+  function cellMultiline(lines, cw, cy, ch){
+    // vertically center 1 or 2 lines in a cell
+    const ls = Array.isArray(lines) ? lines : [lines];
+    const lineH = 4.2;
+    const totalH = ls.length*lineH;
+    let startY = cy + ch/2 - totalH/2 + lineH*0.7;
+    ls.forEach(l=>{
+      if(l) doc.text(String(l), 0, 0); // placeholder, real draw below
+    });
+    return {ls, lineH, startY};
+  }
+
+  function drawCell(idx, lines){
+    const c = cols[idx];
+    const ls = (Array.isArray(lines)?lines:[lines]).filter(Boolean);
+    const lineH = 4.2;
+    const totalH = Math.max(ls.length,1)*lineH;
+    let cy = y + rowH/2 - totalH/2 + lineH*0.7;
+    ls.forEach(l=>{
+      const wrapped = doc.splitTextToSize(String(l), c.w-2);
+      wrapped.forEach(wl=>{
+        doc.text(wl, x+1, cy);
+        cy += lineH;
+      });
+    });
+  }
+
+  x = mg;
+  // TA No
+  drawCell(0, ta.taNo||''); x+=cols[0].w;
+  // Traveller
+  drawCell(1, p.name||''); x+=cols[1].w;
+  // Date of Travel (2 lines if return)
+  drawCell(2, hasReturn?[dateOut,dateRet]:[dateOut]); x+=cols[2].w;
+  // From (2 lines if return, swapped)
+  drawCell(3, hasReturn?[fromCity,toCity]:[fromCity]); x+=cols[3].w;
+  // To
+  drawCell(4, hasReturn?[toCity,fromCity]:[toCity]); x+=cols[4].w;
+  // Flight
+  drawCell(5, hasReturn?[flightOut,flightRet]:[flightOut]); x+=cols[5].w;
+  // Class
+  drawCell(6, hasReturn?[classCode,classCode]:[classCode]); x+=cols[6].w;
+  // Plant visited
+  drawCell(7, trip.plant||''); x+=cols[7].w;
+  // Purpose
+  drawCell(8, trip.purpose||''); x+=cols[8].w;
+  // Allocation %
+  drawCell(9, ta.allocation||''); x+=cols[9].w;
+  // Entity
+  drawCell(10, ta.entity||''); x+=cols[10].w;
+  // Extension date
+  drawCell(11, ta.extension?fmtDate(ta.extension):''); x+=cols[11].w;
+
+  // Requested By — signature image + date
+  const reqCol = cols[12];
+  doc.rect(x, y, reqCol.w, rowH);
+  try{
+    if(typeof STORED_SIG_B64 !== 'undefined' && STORED_SIG_B64){
+      doc.addImage(STORED_SIG_B64, 'PNG', x+2, y+2, reqCol.w-4, rowH-10);
+    }
+  }catch(e){}
+  doc.setFontSize(6.5);
+  doc.text(requestedDate, x+reqCol.w/2, y+rowH-2, {align:'center'});
+  x += reqCol.w;
+
+  // Approved By — blank box for wet-ink signature
+  const appCol = cols[13];
+  doc.rect(x, y, appCol.w, rowH);
+  // leave blank intentionally
+
+  y += rowH;
+
+  // ── Extra empty rows for additional travel entries (matches sample form style) ──
+  doc.setFont('helvetica','normal');
+  for(let i=0;i<8;i++){
+    doc.rect(mg, y, R-mg, 7);
+    let xx = mg;
+    cols.forEach(c=>{ doc.rect(xx, y, c.w, 7); xx+=c.w; });
+    y += 7;
+  }
+
+  // ── Footer ──
+  doc.setFontSize(7);
+  doc.setTextColor(140,140,140);
+  doc.text('Generated by VCS PlantLog Pro · '+new Date().toLocaleDateString('en-GB'), mg, H-6);
+
+  const safePlant=(trip.plant||'TA').replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,30);
+  const fileName=`TA_${ta.taNo?ta.taNo.replace(/[^a-zA-Z0-9]/g,''):'NoNum'}_${safePlant}_${(trip.date||'').replace(/-/g,'')}.pdf`;
+
+  showPdfSaveOptions(doc, fileName, 'ta', tripId);
+}

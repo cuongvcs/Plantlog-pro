@@ -173,6 +173,7 @@ async function syncToSheets(){
     status:     s(tr.status)||'planned',
     notes:         s(tr.notes),
     flight:        tr.flight?JSON.stringify(tr.flight):'',
+    ta:            tr.ta?JSON.stringify(tr.ta):'',
     savedReports:  tr.savedReports&&tr.savedReports.length?JSON.stringify(tr.savedReports):'',
     createdAt:     s(tr.createdAt)
   }));
@@ -369,6 +370,7 @@ async function loadFromSheets(silent){
           status:    ss(tr.Status)||'planned',
           notes:     ss(tr.Notes),
           flight:       tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
+          ta:           tr.TA?(()=>{try{return JSON.parse(ss(tr.TA));}catch(e){return null;}})():null,
           savedReports: (()=>{
             const raw = ss(tr.SavedReports||tr.savedReports||'');
             if(!raw) return [];

@@ -23,7 +23,7 @@ const SN={TRIPS:'Trips',TASKS:'Tasks',LEAVE:'Leave',REPORTS:'Reports',
   BILLS:'Bills',MACHINES:'Machines',PLANS:'Plans',LOG:'SyncLog',REMINDERS:'Reminders'};
 
 const COLS={
-  trips:    ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','SavedReports','CreatedAt'],
+  trips:    ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','TA','SavedReports','CreatedAt'],
   tasks:    ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','PartsJson','FlightJson','FilesJson','AutoDuration','DurationMins','CreatedAt','UpdatedAt'],
   leave:    ['Date','Type','Note'],
   reports:   ['TripID','SignoffSummary','SignoffResult','SignoffRemarks','SignedAt'],
@@ -165,6 +165,7 @@ function syncAll(p){
       t.id,t.plant,t.location,t.date,t.dateEnd,
       t.purpose,t.contact,t.transport,t.status,
       t.notes||'', t.flight||'',
+      t.ta||'',
       t.savedReports||'',
       t.createdAt
     ]));r.trips=p.trips.length;
@@ -526,8 +527,8 @@ function sendDailyTelegramNotifications() {
 function saveTelegramConfig() {
   // ┌─────────────────────────────────────────────────┐
   // │  EDIT YOUR TOKEN AND CHAT ID HERE               │
-  var TOKEN   = 'YOUR_BOT_TOKEN_HERE';   // from @BotFather
-  var CHAT_ID = 'YOUR_CHAT_ID_HERE';     // your Telegram user ID
+  var TOKEN   = '7995614221:AAGpWh89znCbVw92qjXcbrytFwV47Grxm60';   // from @BotFather
+  var CHAT_ID = '545110937';     // your Telegram user ID
   // └─────────────────────────────────────────────────┘
 
   var ss = db_();

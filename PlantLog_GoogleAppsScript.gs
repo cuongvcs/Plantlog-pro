@@ -23,7 +23,7 @@ const SN={TRIPS:'Trips',TASKS:'Tasks',LEAVE:'Leave',REPORTS:'Reports',
   BILLS:'Bills',MACHINES:'Machines',PLANS:'Plans',LOG:'SyncLog',REMINDERS:'Reminders'};
 
 const COLS={
-  trips:    ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','SavedReports','CreatedAt'],
+  trips:    ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','TA','SavedReports','CreatedAt'],
   tasks:    ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','PartsJson','FlightJson','FilesJson','AutoDuration','DurationMins','CreatedAt','UpdatedAt'],
   leave:    ['Date','Type','Note'],
   reports:   ['TripID','SignoffSummary','SignoffResult','SignoffRemarks','SignedAt'],
@@ -165,6 +165,7 @@ function syncAll(p){
       t.id,t.plant,t.location,t.date,t.dateEnd,
       t.purpose,t.contact,t.transport,t.status,
       t.notes||'', t.flight||'',
+      t.ta||'',
       t.savedReports||'',
       t.createdAt
     ]));r.trips=p.trips.length;
@@ -516,6 +517,9 @@ function sendDailyTelegramNotifications() {
   try { checkAndSendReminders_(cfg, today); } catch(e) { Logger.log('Reminders error: ' + e.message); }
 
   Logger.log('Sent ' + sent + '/' + msgs.length + ' Telegram messages for ' + today);
+
+  // ── Also update task/trip statuses in Sheets ──
+  try { autoStartInSheets(); } catch(e) { Logger.log('autoStart error: ' + e.message); }
 }
 
 // ── Save Telegram config to the database spreadsheet ────────
@@ -609,6 +613,63 @@ function daysBetween_(dateStr1, dateStr2) {
  * Test the notification system manually.
  * Run this to check it works before setting up the trigger.
  */
+/**
+ * Called at 7AM by the daily trigger.
+ * Updates task/trip statuses in Sheets directly (planned→in_progress).
+ * This ensures the Sheet stays up to date even when the app is closed.
+ */
+function autoStartInSheets() {
+  var ss    = db_();
+  var today = formatDate_(new Date());
+  var updated = 0;
+
+  // ── Update Trips: planned → in_progress ──
+  var tripSheet = ss.getSheetByName('Trips');
+  if (tripSheet && tripSheet.getLastRow() > 1) {
+    var tripData = tripSheet.getRange(2, 1, tripSheet.getLastRow()-1, tripSheet.getLastColumn()).getValues();
+    var tripHeaders = tripSheet.getRange(1,1,1,tripSheet.getLastColumn()).getValues()[0];
+    var dateCol    = tripHeaders.indexOf('Date');
+    var dateEndCol = tripHeaders.indexOf('DateEnd');
+    var statusCol  = tripHeaders.indexOf('Status');
+    if (statusCol >= 0 && dateCol >= 0) {
+      tripData.forEach(function(row, i) {
+        var status  = String(row[statusCol]||'').toLowerCase();
+        var start   = String(row[dateCol]||'');
+        var end     = String(row[dateEndCol >= 0 ? dateEndCol : dateCol]||start);
+        if (status === 'planned' && start <= today && end >= today) {
+          tripSheet.getRange(i+2, statusCol+1).setValue('in_progress');
+          updated++;
+          Logger.log('Trip auto-started: ' + row[1]); // Plant name at col 1
+        }
+      });
+    }
+  }
+
+  // ── Update Tasks: pending → in_progress ──
+  var taskSheet = ss.getSheetByName('Tasks');
+  if (taskSheet && taskSheet.getLastRow() > 1) {
+    var taskData = taskSheet.getRange(2, 1, taskSheet.getLastRow()-1, taskSheet.getLastColumn()).getValues();
+    var taskHeaders = taskSheet.getRange(1,1,1,taskSheet.getLastColumn()).getValues()[0];
+    var dsCol  = taskHeaders.indexOf('DateStart');
+    var deCol  = taskHeaders.indexOf('DateEnd');
+    var stCol  = taskHeaders.indexOf('Status');
+    if (stCol >= 0 && dsCol >= 0) {
+      taskData.forEach(function(row, i) {
+        var status = String(row[stCol]||'').toLowerCase();
+        var start  = String(row[dsCol]||'');
+        var end    = String(row[deCol >= 0 ? deCol : dsCol]||start);
+        if ((status === 'pending') && start <= today && end >= today) {
+          taskSheet.getRange(i+2, stCol+1).setValue('in_progress');
+          updated++;
+        }
+      });
+    }
+  }
+
+  Logger.log('autoStartInSheets: ' + updated + ' items started for ' + today);
+  return updated;
+}
+
 function testDailyNotifications() {
   Logger.log('Testing daily notifications...');
   sendDailyTelegramNotifications();
