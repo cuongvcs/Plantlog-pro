@@ -6214,35 +6214,52 @@ function generateTAPdf(tripId){
 
   doc.setDrawColor(0,0,0);
 
-  // ════════════════════════════════════════════════════
-  // ROW 0: White row — thin outer border for ALL cols,
-  //        "Destination" label only over From+To
-  // ════════════════════════════════════════════════════
-  const R0H = 6;
-  let y = 19;
+ // ════════════════════════════════════════════════════
+// ROW 0 : White header (Destination merged)
+// ════════════════════════════════════════════════════
+const R0H = 6;
+let y = 19;
 
-  // White fill
-  doc.setFillColor(255,255,255);
-  doc.setLineWidth(0.25);
-  // Draw each cell border (thin, white bg)
-  colDefs.forEach(c=>{ doc.rect(c.x, y, c.w, R0H, 'S'); });
-  // Outer rect border
-  doc.setLineWidth(0.4);
-  doc.rect(ML, y, TW, R0H, 'S');
-  // Thick borders matching sample (left of Plant, left of Req, left of App)
-  doc.setLineWidth(1.2);
-  doc.line(dblX, y, dblX, y+R0H);
-  doc.line(reqX, y, reqX, y+R0H);
-  doc.line(appX, y, appX, y+R0H);
-  doc.setLineWidth(0.4);
+doc.setFillColor(255,255,255);
+doc.setLineWidth(0.25);
 
-  // "Destination" label centered over From+To only
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(6);
-  doc.setTextColor(0,0,0);
-  doc.text('Destination', destX+destW/2, y+R0H/2+1, {align:'center'});
+// Draw each column except From & To
+colDefs.forEach((c, idx) => {
 
-  y += R0H;
+    // Skip From / To because they will be merged
+    if(idx === fromIdx || idx === toIdx) return;
+
+    doc.rect(c.x, y, c.w, R0H, 'S');
+
+});
+
+// Draw merged Destination cell
+doc.rect(destX, y, destW, R0H, 'S');
+
+// Outer border
+doc.setLineWidth(0.4);
+doc.rect(ML, y, TW, R0H, 'S');
+
+// Thick borders
+doc.setLineWidth(1.2);
+doc.line(dblX, y, dblX, y + R0H);
+doc.line(reqX, y, reqX, y + R0H);
+doc.line(appX, y, appX, y + R0H);
+doc.setLineWidth(0.4);
+
+// Destination text
+doc.setFont('helvetica','normal');
+doc.setFontSize(6);
+doc.setTextColor(0,0,0);
+
+doc.text(
+    'Destination',
+    destX + destW / 2,
+    y + R0H / 2 + 1,
+    { align:'center' }
+);
+
+y += R0H;
 
   // ════════════════════════════════════════════════════
   // ROW 1: Full yellow header — ALL columns
