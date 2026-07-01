@@ -6172,19 +6172,19 @@ function generateTAPdf(tripId){
   // ── COLUMN DEFINITIONS ───────────────────────────────
   const colDefs = [
     {key:'ta',    w:14,  label:'TA No'},
-    {key:'trav',  w:26,  label:'Traveller'},
-    {key:'date',  w:22,  label:'Date of\nTravel'},
-    {key:'from',  w:18,  label:'From'},
-    {key:'to',    w:18,  label:'To'},
-    {key:'flt',   w:26,  label:'Flight'},
-    {key:'cls',   w:11,  label:'Class'},
-    {key:'plt',   w:28,  label:'Plant visited'},
-    {key:'purp',  w:42,  label:'Purpose of visit'},
-    {key:'alloc', w:19,  label:'Allocation by\npercentage to\neach plant'},
-    {key:'ent',   w:18,  label:'Entity to be re-\ncharged'},
-    {key:'ext',   w:22,  label:'Date of Extension\nof travel on\npersonal basis (if\nany)'},
-    {key:'req',   w:27,  label:'REQUESTED BY\n(Signature) / Date'},
-    {key:'app',   w:26,  label:'APPROVED BY\n(Signature) / Date'},
+    {key:'trav',  w:30,  label:'Traveller'},
+    {key:'date',  w:20,  label:'Date of\nTravel'},
+    {key:'from',  w:16,  label:'From'},
+    {key:'to',    w:16,  label:'To'},
+    {key:'flt',   w:24,  label:'Flight'},
+    {key:'cls',   w:10,  label:'Class'},
+    {key:'plt',   w:24,  label:'Plant visited'},
+    {key:'purp',  w:52,  label:'Purpose of visit'},
+    {key:'alloc', w:16,  label:'Allocation by\npercentage to\neach plant'},
+    {key:'ent',   w:16,  label:'Entity to be re-\ncharged'},
+    {key:'ext',   w:20,  label:'Date of Extension\nof travel on\npersonal basis (if\nany)'},
+    {key:'req',   w:30,  label:'REQUESTED BY\n(Signature) / Date'},
+    {key:'app',   w:30,  label:'APPROVED BY\n(Signature) / Date'},
   ];
   const rawTotal = colDefs.reduce((s,c)=>s+c.w, 0);
   const scale    = TW / rawTotal;
