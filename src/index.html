@@ -6180,11 +6180,11 @@ function generateTAPdf(tripId){
     {key:'cls',   w:10,  label:'Class'},
     {key:'plt',   w:24,  label:'Plant visited'},
     {key:'purp',  w:52,  label:'Purpose of visit'},
-    {key:'alloc', w:16,  label:'Allocation by\npercentage to\neach plant'},
-    {key:'ent',   w:16,  label:'Entity to be re-\ncharged'},
-    {key:'ext',   w:20,  label:'Date of Extension\nof travel on\npersonal basis (if\nany)'},
-    {key:'req',   w:30,  label:'REQUESTED BY\n(Signature) / Date'},
-    {key:'app',   w:30,  label:'APPROVED BY\n(Signature) / Date'},
+    {key:'alloc', w:18,  label:'Allocation by\npercentage to\neach plant'},
+    {key:'ent',   w:18,  label:'Entity to be re-\ncharged'},
+    {key:'ext',   w:24,  label:'Date of Extension\nof travel on\npersonal basis (if\nany)'},
+    {key:'req',   w:26,  label:'REQUESTED BY\n(Signature) / Date'},
+    {key:'app',   w:26,  label:'APPROVED BY\n(Signature) / Date'},
   ];
   const rawTotal = colDefs.reduce((s,c)=>s+c.w, 0);
   const scale    = TW / rawTotal;
