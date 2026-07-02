@@ -6360,13 +6360,13 @@ y += R0H;
   y += DH;
 
   // ── Signature spanning both data rows ──
-  const sigTotalH = DH*2.5;
+  const sigTotalH = DH*2;
   const rc = colDefs[reqIdx];
   try{
     if(typeof STORED_SIG_B64!=='undefined'&&STORED_SIG_B64){
       doc.addImage(STORED_SIG_B64,'PNG',
         rc.x+1, dataStartY+1,
-        rc.w+1, sigTotalH*1.65
+        rc.w+1, sigTotalH*0.65
       );
     }
   }catch(e){}
