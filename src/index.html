@@ -6365,8 +6365,8 @@ y += R0H;
   try{
     if(typeof STORED_SIG_B64!=='undefined'&&STORED_SIG_B64){
       doc.addImage(STORED_SIG_B64,'PNG',
-        rc.x+0.5, dataStartY+0.5,
-        rc.w-1, sigTotalH*0.85
+        rc.x+1, dataStartY+1,
+        rc.w+1, sigTotalH*0.65
       );
     }
   }catch(e){}
