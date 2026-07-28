@@ -434,6 +434,15 @@ function sendDailyTelegramNotifications() {
   var ss = db_();
   if (!ss) { Logger.log('Cannot open database'); return; }
 
+  // Auto-start trips and tasks on Google Sheets whose start date has arrived
+  try {
+    if (typeof autoStartInSheets === 'function') {
+      autoStartInSheets();
+    }
+  } catch(e) {
+    Logger.log('AutoStart error: ' + e.message);
+  }
+
   // Read Telegram config from a Settings sheet (or hardcode below)
   var cfg = getTelegramConfig_(ss);
   if (!cfg || !cfg.token || !cfg.chatId) {

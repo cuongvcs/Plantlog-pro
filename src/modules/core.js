@@ -470,6 +470,10 @@ function autoStartTodayItems(){
 
   if(changed){
     sv();
+    // Auto-sync status update (in_progress) to Google Sheets immediately
+    if(typeof syncToSheets === 'function'){
+      syncToSheets().catch(e => console.warn('[AutoStart] Sync error:', e));
+    }
     // Re-render affected screens
     try{ renderDash(); }catch(e){}
     try{ renderTripList(); }catch(e){}
