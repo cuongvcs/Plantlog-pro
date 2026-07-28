@@ -24,11 +24,9 @@
   2. Form thêm/sửa Hóa đơn chi phí (`Link to Trip` dropdown trong Add/Edit Bill Modal).
   3. Modal xuất báo cáo PDF Hóa đơn (`Filter by trip` dropdown trong Export Bills PDF).
 
-### 🔒 Sửa lỗi Màn hình Khóa PIN bị bỏ qua khi khởi động (Fix PIN Lock Bypass)
-- **Vấn đề:** Khi mở app, màn hình chính (`#app`) không ẩn hoàn toàn và bộ đếm tự động fallback sau 5 giây ép `#app` hiển thị làm người dùng vào thẳng ứng dụng mà không cần nhập PIN.
-- **Khắc phục:**
-  1. Cập nhật `authInit()` gọi `lockApp()` trực tiếp khi `hasPIN()` là `true`, ẩn hoàn toàn `#app` (`display: none`) và hiện duy nhất `#screen-lock` (`display: flex`).
-  2. Cập nhật script fallback 5s chỉ cho phép tự động hiện `#app` nếu chưa cài mã PIN (`!localStorage.getItem('plprosec1')`).
+### 📱 Tự động gửi báo cáo chuyến đi sang Telegram khi bấm "Mark completed"
+- Cập nhật hàm `markCompleted()` trong `src/index.html`, `src/modules/report.js`, và `plantlog_pro_mobile.html`.
+- Khi người dùng hoàn thành báo cáo và bấm nút **Mark completed** (Đánh dấu hoàn thành), ứng dụng sẽ tự động kích hoạt hàm `sendTripToTelegram(curTrip)` để gửi ngay bản tổng hợp báo cáo chuyến đi (thông tin Trip, danh sách Task, kết quả sign-off, chi phí) tới Telegram Bot nếu đã được cấu hình trong Cài đặt.
 
 ---
 

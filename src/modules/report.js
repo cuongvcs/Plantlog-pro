@@ -872,6 +872,13 @@ function markCompleted(){
     svAndSync('trip_complete');
     showScreen('trip-detail');
     if(typeof renderTripSavedReports==='function') renderTripSavedReports();
+    // Auto-send trip report summary to Telegram if configured
+    if(typeof sendTripToTelegram === 'function'){
+      const cfg = S.telegramConfig || {};
+      if(cfg.token && cfg.chatId){
+        sendTripToTelegram(curTrip).catch(e => console.warn('[Telegram Auto-Send] Error:', e));
+      }
+    }
   }
 }
 

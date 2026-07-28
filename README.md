@@ -33,7 +33,8 @@ src/
 - Updated `autoStartTodayItems()` in `src/index.html`, `src/modules/core.js`, and `plantlog_pro_mobile.html` to invoke `syncToSheets()` immediately when status changes.
 - Updated `sendDailyTelegramNotifications()` in `PlantLog_GoogleAppsScript_Pro.gs` to automatically invoke `autoStartInSheets()` during the 7 AM daily cloud trigger.
 - **Sorted Trips Newest First:** Created `getSortedTrips()` helper to ensure all trip selection dropdowns (Task Modal, Add/Edit Bill Modal, Bills PDF Export Filter) list the most recent trips at the top.
-- **Fixed PIN Lock Bypass:** Updated `authInit()` to invoke `lockApp()` directly when PIN is set, ensuring `#app` is hidden and `#screen-lock` strictly requires PIN authentication upon opening. Also updated startup fallback timer to respect active PIN lock.
+- **Fixed PIN Lock Bypass:** Updated `authInit()` to invoke `lockApp()` directly when PIN is set, ensuring `#app` is hidden and `#screen-lock` strictly requires PIN authentication upon opening.
+- **Telegram Auto-Send on Mark Completed:** Updated `markCompleted()` to automatically trigger `sendTripToTelegram(curTrip)` upon completing a trip report.
 
 ### v4.3 — Parts & Materials + Export
 
