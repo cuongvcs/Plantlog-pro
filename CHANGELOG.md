@@ -24,9 +24,11 @@
   2. Form thêm/sửa Hóa đơn chi phí (`Link to Trip` dropdown trong Add/Edit Bill Modal).
   3. Modal xuất báo cáo PDF Hóa đơn (`Filter by trip` dropdown trong Export Bills PDF).
 
-### 🐛 Sửa 2 lỗi trong file `src/index.html`:
-1. **Lỗi cú pháp JS (Missing catch block in `fmtDate`):** Bổ sung khối `catch(e){return String(d);}` bị thiếu ở dòng 2944 làm treo script JS khi định dạng ngày tháng.
-2. **Lỗi ký tự phân cách Unicode (`openBillExport`):** Chuẩn hóa ký tự em-dash (`—`) thành dấu gạch ngang chuẩn (`-`) trong chuỗi template HTML ở dòng 8373 để tránh lỗi hiển thị mã hóa ký tự dị trên trình duyệt di động.
+### 🔒 Sửa lỗi Màn hình Khóa PIN bị bỏ qua khi khởi động (Fix PIN Lock Bypass)
+- **Vấn đề:** Khi mở app, màn hình chính (`#app`) không ẩn hoàn toàn và bộ đếm tự động fallback sau 5 giây ép `#app` hiển thị làm người dùng vào thẳng ứng dụng mà không cần nhập PIN.
+- **Khắc phục:**
+  1. Cập nhật `authInit()` gọi `lockApp()` trực tiếp khi `hasPIN()` là `true`, ẩn hoàn toàn `#app` (`display: none`) và hiện duy nhất `#screen-lock` (`display: flex`).
+  2. Cập nhật script fallback 5s chỉ cho phép tự động hiện `#app` nếu chưa cài mã PIN (`!localStorage.getItem('plprosec1')`).
 
 ---
 

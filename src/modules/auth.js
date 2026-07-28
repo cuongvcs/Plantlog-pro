@@ -306,27 +306,13 @@ function authInit() {
   const appEl  = document.getElementById('app');
   const lockEl = document.getElementById('screen-lock');
 
-  // App starts hidden — we MUST show it either behind lock or directly
-  function showApp()  { if(appEl)  appEl.style.display  = 'flex'; }
-  function showLock() { if(lockEl) lockEl.style.display = 'flex'; }
+  function showApp()  { if(appEl) appEl.style.display  = 'flex'; if(lockEl) lockEl.style.display = 'none'; }
+  function showLock() { if(lockEl) lockEl.style.display = 'flex'; if(appEl) appEl.style.display = 'none'; }
   function hideLock() { if(lockEl) lockEl.style.display = 'none'; }
 
   if (hasPIN()) {
-    // Show lock screen — app stays hidden behind it
-    showLock();
-    // Don't show app — user must unlock first
-    _isLocked = true;
-    pinBuffer = '';
-    pinMode   = 'login';
-    const lt = document.getElementById('lock-title');
-    if(lt) lt.textContent = 'Enter PIN';
-    const le = document.getElementById('lock-error');
-    if(le) le.textContent = '';
-    const lf = document.getElementById('lock-forgot');
-    if(lf) lf.style.display = 'block';
-    try { updatePinDots('lock'); } catch(e){}
+    lockApp();
   } else {
-    // No PIN — show app directly
     hideLock();
     showApp();
     setTimeout(() => {
