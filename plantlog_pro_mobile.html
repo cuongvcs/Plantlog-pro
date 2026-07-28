@@ -2943,6 +2943,14 @@ function fmtDate(d){
     return dt.toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{day:'numeric',month:'short',year:'numeric'});
   }catch(e){return String(d);}
 }
+function getSortedTrips(){
+  return [...(S.trips||[])].sort((a,b)=>{
+    const dateA = a.dateEnd || a.date || '';
+    const dateB = b.dateEnd || b.date || '';
+    if(dateA !== dateB) return dateB.localeCompare(dateA);
+    return (b.id||'').localeCompare(a.id||'');
+  });
+}
 // ── Auto-start trips and tasks whose date has arrived ────────
 function autoStartTodayItems(){
   const today = new Date().toISOString().slice(0,10);
@@ -4002,7 +4010,7 @@ function renderDash(){
 function populateTaskTripSelect(){
   const sel=document.getElementById('task-trip');
   if(!sel)return;
-  sel.innerHTML='<option value="">None</option>'+S.trips.map(tr=>`<option value="${tr.id}">${tr.plant} (${fmtDate(tr.date)})</option>`).join('');
+  sel.innerHTML='<option value="">None</option>'+getSortedTrips().map(tr=>`<option value="${tr.id}">${tr.plant} (${fmtDate(tr.date)})</option>`).join('');
 }
 function populateMachineSelect(){
   const sel=document.getElementById('task-machine');if(!sel)return;
@@ -8180,7 +8188,7 @@ function openAddBillFromScreen() {
   const tripSel = document.getElementById('bill-trip-select');
   if (tripSel) {
     tripSel.innerHTML = '<option value="">No trip link</option>' +
-      S.trips.map(t => `<option value="${t.id}">${t.plant} (${fmtDate(t.date)})</option>`).join('');
+      getSortedTrips().map(t => `<option value="${t.id}">${t.plant} (${fmtDate(t.date)})</option>`).join('');
   }
   document.getElementById('bill-save-btn').dataset.tripid = '';
   openModal('modal-add-bill');
@@ -8346,7 +8354,7 @@ function openBillExport() {
   const sel = document.getElementById('bill-pdf-trip');
   if (sel) {
     sel.innerHTML = '<option value="all">All trips</option>' +
-      S.trips.map(t => `<option value="${t.id}">${t.plant} — ${fmtDate(t.date)}</option>`).join('');
+      getSortedTrips().map(t => `<option value="${t.id}">${t.plant} - ${fmtDate(t.date)}</option>`).join('');
     sel.onchange = () => { updateBillExportTitle(); buildBillPDFPreview(); };
   }
   // Always reset title on open so it auto-generates fresh
@@ -9152,7 +9160,7 @@ function openAddBill(tripId){
   // Populate trip selector
   const ts=document.getElementById('bill-trip-select');
   if(ts){
-    ts.innerHTML='<option value="">No trip link</option>'+S.trips.map(t=>`<option value="${t.id}"${t.id===tripId?' selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
+    ts.innerHTML='<option value="">No trip link</option>'+getSortedTrips().map(t=>`<option value="${t.id}"${t.id===tripId?' selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
   }
   document.getElementById('bill-save-btn').dataset.tripid=tripId||'';
   openModal('modal-add-bill');
@@ -9187,7 +9195,7 @@ function openEditBill(id){
   document.getElementById('bill-save-btn').dataset.tripid=b.tripId||'';
   const ts2=document.getElementById('bill-trip-select');
   if(ts2){
-    ts2.innerHTML='<option value="">No trip link</option>'+S.trips.map(t=>`<option value="${t.id}"${t.id===b.tripId?' selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
+    ts2.innerHTML='<option value="">No trip link</option>'+getSortedTrips().map(t=>`<option value="${t.id}"${t.id===b.tripId?' selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
   }
   renderBillPhotoGrid();
   openModal('modal-add-bill');

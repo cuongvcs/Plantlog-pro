@@ -8,7 +8,8 @@
 function populateTaskTripSelect(){
   const sel=document.getElementById('task-trip');
   if(!sel)return;
-  sel.innerHTML='<option value="">None</option>'+S.trips.map(tr=>`<option value="${tr.id}">${tr.plant} (${fmtDate(tr.date)})</option>`).join('');
+  const trips = typeof getSortedTrips==='function' ? getSortedTrips() : [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  sel.innerHTML='<option value="">None</option>'+trips.map(tr=>`<option value="${tr.id}">${tr.plant} (${fmtDate(tr.date)})</option>`).join('');
 }
 function populateMachineSelect(){
   const sel=document.getElementById('task-machine');if(!sel)return;

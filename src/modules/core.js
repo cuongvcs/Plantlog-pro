@@ -433,6 +433,14 @@ function fmtDate(d){
     return dt.toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{day:'numeric',month:'short',year:'numeric'});
   }catch(e){return String(d);}
 }
+function getSortedTrips(){
+  return [...(S.trips||[])].sort((a,b)=>{
+    const dateA = a.dateEnd || a.date || '';
+    const dateB = b.dateEnd || b.date || '';
+    if(dateA !== dateB) return dateB.localeCompare(dateA);
+    return (b.id||'').localeCompare(a.id||'');
+  });
+}
 // ── Auto-start trips and tasks whose date has arrived ────────
 function autoStartTodayItems(){
   const today = new Date().toISOString().slice(0,10);

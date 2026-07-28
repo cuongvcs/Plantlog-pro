@@ -128,8 +128,9 @@ function openAddBillFromScreen() {
   // Populate trip selector for linking
   const tripSel = document.getElementById('bill-trip-select');
   if (tripSel) {
+    const trips = typeof getSortedTrips==='function' ? getSortedTrips() : [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
     tripSel.innerHTML = '<option value="">No trip link</option>' +
-      S.trips.map(t => `<option value="${t.id}">${t.plant} (${fmtDate(t.date)})</option>`).join('');
+      trips.map(t => `<option value="${t.id}">${t.plant} (${fmtDate(t.date)})</option>`).join('');
   }
   document.getElementById('bill-save-btn').dataset.tripid = '';
   openModal('modal-add-bill');
@@ -294,8 +295,9 @@ function deleteBillFromScreen(id) {
 function openBillExport() {
   const sel = document.getElementById('bill-pdf-trip');
   if (sel) {
+    const trips = typeof getSortedTrips==='function' ? getSortedTrips() : [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
     sel.innerHTML = '<option value="all">All trips</option>' +
-      S.trips.map(t => `<option value="${t.id}">${t.plant} — ${fmtDate(t.date)}</option>`).join('');
+      trips.map(t => `<option value="${t.id}">${t.plant} — ${fmtDate(t.date)}</option>`).join('');
     sel.onchange = () => { updateBillExportTitle(); buildBillPDFPreview(); };
   }
   // Always reset title on open so it auto-generates fresh
