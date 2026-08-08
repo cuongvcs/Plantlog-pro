@@ -6976,14 +6976,20 @@ function renderTripBills(tripId){
 
       dayBills.forEach(b=>{
         const amt=fmtAmt(b.amount, b.currency);
-        html+=`<div class="bill-card">
+        const pmVal=b.paymentMethod||b.paymentTerm||'1-Cash';
+        const isBank=pmVal.includes('Bank'), isCredit=pmVal.includes('Credit')||pmVal.includes('Card');
+        const pmBg=isBank?'#DBEAFE':isCredit?'#EDE9FE':'#DCFCE7';
+        const pmCol=isBank?'#1E40AF':isCredit?'#5B21B6':'#166534';
+        const pmBdr=isBank?'#2563EB':isCredit?'#7C3AED':'#059669';
+        const pmIcon=isBank?'🏦':isCredit?'💳':'💵';
+        html+=`<div class="bill-card" style="border-left:4px solid ${pmBdr};">
           <div class="bill-head">
             <div style="flex:1;min-width:0;">
               ${b.billNumber?`<div class="bill-num">Receipt #${b.billNumber}</div>`:''}
               <div class="bill-detail-text">${b.detail}</div>
               <div class="bill-meta">
                 <span style="background:var(--al);color:#92400E;padding:1px 7px;border-radius:10px;font-size:10px;">${BILL_CAT_LABELS[b.category]||b.category||'Other'}</span>
-                <span style="background:var(--gl);color:var(--g700);padding:1px 7px;border-radius:10px;font-size:10px;">${b.paymentMethod||b.paymentTerm||'1-Cash'}</span>
+                <span style="background:${pmBg};color:${pmCol};border:1px solid ${pmBdr};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">${pmIcon} ${pmVal}</span>
                 ${b.notes?`<span style="color:var(--g500);">${b.notes}</span>`:''}
               </div>
             </div>

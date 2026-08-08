@@ -2,14 +2,23 @@
 
 ## [v4.5] - 08/08/2026
 
-### 💳 Thêm tùy chọn Hình thức thanh toán (Payment Method) khi Tạo/Sửa Hóa đơn
-- **Form Tạo/Sửa Hóa đơn (`modal-add-bill`)**: Bổ sung ô chọn Dropdown **Payment method** với 3 tùy chọn:
+### 💳 Thêm tùy chọn & Phân màu Hình thức thanh toán (Payment Method for Bills)
+
+#### 1. 📝 Ô chọn Hình thức thanh toán khi Tạo/Sửa Hóa đơn (`modal-add-bill`)
+- Bổ sung ô chọn Dropdown **Payment method** với 3 tùy chọn:
   1. `1-Cash` (💵 Tiền mặt)
   2. `2-Bank transfer` (🏦 Chuyển khoản)
   3. `3-Credit card` (💳 Thẻ tín dụng)
-- **Hiển thị Badge trên danh sách Hóa đơn**: Hiển thị nhãn Badge tượng hình tương ứng (`💵 1-Cash`, `🏦 2-Bank transfer`, `💳 3-Credit card`) trên thẻ hóa đơn.
-- **Xuất Báo cáo PDF**: Hiển thị Hình thức thanh toán trong danh sách chi tiết hóa đơn (PDF Export & Preview).
-- **Đồng bộ Google Sheets & Apps Script Backend**: Thêm cột `PaymentMethod` vào mảng đồng bộ dữ liệu `sync.js` và bảng dữ liệu `SN.BILLS` trên Apps Script (`PlantLog_GoogleAppsScript_Pro.gs` & `PlantLog_GoogleAppsScript.gs`).
+
+#### 2. 🎨 Phân biệt màu sắc trực quan trên giao diện ứng dụng (App UI Color Coding)
+- **`1-Cash`**: Badge nhãn nền xanh lá (`#DCFCE7`), chữ xanh đậm (`#166534`) + Viền điểm nhấn cạnh trái 4px xanh emerald (`#059669`).
+- **`2-Bank transfer`**: Badge nhãn nền xanh dương (`#DBEAFE`), chữ xanh navy (`#1E40AF`) + Viền điểm nhấn cạnh trái 4px xanh lam (`#2563EB`).
+- **`3-Credit card`**: Badge nhãn nền tím (`#EDE9FE`), chữ tím đậm (`#5B21B6`) + Viền điểm nhấn cạnh trái 4px tím (`#7C3AED`).
+
+#### 3. 🛠️ Sửa lỗi Đồng bộ 2 chiều với Google Sheets
+- Cập nhật trường `paymentMethod` trong tất cả 5 hàm `buildBills()` đóng gói dữ liệu và 5 hàm `loadFromSheets()` giải mã dữ liệu trên toàn bộ dự án (`src/index.html`, `plantlog_pro_mobile.html`, `plantlog_debug.html`, `src/modules/sync.js`, `src/js/sync.js`).
+- Khắc phục triệt để hiện tượng đổi hình thức thanh toán trên App thành `Bank transfer` / `Credit card` nhưng trên Google Sheets bị trả ngược về `Cash`.
+- Cập nhật cấu trúc cột `PaymentMethod` trong `COLS.bills` trên mã nguồn Google Apps Script Backend (`PlantLog_GoogleAppsScript_Pro.gs` & `PlantLog_GoogleAppsScript.gs`).
 
 ---
 

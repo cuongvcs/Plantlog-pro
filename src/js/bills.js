@@ -232,6 +232,17 @@ function fmtAmt(val, currency) {
   });
 }
 
+function getPaymentStyle(pm) {
+  const val = pm || '1-Cash';
+  if (val.includes('Bank')) {
+    return { icon: '🏦', val, bg: '#DBEAFE', color: '#1E40AF', border: '#2563EB', badgeHtml: `<span style="background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">🏦 2-Bank transfer</span>` };
+  }
+  if (val.includes('Credit') || val.includes('Card')) {
+    return { icon: '💳', val, bg: '#EDE9FE', color: '#5B21B6', border: '#7C3AED', badgeHtml: `<span style="background:#EDE9FE;color:#5B21B6;border:1px solid #C4B5FD;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">💳 3-Credit card</span>` };
+  }
+  return { icon: '💵', val, bg: '#DCFCE7', color: '#166534', border: '#059669', badgeHtml: `<span style="background:#DCFCE7;color:#166534;border:1px solid #86EFAC;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">💵 1-Cash</span>` };
+}
+
 function toggleVNDRow(){
   const cur=document.getElementById('bill-currency');
   const row=document.getElementById('bill-vnd-row');
@@ -408,16 +419,15 @@ function renderBillRow(b) {
   const vndAmt = hasVND ? fmtAmt(b.vndAmount, 'VND') : null;
   const catIcon = {accommodation:'🏨',travel:'✈️',meals:'🍽',parts:'🔩',tools:'🔧',other:'📋'}[b.category] || '📋';
   const catLabel = {accommodation:'Accommodation',travel:'Travel',meals:'Meals',parts:'Parts/Materials',tools:'Tools',other:'Other'}[b.category] || 'Other';
-  const pmVal = b.paymentMethod || b.paymentTerm || '1-Cash';
-  const pmIcon = pmVal.includes('Cash') ? '💵' : pmVal.includes('Bank') ? '🏦' : '💳';
-  return `<div style="padding:10px 12px;border-bottom:1px solid var(--g100);">
+  const pm = getPaymentStyle(b.paymentMethod || b.paymentTerm);
+  return `<div style="padding:10px 12px;border-bottom:1px solid var(--g100);border-left:4px solid ${pm.border};margin-bottom:2px;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
       <div style="flex:1;min-width:0;">
         ${b.billNumber ? `<div style="font-size:10px;font-weight:600;color:var(--g500);letter-spacing:0.04em;">RECEIPT #${b.billNumber}</div>` : ''}
         <div style="font-size:13px;font-weight:600;color:var(--g800);margin-top:1px;">${b.detail}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;align-items:center;">
           <span style="background:var(--al);color:#92400E;padding:1px 7px;border-radius:10px;font-size:10px;">${catIcon} ${catLabel}</span>
-          <span style="background:var(--gl);color:var(--g700);padding:1px 7px;border-radius:10px;font-size:10px;">${pmIcon} ${pmVal}</span>
+          ${pm.badgeHtml}
           ${b.notes ? `<span style="font-size:11px;color:var(--g500);">${b.notes}</span>` : ''}
         </div>
         ${b.photos && b.photos.length ? `<div class="bill-photo-strip" style="margin-top:6px;">
