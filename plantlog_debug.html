@@ -6297,13 +6297,20 @@ function renderBillRow(b) {
   const vndAmt = hasVND ? fmtAmt(b.vndAmount, 'VND') : null;
   const catIcon = {accommodation:'🏨',travel:'✈️',meals:'🍽',parts:'🔩',tools:'🔧',other:'📋'}[b.category] || '📋';
   const catLabel = {accommodation:'Accommodation',travel:'Travel',meals:'Meals',parts:'Parts/Materials',tools:'Tools',other:'Other'}[b.category] || 'Other';
-  return `<div style="padding:10px 12px;border-bottom:1px solid var(--g100);">
+  const pmVal = b.paymentMethod || b.paymentTerm || '1-Cash';
+  const isBank = pmVal.includes('Bank'), isCredit = pmVal.includes('Credit') || pmVal.includes('Card');
+  const pmBg = isBank ? '#DBEAFE' : isCredit ? '#EDE9FE' : '#DCFCE7';
+  const pmCol = isBank ? '#1E40AF' : isCredit ? '#5B21B6' : '#166534';
+  const pmBdr = isBank ? '#2563EB' : isCredit ? '#7C3AED' : '#059669';
+  const pmIcon = isBank ? '🏦' : isCredit ? '💳' : '💵';
+  return `<div style="padding:10px 12px;border-bottom:1px solid var(--g100);border-left:4px solid ${pmBdr};margin-bottom:2px;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
       <div style="flex:1;min-width:0;">
         ${b.billNumber ? `<div style="font-size:10px;font-weight:600;color:var(--g500);letter-spacing:0.04em;">RECEIPT #${b.billNumber}</div>` : ''}
         <div style="font-size:13px;font-weight:600;color:var(--g800);margin-top:1px;">${b.detail}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;align-items:center;">
           <span style="background:var(--al);color:#92400E;padding:1px 7px;border-radius:10px;font-size:10px;">${catIcon} ${catLabel}</span>
+          <span style="background:${pmBg};color:${pmCol};border:1px solid ${pmBdr};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">${pmIcon} ${pmVal}</span>
           ${b.notes ? `<span style="font-size:11px;color:var(--g500);">${b.notes}</span>` : ''}
         </div>
         ${b.photos && b.photos.length ? `<div class="bill-photo-strip" style="margin-top:6px;">
