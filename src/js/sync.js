@@ -194,6 +194,7 @@ async function syncToSheets(){
         amount:     parseFloat(s(b.amount))||0,
         currency:   s(b.currency)||'VND',
         category:   s(b.category)||'other',
+        paymentMethod: s(b.paymentMethod||b.paymentTerm)||'1-Cash',
         notes:      s(b.notes),
         photoCount: photos.length,
         photosJson: JSON.stringify(compressed),
@@ -331,6 +332,7 @@ async function loadFromSheets(){
             amount:     parseFloat(strB(b.Amount))||0,
             currency:   strB(b.Currency)||'VND',
             category:   strB(b.Category)||'other',
+            paymentMethod: strB(b.PaymentMethod||b.paymentMethod||b.PaymentTerm||b.paymentTerm)||'1-Cash',
             notes:      strB(b.Notes),
             photos:     photos,
             createdAt:  strB(b.CreatedAt)
