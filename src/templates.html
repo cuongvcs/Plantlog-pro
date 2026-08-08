@@ -939,15 +939,24 @@
     </div>
     <div id="bill-vnd-hint" style="font-size:11px;color:var(--g400);margin-top:3px;"></div>
   </div>
-  <div class="fg"><label class="fl">Category</label>
-    <select class="fsel" id="bill-category">
-      <option value="accommodation">🏨 Accommodation</option>
-      <option value="travel">✈️ Travel / Transport</option>
-      <option value="meals">🍽 Meals</option>
-      <option value="parts">🔩 Spare parts / Materials</option>
-      <option value="tools">🔧 Tools / Equipment</option>
-      <option value="other">📋 Other</option>
-    </select>
+  <div class="frow">
+    <div class="fg" style="flex:1;"><label class="fl">Category</label>
+      <select class="fsel" id="bill-category">
+        <option value="accommodation">🏨 Accommodation</option>
+        <option value="travel">✈️ Travel / Transport</option>
+        <option value="meals">🍽 Meals</option>
+        <option value="parts">🔩 Spare parts / Materials</option>
+        <option value="tools">🔧 Tools / Equipment</option>
+        <option value="other">📋 Other</option>
+      </select>
+    </div>
+    <div class="fg" style="flex:1;"><label class="fl">Payment method</label>
+      <select class="fsel" id="bill-payment-method">
+        <option value="1-Cash">💵 1-Cash</option>
+        <option value="2-Bank transfer">🏦 2-Bank transfer</option>
+        <option value="3-Credit card">💳 3-Credit card</option>
+      </select>
+    </div>
   </div>
   <div class="fg"><label class="fl">Notes</label><input class="fi" id="bill-notes" placeholder="Optional notes..."></div>
   <div class="fg"><label class="fl">Link to trip</label>

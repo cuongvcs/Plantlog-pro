@@ -122,6 +122,7 @@ function openAddBillFromScreen() {
   document.getElementById('bill-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('bill-currency').value = 'VND';
   document.getElementById('bill-category').value = 'other';
+  const pmEl = document.getElementById('bill-payment-method'); if (pmEl) pmEl.value = '1-Cash';
   const vndElS=document.getElementById('bill-vnd');if(vndElS)vndElS.value='';
   toggleVNDRow();
   renderBillPhotoGrid();
@@ -260,6 +261,8 @@ function renderBillRow(b) {
   const vndAmt = hasVND ? fmtAmt(b.vndAmount, 'VND') : null;
   const catIcon = {accommodation:'🏨',travel:'✈️',meals:'🍽',parts:'🔩',tools:'🔧',other:'📋'}[b.category] || '📋';
   const catLabel = {accommodation:'Accommodation',travel:'Travel',meals:'Meals',parts:'Parts/Materials',tools:'Tools',other:'Other'}[b.category] || 'Other';
+  const pmVal = b.paymentMethod || b.paymentTerm || '1-Cash';
+  const pmIcon = pmVal.includes('Cash') ? '💵' : pmVal.includes('Bank') ? '🏦' : '💳';
   return `<div style="padding:10px 12px;border-bottom:1px solid var(--g100);">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
       <div style="flex:1;min-width:0;">
@@ -267,6 +270,7 @@ function renderBillRow(b) {
         <div style="font-size:13px;font-weight:600;color:var(--g800);margin-top:1px;">${b.detail}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
           <span style="background:var(--al);color:#92400E;padding:1px 7px;border-radius:10px;font-size:10px;">${catIcon} ${catLabel}</span>
+          <span style="background:var(--gl);color:var(--g700);padding:1px 7px;border-radius:10px;font-size:10px;">${pmIcon} ${pmVal}</span>
           ${b.notes ? `<span style="font-size:11px;color:var(--g500);">${b.notes}</span>` : ''}
         </div>
         ${b.photos && b.photos.length ? `<div class="bill-photo-strip" style="margin-top:6px;">
@@ -374,8 +378,9 @@ function buildBillPDFPreview() {
       </div>
       ${dayBills.map(b=>{
         const catIcon={accommodation:'🏨',travel:'✈️',meals:'🍽',parts:'🔩',tools:'🔧',other:'📋'}[b.category]||'📋';
+        const pmVal=b.paymentMethod||b.paymentTerm||'1-Cash';
         return `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--g100);">
-          <div><div style="font-weight:500;">${catIcon} ${b.billNumber?'[#'+b.billNumber+'] ':''}${b.detail}</div>
+          <div><div style="font-weight:500;">${catIcon} ${b.billNumber?'[#'+b.billNumber+'] ':''}${b.detail} <span style="font-size:10px;color:var(--g500);">(${pmVal})</span></div>
           ${b.notes?`<div style="font-size:10px;color:var(--g500);">${b.notes}</div>`:''}
           ${b.photos&&b.photos.length?`<div style="font-size:10px;color:var(--blue);">📷 ${b.photos.length} photo${b.photos.length>1?'s':''}</div>`:''}
           </div>
@@ -433,7 +438,7 @@ function exportBillsPDF() {
         if(b.billNumber){doc.setFontSize(7.5);doc.setTextColor(140,140,140);doc.text('Receipt #'+b.billNumber,mg+4,y);y+=4;chk();}
         const bl=doc.splitTextToSize('• '+b.detail,W-mg*2-42);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);doc.text(bl,mg+2,y);doc.setFont('helvetica','bold');rtxt(fmtAmt(b.amount,b.currency)+' '+(b.currency||'VND'),y,[146,64,14]);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);y+=bl.length*5;
         if(b.currency!=='VND'&&b.vndAmount){doc.setFontSize(8);doc.setTextColor(120,80,0);rtxt('= '+fmtAmt(b.vndAmount,'VND')+' VND',y);y+=4;}
-        const meta=[catLabel,b.notes].filter(Boolean).join('  ·  ');if(meta){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(meta,mg+6,y);y+=4;}
+        const meta=[catLabel,b.paymentMethod||b.paymentTerm||'1-Cash',b.notes].filter(Boolean).join('  ·  ');if(meta){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(meta,mg+6,y);y+=4;}
         if(b.photos&&b.photos.length){const mx=Math.min(b.photos.length,3);chk();for(let pi=0;pi<mx;pi++){try{if(y+28>265){doc.addPage();y=20;pageNum++;addPN();}doc.addImage(b.photos[pi],'JPEG',mg+6+(pi*36),y,30,23);}catch(e){}}if(mx>0)y+=26;}
         y+=2;chk();
       });

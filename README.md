@@ -27,6 +27,12 @@ src/
 
 ## Changelog
 
+### v4.5 — Payment Method for Bills (08/08/2026)
+
+- **Payment Method Dropdown in Bill Modal:** Added dropdown select for Payment method with 3 options: `1-Cash`, `2-Bank transfer`, `3-Credit card` in `modal-add-bill`.
+- **Bill Cards & PDF Export:** Rendered visual Payment Method badge on bill cards (`💵 1-Cash`, `🏦 2-Bank transfer`, `💳 3-Credit card`) and included payment method in Bills PDF export & preview.
+- **Google Sheets & Apps Script Sync:** Added `PaymentMethod` column to `sync.js` payload and Apps Script backend schema (`PlantLog_GoogleAppsScript_Pro.gs` & `PlantLog_GoogleAppsScript.gs`).
+
 ### v4.4 — Auto-start & Google Sheets Sync Fix + Trip Sorting (28/07/2026)
 
 - Fixed issue where auto-started trips and tasks (set to `in_progress` at date start) were not pushed to Google Sheets and got reset to `planned`/`pending` upon app startup pull.

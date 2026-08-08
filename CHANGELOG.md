@@ -1,5 +1,18 @@
 # 📝 Nhật ký cập nhật (Changelog) — PlantLog Pro
 
+## [v4.5] - 08/08/2026
+
+### 💳 Thêm tùy chọn Hình thức thanh toán (Payment Method) khi Tạo/Sửa Hóa đơn
+- **Form Tạo/Sửa Hóa đơn (`modal-add-bill`)**: Bổ sung ô chọn Dropdown **Payment method** với 3 tùy chọn:
+  1. `1-Cash` (💵 Tiền mặt)
+  2. `2-Bank transfer` (🏦 Chuyển khoản)
+  3. `3-Credit card` (💳 Thẻ tín dụng)
+- **Hiển thị Badge trên danh sách Hóa đơn**: Hiển thị nhãn Badge tượng hình tương ứng (`💵 1-Cash`, `🏦 2-Bank transfer`, `💳 3-Credit card`) trên thẻ hóa đơn.
+- **Xuất Báo cáo PDF**: Hiển thị Hình thức thanh toán trong danh sách chi tiết hóa đơn (PDF Export & Preview).
+- **Đồng bộ Google Sheets & Apps Script Backend**: Thêm cột `PaymentMethod` vào mảng đồng bộ dữ liệu `sync.js` và bảng dữ liệu `SN.BILLS` trên Apps Script (`PlantLog_GoogleAppsScript_Pro.gs` & `PlantLog_GoogleAppsScript.gs`).
+
+---
+
 ## [v4.4] - 28/07/2026
 
 ### 🛠️ Sửa lỗi Auto-start & Đồng bộ Google Sheets (Fix Auto-start Trips/Tasks Sync Issue)

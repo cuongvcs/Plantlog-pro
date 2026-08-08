@@ -2349,15 +2349,24 @@ input, textarea, select, button { font-family: var(--font); }
     </div>
     <div id="bill-vnd-hint" style="font-size:11px;color:var(--g400);margin-top:3px;"></div>
   </div>
-  <div class="fg"><label class="fl">Category</label>
-    <select class="fsel" id="bill-category">
-      <option value="accommodation">🏨 Accommodation</option>
-      <option value="travel">✈️ Travel / Transport</option>
-      <option value="meals">🍽 Meals</option>
-      <option value="parts">🔩 Spare parts / Materials</option>
-      <option value="tools">🔧 Tools / Equipment</option>
-      <option value="other">📋 Other</option>
-    </select>
+  <div class="frow">
+    <div class="fg" style="flex:1;"><label class="fl">Category</label>
+      <select class="fsel" id="bill-category">
+        <option value="accommodation">🏨 Accommodation</option>
+        <option value="travel">✈️ Travel / Transport</option>
+        <option value="meals">🍽 Meals</option>
+        <option value="parts">🔩 Spare parts / Materials</option>
+        <option value="tools">🔧 Tools / Equipment</option>
+        <option value="other">📋 Other</option>
+      </select>
+    </div>
+    <div class="fg" style="flex:1;"><label class="fl">Payment method</label>
+      <select class="fsel" id="bill-payment-method">
+        <option value="1-Cash">💵 1-Cash</option>
+        <option value="2-Bank transfer">🏦 2-Bank transfer</option>
+        <option value="3-Credit card">💳 3-Credit card</option>
+      </select>
+    </div>
   </div>
   <div class="fg"><label class="fl">Notes</label><input class="fi" id="bill-notes" placeholder="Optional notes..."></div>
   <div class="fg"><label class="fl">Link to trip</label>
@@ -9085,6 +9094,7 @@ function renderTripBills(tripId){
               <div class="bill-detail-text">${b.detail}</div>
               <div class="bill-meta">
                 <span style="background:var(--al);color:#92400E;padding:1px 7px;border-radius:10px;font-size:10px;">${BILL_CAT_LABELS[b.category]||b.category||'Other'}</span>
+                <span style="background:var(--gl);color:var(--g700);padding:1px 7px;border-radius:10px;font-size:10px;">${b.paymentMethod||b.paymentTerm||'1-Cash'}</span>
                 ${b.notes?`<span style="color:var(--g500);">${b.notes}</span>`:''}
               </div>
             </div>
@@ -9147,6 +9157,7 @@ function openAddBill(tripId){
   document.getElementById('bill-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('bill-currency').value='VND';
   document.getElementById('bill-category').value='other';
+  const pmEl=document.getElementById('bill-payment-method');if(pmEl)pmEl.value='1-Cash';
   const vndElR=document.getElementById('bill-vnd');if(vndElR)vndElR.value='';
   toggleVNDRow();
   renderBillPhotoGrid();
@@ -9184,6 +9195,7 @@ function openEditBill(id){
   if(vndEl2)vndEl2.value=(b.currency!=='VND'&&b.vndAmount)?b.vndAmount:'';
   toggleVNDRow();
   document.getElementById('bill-category').value=b.category||'other';
+  const pmEl2=document.getElementById('bill-payment-method');if(pmEl2)pmEl2.value=b.paymentMethod||b.paymentTerm||'1-Cash';
   document.getElementById('bill-notes').value=b.notes||'';
   document.getElementById('bill-save-btn').dataset.tripid=b.tripId||'';
   const ts2=document.getElementById('bill-trip-select');
@@ -9261,6 +9273,7 @@ async function saveBill(){
       currency:   cur,
       vndAmount:  vndAmt,
       category:   document.getElementById('bill-category').value,
+      paymentMethod: document.getElementById('bill-payment-method') ? document.getElementById('bill-payment-method').value : '1-Cash',
       notes:      document.getElementById('bill-notes').value,
       photos:     savedPhotos,
       photoMeta:  tmpBillPhotos.filter(p=>p&&p.fileId).map(p=>({

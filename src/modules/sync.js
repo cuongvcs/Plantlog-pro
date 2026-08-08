@@ -218,6 +218,7 @@ async function syncToSheets(){
         currency:   s(b.currency)||'VND',
         vndAmount:  parseFloat(s(b.vndAmount))||0,
         category:   s(b.category)||'other',
+        paymentMethod: s(b.paymentMethod||b.paymentTerm)||'1-Cash',
         notes:      s(b.notes),
         photoCount: photos.length,
         photosJson: JSON.stringify(compressed),
@@ -474,6 +475,7 @@ async function loadFromSheets(silent){
             currency:   strB(b.Currency)||'VND',
             vndAmount:  safeNum(b.VndAmount||b.vndAmount),
             category:   strB(b.Category)||'other',
+            paymentMethod: strB(b.PaymentMethod||b.paymentMethod||b.PaymentTerm||b.paymentTerm)||'1-Cash',
             notes:      strB(b.Notes),
             photos:     photos,
             createdAt:  strB(b.CreatedAt)
@@ -666,6 +668,7 @@ function openEditBill(id){
   if(vndEl2)vndEl2.value=(b.currency!=='VND'&&b.vndAmount)?b.vndAmount:'';
   toggleVNDRow();
   document.getElementById('bill-category').value=b.category||'other';
+  const pmEl3=document.getElementById('bill-payment-method');if(pmEl3)pmEl3.value=b.paymentMethod||b.paymentTerm||'1-Cash';
   document.getElementById('bill-notes').value=b.notes||'';
   document.getElementById('bill-save-btn').dataset.tripid=b.tripId||'';
   const ts2=document.getElementById('bill-trip-select');
@@ -743,6 +746,7 @@ async function saveBill(){
       currency:   cur,
       vndAmount:  vndAmt,
       category:   document.getElementById('bill-category').value,
+      paymentMethod: document.getElementById('bill-payment-method') ? document.getElementById('bill-payment-method').value : '1-Cash',
       notes:      document.getElementById('bill-notes').value,
       photos:     savedPhotos,
       photoMeta:  tmpBillPhotos.filter(p=>p&&p.fileId).map(p=>({

@@ -32,7 +32,7 @@ const COLS={
   readings: ['TripID','Type','Name','Tag','Value','Unit','Status','Condition','Notes'],
   issues:   ['TripID','Title','Description','Severity','IssueStatus','Action','PhotoCount'],
   team:     ['TripID','Name','Role','Organization','SignoffRequired'],
-  bills:    ['ID','TripID','Date','BillNumber','Detail','Amount','Currency','VndAmount','Category','Notes','PhotoCount','PhotosJson','CreatedAt'],
+  bills:    ['ID','TripID','Date','BillNumber','Detail','Amount','Currency','VndAmount','Category','PaymentMethod','Notes','PhotoCount','PhotosJson','CreatedAt'],
   machines: ['Name'],
   plans:    ['Name'],
   log:      ['Timestamp','Action','Entity','EntityID','Status','Details']
@@ -196,6 +196,7 @@ function syncAll(p){
     writeSheet(s,SN.BILLS,COLS.bills,p.bills.map(b=>[
       b.id,b.tripId,b.date,b.billNumber,
       b.detail,b.amount||0,b.currency,b.vndAmount||0,b.category,
+      b.paymentMethod||b.paymentTerm||'1-Cash',
       b.notes,b.photoCount||0,
       b.photosJson||'[]',
       b.createdAt
