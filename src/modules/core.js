@@ -185,27 +185,57 @@ function setupPWA(){
   }
 
   // Install prompt — fires when app meets PWA criteria
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    deferredPrompt = e;
-    console.log('[PlantLog] Install prompt available');
-    const bar = document.getElementById('pwa-install-bar');
-    if(bar) bar.style.display = 'flex';
-  });
-  // Also listen for successful install
-  window.addEventListener('appinstalled', () => {
-    console.log('[PlantLog] App installed!');
-    deferredPrompt = null;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if(!isStandalone){
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      console.log('[PlantLog] Install prompt available');
+      const bar = document.getElementById('pwa-install-bar');
+      if(bar) bar.style.display = 'flex';
+    });
+    window.addEventListener('appinstalled', () => {
+      console.log('[PlantLog] App installed!');
+      deferredPrompt = null;
+      const bar = document.getElementById('pwa-install-bar');
+      if(bar) bar.style.display = 'none';
+      showToast('✓ PlantLog Pro installed!');
+    });
+    // On mobile phone, if not running in standalone mode, show install bar if not dismissed
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if(isMobile && !localStorage.getItem('plpro_pwa_dismissed')) {
+      setTimeout(() => {
+        const bar = document.getElementById('pwa-install-bar');
+        if(bar) bar.style.display = 'flex';
+      }, 1500);
+    }
+  }
+}
+
+function installPWA(){
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if(isStandalone){
+    showToast('📱 App is already installed & running!');
     const bar = document.getElementById('pwa-install-bar');
     if(bar) bar.style.display = 'none';
-    showToast('✓ PlantLog Pro installed!');
-  });
-  window.addEventListener('appinstalled',()=>{
-    document.getElementById('pwa-install-bar').style.display='none';
-    showToast('PlantLog installed on your phone! ✓');
-  });
+    return;
+  }
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(()=>{
+      deferredPrompt = null;
+      const bar = document.getElementById('pwa-install-bar');
+      if(bar) bar.style.display = 'none';
+    });
+    return;
+  }
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if(isIOS){
+    alert('📱 Hướng dẫn cài đặt VCS PlantLog Pro trên iPhone / iPad:\n\n1. Bấm biểu tượng Chia sẻ (Share ⎋) ở thanh công cụ Safari bên dưới.\n2. Cuộn xuống chọn "Thêm vào Màn hình chính" (Add to Home Screen).\n3. Bấm "Thêm" ở góc phải để cài đặt.');
+  } else {
+    alert('📱 Hướng dẫn cài đặt VCS PlantLog Pro trên Android / Chrome:\n\n1. Bấm biểu tượng 3 chấm (⋮) ở góc trên bên phải Chrome.\n2. Chọn "Cài đặt ứng dụng" (Install App) hoặc "Thêm vào Màn hình chính".\n3. Nhấn Bật / Cài đặt.');
+  }
 }
-function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('pwa-install-bar').style.display='none';});}}
 
 // ═══════ NOTIFICATIONS ═══════
 async function requestNotifications(){
