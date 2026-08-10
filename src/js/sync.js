@@ -271,8 +271,9 @@ async function loadFromSheets(){
             status:   finalSt,
           notes:    strV(tr.Notes),
           createdAt:strV(tr.CreatedAt)
-        }));
-      }
+        };
+      });
+    }
       if(d.tasks&&d.tasks.length){
         // Helper: safely convert any value to string, handle Date objects
         const str=v=>{

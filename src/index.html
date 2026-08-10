@@ -8932,8 +8932,9 @@ async function loadFromSheets(silent){
             catch(e){ return []; }
           })(),
           createdAt: ss(tr.CreatedAt)
-        }));
-      }
+        };
+      });
+    }
       if(d.tasks&&d.tasks.length){
         // Helper: safely convert any value to string, handle Date objects
         const str=v=>{

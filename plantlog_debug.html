@@ -1030,7 +1030,7 @@ input, textarea, select, button { font-family: var(--font); }
 </style>
 
   <!-- ── Third-party libs ───────────────────────────── -->
-  <script>/* jsPDF placeholder */window.jspdf={jsPDF:function(){return {text:function(){},save:function(){},addPage:function(){},setFontSize:function(){},setFont:function(){},setTextColor:function(){},setFillColor:function(){},rect:function(){},line:function(){},splitTextToSize:function(){return[];},getTextWidth:function(){return 0;},addImage:function(){},setDrawColor:function(){}}};};</script>
+  <script>/* jsPDF placeholder */window.jspdf={jsPDF:function(){return {text:function(){},save:function(){},addPage:function(){},setFontSize:function(){},setFont:function(){},setTextColor:function(){},setFillColor:function(){},rect:function(){},line:function(){},splitTextToSize:function(){return[];},getTextWidth:function(){return 0;},addImage:function(){},setDrawColor:function(){}};}};</script>
 </head>
 <body>
 
@@ -6829,8 +6829,9 @@ async function loadFromSheets(){
           notes:     ss(tr.Notes),
           flight:    tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
           createdAt: ss(tr.CreatedAt)
-        }));
-      }
+        };
+      });
+    }
       if(d.tasks&&d.tasks.length){
         // Helper: safely convert any value to string, handle Date objects
         const str=v=>{
