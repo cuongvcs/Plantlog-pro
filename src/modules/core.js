@@ -444,9 +444,6 @@ function getSortedTrips(){
 // ── Auto-start trips and tasks whose date has arrived ────────
 function autoStartTodayItems(){
   const today = new Date().toISOString().slice(0,10);
-  const lastRun = localStorage.getItem('plpro_autostart_date');
-  if(lastRun === today) return; // already ran today
-
   let changed = false;
 
   // ── Trips: planned → in_progress if start date reached ──

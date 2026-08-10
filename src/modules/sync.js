@@ -359,16 +359,21 @@ async function loadFromSheets(silent){
 
       if(d.trips&&d.trips.length){
         const strV=v=>safeDate(v)||ss(v);
-        S.trips=d.trips.map(tr=>({
-          id:        ss(tr.ID),
-          plant:     ss(tr.Plant),
-          location:  ss(tr.Location),
-          date:      safeDate(tr.Date),
-          dateEnd:   safeDate(tr.DateEnd),
-          purpose:   ss(tr.Purpose),
-          contact:   ss(tr.Contact),
-          transport: ss(tr.Transport),
-          status:    ss(tr.Status)||'planned',
+        const existingTrips = S.trips || [];
+        S.trips=d.trips.map(tr=>{
+          const st = ss(tr.Status)||'planned';
+          const localTr = existingTrips.find(x=>x.id===ss(tr.ID));
+          const finalSt = (localTr && (localTr.status==='in_progress'||localTr.status==='done') && st==='planned') ? localTr.status : st;
+          return {
+            id:        ss(tr.ID),
+            plant:     ss(tr.Plant),
+            location:  ss(tr.Location),
+            date:      safeDate(tr.Date),
+            dateEnd:   safeDate(tr.DateEnd),
+            purpose:   ss(tr.Purpose),
+            contact:   ss(tr.Contact),
+            transport: ss(tr.Transport),
+            status:    finalSt,
           notes:     ss(tr.Notes),
           flight:       tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
           ta:           tr.TA?(()=>{try{return JSON.parse(ss(tr.TA));}catch(e){return null;}})():null,
@@ -432,10 +437,14 @@ async function loadFromSheets(silent){
             tripId:       ss(tk.TripID),
             status:       (()=>{
               const raw=(ss(tk.Status)||'pending').toLowerCase().trim();
-              // Normalize: "in progress"→"in_progress", "done"→"done", etc.
-              if(raw.includes('progress')||raw==='in_progress') return 'in_progress';
-              if(raw==='done'||raw==='complete'||raw==='completed') return 'done';
-              return 'pending';
+              let stVal = 'pending';
+              if(raw.includes('progress')||raw==='in_progress') stVal = 'in_progress';
+              else if(raw==='done'||raw==='complete'||raw==='completed') stVal = 'done';
+              const localTk = (S.tasks||[]).find(x=>x.id===ss(tk.ID));
+              if(localTk && (localTk.status==='in_progress'||localTk.status==='done') && stVal==='pending') {
+                return localTk.status;
+              }
+              return stVal;
             })(),
             checklist:    cl,
             parts:        pts,
@@ -482,7 +491,9 @@ async function loadFromSheets(silent){
           };
         });
       }
-      sv();renderDash();renderTripList();renderTasks();renderCalendar();
+      sv();
+      try{ if(typeof autoStartTodayItems==='function') autoStartTodayItems(); }catch(e){}
+      renderDash();renderTripList();renderTasks();renderCalendar();
       if(typeof renderTripSavedReports==='function') renderTripSavedReports();
       showGSResult('✅ Data loaded from Google Sheets successfully!','ok');
       showToast('Loaded from Google Sheets ✓');

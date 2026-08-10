@@ -1,5 +1,21 @@
 # 📝 Nhật ký cập nhật (Changelog) — PlantLog Pro
 
+## [v4.6] - 10/08/2026
+
+### 🔄 Sửa lỗi Auto-Start 7h sáng & Bảo vệ trạng thái Active khi tải dữ liệu từ Sheets
+
+#### 1. 🤖 Sửa lỗi Google Apps Script Cloud Trigger (`autoStartInSheets`)
+- **Nguyên nhân cũ:** Chuỗi so sánh ô ngày dạng `Date` object (`"Mon Aug 10 2026..." <= "2026-08-10"`) trả về `false`, khiến trigger 7h sáng bị bỏ qua âm thầm và không bao giờ tự động cập nhật ô dữ liệu trên Google Sheets sang `in_progress`.
+- **Khắc phục:** Thêm hàm `parseSheetDateStr_()` chuẩn hóa ô ngày về định dạng chuẩn `YYYY-MM-DD` trước khi so sánh.
+- Đảm bảo đúng 7h sáng, Google Apps Script **cập nhật trực tiếp cột Status trên Google Sheets sang `in_progress`** và gửi thông báo Telegram chính xác (`🔄 Active`).
+
+#### 2. 📱 Bảo vệ trạng thái Active trên Web App (`loadFromSheets` & `autoStartTodayItems`)
+- **Bảo vệ trạng thái cục bộ:** Khi mở app và kéo dữ liệu từ Google Sheets về (`loadFromSheets`), nếu các công việc / chuyến đi cục bộ đang ở trạng thái `in_progress` hoặc `done`, ứng dụng sẽ bảo vệ trạng thái này, không bị hạ cấp đè ngược lại về `planned`/`pending` nếu dữ liệu trên Sheets chưa kịp cập nhật.
+- **Kích hoạt tự động khi tải dữ liệu:** Tự động gọi `autoStartTodayItems()` ngay sau khi kéo dữ liệu thành công từ Google Sheets.
+- **Bổ sung Service Worker v11:** Đảm bảo tự động xóa cache cũ và nạp ngay logic mới khi truy cập ứng dụng.
+
+---
+
 ## [v4.5] - 08/08/2026
 
 ### 💳 Thêm tùy chọn & Phân màu Hình thức thanh toán (Payment Method for Bills)

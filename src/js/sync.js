@@ -254,16 +254,21 @@ async function loadFromSheets(){
       const d=data.data;
       if(d.trips&&d.trips.length){
         const strV=v=>v===null||v===undefined?'':v instanceof Date?v.toISOString().slice(0,10):String(v);
-        S.trips=d.trips.map(tr=>({
-          id:       strV(tr.ID),
-          plant:    strV(tr.Plant),
-          location: strV(tr.Location),
-          date:     strV(tr.Date),
-          dateEnd:  strV(tr.DateEnd),
-          purpose:  strV(tr.Purpose),
-          contact:  strV(tr.Contact),
-          transport:strV(tr.Transport),
-          status:   strV(tr.Status)||'planned',
+        const existingTrips = S.trips || [];
+        S.trips=d.trips.map(tr=>{
+          const st = strV(tr.Status)||'planned';
+          const localTr = existingTrips.find(x=>x.id===strV(tr.ID));
+          const finalSt = (localTr && (localTr.status==='in_progress'||localTr.status==='done') && st==='planned') ? localTr.status : st;
+          return {
+            id:       strV(tr.ID),
+            plant:    strV(tr.Plant),
+            location: strV(tr.Location),
+            date:     strV(tr.Date),
+            dateEnd:  strV(tr.DateEnd),
+            purpose:  strV(tr.Purpose),
+            contact:  strV(tr.Contact),
+            transport:strV(tr.Transport),
+            status:   finalSt,
           notes:    strV(tr.Notes),
           createdAt:strV(tr.CreatedAt)
         }));
@@ -301,7 +306,17 @@ async function loadFromSheets(){
             machine:      str(tk.Machine),
             plan:         str(tk.Plan),
             tripId:       str(tk.TripID),
-            status:       str(tk.Status)||'pending',
+            status:       (()=>{
+              const raw=(str(tk.Status)||'pending').toLowerCase().trim();
+              let stVal = 'pending';
+              if(raw.includes('progress')||raw==='in_progress') stVal = 'in_progress';
+              else if(raw==='done'||raw==='complete'||raw==='completed') stVal = 'done';
+              const localTk = (S.tasks||[]).find(x=>x.id===str(tk.ID));
+              if(localTk && (localTk.status==='in_progress'||localTk.status==='done') && stVal==='pending') {
+                return localTk.status;
+              }
+              return stVal;
+            })(),
             checklist:    cl,
             date:         ds,
             time:         str(tk.TimeStart)||str(tk.Time)||'',
@@ -339,7 +354,9 @@ async function loadFromSheets(){
           };
         });
       }
-      sv();renderDash();renderTripList();renderTasks();renderCalendar();
+      sv();
+      try{ if(typeof autoStartTodayItems==='function') autoStartTodayItems(); }catch(e){}
+      renderDash();renderTripList();renderTasks();renderCalendar();
       showGSResult('✅ Data loaded from Google Sheets successfully!','ok');
       showToast('Loaded from Google Sheets ✓');
     } else {

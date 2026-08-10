@@ -623,6 +623,20 @@ function daysBetween_(dateStr1, dateStr2) {
  * Test the notification system manually.
  * Run this to check it works before setting up the trigger.
  */
+function parseSheetDateStr_(v) {
+  if (!v) return '';
+  if (v instanceof Date) return formatDate_(v);
+  var str = String(v).trim();
+  if (str.length >= 10 && str.charAt(4) === '-' && str.charAt(7) === '-') {
+    return str.slice(0, 10);
+  }
+  try {
+    var d = new Date(v);
+    if (!isNaN(d.getTime())) return formatDate_(d);
+  } catch(e) {}
+  return str.slice(0, 10);
+}
+
 /**
  * Called at 7AM by the daily trigger.
  * Updates task/trip statuses in Sheets directly (planned→in_progress).
@@ -644,9 +658,10 @@ function autoStartInSheets() {
     if (statusCol >= 0 && dateCol >= 0) {
       tripData.forEach(function(row, i) {
         var status  = String(row[statusCol]||'').toLowerCase();
-        var start   = String(row[dateCol]||'');
-        var end     = String(row[dateEndCol >= 0 ? dateEndCol : dateCol]||start);
-        if (status === 'planned' && start <= today && end >= today) {
+        var start   = parseSheetDateStr_(row[dateCol]);
+        var endVal  = dateEndCol >= 0 ? row[dateEndCol] : row[dateCol];
+        var end     = parseSheetDateStr_(endVal) || start;
+        if (status === 'planned' && start && start <= today && end >= today) {
           tripSheet.getRange(i+2, statusCol+1).setValue('in_progress');
           updated++;
           Logger.log('Trip auto-started: ' + row[1]); // Plant name at col 1
@@ -666,9 +681,10 @@ function autoStartInSheets() {
     if (stCol >= 0 && dsCol >= 0) {
       taskData.forEach(function(row, i) {
         var status = String(row[stCol]||'').toLowerCase();
-        var start  = String(row[dsCol]||'');
-        var end    = String(row[deCol >= 0 ? deCol : dsCol]||start);
-        if ((status === 'pending') && start <= today && end >= today) {
+        var start  = parseSheetDateStr_(row[dsCol]);
+        var endVal = deCol >= 0 ? row[deCol] : row[dsCol];
+        var end    = parseSheetDateStr_(endVal) || start;
+        if ((status === 'pending') && start && start <= today && end >= today) {
           taskSheet.getRange(i+2, stCol+1).setValue('in_progress');
           updated++;
         }

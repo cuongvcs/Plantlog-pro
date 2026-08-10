@@ -27,6 +27,13 @@ src/
 
 ## Changelog
 
+### v4.6 — 7 AM Cloud Auto-Start Fix & Status Preservation (10/08/2026)
+
+- **Apps Script Date Parsing Fix (`autoStartInSheets`):** Added `parseSheetDateStr_()` helper to handle `Date` objects from Google Sheets cell ranges. Today's trips and tasks are now updated directly to `in_progress` on Google Sheets at 7 AM during daily cloud triggers.
+- **Frontend Status Protection (`loadFromSheets`):** Prevents `loadFromSheets()` from overwriting local `in_progress` or `done` statuses back to `planned`/`pending`.
+- **Auto-run AutoStart:** Automatically runs `autoStartTodayItems()` right after `loadFromSheets()` finishes.
+- **Service Worker v11:** Upgraded service worker cache version to invalidate legacy cache.
+
 ### v4.5 — Payment Method for Bills & Color Coding (08/08/2026)
 
 - **Payment Method Selection:** Added `Payment method` dropdown with 3 options: `1-Cash`, `2-Bank transfer`, `3-Credit card` in `modal-add-bill`.
