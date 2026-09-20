@@ -606,12 +606,12 @@ function buildPDFPreview(){
       const catIcon=c=>({work:'🔧',leave:'🌴',travel:'✈️'}[c]||'📋');
       const statusIcon=s=>s==='done'?'✅':s==='in_progress'?'🔄':'⏳';
 
-      // ── Calculate total duration for work tasks with autoDuration ON ──
-      let totalAutoMins = 0;
-      let autoCount = 0;
+      // ── Calculate total duration for work, travel, leave tasks ──
+      let totalWorkMins = 0, workCount = 0;
+      let totalTravelMins = 0, travelCount = 0;
+      let totalLeaveMins = 0, leaveCount = 0;
       tasks.forEach(tk=>{
         const cat = tk.category || 'work';
-        if(cat === 'travel' || cat === 'leave') return;
         let mins = 0;
         if(tk.autoDuration){
           const d = calcDurationFromTimes(tk.dateStart||tk.date, tk.dateEnd||tk.dateStart||tk.date, tk.timeStart, tk.timeEnd);
@@ -622,27 +622,44 @@ function buildPDFPreview(){
           const d = calcDurationFromTimes(tk.dateStart||tk.date, tk.dateEnd||tk.dateStart||tk.date, tk.timeStart, tk.timeEnd);
           if(d) mins = d.totalMins;
         }
-        if(mins > 0){ totalAutoMins += mins; autoCount++; }
+        if(mins > 0){
+          if(cat === 'travel'){ totalTravelMins += mins; travelCount++; }
+          else if(cat === 'leave'){ totalLeaveMins += mins; leaveCount++; }
+          else { totalWorkMins += mins; workCount++; }
+        }
       });
-      const totalH = Math.floor(totalAutoMins/60);
-      const totalM = totalAutoMins % 60;
-      const totalLabel = totalAutoMins > 0
-        ? (totalH>0&&totalM>0 ? totalH+'h '+totalM+'m' : totalH>0 ? totalH+'h' : totalM+'m')
-        : '—';
+      const fmtLabel = m => { const h=Math.floor(m/60), mins=m%60; return m>0 ? (h>0&&mins>0 ? h+'h '+mins+'m' : h>0 ? h+'h' : mins+'m') : '—'; };
+      const workLabel = fmtLabel(totalWorkMins);
+      const travelLabel = fmtLabel(totalTravelMins);
+      const leaveLabel = fmtLabel(totalLeaveMins);
 
       // Group by date
       const byDate={};
       tasks.forEach(tk=>{const d=tk.dateStart||tk.date||'';if(!byDate[d])byDate[d]=[];byDate[d].push(tk);});
       let out=`<div class="pst">Tasks in Report (${tasks.length})</div>`;
 
-      // ── Total work hours summary banner ──
-      if(autoCount>0){
-        out+=`<div style="background:var(--brand-light);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px;
-                          display:flex;justify-content:space-between;align-items:center;
-                          border:1px solid rgba(15,123,62,0.2);">
-          <span style="font-size:12px;color:var(--brand-dark);font-weight:600;">⏱ Total Work Hours (${autoCount} tasks)</span>
-          <span style="font-size:16px;font-weight:800;color:var(--brand);font-family:var(--font-hd);">${totalLabel}</span>
-        </div>`;
+      // ── Total hours summary banner ──
+      if(workCount>0 || travelCount>0 || leaveCount>0){
+        out+=`<div style="background:var(--brand-light);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px;border:1px solid rgba(15,123,62,0.2);display:flex;flex-direction:column;gap:4px;">`;
+        if(workCount>0){
+          out+=`<div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:var(--brand-dark);font-weight:600;">⏱ Total Work Hours (${workCount} task${workCount>1?'s':''})</span>
+            <span style="font-size:15px;font-weight:800;color:var(--brand);font-family:var(--font-hd);">${workLabel}</span>
+          </div>`;
+        }
+        if(travelCount>0){
+          out+=`<div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:#1E40AF;font-weight:600;">✈️ Total Travel Hours (${travelCount} task${travelCount>1?'s':''})</span>
+            <span style="font-size:15px;font-weight:800;color:#1D4ED8;font-family:var(--font-hd);">${travelLabel}</span>
+          </div>`;
+        }
+        if(leaveCount>0){
+          out+=`<div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:#92400E;font-weight:600;">🌴 Total Leave Hours (${leaveCount} task${leaveCount>1?'s':''})</span>
+            <span style="font-size:15px;font-weight:800;color:#D97706;font-family:var(--font-hd);">${leaveLabel}</span>
+          </div>`;
+        }
+        out+=`</div>`;
       }
 
       Object.entries(byDate).forEach(([dateKey,dayTasks])=>{
@@ -740,11 +757,12 @@ function exportPDF(){
   if(!r.issues.length){doc.setFontSize(9);doc.text('None.',mg+2,y);y+=5;}ln();
   if(r.team&&r.team.length){sec(`TEAM (${r.team.length})`);r.team.forEach(m=>{doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);doc.text('• '+m.name+(m.role?' — '+m.role:''),mg+2,y);doc.setFont('helvetica','bold');rtxt(m.signoff==='yes'?'SIGNOFF':'ATTEND',y,m.signoff==='yes'?[15,110,86]:[100,100,100]);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);y+=5;chk();});ln();}
   const rptTaskIds=r.reportTasks||[];
-  let pdfTotalMins=0, pdfWorkCount=0;
-  if(rptTaskIds.length){sec(`TASKS IN REPORT (${rptTaskIds.length})`);const rptTasks=rptTaskIds.map(id=>S.tasks.find(t=>t.id===id)).filter(Boolean).sort((a,b)=>(b.dateStart||b.date||'').localeCompare(a.dateStart||a.date||'')||a.title.localeCompare(b.title));rptTasks.forEach(tk=>{const cat=tk.category||'work';if(cat==='travel'||cat==='leave')return;let mins=0;if(tk.autoDuration){const d=calcDurationFromTimes(tk.dateStart||tk.date,tk.dateEnd||tk.dateStart||tk.date,tk.timeStart,tk.timeEnd);if(d)mins=d.totalMins;}else if(tk.hours||tk.minutes){mins=(parseInt(tk.hours)||0)*60+(parseInt(tk.minutes)||0);}else{const d=calcDurationFromTimes(tk.dateStart||tk.date,tk.dateEnd||tk.dateStart||tk.date,tk.timeStart,tk.timeEnd);if(d)mins=d.totalMins;}if(mins>0){pdfTotalMins+=mins;pdfWorkCount++;}});const byDate={};rptTasks.forEach(tk=>{const d=tk.dateStart||tk.date||'';if(!byDate[d])byDate[d]=[];byDate[d].push(tk);});Object.entries(byDate).forEach(([dk,dayTasks])=>{if(dk){doc.setFillColor(228,240,232);doc.rect(mg,y-3,W-mg*2,7,'F');doc.setTextColor(0,100,50);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(fmtDate(dk),mg+3,y+1);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=8;chk();}dayTasks.forEach(tk=>{const timeStr=tk.timeStart?(tk.timeEnd?`${tk.timeStart}–${tk.timeEnd}`:tk.timeStart):'';const dur=calcDuration(tk);const titleLine='• '+tk.title+(timeStr?' ('+timeStr+')':'')+(dur?' '+dur:'')+(tk.status==='done'?' — Done':'');doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);const tl=doc.splitTextToSize(titleLine,W-mg*2-4);doc.text(tl,mg+2,y);y+=tl.length*5;const meta=[tk.machine?'Machine: '+tk.machine:'',tk.plan?'Plan: '+tk.plan:'',tk.priority&&tk.priority!=='medium'?'Priority: '+tk.priority:''].filter(Boolean).join('  ·  ');if(meta){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(meta,mg+6,y);y+=4;}if(tk.desc){doc.setFontSize(8);doc.setTextColor(100,100,100);const dl=doc.splitTextToSize('Desc: '+tk.desc,W-mg*2-8);doc.text(dl,mg+6,y);y+=dl.length*4+1;}if(tk.checklist&&tk.checklist.length){const done=tk.checklist.filter(c=>c.done).length;doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text(`Checklist: ${done}/${tk.checklist.length} items`,mg+6,y);y+=4;}const note=(r.reportTaskNotes||{})[tk.id];if(note){doc.setFontSize(8);doc.setTextColor(80,80,80);const nl=doc.splitTextToSize('Notes: '+note,W-mg*2-8);doc.text(nl,mg+6,y);y+=nl.length*4+1;}y+=3;chk();});});ln();}
-  const pdfTotH=Math.floor(pdfTotalMins/60), pdfTotM=pdfTotalMins%60;
-  const pdfTotalLabel=pdfTotalMins>0?(pdfTotH>0&&pdfTotM>0?`${pdfTotH}h ${pdfTotM}m`:pdfTotH>0?`${pdfTotH}h`:`${pdfTotM}m`):'—';
-  sec('SIGN-OFF');kv2('Result',r.signoff&&r.signoff.result||'Completed');if(r.signoff&&r.signoff.summary)kv2('Summary',r.signoff.summary);if(r.signoff&&r.signoff.remarks)kv2('Remarks',r.signoff.remarks);if(pdfWorkCount>0)kv2('Total Work Hours',`${pdfTotalLabel} (${pdfWorkCount} task${pdfWorkCount>1?'s':''})`);y+=4;
+  let pdfWorkMins=0, pdfWorkCount=0;
+  let pdfTravelMins=0, pdfTravelCount=0;
+  let pdfLeaveMins=0, pdfLeaveCount=0;
+  if(rptTaskIds.length){sec(`TASKS IN REPORT (${rptTaskIds.length})`);const rptTasks=rptTaskIds.map(id=>S.tasks.find(t=>t.id===id)).filter(Boolean).sort((a,b)=>(b.dateStart||b.date||'').localeCompare(a.dateStart||a.date||'')||a.title.localeCompare(b.title));rptTasks.forEach(tk=>{const cat=tk.category||'work';let mins=0;if(tk.autoDuration){const d=calcDurationFromTimes(tk.dateStart||tk.date,tk.dateEnd||tk.dateStart||tk.date,tk.timeStart,tk.timeEnd);if(d)mins=d.totalMins;}else if(tk.hours||tk.minutes){mins=(parseInt(tk.hours)||0)*60+(parseInt(tk.minutes)||0);}else{const d=calcDurationFromTimes(tk.dateStart||tk.date,tk.dateEnd||tk.dateStart||tk.date,tk.timeStart,tk.timeEnd);if(d)mins=d.totalMins;}if(mins>0){if(cat==='travel'){pdfTravelMins+=mins;pdfTravelCount++;}else if(cat==='leave'){pdfLeaveMins+=mins;pdfLeaveCount++;}else{pdfWorkMins+=mins;pdfWorkCount++;}}});const byDate={};rptTasks.forEach(tk=>{const d=tk.dateStart||tk.date||'';if(!byDate[d])byDate[d]=[];byDate[d].push(tk);});Object.entries(byDate).forEach(([dk,dayTasks])=>{if(dk){doc.setFillColor(228,240,232);doc.rect(mg,y-3,W-mg*2,7,'F');doc.setTextColor(0,100,50);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(fmtDate(dk),mg+3,y+1);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=8;chk();}dayTasks.forEach(tk=>{const timeStr=tk.timeStart?(tk.timeEnd?`${tk.timeStart}–${tk.timeEnd}`:tk.timeStart):'';const dur=calcDuration(tk);const titleLine='• '+tk.title+(timeStr?' ('+timeStr+')':'')+(dur?' '+dur:'')+(tk.status==='done'?' — Done':'');doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);const tl=doc.splitTextToSize(titleLine,W-mg*2-4);doc.text(tl,mg+2,y);y+=tl.length*5;const meta=[tk.machine?'Machine: '+tk.machine:'',tk.plan?'Plan: '+tk.plan:'',tk.priority&&tk.priority!=='medium'?'Priority: '+tk.priority:''].filter(Boolean).join('  ·  ');if(meta){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(meta,mg+6,y);y+=4;}if(tk.desc){doc.setFontSize(8);doc.setTextColor(100,100,100);const dl=doc.splitTextToSize('Desc: '+tk.desc,W-mg*2-8);doc.text(dl,mg+6,y);y+=dl.length*4+1;}if(tk.checklist&&tk.checklist.length){const done=tk.checklist.filter(c=>c.done).length;doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text(`Checklist: ${done}/${tk.checklist.length} items`,mg+6,y);y+=4;}const note=(r.reportTaskNotes||{})[tk.id];if(note){doc.setFontSize(8);doc.setTextColor(80,80,80);const nl=doc.splitTextToSize('Notes: '+note,W-mg*2-8);doc.text(nl,mg+6,y);y+=nl.length*4+1;}y+=3;chk();});});ln();}
+  const fmtPdfMins=m=>{const h=Math.floor(m/60),mins=m%60;return m>0?(h>0&&mins>0?`${h}h ${mins}m`:h>0?`${h}h`:`${mins}m`):'—';};
+  sec('SIGN-OFF');kv2('Result',r.signoff&&r.signoff.result||'Completed');if(r.signoff&&r.signoff.summary)kv2('Summary',r.signoff.summary);if(r.signoff&&r.signoff.remarks)kv2('Remarks',r.signoff.remarks);if(pdfWorkCount>0)kv2('Total Work Hours',`${fmtPdfMins(pdfWorkMins)} (${pdfWorkCount} task${pdfWorkCount>1?'s':''})`);if(pdfTravelCount>0)kv2('Total Travel Hours',`${fmtPdfMins(pdfTravelMins)} (${pdfTravelCount} task${pdfTravelCount>1?'s':''})`);if(pdfLeaveCount>0)kv2('Total Leave Hours',`${fmtPdfMins(pdfLeaveMins)} (${pdfLeaveCount} task${pdfLeaveCount>1?'s':''})`);y+=4;
   if(y>240){doc.addPage();y=20;pageNum++;addPN();}
   doc.setDrawColor(200,200,200);doc.rect(mg,y,W-mg*2,34);doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text('Signature:',mg+4,y+7);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text(p.name||'Engineer',mg+4,y+29);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(100,100,100);rtxt(new Date().toLocaleDateString('en-GB'),y+29);
   if(r.signature&&r.signature.length>100){try{doc.addImage(r.signature,'PNG',mg+40,y+4,65,25);}catch(e){}}

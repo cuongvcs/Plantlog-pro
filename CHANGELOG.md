@@ -16,12 +16,13 @@
 - **Nguyên nhân:** Các quy tắc CSS cho nút chọn Checklist (`.rb`, `.rb.pass`, `.rb.fail`, `.rb.na`, `.act`) bị thiếu trong stylesheet chính (`src/styles.css`, `index.html`, `plantlog_pro_mobile.html`, `plantlog_debug.html`), khiến nút bấm không đổi màu nền khi người dùng bấm chọn.
 - **Khắc phục:** 
   - Bổ sung bộ quy tắc CSS chuẩn cho Checklist: khi chọn **PASS (`✓`)** nút bật màu xanh lá nổi bật kèm hiệu ứng bóng (`box-shadow`), **FAIL (`✕`)** bật màu đỏ đậm, **N/A (`–`)** bật màu xám đậm.
-#### 4. ⏱️ Bổ sung Tổng số Giờ làm việc (`Total Work Hours`) vào phần SIGN-OFF trong File PDF & Modal Báo cáo
-- **Cập nhật:** Tự động tổng hợp tổng số giờ làm việc (`Total Work Hours`) dựa trên thời gian thực hiện các nhiệm vụ trong báo cáo.
-- **Quy tắc tính:** **Loại trừ** các công việc di chuyển (`travel`) và nghỉ phép (`leave`), **chỉ tính** tổng thời gian làm việc thực tế (`work`).
+#### 4. ⏱️ Bổ sung Tổng số Giờ làm việc (`Total Work Hours`), Giờ di chuyển (`Total Travel Hours`) & Giờ nghỉ (`Total Leave Hours`)
+- **Cập nhật:** Tự động tổng hợp và phân loại tổng số giờ làm việc, di chuyển và nghỉ phép dựa trên thời gian thực hiện các nhiệm vụ trong báo cáo.
+- **Quy tắc hiển thị linh hoạt:** 
+  - Chỉ hiển thị các mục có số giờ > 0 (`> 0h`). Nếu không có nhiệm vụ thuộc danh mục đó (`0h`), ứng dụng sẽ tự động ẩn dòng tương ứng.
 - **Vị trí hiển thị:** 
-  - Đã hiển thị trên khung Banner tổng quan trong Modal xem báo cáo (`⏱ Total Work Hours (X tasks)`).
-  - Xuất hiện dưới dòng `Remarks` trong khung **SIGN-OFF** của file PDF xuất ra với định dạng `Total Work Hours: XXh XXm (X tasks)`.
+  - Thể hiện trực quan trên khung Banner trong Modal xem báo cáo (`⏱ Total Work Hours`, `✈️ Total Travel Hours`, `🌴 Total Leave Hours`).
+  - Xuất hiện dưới dòng `Remarks` trong khung **SIGN-OFF** của file PDF xuất ra với định dạng: `Total Work/Travel/Leave Hours: XXh XXm (X tasks)`.
 
 ## [v4.6] - 10/08/2026
 
