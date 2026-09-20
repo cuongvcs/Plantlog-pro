@@ -16,7 +16,9 @@
 - **Nguyên nhân:** Các quy tắc CSS cho nút chọn Checklist (`.rb`, `.rb.pass`, `.rb.fail`, `.rb.na`, `.act`) bị thiếu trong stylesheet chính (`src/styles.css`, `index.html`, `plantlog_pro_mobile.html`, `plantlog_debug.html`), khiến nút bấm không đổi màu nền khi người dùng bấm chọn.
 - **Khắc phục:** 
   - Bổ sung bộ quy tắc CSS chuẩn cho Checklist: khi chọn **PASS (`✓`)** nút bật màu xanh lá nổi bật kèm hiệu ứng bóng (`box-shadow`), **FAIL (`✕`)** bật màu đỏ đậm, **N/A (`–`)** bật màu xám đậm.
-  - Hỗ trợ cơ chế **Bật/Tắt (Toggle-off)**: bấm lại vào lựa chọn đang kích hoạt sẽ bỏ chọn về trạng thái trống.
+#### 4. ⏱️ Bổ sung Tổng số Giờ làm việc (`Total Work Hours`) vào phần SIGN-OFF trong File PDF
+- **Cập nhật:** Trong hàm `exportReportPDF`, tự động tổng hợp tổng số giờ làm việc (`Total Work Hours`) dựa trên thời gian làm việc của các nhiệm vụ trong báo cáo.
+- **Vị trí hiển thị:** Xuất hiện dưới dòng `Remarks` trong khung **SIGN-OFF** với định dạng `Total Work Hours: XXh XXm (X tasks)`.
 
 ## [v4.6] - 10/08/2026
 
