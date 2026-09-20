@@ -12,7 +12,11 @@
 - Bổ sung nội dung `Desc: <tk.desc>` dưới dạng khối văn bản đa dòng được căn lề chuẩn và ngắt trang linh hoạt trong tệp PDF báo cáo chuyến đi.
 - Áp dụng đồng bộ trên tất cả các điểm truy cập (`src/index.html`, `plantlog_pro_mobile.html`, `plantlog_debug.html`, `src/modules/report.js`, `src/js/reports.js`, `src/js/pdf.js`, `src/js/settings.js`).
 
----
+#### 3. ✅ Sửa lỗi Hiển thị Trạng thái Lựa chọn Checklist (Checklist UI Fix)
+- **Nguyên nhân:** Các quy tắc CSS cho nút chọn Checklist (`.rb`, `.rb.pass`, `.rb.fail`, `.rb.na`, `.act`) bị thiếu trong stylesheet chính (`src/styles.css`, `index.html`, `plantlog_pro_mobile.html`, `plantlog_debug.html`), khiến nút bấm không đổi màu nền khi người dùng bấm chọn.
+- **Khắc phục:** 
+  - Bổ sung bộ quy tắc CSS chuẩn cho Checklist: khi chọn **PASS (`✓`)** nút bật màu xanh lá nổi bật kèm hiệu ứng bóng (`box-shadow`), **FAIL (`✕`)** bật màu đỏ đậm, **N/A (`–`)** bật màu xám đậm.
+  - Hỗ trợ cơ chế **Bật/Tắt (Toggle-off)**: bấm lại vào lựa chọn đang kích hoạt sẽ bỏ chọn về trạng thái trống.
 
 ## [v4.6] - 10/08/2026
 

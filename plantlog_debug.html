@@ -461,6 +461,31 @@ input, textarea, select, button { font-family: var(--font); }
 }
 .ropt.sel { background: var(--brand-light); border-color: var(--brand); color: var(--brand-dark); font-weight: 700; }
 
+/* ── CHECKLIST ITEMS ────────────────────────────────────── */
+.ci { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--n150); }
+.ci:last-child { border-bottom:none; }
+.ci-info { flex:1; min-width:0; }
+.ci-name { font-size:13px; font-weight:600; color:var(--n800); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ci-note { font-size:11px; color:var(--n500); margin-top:2px; }
+
+/* Checklist Result Buttons */
+.rb { width:32px; height:32px; border-radius:50%; border:1.5px solid var(--n300); background:var(--surface); cursor:pointer; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; transition:all var(--dur-fast); outline:none; }
+
+.rb.pass { color:var(--brand); border-color:rgba(0,132,61,0.3); background:rgba(0,132,61,0.05); }
+.rb.pass:hover { background:rgba(0,132,61,0.12); border-color:var(--brand); }
+.rb.pass.act { background:var(--brand) !important; border-color:var(--brand) !important; color:#ffffff !important; box-shadow:0 2px 8px rgba(0,132,61,0.4); transform:scale(1.1); }
+
+.rb.fail { color:var(--red); border-color:rgba(226,75,74,0.3); background:rgba(226,75,74,0.05); }
+.rb.fail:hover { background:rgba(226,75,74,0.12); border-color:var(--red); }
+.rb.fail.act { background:var(--red) !important; border-color:var(--red) !important; color:#ffffff !important; box-shadow:0 2px 8px rgba(226,75,74,0.4); transform:scale(1.1); }
+
+.rb.na { color:var(--n600); border-color:var(--n300); background:var(--n100); }
+.rb.na:hover { background:var(--n200); border-color:var(--n400); }
+.rb.na.act { background:var(--n600) !important; border-color:var(--n600) !important; color:#ffffff !important; box-shadow:0 2px 6px rgba(108,117,125,0.4); transform:scale(1.1); }
+
+.db { width:28px; height:28px; border-radius:50%; border:none; background:var(--n100); color:var(--n500); cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all var(--dur-fast); }
+.db:hover, .db:active { background:var(--rl); color:var(--red); }
+
 /* ── ISSUE CARDS ──────────────────────────────────────── */
 .issue {
   border-left: 3px solid var(--n300); border-radius: var(--r-sm);
@@ -4844,7 +4869,7 @@ function renderChecklist(){
       <button class="db" onclick="delCheck(${i})">×</button>
     </div>`).join('');
 }
-function setCheck(i,r){curReport.checklist[i].result=r;sv();renderChecklist();}
+function setCheck(i,r){if(!curReport||!curReport.checklist[i])return;curReport.checklist[i].result=curReport.checklist[i].result===r?'':r;sv();renderChecklist();}
 function delCheck(i){curReport.checklist.splice(i,1);sv();renderChecklist();}
 function addCheckItem(){
   const name=document.getElementById('ci-name').value.trim();if(!name){showToast('Name required');return;}

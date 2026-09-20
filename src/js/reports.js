@@ -187,7 +187,7 @@ function renderChecklist(){
       <button class="db" onclick="delCheck(${i})">×</button>
     </div>`).join('');
 }
-function setCheck(i,r){curReport.checklist[i].result=r;sv();renderChecklist();}
+function setCheck(i,r){if(!curReport||!curReport.checklist[i])return;curReport.checklist[i].result=curReport.checklist[i].result===r?'':r;sv();renderChecklist();}
 function delCheck(i){curReport.checklist.splice(i,1);sv();renderChecklist();}
 function addCheckItem(){
   const name=document.getElementById('ci-name').value.trim();if(!name){showToast('Name required');return;}
