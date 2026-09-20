@@ -154,6 +154,7 @@ function renderReportTasksPreview(){
             ${tk.plan?`<span>📁 ${tk.plan}</span>`:''}
             ${tk.priority?`<span style="color:${tk.priority==='high'?'var(--red)':tk.priority==='critical'?'var(--purple)':'var(--g500)'};">▲ ${tk.priority}</span>`:''}
           </div>
+          ${tk.desc?`<div style="font-size:11px;color:var(--g600);margin-top:4px;white-space:pre-wrap;background:rgba(0,0,0,0.02);padding:4px 6px;border-radius:4px;border-left:2px solid var(--g300);">📝 ${tk.desc}</div>`:''}
           ${tk.checklist&&tk.checklist.length?`
           <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
             <div style="flex:1;height:3px;background:var(--g200);border-radius:2px;overflow:hidden;">

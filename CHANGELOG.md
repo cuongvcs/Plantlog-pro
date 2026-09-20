@@ -1,5 +1,19 @@
 # 📝 Nhật ký cập nhật (Changelog) — PlantLog Pro
 
+## [v4.7] - 20/09/2026
+
+### 📝 Bổ sung Mô tả Công việc (`Task Description`) vào Báo cáo Chuyến đi (Trip Report) & PDF
+
+#### 1. 🖥️ Hiển thị trực quan trên giao diện ứng dụng (App UI)
+- **Wizard tạo báo cáo (Step 5 Tasks):** Hiển thị ô `Description` (Mô tả chi tiết công việc) trực tiếp trên từng thẻ công việc trong giao diện chỉnh sửa báo cáo với khung viền điểm nhấn nhẹ, bảo lưu định dạng xuống dòng (`white-space: pre-wrap`).
+- **Modal xem báo cáo (View Report Modal):** Hiển thị đoạn mô tả `📝 <Description>` dưới dòng thông tin máy (`Machine`) & kế hoạch (`Plan`) của từng nhiệm vụ.
+
+#### 2. 📄 Xuất file PDF Báo cáo (`exportReportPDF`)
+- Bổ sung nội dung `Desc: <tk.desc>` dưới dạng khối văn bản đa dòng được căn lề chuẩn và ngắt trang linh hoạt trong tệp PDF báo cáo chuyến đi.
+- Áp dụng đồng bộ trên tất cả các điểm truy cập (`src/index.html`, `plantlog_pro_mobile.html`, `plantlog_debug.html`, `src/modules/report.js`, `src/js/reports.js`, `src/js/pdf.js`, `src/js/settings.js`).
+
+---
+
 ## [v4.6] - 10/08/2026
 
 ### 🔄 Sửa lỗi Auto-Start 7h sáng & Bảo vệ trạng thái Active khi tải dữ liệu từ Sheets
