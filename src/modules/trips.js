@@ -233,7 +233,7 @@ function formatTripFlightInfo(fl){
   if(outNum || outFrom || outTo || outAirline){
     let str = outNum;
     if(outAirline) str += (str ? ` (${outAirline})` : outAirline);
-    if(outFrom || outTo) str += (str ? ': ' : '') + `${outFrom||'—'} ➔ ${outTo||'—'}`;
+    if(outFrom || outTo) str += (str ? ': ' : '') + `${outFrom||'—'} → ${outTo||'—'}`;
     if(outDepart || outArrive) str += ` (${outDepart||''}${outDepart&&outArrive?'–':''}${outArrive||''})`;
     if(str.trim()) lines.push(str.trim());
   }
@@ -248,7 +248,7 @@ function formatTripFlightInfo(fl){
   if(retNum || retFrom || retTo || retAirline){
     let str = 'Return: ' + retNum;
     if(retAirline) str += (retNum ? ` (${retAirline})` : retAirline);
-    if(retFrom || retTo) str += (retNum||retAirline ? ': ' : '') + `${retFrom||'—'} ➔ ${retTo||'—'}`;
+    if(retFrom || retTo) str += (retNum||retAirline ? ': ' : '') + `${retFrom||'—'} → ${retTo||'—'}`;
     if(retDepart || retArrive) str += ` (${retDepart||''}${retDepart&&retArrive?'–':''}${retArrive||''})`;
     if(str.trim()) lines.push(str.trim());
   }
@@ -288,7 +288,12 @@ function resetTripTAFields(){
   loadTripTAFields({});
 }
 
-function kv(l,v){return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g100);font-size:13px;"><span style="color:var(--g500);">${l}</span><span style="font-weight:500;text-align:right;max-width:60%;">${v}</span></div>`;}
+function kv(l,v){
+  if(l==='Flight Details'||l==='Chi tiết chuyến bay'){
+    return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g100);font-size:11px;align-items:flex-start;"><span style="color:var(--g500);white-space:nowrap;margin-right:8px;">${l}</span><span style="font-weight:500;text-align:right;max-width:75%;font-size:11px;line-height:1.4;word-break:break-word;color:var(--g800);">${v}</span></div>`;
+  }
+  return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g100);font-size:13px;"><span style="color:var(--g500);">${l}</span><span style="font-weight:500;text-align:right;max-width:60%;">${v}</span></div>`;
+}
 
 function openNewTripModal(){
   editingTripId=null;

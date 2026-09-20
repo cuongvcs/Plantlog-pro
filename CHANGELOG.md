@@ -26,7 +26,10 @@
 
 #### 5. ✈️ Hiển thị Chi tiết Chuyến bay (`Flight Details`) trong mục `TRIP INFO`
 - **Cập nhật:** Khi chuyến đi có sử dụng phương tiện máy bay (`Transport: Flight / Flight + rental car`), hệ thống tự động trích xuất thông tin chuyến bay (`trip.flight`) và hiển thị ngay dưới mục `Transport` trong phần **TRIP INFO**.
-- **Thông tin chi tiết hiển thị:** Số hiệu chuyến bay, hãng hàng không, chặng bay đi/về (`From ➔ To`), giờ cất cánh/hạ cánh, và mã đặt chỗ (`PNR`).
+- **Thông tin chi tiết hiển thị:** Số hiệu chuyến bay, hãng hàng không, chặng bay đi/về (`From → To`), giờ cất cánh/hạ cánh, và mã đặt chỗ (`PNR`).
+- **Tối ưu hiển thị full thông tin:**
+  - Tự động hạ cỡ chữ vừa phải (`10.5px - 11px` trên giao diện Web/Mobile, `7.5pt` trong PDF Export).
+  - Tăng độ rộng hiển thị lên `75%`, hỗ trợ ngắt dòng tự động (`word-break: break-word`, `line-height: 1.4`), đảm bảo **hiển thị 100% đầy đủ thông tin chuyến bay không bị cắt xén hay bị mất chữ ở lề phải**.
 - **Đồng bộ toàn bộ:** Đã cập nhật trên giao diện chi tiết chuyến đi (Trip Detail Card), Modal xem báo cáo (View Report Modal) và tệp PDF xuất ra (`exportReportPDF`).
 
 ## [v4.6] - 10/08/2026

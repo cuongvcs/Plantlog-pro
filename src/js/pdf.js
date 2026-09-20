@@ -93,7 +93,12 @@ function buildPDFPreview(){
       ${r.signature?`<div style="margin-top:8px;"><img src="${r.signature}" style="max-width:180px;border:1px solid var(--g200);border-radius:6px;padding:3px;"></div>`:'<div style="font-size:12px;color:var(--red);">⚠ No signature</div>'}
     </div>`;
 }
-function pr(l,v){return `<div class="pr"><span>${l}</span><span>${v}</span></div>`;}
+function pr(l,v){
+  if(l==='Flight Details'||l==='Chi tiết chuyến bay'){
+    return `<div class="pr" style="font-size:11px;align-items:flex-start;"><span style="white-space:nowrap;margin-right:8px;">${l}</span><span style="font-size:10.5px;font-weight:600;text-align:right;max-width:75%;line-height:1.4;word-break:break-word;">${v}</span></div>`;
+  }
+  return `<div class="pr"><span>${l}</span><span>${v}</span></div>`;
+}
 function exportPDF(){
   if(typeof window.jspdf==='undefined'){showToast('PDF loading...');setTimeout(exportPDF,1500);return;}
   const{jsPDF}=window.jspdf;
@@ -116,7 +121,7 @@ function exportPDF(){
   const rtxt=(str,yy,col)=>{if(col)doc.setTextColor(...col);const tw=doc.getTextWidth(String(str));doc.text(String(str),R-tw,yy);if(col)doc.setTextColor(33,37,41);};
   const addPN=()=>{doc.setFontSize(7);doc.setTextColor(150,150,150);doc.setFont('helvetica','normal');rtxt(`Page ${pageNum}`,289);doc.text('PlantLog  ·  '+new Date().toLocaleDateString('en-GB'),mg,289);};
   const sec=title=>{if(y>265){doc.addPage();y=20;pageNum++;addPN();}doc.setFillColor(241,243,245);doc.rect(mg,y-4,W-mg*2,8,'F');doc.setTextColor(0,132,61);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(title,mg+2,y+1);doc.setTextColor(33,37,41);y+=8;};
-  const kv2=(l,v)=>{doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);doc.text(l,mg,y);doc.setTextColor(33,37,41);doc.setFont('helvetica','bold');const lines=doc.splitTextToSize(String(v),W-mg*2-30);lines.forEach((ln,li)=>{const tw=doc.getTextWidth(ln);doc.text(ln,R-tw,y+li*5);});doc.setFont('helvetica','normal');y+=lines.length*5+1;if(y>270){doc.addPage();y=20;pageNum++;addPN();}};
+  const kv2=(l,v)=>{const isFlight=(l==='Flight Details'||l==='Chi tiết chuyến bay');const fsz=isFlight?7.5:9;const lh=isFlight?4:5;const valWidth=isFlight?(W-mg*2-25):(W-mg*2-30);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100,100,100);doc.text(l,mg,y);doc.setTextColor(33,37,41);doc.setFont('helvetica','bold');doc.setFontSize(fsz);const lines=doc.splitTextToSize(String(v),valWidth);lines.forEach((ln,li)=>{const tw=doc.getTextWidth(ln);doc.text(ln,R-tw,y+li*lh);});doc.setFont('helvetica','normal');doc.setFontSize(9);y+=lines.length*lh+1;if(y>270){doc.addPage();y=20;pageNum++;addPN();}};
   const ln=()=>{doc.setDrawColor(220,220,220);doc.line(mg,y,W-mg,y);y+=4;};
   const chk=()=>{if(y>265){doc.addPage();y=20;pageNum++;addPN();}};
   sec('TRIP INFO');
