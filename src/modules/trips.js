@@ -159,7 +159,8 @@ function openTripDetail(id){
     <div style="margin-bottom:10px;"><span class="badge ${tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned')}</span></div>
     ${kv(t('plantName').replace(' *',''),tr.plant)}${kv(t('location'),tr.location||'—')}${kv(t('visitDate').replace(' *',''),fmtDate(tr.date))}
     ${tr.dateEnd&&tr.dateEnd!==tr.date?kv(t('endDate'),fmtDate(tr.dateEnd)):''}
-    ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}`;
+    ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}
+    ${tr.flight&&formatTripFlightInfo(tr.flight)?kv('Flight Details',formatTripFlightInfo(tr.flight).replace(/\n/g,'<br>')):''}`;
   // Load trip note
   const noteEl=document.getElementById('trip-note-input');
   if(noteEl)noteEl.value=tr.notes||'';
@@ -217,6 +218,46 @@ function getTripFlightFields(){
     ret_to:gv('nt-fl-ret-to'), ret_depart:gv('nt-fl-ret-depart'), ret_arrive:gv('nt-fl-ret-arrive'),
     pnr:gv('nt-fl-pnr')
   };
+}
+
+function formatTripFlightInfo(fl){
+  if(!fl) return '';
+  const lines = [];
+  const outNum = fl.num || fl.flightNo || '';
+  const outAirline = fl.airline || '';
+  const outFrom = fl.from || '';
+  const outTo = fl.to || '';
+  const outDepart = fl.depart || fl.departTime || '';
+  const outArrive = fl.arrive || fl.arriveTime || '';
+
+  if(outNum || outFrom || outTo || outAirline){
+    let str = outNum;
+    if(outAirline) str += (str ? ` (${outAirline})` : outAirline);
+    if(outFrom || outTo) str += (str ? ': ' : '') + `${outFrom||'—'} ➔ ${outTo||'—'}`;
+    if(outDepart || outArrive) str += ` (${outDepart||''}${outDepart&&outArrive?'–':''}${outArrive||''})`;
+    if(str.trim()) lines.push(str.trim());
+  }
+
+  const retNum = fl.ret_num || fl.retNum || '';
+  const retAirline = fl.ret_airline || fl.retAirline || '';
+  const retFrom = fl.ret_from || fl.retFrom || '';
+  const retTo = fl.ret_to || fl.retTo || '';
+  const retDepart = fl.ret_depart || fl.retDepart || '';
+  const retArrive = fl.ret_arrive || fl.retArrive || '';
+
+  if(retNum || retFrom || retTo || retAirline){
+    let str = 'Return: ' + retNum;
+    if(retAirline) str += (retNum ? ` (${retAirline})` : retAirline);
+    if(retFrom || retTo) str += (retNum||retAirline ? ': ' : '') + `${retFrom||'—'} ➔ ${retTo||'—'}`;
+    if(retDepart || retArrive) str += ` (${retDepart||''}${retDepart&&retArrive?'–':''}${retArrive||''})`;
+    if(str.trim()) lines.push(str.trim());
+  }
+
+  if(fl.pnr){
+    lines.push(`PNR: ${fl.pnr}`);
+  }
+
+  return lines.join('\n');
 }
 
 // ── Travel Authorization (TA) fields — separate from flight ──

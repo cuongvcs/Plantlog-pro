@@ -140,7 +140,8 @@ function openTripDetail(id){
     <div style="margin-bottom:10px;"><span class="badge ${tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned')}</span></div>
     ${kv(t('plantName').replace(' *',''),tr.plant)}${kv(t('location'),tr.location||'—')}${kv(t('visitDate').replace(' *',''),fmtDate(tr.date))}
     ${tr.dateEnd&&tr.dateEnd!==tr.date?kv(t('endDate'),fmtDate(tr.dateEnd)):''}
-    ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}`;
+    ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}
+    ${tr.flight&&formatTripFlightInfo(tr.flight)?kv('Flight Details',formatTripFlightInfo(tr.flight).replace(/\n/g,'<br>')):''}`;
   // Load trip note
   const noteEl=document.getElementById('trip-note-input');
   if(noteEl)noteEl.value=tr.notes||'';
@@ -188,6 +189,46 @@ function loadTripFlightFields(flight){
 
 function getTripFlightFields(){
   return {'num':document.getElementById('nt-fl-num')?document.getElementById('nt-fl-num').value:'', 'airline':document.getElementById('nt-fl-airline')?document.getElementById('nt-fl-airline').value:'', 'from':document.getElementById('nt-fl-from')?document.getElementById('nt-fl-from').value:'', 'to':document.getElementById('nt-fl-to')?document.getElementById('nt-fl-to').value:'', 'depart':document.getElementById('nt-fl-depart')?document.getElementById('nt-fl-depart').value:'', 'arrive':document.getElementById('nt-fl-arrive')?document.getElementById('nt-fl-arrive').value:'', 'ret_num':document.getElementById('nt-fl-ret-num')?document.getElementById('nt-fl-ret-num').value:'', 'ret_airline':document.getElementById('nt-fl-ret-airline')?document.getElementById('nt-fl-ret-airline').value:'', 'ret_from':document.getElementById('nt-fl-ret-from')?document.getElementById('nt-fl-ret-from').value:'', 'ret_to':document.getElementById('nt-fl-ret-to')?document.getElementById('nt-fl-ret-to').value:'', 'ret_depart':document.getElementById('nt-fl-ret-depart')?document.getElementById('nt-fl-ret-depart').value:'', 'ret_arrive':document.getElementById('nt-fl-ret-arrive')?document.getElementById('nt-fl-ret-arrive').value:'', 'pnr':document.getElementById('nt-fl-pnr')?document.getElementById('nt-fl-pnr').value:''};
+}
+
+function formatTripFlightInfo(fl){
+  if(!fl) return '';
+  const lines = [];
+  const outNum = fl.num || fl.flightNo || '';
+  const outAirline = fl.airline || '';
+  const outFrom = fl.from || '';
+  const outTo = fl.to || '';
+  const outDepart = fl.depart || fl.departTime || '';
+  const outArrive = fl.arrive || fl.arriveTime || '';
+
+  if(outNum || outFrom || outTo || outAirline){
+    let str = outNum;
+    if(outAirline) str += (str ? ` (${outAirline})` : outAirline);
+    if(outFrom || outTo) str += (str ? ': ' : '') + `${outFrom||'—'} ➔ ${outTo||'—'}`;
+    if(outDepart || outArrive) str += ` (${outDepart||''}${outDepart&&outArrive?'–':''}${outArrive||''})`;
+    if(str.trim()) lines.push(str.trim());
+  }
+
+  const retNum = fl.ret_num || fl.retNum || '';
+  const retAirline = fl.ret_airline || fl.retAirline || '';
+  const retFrom = fl.ret_from || fl.retFrom || '';
+  const retTo = fl.ret_to || fl.retTo || '';
+  const retDepart = fl.ret_depart || fl.retDepart || '';
+  const retArrive = fl.ret_arrive || fl.retArrive || '';
+
+  if(retNum || retFrom || retTo || retAirline){
+    let str = 'Return: ' + retNum;
+    if(retAirline) str += (retNum ? ` (${retAirline})` : retAirline);
+    if(retFrom || retTo) str += (retNum||retAirline ? ': ' : '') + `${retFrom||'—'} ➔ ${retTo||'—'}`;
+    if(retDepart || retArrive) str += ` (${retDepart||''}${retDepart&&retArrive?'–':''}${retArrive||''})`;
+    if(str.trim()) lines.push(str.trim());
+  }
+
+  if(fl.pnr){
+    lines.push(`PNR: ${fl.pnr}`);
+  }
+
+  return lines.join('\n');
 }
 
 function kv(l,v){return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g100);font-size:13px;"><span style="color:var(--g500);">${l}</span><span style="font-weight:500;text-align:right;max-width:60%;">${v}</span></div>`;}

@@ -3626,7 +3626,8 @@ function openTripDetail(id){
     <div style="margin-bottom:10px;"><span class="badge ${tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned')}</span></div>
     ${kv(t('plantName').replace(' *',''),tr.plant)}${kv(t('location'),tr.location||'—')}${kv(t('visitDate').replace(' *',''),fmtDate(tr.date))}
     ${tr.dateEnd&&tr.dateEnd!==tr.date?kv(t('endDate'),fmtDate(tr.dateEnd)):''}
-    ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}`;
+    ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}
+    ${tr.flight&&formatTripFlightInfo(tr.flight)?kv('Flight Details',formatTripFlightInfo(tr.flight).replace(/\n/g,'<br>')):''}`;
   // Load trip note
   const noteEl=document.getElementById('trip-note-input');
   if(noteEl)noteEl.value=tr.notes||'';
@@ -3684,6 +3685,46 @@ function getTripFlightFields(){
     ret_to:gv('nt-fl-ret-to'), ret_depart:gv('nt-fl-ret-depart'), ret_arrive:gv('nt-fl-ret-arrive'),
     pnr:gv('nt-fl-pnr')
   };
+}
+
+function formatTripFlightInfo(fl){
+  if(!fl) return '';
+  const lines = [];
+  const outNum = fl.num || fl.flightNo || '';
+  const outAirline = fl.airline || '';
+  const outFrom = fl.from || '';
+  const outTo = fl.to || '';
+  const outDepart = fl.depart || fl.departTime || '';
+  const outArrive = fl.arrive || fl.arriveTime || '';
+
+  if(outNum || outFrom || outTo || outAirline){
+    let str = outNum;
+    if(outAirline) str += (str ? ` (${outAirline})` : outAirline);
+    if(outFrom || outTo) str += (str ? ': ' : '') + `${outFrom||'—'} ➔ ${outTo||'—'}`;
+    if(outDepart || outArrive) str += ` (${outDepart||''}${outDepart&&outArrive?'–':''}${outArrive||''})`;
+    if(str.trim()) lines.push(str.trim());
+  }
+
+  const retNum = fl.ret_num || fl.retNum || '';
+  const retAirline = fl.ret_airline || fl.retAirline || '';
+  const retFrom = fl.ret_from || fl.retFrom || '';
+  const retTo = fl.ret_to || fl.retTo || '';
+  const retDepart = fl.ret_depart || fl.retDepart || '';
+  const retArrive = fl.ret_arrive || fl.retArrive || '';
+
+  if(retNum || retFrom || retTo || retAirline){
+    let str = 'Return: ' + retNum;
+    if(retAirline) str += (retNum ? ` (${retAirline})` : retAirline);
+    if(retFrom || retTo) str += (retNum||retAirline ? ': ' : '') + `${retFrom||'—'} ➔ ${retTo||'—'}`;
+    if(retDepart || retArrive) str += ` (${retDepart||''}${retDepart&&retArrive?'–':''}${retArrive||''})`;
+    if(str.trim()) lines.push(str.trim());
+  }
+
+  if(fl.pnr){
+    lines.push(`PNR: ${fl.pnr}`);
+  }
+
+  return lines.join('\n');
 }
 
 // ── Travel Authorization (TA) fields — separate from flight ──
@@ -5881,6 +5922,9 @@ function buildPDFPreview(){
         <div style="font-size:12px;opacity:0.85;margin-top:3px;" id="preview-report-sub"></div>
       </div>
       ${pr('Plant',trip.plant)}${pr('Location',trip.location||'—')}${pr('Date',fmtDate(trip.date))}
+      ${trip.dateEnd&&trip.dateEnd!==trip.date?pr('End Date',fmtDate(trip.dateEnd)):''}
+      ${pr('Purpose',trip.purpose||'—')}${pr('Contact',trip.contact||'—')}${pr('Transport',trip.transport||'—')}
+      ${trip.flight&&formatTripFlightInfo(trip.flight)?pr('Flight Details',formatTripFlightInfo(trip.flight).replace(/\n/g,'<br>')):''}
       ${pr('Engineer',p.name||'—')}${pr('Title',p.title||'—')}${pr('Company',p.company||'—')}
     </div>
     <div class="ps"><div class="pst">Checklist (${r.checklist.length})</div>
@@ -6041,7 +6085,13 @@ function exportPDF(){
   if(trip.dateEnd&&trip.dateEnd!==trip.date)kv2('End Date',fmtDate(trip.dateEnd));
   kv2('Purpose',trip.purpose||'—');
   if(trip.contact)kv2('Contact',trip.contact);
-  if(trip.transport)kv2('Transport',trip.transport);
+  if(trip.transport){
+    kv2('Transport',trip.transport);
+    if(trip.flight){
+      const flStr=formatTripFlightInfo(trip.flight);
+      if(flStr) kv2('Flight Details',flStr);
+    }
+  }
   if(trip.notes){doc.setFontSize(8);doc.setTextColor(100,100,100);const nl=doc.splitTextToSize(trip.notes,W-mg*2-4);doc.text(nl,mg+2,y);y+=nl.length*4+2;}
   ln();
   sec(`CHECKLIST (${r.checklist.length})`);

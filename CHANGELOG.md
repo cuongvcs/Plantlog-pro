@@ -24,6 +24,11 @@
   - Thể hiện trực quan trên khung Banner trong Modal xem báo cáo (`⏱ Total Work Hours`, `✈️ Total Travel Hours`, `🌴 Total Leave Hours`).
   - Xuất hiện dưới dòng `Remarks` trong khung **SIGN-OFF** của file PDF xuất ra với định dạng: `Total Work/Travel/Leave Hours: XXh XXm (X tasks)`.
 
+#### 5. ✈️ Hiển thị Chi tiết Chuyến bay (`Flight Details`) trong mục `TRIP INFO`
+- **Cập nhật:** Khi chuyến đi có sử dụng phương tiện máy bay (`Transport: Flight / Flight + rental car`), hệ thống tự động trích xuất thông tin chuyến bay (`trip.flight`) và hiển thị ngay dưới mục `Transport` trong phần **TRIP INFO**.
+- **Thông tin chi tiết hiển thị:** Số hiệu chuyến bay, hãng hàng không, chặng bay đi/về (`From ➔ To`), giờ cất cánh/hạ cánh, và mã đặt chỗ (`PNR`).
+- **Đồng bộ toàn bộ:** Đã cập nhật trên giao diện chi tiết chuyến đi (Trip Detail Card), Modal xem báo cáo (View Report Modal) và tệp PDF xuất ra (`exportReportPDF`).
+
 ## [v4.6] - 10/08/2026
 
 ### 🔄 Sửa lỗi Auto-Start 7h sáng & Bảo vệ trạng thái Active khi tải dữ liệu từ Sheets

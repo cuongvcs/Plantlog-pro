@@ -144,7 +144,13 @@ function exportPDF(){
   if(trip.dateEnd&&trip.dateEnd!==trip.date)kv2('End Date',fmtDate(trip.dateEnd));
   kv2('Purpose',trip.purpose||'—');
   if(trip.contact)kv2('Contact',trip.contact);
-  if(trip.transport)kv2('Transport',trip.transport);
+  if(trip.transport){
+    kv2('Transport',trip.transport);
+    if(trip.flight){
+      const flStr=formatTripFlightInfo(trip.flight);
+      if(flStr) kv2('Flight Details',flStr);
+    }
+  }
   if(trip.notes){doc.setFontSize(8);doc.setTextColor(100,100,100);const nl=doc.splitTextToSize(trip.notes,W-mg*2-4);doc.text(nl,mg+2,y);y+=nl.length*4+2;}
   ln();
   sec(`CHECKLIST (${r.checklist.length})`);
