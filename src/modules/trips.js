@@ -233,7 +233,7 @@ function formatTripFlightInfo(fl){
   if(outNum || outFrom || outTo || outAirline){
     let str = outNum;
     if(outAirline) str += (str ? ` (${outAirline})` : outAirline);
-    if(outFrom || outTo) str += (str ? ': ' : '') + `${outFrom||'—'} → ${outTo||'—'}`;
+    if(outFrom || outTo) str += (str ? ': ' : '') + `${outFrom||'—'} -> ${outTo||'—'}`;
     if(outDepart || outArrive) str += ` (${outDepart||''}${outDepart&&outArrive?'–':''}${outArrive||''})`;
     if(str.trim()) lines.push(str.trim());
   }
@@ -248,7 +248,7 @@ function formatTripFlightInfo(fl){
   if(retNum || retFrom || retTo || retAirline){
     let str = 'Return: ' + retNum;
     if(retAirline) str += (retNum ? ` (${retAirline})` : retAirline);
-    if(retFrom || retTo) str += (retNum||retAirline ? ': ' : '') + `${retFrom||'—'} → ${retTo||'—'}`;
+    if(retFrom || retTo) str += (retNum||retAirline ? ': ' : '') + `${retFrom||'—'} -> ${retTo||'—'}`;
     if(retDepart || retArrive) str += ` (${retDepart||''}${retDepart&&retArrive?'–':''}${retArrive||''})`;
     if(str.trim()) lines.push(str.trim());
   }

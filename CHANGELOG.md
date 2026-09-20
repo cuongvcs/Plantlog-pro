@@ -27,9 +27,10 @@
 #### 5. ✈️ Hiển thị Chi tiết Chuyến bay (`Flight Details`) trong mục `TRIP INFO`
 - **Cập nhật:** Khi chuyến đi có sử dụng phương tiện máy bay (`Transport: Flight / Flight + rental car`), hệ thống tự động trích xuất thông tin chuyến bay (`trip.flight`) và hiển thị ngay dưới mục `Transport` trong phần **TRIP INFO**.
 - **Thông tin chi tiết hiển thị:** Số hiệu chuyến bay, hãng hàng không, chặng bay đi/về (`From → To`), giờ cất cánh/hạ cánh, và mã đặt chỗ (`PNR`).
-- **Tối ưu hiển thị full thông tin:**
-  - Tự động hạ cỡ chữ vừa phải (`10.5px - 11px` trên giao diện Web/Mobile, `7.5pt` trong PDF Export).
-  - Tăng độ rộng hiển thị lên `75%`, hỗ trợ ngắt dòng tự động (`word-break: break-word`, `line-height: 1.4`), đảm bảo **hiển thị 100% đầy đủ thông tin chuyến bay không bị cắt xén hay bị mất chữ ở lề phải**.
+- **Tối ưu & Khắc phục hoàn toàn trên PDF Export:**
+  - **Bổ sung thông tin người lập báo cáo:** Thêm đầy đủ `Engineer`, `Title`, và `Company` vào mục **TRIP INFO** trên tệp PDF xuất ra để **100% khớp dữ liệu với giao diện Xem trước Báo cáo (HTML Modal)**.
+  - **Sửa lỗi tràn chữ & lỗi ký tự:** Chuyển đổi ký tự Unicode arrow `→` sang chuẩn ASCII `->` giúp font chữ Helvetica trong PDF tính toán chính xác độ rộng chuỗi (`getTextWidth`), tự động ngắt dòng thông minh mà không bị biến dạng thành `'" ` hoặc bị mất chữ ở lề phải (`DaNang -> Ho Chi Minh`).
+  - **Cỡ chữ chuẩn:** Đặt cỡ chữ `8pt` vừa vặn, định khoảng cách dòng hợp lý (`lh = 4mm`), giúp toàn bộ thông tin chặng đi, chặng về và PNR hiển thị đầy đủ, đẹp mắt.
 - **Đồng bộ toàn bộ:** Đã cập nhật trên giao diện chi tiết chuyến đi (Trip Detail Card), Modal xem báo cáo (View Report Modal) và tệp PDF xuất ra (`exportReportPDF`).
 
 ## [v4.6] - 10/08/2026
