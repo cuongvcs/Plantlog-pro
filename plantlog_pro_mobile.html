@@ -904,7 +904,10 @@ input, textarea, select, button { font-family: var(--font); }
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
         <span style="font-size:13px;">📝</span>
         <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.08em;text-transform:uppercase;">Notes</div>
-        <span id="trip-note-saved" style="font-size:10px;color:var(--green);margin-left:auto;opacity:0;transition:opacity 0.4s;">Saved</span>
+        <button type="button" onclick="startVoiceToEnglish('trip-note-input', saveTripNote)" style="margin-left:auto;padding:3px 8px;border-radius:12px;background:#EBF7F0;border:1px solid #00843D;color:#00843D;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;" title="Voice input in Vietnamese automatically translated to English">
+          <span>🎙️ Voice VI ➔ EN</span>
+        </button>
+        <span id="trip-note-saved" style="font-size:10px;color:var(--green);opacity:0;transition:opacity 0.4s;">Saved</span>
       </div>
       <textarea id="trip-note-input"
         placeholder="Add notes for this trip — observations, reminders, contacts, special instructions…"
@@ -2008,7 +2011,15 @@ input, textarea, select, button { font-family: var(--font); }
   <div class="form-section">
     <div class="form-section-title">Task Details</div>
     <div class="fg"><label class="fl">Title *</label><input class="fi" id="task-title" placeholder="What needs to be done?"></div>
-    <div class="fg" style="margin-bottom:0;"><label class="fl">Description</label><textarea class="fta" id="task-desc" placeholder="Additional details..." style="min-height:60px;"></textarea></div>
+    <div class="fg" style="margin-bottom:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <label class="fl" style="margin-bottom:0;">Description</label>
+        <button type="button" onclick="startVoiceToEnglish('task-desc')" style="padding:2px 8px;border-radius:10px;background:#EBF7F0;border:1px solid #00843D;color:#00843D;font-size:11px;font-weight:600;display:flex;align-items:center;gap:3px;cursor:pointer;">
+          <span>🎙️ VI ➔ EN</span>
+        </button>
+      </div>
+      <textarea class="fta" id="task-desc" placeholder="Additional details..." style="min-height:60px;"></textarea>
+    </div>
   </div>
 
   <!-- DATE & TIME -->
@@ -2297,8 +2308,15 @@ input, textarea, select, button { font-family: var(--font); }
 
 <div id="modal-add-issue" class="mo"><div class="modal">
   <div class="mh"></div><div class="mt" data-t="addIssue">Add issue</div>
-  <div class="fg"><label class="fl" data-t="issueTitle">Title *</label><input class="fi" id="is-title" placeholder="Brief description"></div>
-  <div class="fg"><label class="fl" data-t="details">Details</label><textarea class="fta" id="is-desc" placeholder="..." style="min-height:60px;"></textarea></div>
+  <div class="fg">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <label class="fl" style="margin-bottom:0;" data-t="details">Details</label>
+      <button type="button" onclick="startVoiceToEnglish('is-desc')" style="padding:2px 8px;border-radius:10px;background:#EBF7F0;border:1px solid #00843D;color:#00843D;font-size:11px;font-weight:600;display:flex;align-items:center;gap:3px;cursor:pointer;">
+        <span>🎙️ VI ➔ EN</span>
+      </button>
+    </div>
+    <textarea class="fta" id="is-desc" placeholder="..." style="min-height:60px;"></textarea>
+  </div>
   <div class="frow">
     <div class="fg"><label class="fl" data-t="severity">Severity</label>
       <select class="fsel" id="is-sev"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select>
@@ -2409,8 +2427,15 @@ input, textarea, select, button { font-family: var(--font); }
         <option value="3-Credit card">💳 3-Credit card</option>
       </select>
     </div>
+  <div class="fg">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <label class="fl" style="margin-bottom:0;">Notes</label>
+      <button type="button" onclick="startVoiceToEnglish('bill-notes')" style="padding:2px 8px;border-radius:10px;background:#EBF7F0;border:1px solid #00843D;color:#00843D;font-size:11px;font-weight:600;display:flex;align-items:center;gap:3px;cursor:pointer;">
+        <span>🎙️ VI ➔ EN</span>
+      </button>
+    </div>
+    <input class="fi" id="bill-notes" placeholder="Optional notes...">
   </div>
-  <div class="fg"><label class="fl">Notes</label><input class="fi" id="bill-notes" placeholder="Optional notes..."></div>
   <div class="fg"><label class="fl">Link to trip</label>
     <select class="fsel" id="bill-trip-select">
       <option value="">No trip link</option>
@@ -2546,7 +2571,43 @@ input, textarea, select, button { font-family: var(--font); }
     <button onclick="closeModal('photo-source-sheet')"
       style="width:100%;padding:11px;border:1.5px solid var(--g200);border-radius:var(--rs);background:#fff;font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;color:var(--g600);">Cancel</button>
   </div>
+<!-- ═══════════════ MODAL VOICE INPUT & TRANSLATE (IMP-08) ═══════════════ -->
+<div id="modal-voice-input" class="mo" style="z-index:200;">
+  <div class="modal" style="max-width:440px;">
+    <div class="mh"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <span style="font-size:24px;">🎙️</span>
+      <div>
+        <div style="font-weight:700;font-size:15px;color:var(--g900);">Voice Note (VI ➔ English)</div>
+        <div id="voice-status" style="font-size:12px;color:var(--brand);margin-top:2px;font-weight:600;">🔴 Listening (Vietnamese)... Speak into microphone</div>
+      </div>
+    </div>
+
+    <!-- Vietnamese transcript box -->
+    <div class="fg" style="margin-bottom:10px;">
+      <label class="fl" style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;">
+        <span>🇻🇳 Spoken Vietnamese (Recognized):</span>
+      </label>
+      <textarea id="voice-transcript-vi" class="fta" style="min-height:65px;font-size:13px;" placeholder="Listening to Vietnamese speech..."></textarea>
+    </div>
+
+    <!-- English translated box -->
+    <div class="fg" style="margin-bottom:14px;">
+      <label class="fl" style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;">
+        <span>🇬🇧 English Translation (will be saved):</span>
+      </label>
+      <textarea id="voice-result-en" class="fta" style="min-height:65px;font-size:13px;background:#F0FDF4;border-color:#86EFAC;" placeholder="English translation will appear here..."></textarea>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="brow" style="gap:8px;">
+      <button class="btn btn-o btn-sm" onclick="closeModal('modal-voice-input')" style="font-size:12px;">Close</button>
+      <button class="btn btn-p btn-sm" id="voice-stop-btn" onclick="stopVoiceAndTranslate()" style="flex:1;background:var(--amber);color:#fff;border-color:var(--amber);font-size:12px;">⏹ Stop &amp; Translate</button>
+      <button class="btn btn-p btn-sm" id="voice-insert-btn" onclick="applyVoiceResultToInput()" style="display:none;flex:1;background:var(--brand);font-size:12px;">💾 Insert &amp; Save</button>
+    </div>
+  </div>
 </div>
+
 <div id="toast" class="toast"></div>
 
 
@@ -3330,6 +3391,160 @@ Store.on('*',            ({ action }) => {
   // Auto-sync to Google Sheets on any commit
   if (S.gsUrl) svAndSync(action);
 });
+
+// ═══════ VOICE INPUT & TRANSLATION TO ENGLISH (IMP-08) ═══════
+let _activeRecognition = null;
+let _voiceTargetInputId = null;
+let _voiceCallback = null;
+let _lastTranslatedText = '';
+
+async function translateViToEn(text) {
+  if (!text || !text.trim()) return '';
+  try {
+    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=en&dt=t&q=' + encodeURIComponent(text.trim());
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Translate status ' + res.status);
+    const data = await res.json();
+    if (data && Array.isArray(data[0])) {
+      return data[0].map(x => x[0]).filter(Boolean).join('');
+    }
+  } catch(e) {
+    console.warn('[translateViToEn] Error translating:', e);
+  }
+  return text; // Fallback to original text if offline or error
+}
+
+function startVoiceToEnglish(targetId, onSavedCb) {
+  const SpeechRec = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
+  if (!SpeechRec) {
+    if (typeof showToast === 'function') {
+      showToast('⚠️ Trình duyệt chưa hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome hoặc Safari.');
+    } else {
+      alert('Trình duyệt chưa hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome hoặc Safari.');
+    }
+    return;
+  }
+
+  _voiceTargetInputId = targetId;
+  _voiceCallback = typeof onSavedCb === 'function' ? onSavedCb : null;
+  _lastTranslatedText = '';
+
+  const statusEl = document.getElementById('voice-status');
+  const viBox = document.getElementById('voice-transcript-vi');
+  const enBox = document.getElementById('voice-result-en');
+  const stopBtn = document.getElementById('voice-stop-btn');
+  const insertBtn = document.getElementById('voice-insert-btn');
+
+  if (statusEl) statusEl.textContent = '🔴 Listening (Vietnamese)... Speak into microphone';
+  if (viBox) { viBox.value = ''; viBox.placeholder = 'Listening to Vietnamese speech...'; }
+  if (enBox) { enBox.value = ''; enBox.placeholder = 'English translation will appear here...'; }
+  if (stopBtn) { stopBtn.style.display = ''; stopBtn.textContent = '⏹ Stop & Translate to English'; }
+  if (insertBtn) insertBtn.style.display = 'none';
+
+  if (typeof openModal === 'function') openModal('modal-voice-input');
+
+  try {
+    if (_activeRecognition) {
+      try { _activeRecognition.abort(); } catch(x) {}
+    }
+    const rec = new SpeechRec();
+    rec.lang = 'vi-VN';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+
+    let finalTranscript = '';
+
+    rec.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript + ' ';
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      const currentText = (finalTranscript + interim).trim();
+      if (viBox) viBox.value = currentText;
+    };
+
+    rec.onerror = (event) => {
+      console.warn('[SpeechRec] Error:', event.error);
+      if (event.error === 'not-allowed') {
+        if (statusEl) statusEl.textContent = '⚠️ Microphone access denied. Please allow microphone in browser settings.';
+      } else if (event.error !== 'no-speech') {
+        if (statusEl) statusEl.textContent = '⚠️ Recognition error: ' + event.error;
+      }
+    };
+
+    rec.onend = () => {
+      _activeRecognition = null;
+      if (statusEl && statusEl.textContent.includes('Listening')) {
+        statusEl.textContent = '⏹ Recording stopped.';
+      }
+    };
+
+    rec.start();
+    _activeRecognition = rec;
+  } catch(err) {
+    console.error('[startVoiceToEnglish] Init error:', err);
+    if (statusEl) statusEl.textContent = '⚠️ Cannot start microphone: ' + err.message;
+  }
+}
+
+async function stopVoiceAndTranslate() {
+  const statusEl = document.getElementById('voice-status');
+  const viBox = document.getElementById('voice-transcript-vi');
+  const enBox = document.getElementById('voice-result-en');
+  const stopBtn = document.getElementById('voice-stop-btn');
+  const insertBtn = document.getElementById('voice-insert-btn');
+
+  if (_activeRecognition) {
+    try { _activeRecognition.stop(); } catch(x) {}
+    _activeRecognition = null;
+  }
+
+  const viText = viBox ? viBox.value.trim() : '';
+  if (!viText) {
+    if (statusEl) statusEl.textContent = '⚠️ No speech detected. Please speak again.';
+    return;
+  }
+
+  if (statusEl) statusEl.textContent = '⏳ Translating to English...';
+  if (stopBtn) stopBtn.style.display = 'none';
+
+  const enText = await translateViToEn(viText);
+  _lastTranslatedText = enText;
+
+  if (enBox) enBox.value = enText;
+  if (statusEl) statusEl.textContent = '✅ Translated successfully!';
+  if (insertBtn) {
+    insertBtn.style.display = '';
+    insertBtn.textContent = '💾 Insert to Notes & Save';
+  }
+}
+
+function applyVoiceResultToInput() {
+  const textToInsert = _lastTranslatedText || (document.getElementById('voice-result-en') && document.getElementById('voice-result-en').value) || (document.getElementById('voice-transcript-vi') && document.getElementById('voice-transcript-vi').value);
+  if (!textToInsert) return;
+
+  if (_voiceTargetInputId) {
+    const el = document.getElementById(_voiceTargetInputId);
+    if (el) {
+      const cur = el.value.trim();
+      el.value = cur ? cur + '\n' + textToInsert : textToInsert;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  if (_voiceCallback) {
+    try { _voiceCallback(); } catch(x) {}
+  }
+
+  if (typeof closeModal === 'function') closeModal('modal-voice-input');
+  if (typeof showToast === 'function') showToast('🎙️ English notes inserted & saved! ✓');
+}
 
 init();
 

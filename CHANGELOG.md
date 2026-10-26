@@ -6,36 +6,20 @@
 
 ### 📌 Danh mục các hạng mục cải tiến theo mức độ ưu tiên & tính cấp thiết:
 
-1. **🔴 [P0 - Bắt buộc / Khẩn cấp] Nén ảnh tự động tại Client & Chống tràn LocalStorage:**
-   - **Vấn đề:** Ảnh chụp từ camera điện thoại (4MB – 12MB) đọc trực tiếp thành Base64 gây lỗi `QuotaExceededError` (tràn giới hạn 5MB của `localStorage`), dẫn đến việc dữ liệu bị xóa sạch khi tải lại trang.
-   - **Kế hoạch xử lý:** Xây dựng hàm `compressImageFile()` nén ảnh tự động qua Canvas (max 1280px, chất lượng 0.72) giảm dung lượng còn ~150KB - 250KB; bổ sung cơ chế cảnh báo bộ nhớ đầy.
-
-2. **🟠 [P1 - Rất cần thiết] Hàng đợi tải ảnh nền khi Offline (Background Media Queue):**
-   - **Vấn đề:** Khi kỹ sư chụp hóa đơn / sự cố tại nơi mất mạng, ảnh Base64 bị kẹt lại máy và không tự động đẩy bù lên Google Drive khi có mạng trở lại.
-   - **Kế hoạch xử lý:** Thêm hàng đợi `pendingMedia` và hàm tự động quét đẩy ảnh lên Drive khi mạng kết nối lại (`online` event) hoặc khi bấm nút Sync.
-
-3. **🟠 [P1 - Rất cần thiết] Bảo mật Webhook Secret & Token trong Google Apps Script:**
-   - **Vấn đề:** Lộ chuỗi ký bí mật của Webhook Power Automate trong mã nguồn backend (`PlantLog_GoogleAppsScript_Pro.gs`) và Token Telegram lưu trên trình duyệt.
-   - **Kế hoạch xử lý:** Đưa các khóa bí mật vào `Script Properties` của Google Apps Script; chuyển việc gửi tin Telegram sang server backend xử lý.
-
-4. **🟠 [P1 - Rất cần thiết] Script đóng gói tự động (Automated Bundler Script):**
-   - **Vấn đề:** Hiện tượng lệch code khi phải sửa đồng thời ở 4 nơi (`src/modules/`, `src/index.html`, `plantlog_pro_mobile.html`, `plantlog_debug.html`).
-   - **Kế hoạch xử lý:** Viết script tự động hóa `bundle.ps1` đọc các file từ `src/modules/` tự động inject vào file bundle và tự động tăng version cache của Service Worker.
-
-5. **🟡 [P2 - Cần thiết] Đồng bộ 2 chiều chống xung đột (Per-Item Timestamp Merge):**
-   - **Kế hoạch xử lý:** Bổ sung so sánh `updatedAt` theo từng dòng dữ liệu (Trip, Task, Bill) thay vì ghi đè toàn bộ danh sách khi kéo dữ liệu từ Sheets về.
-
-6. **🟡 [P2 - Cần thiết] Sao lưu & Khôi phục dữ liệu thủ công (Backup / Restore JSON):**
-   - **Kế hoạch xử lý:** Bổ sung tính năng tải file `plantlog_backup.json` và khôi phục dữ liệu trong màn hình Cài đặt, bảo vệ an toàn dữ liệu khi đổi máy.
-
-7. **🟢 [P3 - Cải thiện UX] Tối ưu hóa RAM xuất PDF & Chỉ báo trạng thái mạng trực quan:**
-   - **Kế hoạch xử lý:** Thêm chấm báo Online/Offline trên Header, thanh Loading khi tạo PDF và bộ lọc nhanh hóa đơn theo hình thức thanh toán.
+1. **🔴 [P0 - Bắt buộc / Khẩn cấp] Nén ảnh tự động tại Client & Chống tràn LocalStorage:** (Hoàn tất - IMP-01)
+2. **🟠 [P1 - Rất cần thiết] Hàng đợi tải ảnh nền khi Offline (Background Media Queue):** (Hoàn tất - IMP-02)
+3. **🟠 [P1 - Rất cần thiết] Bảo mật Webhook Secret & Token trong Google Apps Script:** (Hoàn tất - IMP-03)
+4. **🟠 [P1 - Rất cần thiết] Script đóng gói tự động (Automated Bundler Script):** (Hoàn tất - IMP-04)
+5. **🟡 [P2 - Cần thiết] Đồng bộ 2 chiều chống xung đột (Per-Item Timestamp Merge):** (Hoàn tất - IMP-05)
+6. **🟡 [P2 - Cần thiết] Sao lưu & Khôi phục dữ liệu thủ công (Backup / Restore JSON):** (Hoàn tất - IMP-06)
+7. **🟢 [P3 - Cải thiện UX] Tối ưu hóa RAM xuất PDF & Chỉ báo trạng thái mạng trực quan:** (Hoàn tất - IMP-07)
+8. **🎙️ [P2 - Năng suất hiện trường] Nhập giọng nói Tiếng Việt dịch sang Tiếng Anh & Lưu ghi chú:** (Hoàn tất - IMP-08)
 
 ---
 
 ## [v4.9] - 26/10/2026
 
-### 🚀 Triển khai Giai đoạn 1 Kế hoạch Cải tiến Hệ thống (IMPROVEMENT_PLAN)
+### 🚀 Triển khai Toàn diện Kế hoạch Cải tiến Hệ thống (IMPROVEMENT_PLAN: IMP-01 ➔ IMP-08)
 
 #### 🔴 1. [IMP-01] Nén ảnh tự động tại Client & Chống tràn LocalStorage:
 - **Hàm nén Canvas `compressImageFile(source, maxDimension = 1280, quality = 0.72)`:** Tự động điều chỉnh kích thước lớn nhất về 1280px và nén JPEG chất lượng 0.72, giảm dung lượng ảnh camera từ 4MB – 12MB xuống còn ~150KB - 250KB (giảm 97%), bảo toàn độ sắc nét văn bản trên hóa đơn và thiết bị hiện trường.
@@ -55,7 +39,7 @@
 
 #### 🟠 4. [IMP-04] Script Tự Động Đóng Gói Mã Nguồn (Automated Bundler Script):
 - **Xây dựng `bundle.js` & `bundle.ps1`:** Đọc tự động 12 module cốt lõi từ `src/modules/` theo đúng thứ tự phụ thuộc, kiểm tra cú pháp JS (`new Function()`), inject vào thẻ `<script>` của `src/index.html` và đồng bộ tức thì sang `plantlog_pro_mobile.html`.
-- **Tự động tăng phiên bản Cache Service Worker:** Tự động phát hiện và nâng version trong `src/sw.js` (ví dụ `plantlog-pro-v13` ➔ `v14`), kích hoạt trình duyệt client xóa cache cũ và tải mã nguồn mới nhất khi online.
+- **Tự động tăng phiên bản Cache Service Worker:** Tự động phát hiện và nâng version trong `src/sw.js` (ví dụ `plantlog-pro-v13` ➔ `v21`), kích hoạt trình duyệt client xóa cache cũ và tải mã nguồn mới nhất khi online.
 - **Tiêu chuẩn hóa quy trình phát triển:** Lập trình viên chỉ cần chỉnh sửa các file nhỏ trong `src/modules/` và chạy `node bundle.js` hoặc `./bundle.ps1`.
 
 #### 🟡 5. [IMP-05] Đồng Bộ 2 Chiều Chống Xung Đột (Per-Item Timestamp Merge):
@@ -72,6 +56,13 @@
 - **Chỉ báo kết nối mạng (Network Status Badge):** Bổ sung huy hiệu trạng thái mạng trực quan ngay trên thanh tiêu đề Home (`net-status-badge`) với đèn chấm xanh `Online` và đỏ `Offline`, tự động cập nhật phản hồi sự kiện mạng theo thời gian thực (`online`/`offline`).
 - **Thanh tiến trình & Tối ưu RAM khi xuất PDF:** Bổ sung hiệu ứng phản hồi trực quan khi bấm xuất báo cáo (`⏳ Đang kết xuất tệp PDF...`), tự động khóa tạm nút xuất chống bấm liên tục làm quá tải bộ nhớ trình duyệt, đồng thời ngăn lỗi văng trang khi ảnh sự cố đã tải lên Google Drive URL.
 - **Bộ lọc nhanh hình thức thanh toán trên Bills Screen:** Bổ sung thanh 4 nút lọc nhanh ngay trên màn hình Expense Bills (`All PM`, `💵 Cash`, `🏦 Bank`, `💳 Card`), giúp kỹ sư dễ dàng theo dõi và đối soát chi phí theo từng phương thức thanh toán.
+
+#### 🎙️ 8. [IMP-08] Nhập Liệu Giọng Nói Tiếng Việt ➔ Tự Động Dịch Sang Tiếng Anh & Lưu Ghi Chú:
+- **Tích hợp Web Speech API (`vi-VN`):** Kỹ sư chỉ cần bấm nút micro 🎙️ trên màn hình và nói tiếng Việt tự nhiên, ứng dụng sẽ nhận diện giọng nói chuẩn xác theo thời gian thực.
+- **Tự động dịch sang Tiếng Anh chuẩn kỹ thuật (`translateViToEn`):** Ngay sau khi dừng nói, văn bản tiếng Việt sẽ được tự động dịch sang tiếng Anh chuyên ngành qua Google Translate API (~200ms).
+- **Điền & Lưu tự động vào Ghi chú:** Bản dịch tiếng Anh được tự động chèn vào ô nhập tương ứng và gọi hàm lưu ngay lập tức (hỗ trợ tại: *Ghi chú chuyến đi Trip Notes, Mô tả công việc Task Details, Chi tiết sự cố Issue Details, Ghi chú hóa đơn Bill Notes*).
+- **Giao diện Tiếng Anh chuẩn hóa:** Toàn bộ thông báo và nhãn thao tác trong Modal Voice Note được thiết kế bằng tiếng Anh đồng bộ với toàn bộ ứng dụng (`Listening (Vietnamese)... Speak into microphone`, `Voice VI ➔ EN`, `Stop & Translate`, `Insert & Save`).
+- **Cơ chế an toàn khi Offline:** Nếu thiết bị mất kết nối mạng khiến việc dịch bị gián đoạn, ứng dụng tự động bảo lưu văn bản tiếng Việt gốc vào ghi chú để không bị mất thông tin.
 
 ---
 

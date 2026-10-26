@@ -769,4 +769,159 @@ Store.on('*',            ({ action }) => {
   if (S.gsUrl) svAndSync(action);
 });
 
+// ═══════ VOICE INPUT & TRANSLATION TO ENGLISH (IMP-08) ═══════
+let _activeRecognition = null;
+let _voiceTargetInputId = null;
+let _voiceCallback = null;
+let _lastTranslatedText = '';
+
+async function translateViToEn(text) {
+  if (!text || !text.trim()) return '';
+  try {
+    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=en&dt=t&q=' + encodeURIComponent(text.trim());
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Translate status ' + res.status);
+    const data = await res.json();
+    if (data && Array.isArray(data[0])) {
+      return data[0].map(x => x[0]).filter(Boolean).join('');
+    }
+  } catch(e) {
+    console.warn('[translateViToEn] Error translating:', e);
+  }
+  return text; // Fallback to original text if offline or error
+}
+
+function startVoiceToEnglish(targetId, onSavedCb) {
+  const SpeechRec = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
+  if (!SpeechRec) {
+    if (typeof showToast === 'function') {
+      showToast('⚠️ Trình duyệt chưa hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome hoặc Safari.');
+    } else {
+      alert('Trình duyệt chưa hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome hoặc Safari.');
+    }
+    return;
+  }
+
+  _voiceTargetInputId = targetId;
+  _voiceCallback = typeof onSavedCb === 'function' ? onSavedCb : null;
+  _lastTranslatedText = '';
+
+  const statusEl = document.getElementById('voice-status');
+  const viBox = document.getElementById('voice-transcript-vi');
+  const enBox = document.getElementById('voice-result-en');
+  const stopBtn = document.getElementById('voice-stop-btn');
+  const insertBtn = document.getElementById('voice-insert-btn');
+
+  if (statusEl) statusEl.textContent = '🔴 Listening (Vietnamese)... Speak into microphone';
+  if (viBox) { viBox.value = ''; viBox.placeholder = 'Listening to Vietnamese speech...'; }
+  if (enBox) { enBox.value = ''; enBox.placeholder = 'English translation will appear here...'; }
+  if (stopBtn) { stopBtn.style.display = ''; stopBtn.textContent = '⏹ Stop & Translate to English'; }
+  if (insertBtn) insertBtn.style.display = 'none';
+
+  if (typeof openModal === 'function') openModal('modal-voice-input');
+
+  try {
+    if (_activeRecognition) {
+      try { _activeRecognition.abort(); } catch(x) {}
+    }
+    const rec = new SpeechRec();
+    rec.lang = 'vi-VN';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+
+    let finalTranscript = '';
+
+    rec.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript + ' ';
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      const currentText = (finalTranscript + interim).trim();
+      if (viBox) viBox.value = currentText;
+    };
+
+    rec.onerror = (event) => {
+      console.warn('[SpeechRec] Error:', event.error);
+      if (event.error === 'not-allowed') {
+        if (statusEl) statusEl.textContent = '⚠️ Microphone access denied. Please allow microphone in browser settings.';
+      } else if (event.error !== 'no-speech') {
+        if (statusEl) statusEl.textContent = '⚠️ Recognition error: ' + event.error;
+      }
+    };
+
+    rec.onend = () => {
+      _activeRecognition = null;
+      if (statusEl && statusEl.textContent.includes('Listening')) {
+        statusEl.textContent = '⏹ Recording stopped.';
+      }
+    };
+
+    rec.start();
+    _activeRecognition = rec;
+  } catch(err) {
+    console.error('[startVoiceToEnglish] Init error:', err);
+    if (statusEl) statusEl.textContent = '⚠️ Cannot start microphone: ' + err.message;
+  }
+}
+
+async function stopVoiceAndTranslate() {
+  const statusEl = document.getElementById('voice-status');
+  const viBox = document.getElementById('voice-transcript-vi');
+  const enBox = document.getElementById('voice-result-en');
+  const stopBtn = document.getElementById('voice-stop-btn');
+  const insertBtn = document.getElementById('voice-insert-btn');
+
+  if (_activeRecognition) {
+    try { _activeRecognition.stop(); } catch(x) {}
+    _activeRecognition = null;
+  }
+
+  const viText = viBox ? viBox.value.trim() : '';
+  if (!viText) {
+    if (statusEl) statusEl.textContent = '⚠️ No speech detected. Please speak again.';
+    return;
+  }
+
+  if (statusEl) statusEl.textContent = '⏳ Translating to English...';
+  if (stopBtn) stopBtn.style.display = 'none';
+
+  const enText = await translateViToEn(viText);
+  _lastTranslatedText = enText;
+
+  if (enBox) enBox.value = enText;
+  if (statusEl) statusEl.textContent = '✅ Translated successfully!';
+  if (insertBtn) {
+    insertBtn.style.display = '';
+    insertBtn.textContent = '💾 Insert to Notes & Save';
+  }
+}
+
+function applyVoiceResultToInput() {
+  const textToInsert = _lastTranslatedText || (document.getElementById('voice-result-en') && document.getElementById('voice-result-en').value) || (document.getElementById('voice-transcript-vi') && document.getElementById('voice-transcript-vi').value);
+  if (!textToInsert) return;
+
+  if (_voiceTargetInputId) {
+    const el = document.getElementById(_voiceTargetInputId);
+    if (el) {
+      const cur = el.value.trim();
+      el.value = cur ? cur + '\n' + textToInsert : textToInsert;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  if (_voiceCallback) {
+    try { _voiceCallback(); } catch(x) {}
+  }
+
+  if (typeof closeModal === 'function') closeModal('modal-voice-input');
+  if (typeof showToast === 'function') showToast('🎙️ English notes inserted & saved! ✓');
+}
+
 init();
+

@@ -203,6 +203,31 @@ it('report.js có loading indicator và Drive URL safety guard cho exportPDF', (
   assert(reportCode.includes('ph.startsWith(\'data:image/\')'), 'Drive URL safety guard exists');
 });
 
+// ── IMP-08 TESTS ──────────────────────────────────────────────────────────
+console.log('\n--- [IMP-08] Voice-to-Text Vietnamese ➔ English Translation ---');
+it('core.js có các hàm xử lý Voice-to-Text và dịch tự động translateViToEn', () => {
+  const coreCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'core.js'), 'utf8');
+  assert(coreCode.includes('async function translateViToEn'), 'translateViToEn exists');
+  assert(coreCode.includes('function startVoiceToEnglish'), 'startVoiceToEnglish exists');
+  assert(coreCode.includes('function stopVoiceAndTranslate'), 'stopVoiceAndTranslate exists');
+  assert(coreCode.includes('function applyVoiceResultToInput'), 'applyVoiceResultToInput exists');
+});
+
+it('templates.html và index.html có modal-voice-input và các nút Voice Note', () => {
+  const indexHtml = fs.readFileSync(path.join(__dirname, 'src', 'index.html'), 'utf8');
+  const templatesHtml = fs.readFileSync(path.join(__dirname, 'src', 'templates.html'), 'utf8');
+  const mobileHtml = fs.readFileSync(path.join(__dirname, 'plantlog_pro_mobile.html'), 'utf8');
+
+  assert(indexHtml.includes('id="modal-voice-input"'), 'index.html has modal-voice-input');
+  assert(templatesHtml.includes('id="modal-voice-input"'), 'templates.html has modal-voice-input');
+  assert(mobileHtml.includes('id="modal-voice-input"'), 'plantlog_pro_mobile.html has modal-voice-input');
+
+  assert(indexHtml.includes("startVoiceToEnglish('trip-note-input'"), 'index.html has trip-note voice button');
+  assert(indexHtml.includes("startVoiceToEnglish('task-desc')"), 'index.html has task-desc voice button');
+  assert(indexHtml.includes("startVoiceToEnglish('is-desc')"), 'index.html has is-desc voice button');
+  assert(indexHtml.includes("startVoiceToEnglish('bill-notes')"), 'index.html has bill-notes voice button');
+});
+
 console.log('\n====================================================');
 console.log(`🎉 KẾT QUẢ KIỂM THỬ: ${passedTests}/${totalTests} TESTS ĐẠT YÊU CẦU (${Math.round((passedTests/totalTests)*100)}% PASS)`);
 console.log('====================================================');

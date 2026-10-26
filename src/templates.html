@@ -172,7 +172,10 @@
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
         <span style="font-size:13px;">📝</span>
         <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.08em;text-transform:uppercase;">Notes</div>
-        <span id="trip-note-saved" style="font-size:10px;color:var(--green);margin-left:auto;opacity:0;transition:opacity 0.4s;">Saved</span>
+        <button type="button" onclick="startVoiceToEnglish('trip-note-input', saveTripNote)" style="margin-left:auto;padding:3px 8px;border-radius:12px;background:#EBF7F0;border:1px solid #00843D;color:#00843D;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;" title="Voice input in Vietnamese automatically translated to English">
+          <span>🎙️ Voice VI ➔ EN</span>
+        </button>
+        <span id="trip-note-saved" style="font-size:10px;color:var(--green);opacity:0;transition:opacity 0.4s;">Saved</span>
       </div>
       <textarea id="trip-note-input"
         placeholder="Add notes for this trip — observations, reminders, contacts, special instructions…"
@@ -651,7 +654,15 @@
   <div class="form-section">
     <div class="form-section-title">Task Details</div>
     <div class="fg"><label class="fl">Title *</label><input class="fi" id="task-title" placeholder="What needs to be done?"></div>
-    <div class="fg" style="margin-bottom:0;"><label class="fl">Description</label><textarea class="fta" id="task-desc" placeholder="Additional details..." style="min-height:60px;"></textarea></div>
+    <div class="fg" style="margin-bottom:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <label class="fl" style="margin-bottom:0;">Description</label>
+        <button type="button" onclick="startVoiceToEnglish('task-desc')" style="padding:2px 8px;border-radius:10px;background:#EBF7F0;border:1px solid #00843D;color:#00843D;font-size:11px;font-weight:600;display:flex;align-items:center;gap:3px;cursor:pointer;">
+          <span>🎙️ VI ➔ EN</span>
+        </button>
+      </div>
+      <textarea class="fta" id="task-desc" placeholder="Additional details..." style="min-height:60px;"></textarea>
+    </div>
   </div>
 
   <!-- DATE & TIME -->
@@ -863,7 +874,15 @@
 <div id="modal-add-issue" class="mo"><div class="modal">
   <div class="mh"></div><div class="mt" data-t="addIssue">Add issue</div>
   <div class="fg"><label class="fl" data-t="issueTitle">Title *</label><input class="fi" id="is-title" placeholder="Brief description"></div>
-  <div class="fg"><label class="fl" data-t="details">Details</label><textarea class="fta" id="is-desc" placeholder="..." style="min-height:60px;"></textarea></div>
+  <div class="fg">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <label class="fl" style="margin-bottom:0;" data-t="details">Details</label>
+      <button type="button" onclick="startVoiceToEnglish('is-desc')" style="padding:2px 8px;border-radius:10px;background:#EBF7F0;border:1px solid #00843D;color:#00843D;font-size:11px;font-weight:600;display:flex;align-items:center;gap:3px;cursor:pointer;">
+        <span>🎙️ VI ➔ EN</span>
+      </button>
+    </div>
+    <textarea class="fta" id="is-desc" placeholder="..." style="min-height:60px;"></textarea>
+  </div>
   <div class="frow">
     <div class="fg"><label class="fl" data-t="severity">Severity</label>
       <select class="fsel" id="is-sev"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select>
@@ -974,8 +993,15 @@
         <option value="3-Credit card">💳 3-Credit card</option>
       </select>
     </div>
+  <div class="fg">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <label class="fl" style="margin-bottom:0;">Notes</label>
+      <button type="button" onclick="startVoiceToEnglish('bill-notes')" style="padding:2px 8px;border-radius:10px;background:#EBF7F0;border:1px solid #00843D;color:#00843D;font-size:11px;font-weight:600;display:flex;align-items:center;gap:3px;cursor:pointer;">
+        <span>🎙️ VI ➔ EN</span>
+      </button>
+    </div>
+    <input class="fi" id="bill-notes" placeholder="Optional notes...">
   </div>
-  <div class="fg"><label class="fl">Notes</label><input class="fi" id="bill-notes" placeholder="Optional notes..."></div>
   <div class="fg"><label class="fl">Link to trip</label>
     <select class="fsel" id="bill-trip-select">
       <option value="">No trip link</option>
@@ -1111,6 +1137,42 @@
     <button onclick="closeModal('photo-source-sheet')"
       style="width:100%;padding:11px;border:1.5px solid var(--g200);border-radius:var(--rs);background:#fff;font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;color:var(--g600);">Cancel</button>
   </div>
+<!-- ═══════════════ MODAL VOICE INPUT & TRANSLATE (IMP-08) ═══════════════ -->
+<div id="modal-voice-input" class="mo" style="z-index:200;">
+  <div class="modal" style="max-width:440px;">
+    <div class="mh"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <span style="font-size:24px;">🎙️</span>
+      <div>
+        <div style="font-weight:700;font-size:15px;color:var(--g900);">Voice Note (VI ➔ English)</div>
+        <div id="voice-status" style="font-size:12px;color:var(--brand);margin-top:2px;font-weight:600;">🔴 Listening (Vietnamese)... Speak into microphone</div>
+      </div>
+    </div>
+
+    <!-- Vietnamese transcript box -->
+    <div class="fg" style="margin-bottom:10px;">
+      <label class="fl" style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;">
+        <span>🇻🇳 Spoken Vietnamese (Recognized):</span>
+      </label>
+      <textarea id="voice-transcript-vi" class="fta" style="min-height:65px;font-size:13px;" placeholder="Listening to Vietnamese speech..."></textarea>
+    </div>
+
+    <!-- English translated box -->
+    <div class="fg" style="margin-bottom:14px;">
+      <label class="fl" style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;">
+        <span>🇬🇧 English Translation (will be saved):</span>
+      </label>
+      <textarea id="voice-result-en" class="fta" style="min-height:65px;font-size:13px;background:#F0FDF4;border-color:#86EFAC;" placeholder="English translation will appear here..."></textarea>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="brow" style="gap:8px;">
+      <button class="btn btn-o btn-sm" onclick="closeModal('modal-voice-input')" style="font-size:12px;">Close</button>
+      <button class="btn btn-p btn-sm" id="voice-stop-btn" onclick="stopVoiceAndTranslate()" style="flex:1;background:var(--amber);color:#fff;border-color:var(--amber);font-size:12px;">⏹ Stop &amp; Translate</button>
+      <button class="btn btn-p btn-sm" id="voice-insert-btn" onclick="applyVoiceResultToInput()" style="display:none;flex:1;background:var(--brand);font-size:12px;">💾 Insert &amp; Save</button>
+    </div>
+  </div>
 </div>
+
 <div id="toast" class="toast"></div>
 
