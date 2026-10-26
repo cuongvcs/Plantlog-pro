@@ -792,19 +792,12 @@ async function translateViToEn(text) {
 }
 
 function startVoiceToEnglish(targetId, onSavedCb) {
-  const SpeechRec = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
-  if (!SpeechRec) {
-    if (typeof showToast === 'function') {
-      showToast('⚠️ Trình duyệt chưa hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome hoặc Safari.');
-    } else {
-      alert('Trình duyệt chưa hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome hoặc Safari.');
-    }
-    return;
-  }
-
   _voiceTargetInputId = targetId;
   _voiceCallback = typeof onSavedCb === 'function' ? onSavedCb : null;
   _lastTranslatedText = '';
+
+  // Always open modal first so user sees the dialog immediately
+  if (typeof openModal === 'function') openModal('modal-voice-input');
 
   const statusEl = document.getElementById('voice-status');
   const viBox = document.getElementById('voice-transcript-vi');
@@ -812,13 +805,20 @@ function startVoiceToEnglish(targetId, onSavedCb) {
   const stopBtn = document.getElementById('voice-stop-btn');
   const insertBtn = document.getElementById('voice-insert-btn');
 
-  if (statusEl) statusEl.textContent = '🔴 Listening (Vietnamese)... Speak into microphone';
   if (viBox) { viBox.value = ''; viBox.placeholder = 'Listening to Vietnamese speech...'; }
   if (enBox) { enBox.value = ''; enBox.placeholder = 'English translation will appear here...'; }
-  if (stopBtn) { stopBtn.style.display = ''; stopBtn.textContent = '⏹ Stop & Translate to English'; }
   if (insertBtn) insertBtn.style.display = 'none';
 
-  if (typeof openModal === 'function') openModal('modal-voice-input');
+  const SpeechRec = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition);
+  if (!SpeechRec) {
+    if (statusEl) statusEl.textContent = 'ℹ️ Speech recognition not supported in this browser. You can type in Vietnamese below and tap Translate.';
+    if (viBox) viBox.placeholder = 'Type Vietnamese here, then tap Translate below...';
+    if (stopBtn) { stopBtn.style.display = ''; stopBtn.textContent = '🔄 Translate to English'; }
+    return;
+  }
+
+  if (statusEl) statusEl.textContent = '🔴 Listening (Vietnamese)... Speak into microphone';
+  if (stopBtn) { stopBtn.style.display = ''; stopBtn.textContent = '⏹ Stop & Translate to English'; }
 
   try {
     if (_activeRecognition) {
