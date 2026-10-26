@@ -3425,6 +3425,71 @@ async function translateViToEn(text) {
   return text; // Fallback to original text if offline or error
 }
 
+// ── Speech Deduplication & Normalization Helper (IMP-08) ────────
+function cleanSpeechText(text) {
+  if (!text) return '';
+  let cleaned = text.replace(/\s+/g, ' ').trim();
+  const words = cleaned.split(' ');
+  const deduped = [];
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    if (!w) continue;
+    if (deduped.length > 0) {
+      const prev = deduped[deduped.length - 1];
+      const prevLower = prev.toLowerCase();
+      const currLower = w.toLowerCase();
+      // Exact duplicate consecutive word ("motor motor" -> "motor")
+      if (currLower === prevLower) continue;
+      // Partial interim stem duplicate ("Moto motor" -> "motor")
+      if (prevLower.length >= 3 && currLower.startsWith(prevLower)) {
+        deduped[deduped.length - 1] = w;
+        continue;
+      }
+      if (currLower.length >= 3 && prevLower.startsWith(currLower)) {
+        continue;
+      }
+    }
+    deduped.push(w);
+  }
+  return deduped.join(' ').trim();
+}
+
+function mergeSpeechSegments(results) {
+  const finalTexts = [];
+  let interimText = '';
+  for (let i = 0; i < results.length; ++i) {
+    const item = results[i];
+    const transcript = item[0] ? item[0].transcript.trim() : '';
+    if (!transcript) continue;
+    if (item.isFinal) {
+      if (finalTexts.length > 0) {
+        const last = finalTexts[finalTexts.length - 1].toLowerCase();
+        const curr = transcript.toLowerCase();
+        // If next segment already includes previous segment (Android Chrome accumulation bug)
+        if (curr.startsWith(last)) {
+          finalTexts[finalTexts.length - 1] = transcript;
+          continue;
+        }
+        if (last.endsWith(curr)) {
+          continue;
+        }
+      }
+      finalTexts.push(transcript);
+    } else {
+      interimText = transcript;
+    }
+  }
+  let raw = finalTexts.join(' ');
+  if (interimText) {
+    const rawLower = raw.toLowerCase();
+    const interimLower = interimText.toLowerCase();
+    if (!rawLower.endsWith(interimLower)) {
+      raw = raw ? (raw + ' ' + interimText) : interimText;
+    }
+  }
+  return cleanSpeechText(raw);
+}
+
 function startVoiceToEnglish(targetId, onSavedCb) {
   _voiceTargetInputId = targetId;
   _voiceCallback = typeof onSavedCb === 'function' ? onSavedCb : null;
@@ -3464,19 +3529,9 @@ function startVoiceToEnglish(targetId, onSavedCb) {
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
-    let finalTranscript = '';
-
     rec.onresult = (event) => {
-      let interim = '';
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript + ' ';
-        } else {
-          interim += event.results[i][0].transcript;
-        }
-      }
-      const currentText = (finalTranscript + interim).trim();
-      if (viBox) viBox.value = currentText;
+      const currentText = mergeSpeechSegments(event.results);
+      if (viBox && currentText) viBox.value = currentText;
     };
 
     rec.onerror = (event) => {
@@ -3515,7 +3570,8 @@ async function stopVoiceAndTranslate() {
     _activeRecognition = null;
   }
 
-  const viText = viBox ? viBox.value.trim() : '';
+  const viText = viBox ? cleanSpeechText(viBox.value) : '';
+  if (viBox) viBox.value = viText;
   if (!viText) {
     if (statusEl) statusEl.textContent = '⚠️ No speech detected. Please speak again.';
     return;

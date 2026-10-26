@@ -64,6 +64,7 @@
 - **Giao diện Tiếng Anh chuẩn hóa:** Toàn bộ thông báo và nhãn thao tác trong Modal Voice Note được thiết kế bằng tiếng Anh đồng bộ với toàn bộ ứng dụng (`Listening (Vietnamese)... Speak into microphone`, `Voice VI ➔ EN`, `Stop & Translate`, `Insert & Save`).
 - **Cơ chế an toàn khi Offline:** Nếu thiết bị mất kết nối mạng khiến việc dịch bị gián đoạn, ứng dụng tự động bảo lưu văn bản tiếng Việt gốc vào ghi chú để không bị mất thông tin.
 - **Khắc phục triệt để lỗi hiển thị Modal & Cài đặt:** Đã sửa lỗi thẻ `<div>` chưa đóng trong `<div class="frow">` của `modal-add-bill`, khôi phục tính độc lập cho toàn bộ các modal (`modal-pin`, `modal-voice-input`, `modal-gsheet`). Bây giờ cả màn hình **Settings (Cài đặt)** và hộp thoại **Voice Note (`🎙️ VI ➔ EN`)** đều bật lên ngay lập tức và hoạt động ổn định 100%.
+- **Khắc phục triệt để lỗi lặp từ giọng nói (Speech Duplication):** Bổ sung 2 hàm xử lý chuyên sâu `mergeSpeechSegments()` và `cleanSpeechText()` để tái cấu trúc trực tiếp từ mảng phân đoạn `event.results` thay vì cộng dồn chuỗi lặp lại qua biến toàn cục. Xóa bỏ hoàn toàn hiện tượng lặp từ ("Moto motor", "motor hỏng motor hỏng") do cơ chế streaming của Web Speech API trên Chrome Android.
 
 ---
 

@@ -228,6 +228,31 @@ it('templates.html và index.html có modal-voice-input và các nút Voice Note
   assert(indexHtml.includes("startVoiceToEnglish('bill-notes')"), 'index.html has bill-notes voice button');
 });
 
+it('cleanSpeechText và mergeSpeechSegments loại bỏ triệt để từ lặp và xung đột Android Web Speech API', () => {
+  const coreCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'core.js'), 'utf8');
+  const vm = require('vm');
+  const sandbox = { console };
+  vm.createContext(sandbox);
+  // Extract and run functions in sandbox
+  vm.runInContext(coreCode.substring(coreCode.indexOf('function cleanSpeechText'), coreCode.indexOf('function startVoiceToEnglish')), sandbox);
+
+  // Test 1: Duplicate stem from streaming recognition
+  const t1 = sandbox.cleanSpeechText('Moto motor này hỏng');
+  assert(t1 === 'motor này hỏng', 'cleanSpeechText removes interim stem duplicate: got ' + t1);
+
+  // Test 2: Consecutive duplicate words
+  const t2 = sandbox.cleanSpeechText('bơm bơm nước bị rò rỉ');
+  assert(t2 === 'bơm nước bị rò rỉ', 'cleanSpeechText removes repeated words: got ' + t2);
+
+  // Test 3: Android Chrome segment overlap
+  const segments = [
+    { 0: { transcript: 'Motor' }, isFinal: true },
+    { 0: { transcript: 'Motor này hỏng rồi' }, isFinal: true }
+  ];
+  const t3 = sandbox.mergeSpeechSegments(segments);
+  assert(t3 === 'Motor này hỏng rồi', 'mergeSpeechSegments removes Android segment overlap: got ' + t3);
+});
+
 console.log('\n====================================================');
 console.log(`🎉 KẾT QUẢ KIỂM THỬ: ${passedTests}/${totalTests} TESTS ĐẠT YÊU CẦU (${Math.round((passedTests/totalTests)*100)}% PASS)`);
 console.log('====================================================');
