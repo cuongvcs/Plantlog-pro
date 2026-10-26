@@ -47,6 +47,30 @@ function updateTelegramStatusLabel(){
 // ═══════ SEND MESSAGE ═══════
 async function sendTelegramMessage(text){
   const cfg = S.telegramConfig || {};
+  const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
+
+  // 1. Ưu tiên gửi qua Apps Script Backend (IMP-03: an toàn bảo mật, tránh lỗi CORS)
+  if(gsUrl && gsUrl.includes('/exec')){
+    try {
+      const resp = await fetch(gsUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'text/plain'},
+        body: JSON.stringify({
+          action: 'sendTelegram',
+          text: text,
+          parseMode: 'HTML',
+          token: cfg.token || '',
+          chatId: cfg.chatId || ''
+        })
+      });
+      const data = await resp.json();
+      if(data && data.ok) return true;
+    } catch(e) {
+      console.warn('[Telegram] Backend dispatch error, fallback to direct:', e.message);
+    }
+  }
+
+  // 2. Fallback gửi trực tiếp nếu client có lưu token và chatId
   if(!cfg.token || !cfg.chatId) return false;
   try{
     const url = `https://api.telegram.org/bot${cfg.token}/sendMessage`;

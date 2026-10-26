@@ -116,6 +116,9 @@ async function syncToSheets(){
   if(btn){btn.disabled=true;btn.textContent='Syncing...';}
   showToast('Syncing to Google Sheets…');
 
+  // IMP-02: Tải bù ảnh nền offline lên Google Drive trước khi gửi dữ liệu lên Sheets
+  try { await flushPendingMedia(); } catch(x){}
+
   // ── Every field explicitly cast to String to prevent type issues ──
   const s=v=>(v===null||v===undefined)?'':String(v);
 
@@ -269,6 +272,65 @@ async function syncToSheets(){
   }
 }
 
+// ═══════ PER-ITEM TIMESTAMP MERGE (IMP-05) ═══════
+/**
+ * So sánh & Gộp danh sách dữ liệu 2 chiều theo Timestamp (IMP-05)
+ * Chống ghi đè mất dữ liệu offline khi đồng bộ từ Google Sheets
+ */
+function mergeCollectionByTimestamp(localList, remoteList, idKey = 'id') {
+  localList = Array.isArray(localList) ? localList : [];
+  remoteList = Array.isArray(remoteList) ? remoteList : [];
+
+  const localMap = new Map();
+  for (const item of localList) {
+    if (item && item[idKey]) localMap.set(String(item[idKey]), item);
+  }
+
+  const merged = [];
+  const processedIds = new Set();
+
+  for (const remote of remoteList) {
+    const id = String(remote[idKey] || '');
+    if (!id) continue;
+    processedIds.add(id);
+
+    const local = localMap.get(id);
+    if (!local) {
+      // Bản ghi mới từ Google Sheets mà máy chưa có
+      merged.push(remote);
+    } else {
+      // Cả 2 đều có -> So sánh updatedAt
+      const localTime = new Date(local.updatedAt || local.createdAt || 0).getTime();
+      const remoteTime = new Date(remote.updatedAt || remote.createdAt || 0).getTime();
+
+      if (localTime > remoteTime) {
+        // Cục bộ mới sửa offline -> Giữ nguyên dữ liệu cục bộ
+        merged.push(local);
+      } else {
+        // Sheets mới hơn hoặc bằng -> Lấy remote, nhưng giữ lại các trường cục bộ quan trọng (như ảnh chất lượng cao hoặc photoMeta)
+        if (local.photoMeta && (!remote.photoMeta || !remote.photoMeta.length)) {
+          remote.photoMeta = local.photoMeta;
+        }
+        if (Array.isArray(local.photos) && local.photos.some(p => typeof p === 'string' && p.includes('drive.google.com'))) {
+          remote.photos = local.photos;
+        }
+        merged.push(remote);
+      }
+    }
+  }
+
+  // Giữ lại các bản ghi được tạo mới Offline chưa kịp đồng bộ lên Sheets
+  for (const local of localList) {
+    const id = String(local[idKey] || '');
+    if (id && !processedIds.has(id)) {
+      console.log(`[Sync Merge] Preserving offline local ${idKey}:`, id);
+      merged.push(local);
+    }
+  }
+
+  return merged;
+}
+
 async function loadFromSheets(silent){
   const url=getGSUrl();
   if(!url){if(!silent){showToast('Set your Google Sheet URL first');openModal('modal-gsheet');}return;}
@@ -360,7 +422,7 @@ async function loadFromSheets(silent){
       if(d.trips&&d.trips.length){
         const strV=v=>safeDate(v)||ss(v);
         const existingTrips = S.trips || [];
-        S.trips=d.trips.map(tr=>{
+        const remoteTrips=d.trips.map(tr=>{
           const st = ss(tr.Status)||'planned';
           const localTr = existingTrips.find(x=>x.id===ss(tr.ID));
           const finalSt = (localTr && (localTr.status==='in_progress'||localTr.status==='done') && st==='planned') ? localTr.status : st;
@@ -374,19 +436,21 @@ async function loadFromSheets(silent){
             contact:   ss(tr.Contact),
             transport: ss(tr.Transport),
             status:    finalSt,
-          notes:     ss(tr.Notes),
-          flight:       tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
-          ta:           tr.TA?(()=>{try{return JSON.parse(ss(tr.TA));}catch(e){return null;}})():null,
-          savedReports: (()=>{
-            const raw = ss(tr.SavedReports||tr.savedReports||'');
-            if(!raw) return [];
-            try{ const p=JSON.parse(raw); return Array.isArray(p)?p:[]; }
-            catch(e){ return []; }
-          })(),
-          createdAt: ss(tr.CreatedAt)
-        };
-      });
-    }
+            notes:     ss(tr.Notes),
+            flight:       tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
+            ta:           tr.TA?(()=>{try{return JSON.parse(ss(tr.TA));}catch(e){return null;}})():null,
+            savedReports: (()=>{
+              const raw = ss(tr.SavedReports||tr.savedReports||'');
+              if(!raw) return [];
+              try{ const p=JSON.parse(raw); return Array.isArray(p)?p:[]; }
+              catch(e){ return []; }
+            })(),
+            createdAt: ss(tr.CreatedAt),
+            updatedAt: ss(tr.UpdatedAt||tr.CreatedAt)
+          };
+        });
+        S.trips = mergeCollectionByTimestamp(existingTrips, remoteTrips, 'id');
+      }
       if(d.tasks&&d.tasks.length){
         // Helper: safely convert any value to string, handle Date objects
         const str=v=>{
@@ -395,7 +459,8 @@ async function loadFromSheets(silent){
           return String(v);
         };
         const num=v=>parseFloat(str(v))||0;
-        S.tasks=d.tasks.map(tk=>{
+        const existingTasks = S.tasks || [];
+        const remoteTasks=d.tasks.map(tk=>{
           let cl=[];
           try{
             const cj=str(tk.ChecklistJson||tk.checklistJson||'');
@@ -455,9 +520,10 @@ async function loadFromSheets(silent){
             date:         ds,
             time:         ts,
             createdAt:    ss(tk.CreatedAt),
-            updatedAt:    ss(tk.UpdatedAt)
+            updatedAt:    ss(tk.UpdatedAt||tk.CreatedAt)
           };
         });
+        S.tasks = mergeCollectionByTimestamp(existingTasks, remoteTasks, 'id');
       }
       if(d.leave&&d.leave.length){
         S.leaveData={};
@@ -469,7 +535,8 @@ async function loadFromSheets(silent){
       // Load bills
       if(d.bills&&d.bills.length){
         const strB=v=>v===null||v===undefined?'':v instanceof Date?v.toISOString().slice(0,10):String(v);
-        S.bills=d.bills.map(b=>{
+        const existingBills = S.bills || [];
+        const remoteBills=d.bills.map(b=>{
           let photos=[];
           try{
             const pj=strB(b.PhotosJson||b.photosJson||'');
@@ -488,9 +555,11 @@ async function loadFromSheets(silent){
             paymentMethod: strB(b.PaymentMethod||b.paymentMethod||b.PaymentTerm||b.paymentTerm)||'1-Cash',
             notes:      strB(b.Notes),
             photos:     photos,
-            createdAt:  strB(b.CreatedAt)
+            createdAt:  strB(b.CreatedAt),
+            updatedAt:  strB(b.UpdatedAt||b.CreatedAt)
           };
         });
+        S.bills = mergeCollectionByTimestamp(existingBills, remoteBills, 'id');
       }
       sv();
       try{ if(typeof autoStartTodayItems==='function') autoStartTodayItems(); }catch(e){}
@@ -768,7 +837,8 @@ async function saveBill(){
       })),
       createdAt: editingBillId
         ? (S.bills.find(b=>b.id===editingBillId)||{}).createdAt || new Date().toISOString()
-        : new Date().toISOString()
+        : new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     if(editingBillId){
@@ -895,12 +965,106 @@ async function uploadBillPhotoToDrive(src, billId, tripId){
 }
 
 // ── Simple add: just store locally, no background upload ─
-function handleBillPhotos(newPhotos, billId, tripId){
+async function handleBillPhotos(newPhotos, billId, tripId){
   // Store as simple objects — uploaded during saveBill()
-  for(const src of newPhotos){
+  for(let src of newPhotos){
+    // Safeguard: nếu ảnh base64 lớn hơn 250KB, tự động nén trước khi lưu vào tmpBillPhotos
+    if(typeof src === 'string' && src.startsWith('data:image/') && src.length > 250000 && typeof compressImageFile === 'function'){
+      try { src = await compressImageFile(src, 1280, 0.72); } catch(x){}
+    }
     tmpBillPhotos.push({src, driveUrl:'', fileId:''});
   }
   renderBillPhotoGrid();
 }
+
+// ═══════ BACKGROUND MEDIA QUEUE (IMP-02) ═══════
+let _flushingMedia = false;
+
+/**
+ * Hàng đợi quét và tải bù ảnh Offline lên Google Drive (IMP-02)
+ * Tự động kích hoạt khi có mạng (online event) hoặc khi bắt đầu Đồng bộ (Sync)
+ */
+async function flushPendingMedia(){
+  if(_flushingMedia) return;
+  const gsUrl = getGSUrl ? getGSUrl() : (S && S.gsUrl || '');
+  if(!gsUrl || !gsUrl.includes('/exec')) return;
+
+  _flushingMedia = true;
+  let uploadCount = 0;
+
+  try {
+    // 1. Quét hóa đơn (Bills)
+    if(Array.isArray(S.bills)){
+      for(const bill of S.bills){
+        if(!Array.isArray(bill.photos)) continue;
+        for(let i = 0; i < bill.photos.length; i++){
+          const src = bill.photos[i];
+          if(typeof src === 'string' && src.startsWith('data:')){
+            try {
+              const res = await uploadBillPhotoToDrive(src, bill.id, bill.tripId);
+              if(res && res.driveUrl){
+                bill.photos[i] = res.driveUrl;
+                if(!bill.photoMeta) bill.photoMeta = [];
+                bill.photoMeta.push({
+                  src: res.driveUrl,
+                  driveUrl: res.driveUrl,
+                  fileId: res.fileId
+                });
+                uploadCount++;
+              }
+            } catch(upErr){
+              console.warn('[flushPendingMedia] Bill photo upload failed:', upErr);
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Quét sự cố trong Báo cáo (Report Issues)
+    if(S.reports && typeof S.reports === 'object'){
+      for(const [tripId, rep] of Object.entries(S.reports)){
+        if(!rep || !Array.isArray(rep.issues)) continue;
+        for(const issue of rep.issues){
+          if(!Array.isArray(issue.photos)) continue;
+          for(let i = 0; i < issue.photos.length; i++){
+            const src = issue.photos[i];
+            if(typeof src === 'string' && src.startsWith('data:')){
+              try {
+                const res = await uploadBillPhotoToDrive(src, 'issue_' + (issue.title||'').slice(0,10), tripId);
+                if(res && res.driveUrl){
+                  issue.photos[i] = res.driveUrl;
+                  uploadCount++;
+                }
+              } catch(upErr){
+                console.warn('[flushPendingMedia] Issue photo upload failed:', upErr);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if(uploadCount > 0){
+      sv(); // Lưu state mới (đã giải phóng Base64, thay bằng driveUrl)
+      if(typeof showToast === 'function'){
+        showToast(`✓ Đã tải bù ${uploadCount} ảnh offline lên Google Drive!`);
+      }
+      console.log(`[flushPendingMedia] Successfully uploaded ${uploadCount} offline photos to Drive.`);
+    }
+  } catch(e) {
+    console.warn('[flushPendingMedia] Error flushing offline media:', e);
+  } finally {
+    _flushingMedia = false;
+  }
+}
+
+// Lắng nghe sự kiện Online để tự động kích hoạt đẩy ảnh bù
+if(typeof window !== 'undefined'){
+  window.addEventListener('online', () => {
+    console.log('[PlantLog] Network back online, checking pending media queue…');
+    setTimeout(flushPendingMedia, 2500);
+  });
+}
+
 
 

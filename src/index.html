@@ -770,6 +770,10 @@ input, textarea, select, button { font-family: var(--font); }
       <div id="today-date" style="font-size:11px;opacity:0.78;margin-top:1px;"></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <div id="net-status-badge" style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;background:rgba(255,255,255,0.18);font-size:11px;font-weight:600;color:#fff;">
+        <span id="net-dot" style="width:7px;height:7px;border-radius:50%;background:#4ADE80;"></span>
+        <span id="net-text">Online</span>
+      </div>
       <div class="ltog">
         <button class="lbtn act" id="lang-en" onclick="setLang('en')">EN</button>
         <button class="lbtn" id="lang-vi" onclick="setLang('vi')">VI</button>
@@ -1664,6 +1668,13 @@ input, textarea, select, button { font-family: var(--font); }
       <button class="tf-btn"        id="bf-trip"  onclick="setBillFilter('trip')">By Trip</button>
       <button class="tf-btn"        id="bf-month" onclick="setBillFilter('month')">By Month</button>
     </div>
+    <!-- Payment method tabs (IMP-07) -->
+    <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px;">
+      <button class="tf-btn active" id="bpf-all"  onclick="setBillPaymentFilter('all')"  style="font-size:11px;padding:3px 9px;">All PM</button>
+      <button class="tf-btn"        id="bpf-cash" onclick="setBillPaymentFilter('cash')" style="font-size:11px;padding:3px 9px;">💵 Cash</button>
+      <button class="tf-btn"        id="bpf-bank" onclick="setBillPaymentFilter('bank')" style="font-size:11px;padding:3px 9px;">🏦 Bank</button>
+      <button class="tf-btn"        id="bpf-card" onclick="setBillPaymentFilter('card')" style="font-size:11px;padding:3px 9px;">💳 Card</button>
+    </div>
     <!-- Trip selector (shown for 'trip' view) -->
     <div id="bf-trip-selector" style="display:none;padding-bottom:8px;">
       <select class="fsel" id="bf-trip-select" style="font-size:13px;height:36px;" onchange="renderBillsScreen()">
@@ -1864,11 +1875,17 @@ input, textarea, select, button { font-family: var(--font); }
       </div>
     </div>
     <div class="card">
-      <div class="si" onclick="showScreen('leave')">
-        <div class="sic" style="background:var(--al);color:#92400E;">🌴</div>
-        <div class="sin"><div class="sil">Leave / Calendar Planner</div><div class="sis">Manage leave, WFH and holiday days</div></div>
-        <div style="color:var(--g400);">›</div>
+      <div class="si" onclick="exportDataBackupJSON()">
+        <div class="sic" style="background:#E0F2FE;color:#0369A1;">💾</div>
+        <div class="sin"><div class="sil">Xuất dữ liệu dự phòng (.json)</div><div class="sis">Lưu toàn bộ dữ liệu ra tệp JSON về máy</div></div>
+        <div style="color:var(--g400);">↓</div>
       </div>
+      <div class="si" onclick="importDataBackupJSON()">
+        <div class="sic" style="background:#FEF3C7;color:#B45309;">📥</div>
+        <div class="sin"><div class="sil">Khôi phục từ tệp dự phòng</div><div class="sis">Nhập dữ liệu JSON khi chuyển máy mới</div></div>
+        <div style="color:var(--g400);">↑</div>
+      </div>
+      <input type="file" id="backup-json-input" accept=".json,application/json" style="display:none;" onchange="handleBackupFileSelect(event)">
       <div class="si" onclick="clearAllData()" style="border-bottom:none;">
         <div class="sic" style="background:var(--rl);color:var(--red);">🗑</div>
         <div class="sin"><div class="sil" style="color:var(--red);" data-t="clearData">Clear all data</div></div>
@@ -2542,6 +2559,7 @@ input, textarea, select, button { font-family: var(--font); }
 </script>
 <script>
 'use strict';
+
 // ====== core.js ======
 // =====================================================
 // PlantLog — core.js
@@ -2663,9 +2681,222 @@ let photoCtx=null,tmpPhotos=[];
 let taskView='list',taskFilter='all';
 let deferredPrompt=null;
 
-function sv(){try{localStorage.setItem('plpro1',JSON.stringify(S));}catch(e){}}
+function sv(){
+  try{
+    localStorage.setItem('plpro1',JSON.stringify(S));
+  }catch(e){
+    console.error('[PlantLog] LocalStorage save error:', e);
+    if(e.name==='QuotaExceededError'||e.code===22||e.code===1014||(e.message&&e.message.toLowerCase().includes('quota'))){
+      if(typeof showToast==='function'){
+        showToast('⚠️ Bộ nhớ máy bị đầy (LocalStorage Quota)! Vui lòng xóa bớt ảnh hoặc đồng bộ dữ liệu.', 6000);
+      }
+    }
+  }
+}
 function ld(){try{const d=localStorage.getItem('plpro1');if(d)S={...S,...JSON.parse(d)};}catch(e){}}
 function t(k){return T[S.lang][k]||T.en[k]||k;}
+
+// ═══════ STORAGE & IMAGE OPTIMIZATION (IMP-01) ═══════
+function getStorageUsage(){
+  try {
+    let total = 0;
+    for (let x in localStorage) {
+      if (Object.prototype.hasOwnProperty.call(localStorage, x)) {
+        total += ((localStorage[x].length + x.length) * 2);
+      }
+    }
+    return {
+      usedBytes: total,
+      usedMB: (total / (1024 * 1024)).toFixed(2),
+      percent: Math.min(100, Math.round((total / (5 * 1024 * 1024)) * 100))
+    };
+  } catch(e) {
+    return { usedBytes: 0, usedMB: '0', percent: 0 };
+  }
+}
+
+/**
+ * Nén ảnh tự động tại Client qua Canvas (IMP-01)
+ * Giảm dung lượng ảnh từ 3MB - 12MB xuống ~150KB - 250KB JPEG (giảm 97%)
+ * @param {File|Blob|string} source - Tệp ảnh hoặc Data URL
+ * @param {number} [maxDimension=1280] - Chiều tối đa (width/height)
+ * @param {number} [quality=0.72] - Chất lượng nén JPEG (0 - 1)
+ * @returns {Promise<string>} Chuỗi Data URL đã được nén
+ */
+function compressImageFile(source, maxDimension = 1280, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    if (!source) return resolve('');
+
+    // Nếu là Blob/File không phải ảnh (PDF, text, ...), đọc thẳng DataURL
+    if (source instanceof Blob && source.type && !source.type.startsWith('image/')) {
+      const r = new FileReader();
+      r.onload = e => resolve(e.target.result);
+      r.onerror = reject;
+      r.readAsDataURL(source);
+      return;
+    }
+
+    const processImg = (img) => {
+      try {
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+
+        if (!w || !h) {
+          return resolve(typeof source === 'string' ? source : '');
+        }
+
+        if (w > maxDimension || h > maxDimension) {
+          if (w > h) {
+            h = Math.round((h * maxDimension) / w);
+            w = maxDimension;
+          } else {
+            w = Math.round((w * maxDimension) / h);
+            h = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(typeof source === 'string' ? source : '');
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      } catch (err) {
+        console.warn('[compressImageFile] Canvas compression error:', err);
+        if (typeof source === 'string') resolve(source);
+        else {
+          const r = new FileReader();
+          r.onload = e => resolve(e.target.result);
+          r.onerror = reject;
+          r.readAsDataURL(source);
+        }
+      }
+    };
+
+    const img = new Image();
+    if (typeof source === 'string') {
+      img.onload = () => processImg(img);
+      img.onerror = () => resolve(source);
+      img.src = source;
+    } else if (source instanceof Blob) {
+      const objUrl = URL.createObjectURL(source);
+      img.onload = () => {
+        URL.revokeObjectURL(objUrl);
+        processImg(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objUrl);
+        const r = new FileReader();
+        r.onload = ev => resolve(ev.target.result);
+        r.onerror = reject;
+        r.readAsDataURL(source);
+      };
+      img.src = objUrl;
+    } else {
+      resolve('');
+    }
+  });
+}
+
+// ═══════ DATA BACKUP & RESTORE (IMP-06) ═══════
+function exportDataBackupJSON() {
+  try {
+    const backupObj = {
+      app: 'VCS PlantLog Pro',
+      version: 'v4.9',
+      exportDate: new Date().toISOString(),
+      data: S
+    };
+    const jsonStr = JSON.stringify(backupObj, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `PlantLog_Backup_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if(typeof showToast === 'function') showToast('✓ Đã xuất file sao lưu JSON thành công!');
+  } catch (e) {
+    console.error('[Backup]', e);
+    if(typeof showToast === 'function') showToast('Lỗi khi xuất file sao lưu: ' + e.message);
+  }
+}
+
+function importDataBackupJSON() {
+  const input = document.getElementById('backup-json-input');
+  if (input) {
+    input.value = '';
+    input.click();
+  }
+}
+
+function handleBackupFileSelect(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      const incomingData = parsed.data || parsed;
+      if (!incomingData || typeof incomingData !== 'object' || (!incomingData.trips && !incomingData.tasks && !incomingData.profile)) {
+        if(typeof showToast === 'function') showToast('❌ Tệp sao lưu không đúng định dạng PlantLog Pro!');
+        return;
+      }
+
+      if (!confirm('Bạn có chắc chắn muốn khôi phục dữ liệu từ tệp này? Dữ liệu hiện tại sẽ được cập nhật.')) {
+        return;
+      }
+
+      S = { ...S, ...incomingData };
+      sv();
+      if(typeof showToast === 'function') showToast('✅ Khôi phục dữ liệu thành công!');
+
+      // Re-render toàn bộ giao diện
+      if (typeof renderDash === 'function') renderDash();
+      if (typeof renderTripList === 'function') renderTripList();
+      if (typeof renderTasks === 'function') renderTasks();
+      if (typeof renderCalendar === 'function') renderCalendar();
+      if (typeof loadProfile === 'function') loadProfile();
+    } catch (err) {
+      console.error('[Restore]', err);
+      if(typeof showToast === 'function') showToast('❌ Lỗi đọc tệp JSON: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ═══════ NETWORK STATUS INDICATOR (IMP-07) ═══════
+function updateNetworkStatus() {
+  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  const badge = document.getElementById('net-status-badge');
+  const dot = document.getElementById('net-dot');
+  const text = document.getElementById('net-text');
+  if (!badge || !dot || !text) return;
+
+  if (isOnline) {
+    dot.style.background = '#4ADE80';
+    text.textContent = 'Online';
+    badge.title = 'Đang kết nối Internet';
+  } else {
+    dot.style.background = '#F87171';
+    text.textContent = 'Offline';
+    badge.title = 'Mất kết nối Internet - Chạy chế độ Offline';
+  }
+}
+if(typeof window !== 'undefined'){
+  window.addEventListener('online', updateNetworkStatus);
+  window.addEventListener('offline', updateNetworkStatus);
+}
 
 // ═══════ PWA ═══════
 function setupPWA(){
@@ -2862,6 +3093,7 @@ function init(){
   safeRun(() => setLang(S.lang||'en'), 'setLang');
   safeRun(checkNotifPrompt, 'checkNotifPrompt');
   safeRun(updateGSStatus,   'updateGSStatus');
+  safeRun(updateNetworkStatus, 'updateNetworkStatus');
 
   // Auth MUST run last — it controls app visibility
   // Do NOT hide app before this — a crash would leave it blank
@@ -3463,7 +3695,6 @@ function chPinDel() { modalPinBackspace(); }
 // ── settingsPinKey / settingsPinDel (also alias to modal) ─────
 function settingsPinKey(d) { modalPinKey(d); }
 function settingsPinDel() { modalPinBackspace(); }
-
 
 // ====== trips.js ======
 // =====================================================
@@ -4092,7 +4323,6 @@ function renderDash(){
   recEl.innerHTML=completed.length?completed.map(tr=>`<div class="card" style="cursor:pointer;" onclick="openTripDetail('${tr.id}')"><div class="ch"><div class="ct">${tr.plant}</div><span class="badge bg">${t('completed')}</span></div><div class="cs">${fmtDate(tr.date)}</div></div>`).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noReports')}</div>`;
 }
 
-
 // ====== tasks.js ======
 // =====================================================
 // PlantLog — tasks.js
@@ -4103,7 +4333,8 @@ function renderDash(){
 function populateTaskTripSelect(){
   const sel=document.getElementById('task-trip');
   if(!sel)return;
-  sel.innerHTML='<option value="">None</option>'+getSortedTrips().map(tr=>`<option value="${tr.id}">${tr.plant} (${fmtDate(tr.date)})</option>`).join('');
+  const trips = typeof getSortedTrips==='function' ? getSortedTrips() : [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  sel.innerHTML='<option value="">None</option>'+trips.map(tr=>`<option value="${tr.id}">${tr.plant} (${fmtDate(tr.date)})</option>`).join('');
 }
 function populateMachineSelect(){
   const sel=document.getElementById('task-machine');if(!sel)return;
@@ -5709,41 +5940,56 @@ function pickPhotoSource(source){
   setTimeout(()=>input.click(), 120);
 }
 
-function handlePhoto(e){
+async function handlePhoto(e){
   const files = Array.from(e.target.files);
   if(!files.length) return;
   const context = (e.target.dataset && e.target.dataset.context) || '';
-  let loaded = 0;
-  const photos = [];
 
-  files.forEach(f => {
-    const r = new FileReader();
-    r.onload = ev => {
-      photos.push(ev.target.result);
-      if(++loaded === files.length){
-        if(context === 'bill'){
-          // Get trip + bill IDs from the open modal
-          const ts     = document.getElementById('bill-trip-select');
-          const tripId = (ts && ts.value) || (document.getElementById('bill-save-btn').dataset.tripid||'');
-          const billId = editingBillId || '';
-          // Call Drive-aware handler
-          handleBillPhotos(photos, billId, tripId);
-          e.target.dataset.context = '';
-          _photoCtxPending = null;
-        } else if(context === 'issue' && typeof photoCtx === 'number'){
-          if(!curReport.issues[photoCtx].photos) curReport.issues[photoCtx].photos = [];
-          curReport.issues[photoCtx].photos.push(...photos);
-          sv(); renderIssues(); photoCtx = null;
-          e.target.dataset.context = '';
-          _photoCtxPending = null;
-        } else {
-          tmpPhotos.push(...photos);
-          renderTmpPhotos();
-        }
-      }
-    };
-    r.readAsDataURL(f);
-  });
+  if (typeof showToast === 'function' && files.length > 0) {
+    showToast('⏳ Đang tối ưu & nén ảnh…');
+  }
+
+  const photos = [];
+  for(const f of files){
+    try {
+      const compressed = await compressImageFile(f, 1280, 0.72);
+      if(compressed) photos.push(compressed);
+    } catch(err){
+      console.warn('[handlePhoto] Compression failed, fallback to raw', err);
+      const raw = await new Promise(res => {
+        const r = new FileReader();
+        r.onload = ev => res(ev.target.result);
+        r.onerror = () => res('');
+        r.readAsDataURL(f);
+      });
+      if(raw) photos.push(raw);
+    }
+  }
+
+  if(!photos.length){
+    e.target.value = '';
+    return;
+  }
+
+  if(context === 'bill'){
+    // Get trip + bill IDs from the open modal
+    const ts     = document.getElementById('bill-trip-select');
+    const tripId = (ts && ts.value) || (document.getElementById('bill-save-btn') && document.getElementById('bill-save-btn').dataset.tripid||'');
+    const billId = (typeof editingBillId !== 'undefined' && editingBillId) ? editingBillId : '';
+    // Call Drive-aware handler
+    handleBillPhotos(photos, billId, tripId);
+    e.target.dataset.context = '';
+    _photoCtxPending = null;
+  } else if(context === 'issue' && typeof photoCtx === 'number' && curReport && curReport.issues && curReport.issues[photoCtx]){
+    if(!curReport.issues[photoCtx].photos) curReport.issues[photoCtx].photos = [];
+    curReport.issues[photoCtx].photos.push(...photos);
+    sv(); renderIssues(); photoCtx = null;
+    e.target.dataset.context = '';
+    _photoCtxPending = null;
+  } else {
+    tmpPhotos.push(...photos);
+    renderTmpPhotos();
+  }
   e.target.value = '';
 }
 function addPhotoToIssue(idx){photoCtx=idx;_photoCtxPending='issue';openPhotoSheet('issue');}
@@ -6067,6 +6313,18 @@ function exportPDF(){
     }
     return;
   }
+
+  // IMP-07: Visual loading feedback & RAM protection
+  if(typeof showToast === 'function') showToast('⏳ Đang kết xuất tệp PDF...');
+  const expBtn = document.activeElement;
+  let origText = '';
+  if(expBtn && expBtn.tagName === 'BUTTON') {
+    expBtn.disabled = true;
+    origText = expBtn.innerHTML;
+    expBtn.innerHTML = '⟳ Generating PDF…';
+    setTimeout(() => { try { expBtn.disabled = false; expBtn.innerHTML = origText; } catch(x){} }, 3000);
+  }
+
   const{jsPDF}=window.jspdf;
   const trip=S.trips.find(tr=>tr.id===curTrip);const r=curReport;const p=S.profile;
   if(!trip||!r)return;
@@ -6113,7 +6371,7 @@ function exportPDF(){
   r.readings.forEach(rd=>{const isCond=rd.type==='condition'||(!rd.value&&rd.condition);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);const nl=doc.splitTextToSize('• '+rd.name+(rd.tag?' ['+rd.tag+']':''),W-mg*2-40);doc.text(nl,mg+2,y);doc.setFont('helvetica','bold');if(isCond){const cond=rd.condition||'ok';rtxt(cond==='ok'?'OK':cond==='notok'?'NOT OK':'OTHER',y,cond==='ok'?[15,110,86]:cond==='notok'?[226,75,74]:[245,158,11]);}else{rtxt((rd.value||'')+(rd.unit?' '+rd.unit:''),y,rd.status==='bad'?[226,75,74]:rd.status==='na'?[100,100,100]:[15,110,86]);}doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);if(rd.notes){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(rd.notes,mg+6,y+5);y+=5;}y+=nl.length*5;chk();});
   if(!r.readings.length){doc.setFontSize(9);doc.text('None.',mg+2,y);y+=5;}ln();
   sec(`ISSUES (${r.issues.length})`);
-  r.issues.forEach(is=>{const sc=is.severity==='critical'?[91,33,182]:is.severity==='high'?[226,75,74]:is.severity==='medium'?[245,158,11]:[55,138,221];const istLabel={'pending':'Pending','waiting_part':'Waiting part','processing':'Processing','done':'Done'}[is.istatus||'pending']||'Pending';const istCol={pending:[100,100,100],waiting_part:[55,138,221],processing:[245,158,11],done:[15,110,86]}[is.istatus||'pending'];doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...sc);doc.text(`[${is.severity.toUpperCase()}]`,mg+2,y);doc.setTextColor(33,37,41);const tl=doc.splitTextToSize(is.title,W-mg*2-50);doc.text(tl,mg+22,y);doc.setFontSize(8);doc.setFont('helvetica','normal');rtxt(istLabel,y,istCol);y+=tl.length*5;if(is.description){doc.setFontSize(8);doc.setTextColor(80,80,80);const dl=doc.splitTextToSize(is.description,W-mg*2-6);doc.text(dl,mg+4,y);y+=dl.length*4+2;}if(is.action){doc.setFontSize(8);doc.setTextColor(80,80,80);const al=doc.splitTextToSize('→ '+is.action,W-mg*2-6);doc.text(al,mg+4,y);y+=al.length*4+2;}if(is.photos&&is.photos.length){is.photos.forEach(ph=>{try{doc.addImage(ph,'JPEG',mg+4,y,35,26);y+=28;}catch(e){}chk();});}chk();});
+  r.issues.forEach(is=>{const sc=is.severity==='critical'?[91,33,182]:is.severity==='high'?[226,75,74]:is.severity==='medium'?[245,158,11]:[55,138,221];const istLabel={'pending':'Pending','waiting_part':'Waiting part','processing':'Processing','done':'Done'}[is.istatus||'pending']||'Pending';const istCol={pending:[100,100,100],waiting_part:[55,138,221],processing:[245,158,11],done:[15,110,86]}[is.istatus||'pending'];doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...sc);doc.text(`[${is.severity.toUpperCase()}]`,mg+2,y);doc.setTextColor(33,37,41);const tl=doc.splitTextToSize(is.title,W-mg*2-50);doc.text(tl,mg+22,y);doc.setFontSize(8);doc.setFont('helvetica','normal');rtxt(istLabel,y,istCol);y+=tl.length*5;if(is.description){doc.setFontSize(8);doc.setTextColor(80,80,80);const dl=doc.splitTextToSize(is.description,W-mg*2-6);doc.text(dl,mg+4,y);y+=dl.length*4+2;}if(is.action){doc.setFontSize(8);doc.setTextColor(80,80,80);const al=doc.splitTextToSize('→ '+is.action,W-mg*2-6);doc.text(al,mg+4,y);y+=al.length*4+2;}if(is.photos&&is.photos.length){is.photos.forEach(ph=>{if(typeof ph==='string'&&ph.startsWith('data:image/')){try{doc.addImage(ph,'JPEG',mg+4,y,35,26);y+=28;}catch(e){}}chk();});}chk();});
   if(!r.issues.length){doc.setFontSize(9);doc.text('None.',mg+2,y);y+=5;}ln();
   if(r.team&&r.team.length){sec(`TEAM (${r.team.length})`);r.team.forEach(m=>{doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);doc.text('• '+m.name+(m.role?' — '+m.role:''),mg+2,y);doc.setFont('helvetica','bold');rtxt(m.signoff==='yes'?'SIGNOFF':'ATTEND',y,m.signoff==='yes'?[15,110,86]:[100,100,100]);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);y+=5;chk();});ln();}
   const rptTaskIds=r.reportTasks||[];
@@ -6332,21 +6590,21 @@ function generateTAPdf(tripId){
 
   // ── COLUMN DEFINITIONS ───────────────────────────────
   const colDefs = [
-    {key:'ta',    w:14, label:'TA No'},
-    {key:'trav',  w:30, label:'Traveller'},
-    {key:'date',  w:20, label:'Date of\nTravel'},
-    {key:'from',  w:16, label:'From'},
-    {key:'to',    w:16, label:'To'},
-    {key:'flt',   w:22, label:'Flight'},
-    {key:'cls',   w:9,  label:'Class'},
-    {key:'plt',   w:27, label:'Plant visited'},
-    {key:'purp',  w:60, label:'Purpose of visit'},
-    {key:'alloc', w:22, label:'Allocation by\npercentage to\neach plant'},
-    {key:'ent',   w:18, label:'Entity to be \nre-charged'},
-    {key:'ext',   w:28, label:'Date of Extension\nof travel on\npersonal basis \n(if any)'},
-    {key:'req',   w:26, label:'REQUESTED BY\n(Signature) / Date'},
-    {key:'app',   w:26, label:'APPROVED BY\n(Signature) / Date'},
-];
+    {key:'ta',    w:14,  label:'TA No'},
+    {key:'trav',  w:26,  label:'Traveller'},
+    {key:'date',  w:22,  label:'Date of\nTravel'},
+    {key:'from',  w:18,  label:'From'},
+    {key:'to',    w:18,  label:'To'},
+    {key:'flt',   w:26,  label:'Flight'},
+    {key:'cls',   w:11,  label:'Class'},
+    {key:'plt',   w:28,  label:'Plant visited'},
+    {key:'purp',  w:42,  label:'Purpose of visit'},
+    {key:'alloc', w:19,  label:'Allocation by\npercentage to\neach plant'},
+    {key:'ent',   w:18,  label:'Entity to be re-\ncharged'},
+    {key:'ext',   w:22,  label:'Date of Extension\nof travel on\npersonal basis (if\nany)'},
+    {key:'req',   w:27,  label:'REQUESTED BY\n(Signature) / Date'},
+    {key:'app',   w:26,  label:'APPROVED BY\n(Signature) / Date'},
+  ];
   const rawTotal = colDefs.reduce((s,c)=>s+c.w, 0);
   const scale    = TW / rawTotal;
   colDefs.forEach(c=>c.w = Math.round(c.w*scale*100)/100);
@@ -6375,59 +6633,42 @@ function generateTAPdf(tripId){
 
   doc.setDrawColor(0,0,0);
 
- // ════════════════════════════════════════════════════
-// ROW 0 : White header (Destination merged)
-// ════════════════════════════════════════════════════
-const R0H = 6;
-let y = 19;
+  // ════════════════════════════════════════════════════
+  // ROW 0: White row — thin outer border for ALL cols,
+  //        "Destination" label only over From+To
+  // ════════════════════════════════════════════════════
+  const R0H = 6;
+  let y = 19;
 
-doc.setFillColor(255,255,255);
-doc.setLineWidth(0.25);
+  // White fill
+  doc.setFillColor(255,255,255);
+  doc.setLineWidth(0.25);
+  // Draw each cell border (thin, white bg)
+  colDefs.forEach(c=>{ doc.rect(c.x, y, c.w, R0H, 'S'); });
+  // Outer rect border
+  doc.setLineWidth(0.4);
+  doc.rect(ML, y, TW, R0H, 'S');
+  // Thick borders matching sample (left of Plant, left of Req, left of App)
+  doc.setLineWidth(1.2);
+  doc.line(dblX, y, dblX, y+R0H);
+  doc.line(reqX, y, reqX, y+R0H);
+  doc.line(appX, y, appX, y+R0H);
+  doc.setLineWidth(0.4);
 
-// Draw each column except From & To
-colDefs.forEach((c, idx) => {
+  // "Destination" label centered over From+To only
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(6);
+  doc.setTextColor(0,0,0);
+  doc.text('Destination', destX+destW/2, y+R0H/2+1, {align:'center'});
 
-    // Skip From / To because they will be merged
-    if(idx === fromIdx || idx === toIdx) return;
-
-    doc.rect(c.x, y, c.w, R0H, 'S');
-
-});
-
-// Draw merged Destination cell
-doc.rect(destX, y, destW, R0H, 'S');
-
-// Outer border
-doc.setLineWidth(0.4);
-doc.rect(ML, y, TW, R0H, 'S');
-
-// Thick borders
-doc.setLineWidth(1.2);
-doc.line(dblX, y, dblX, y + R0H);
-doc.line(reqX, y, reqX, y + R0H);
-doc.line(appX, y, appX, y + R0H);
-doc.setLineWidth(0.4);
-
-// Destination text
-doc.setFont('helvetica','bold');
-doc.setFontSize(6);
-doc.setTextColor(0,0,0);
-
-doc.text(
-    'Destination',
-    destX + destW / 2,
-    y + R0H / 2 + 1,
-    { align:'center' }
-);
-
-y += R0H;
+  y += R0H;
 
   // ════════════════════════════════════════════════════
   // ROW 1: Full yellow header — ALL columns
   // ════════════════════════════════════════════════════
   const R1H = 16;
 
-  doc.setFillColor(255,255,0);
+  doc.setFillColor(255,235,59);
   doc.setLineWidth(0.25);
   doc.rect(ML, y, TW, R1H, 'FD');
   colDefs.forEach(c=>{ doc.rect(c.x, y, c.w, R1H, 'S'); });
@@ -6527,7 +6768,7 @@ y += R0H;
     if(typeof STORED_SIG_B64!=='undefined'&&STORED_SIG_B64){
       doc.addImage(STORED_SIG_B64,'PNG',
         rc.x+1, dataStartY+1,
-        rc.w+1, sigTotalH*0.65
+        rc.w*0.75, sigTotalH*0.65
       );
     }
   }catch(e){}
@@ -6539,7 +6780,7 @@ y += R0H;
   // ════════════════════════════════════════════════════
   // EMPTY ROWS filling rest of page
   // ════════════════════════════════════════════════════
-  const EH = 5;
+  const EH = 7;
   doc.setLineWidth(0.25);
   while(y + EH <= PH - 5){
     colDefs.forEach(c=>doc.rect(c.x, y, c.w, EH, 'S'));
@@ -6560,10 +6801,6 @@ y += R0H;
   const fn='TA_'+((ta.taNo||'NoNum').replace(/[^a-zA-Z0-9]/g,''))+'_'+sP+'_'+((trip.date||'').replace(/-/g,''))+'.pdf';
   showPdfSaveOptions(doc, fn, 'ta', tripId);
 }
-
-
-
-
 
 // ====== inspection.js ======
 // =====================================================
@@ -7436,7 +7673,6 @@ function openReportDirect(step){
   }catch(e){console.warn('sig init:',e);}
 }
 
-
 // ====== telegram.js ======
 // =====================================================
 // PlantLog Pro — telegram.js
@@ -7486,6 +7722,30 @@ function updateTelegramStatusLabel(){
 // ═══════ SEND MESSAGE ═══════
 async function sendTelegramMessage(text){
   const cfg = S.telegramConfig || {};
+  const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
+
+  // 1. Ưu tiên gửi qua Apps Script Backend (IMP-03: an toàn bảo mật, tránh lỗi CORS)
+  if(gsUrl && gsUrl.includes('/exec')){
+    try {
+      const resp = await fetch(gsUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'text/plain'},
+        body: JSON.stringify({
+          action: 'sendTelegram',
+          text: text,
+          parseMode: 'HTML',
+          token: cfg.token || '',
+          chatId: cfg.chatId || ''
+        })
+      });
+      const data = await resp.json();
+      if(data && data.ok) return true;
+    } catch(e) {
+      console.warn('[Telegram] Backend dispatch error, fallback to direct:', e.message);
+    }
+  }
+
+  // 2. Fallback gửi trực tiếp nếu client có lưu token và chatId
   if(!cfg.token || !cfg.chatId) return false;
   try{
     const url = `https://api.telegram.org/bot${cfg.token}/sendMessage`;
@@ -8245,6 +8505,17 @@ function fmtAmt(val, currency) {
   });
 }
 
+function getPaymentStyle(pm) {
+  const val = pm || '1-Cash';
+  if (val.includes('Bank')) {
+    return { icon: '🏦', val, bg: '#DBEAFE', color: '#1E40AF', border: '#2563EB', badgeHtml: `<span style="background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">🏦 2-Bank transfer</span>` };
+  }
+  if (val.includes('Credit') || val.includes('Card')) {
+    return { icon: '💳', val, bg: '#EDE9FE', color: '#5B21B6', border: '#7C3AED', badgeHtml: `<span style="background:#EDE9FE;color:#5B21B6;border:1px solid #C4B5FD;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">💳 3-Credit card</span>` };
+  }
+  return { icon: '💵', val, bg: '#DCFCE7', color: '#166534', border: '#059669', badgeHtml: `<span style="background:#DCFCE7;color:#166534;border:1px solid #86EFAC;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">💵 1-Cash</span>` };
+}
+
 function toggleVNDRow(){
   const cur=document.getElementById('bill-currency');
   const row=document.getElementById('bill-vnd-row');
@@ -8331,6 +8602,18 @@ function setBillFilter(f) {
   renderBillsScreen();
 }
 
+// ═══════ PAYMENT METHOD FILTER (IMP-07) ═══════
+let billPaymentFilter = 'all';
+
+function setBillPaymentFilter(pm) {
+  billPaymentFilter = pm;
+  ['all','cash','bank','card'].forEach(k => {
+    const el = document.getElementById('bpf-' + k);
+    if(el) el.classList.toggle('active', k === pm);
+  });
+  renderBillsScreen();
+}
+
 function openAddBillFromScreen() {
   // Open add bill modal without pre-selecting a trip
   editingBillId = null;
@@ -8347,14 +8630,16 @@ function openAddBillFromScreen() {
   document.getElementById('bill-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('bill-currency').value = 'VND';
   document.getElementById('bill-category').value = 'other';
+  const pmEl = document.getElementById('bill-payment-method'); if (pmEl) pmEl.value = '1-Cash';
   const vndElS=document.getElementById('bill-vnd');if(vndElS)vndElS.value='';
   toggleVNDRow();
   renderBillPhotoGrid();
   // Populate trip selector for linking
   const tripSel = document.getElementById('bill-trip-select');
   if (tripSel) {
+    const trips = typeof getSortedTrips==='function' ? getSortedTrips() : [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
     tripSel.innerHTML = '<option value="">No trip link</option>' +
-      getSortedTrips().map(t => `<option value="${t.id}">${t.plant} (${fmtDate(t.date)})</option>`).join('');
+      trips.map(t => `<option value="${t.id}">${t.plant} (${fmtDate(t.date)})</option>`).join('');
   }
   document.getElementById('bill-save-btn').dataset.tripid = '';
   openModal('modal-add-bill');
@@ -8381,6 +8666,15 @@ function renderBillsScreen() {
     const year  = (yearSel  && yearSel.value)  || new Date().getFullYear().toString();
     const month = (monthSel && monthSel.value) || String(new Date().getMonth()+1).padStart(2,'0');
     bills = bills.filter(b => (b.date||'').startsWith(`${year}-${month}`));
+  }
+
+  // Lọc theo hình thức thanh toán (IMP-07)
+  if (billPaymentFilter === 'cash') {
+    bills = bills.filter(b => (b.paymentMethod || '1-Cash').includes('Cash') || (b.paymentMethod || '').includes('1-'));
+  } else if (billPaymentFilter === 'bank') {
+    bills = bills.filter(b => (b.paymentMethod || '').includes('Bank') || (b.paymentMethod || '').includes('2-'));
+  } else if (billPaymentFilter === 'card') {
+    bills = bills.filter(b => (b.paymentMethod || '').includes('Card') || (b.paymentMethod || '').includes('Credit') || (b.paymentMethod || '').includes('3-'));
   }
 
   bills.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -8484,20 +8778,15 @@ function renderBillRow(b) {
   const vndAmt = hasVND ? fmtAmt(b.vndAmount, 'VND') : null;
   const catIcon = {accommodation:'🏨',travel:'✈️',meals:'🍽',parts:'🔩',tools:'🔧',other:'📋'}[b.category] || '📋';
   const catLabel = {accommodation:'Accommodation',travel:'Travel',meals:'Meals',parts:'Parts/Materials',tools:'Tools',other:'Other'}[b.category] || 'Other';
-  const pmVal = b.paymentMethod || b.paymentTerm || '1-Cash';
-  const isBank = pmVal.includes('Bank'), isCredit = pmVal.includes('Credit') || pmVal.includes('Card');
-  const pmBg = isBank ? '#DBEAFE' : isCredit ? '#EDE9FE' : '#DCFCE7';
-  const pmCol = isBank ? '#1E40AF' : isCredit ? '#5B21B6' : '#166534';
-  const pmBdr = isBank ? '#2563EB' : isCredit ? '#7C3AED' : '#059669';
-  const pmIcon = isBank ? '🏦' : isCredit ? '💳' : '💵';
-  return `<div style="padding:10px 12px;border-bottom:1px solid var(--g100);border-left:4px solid ${pmBdr};margin-bottom:2px;">
+  const pm = getPaymentStyle(b.paymentMethod || b.paymentTerm);
+  return `<div style="padding:10px 12px;border-bottom:1px solid var(--g100);border-left:4px solid ${pm.border};margin-bottom:2px;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
       <div style="flex:1;min-width:0;">
         ${b.billNumber ? `<div style="font-size:10px;font-weight:600;color:var(--g500);letter-spacing:0.04em;">RECEIPT #${b.billNumber}</div>` : ''}
         <div style="font-size:13px;font-weight:600;color:var(--g800);margin-top:1px;">${b.detail}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;align-items:center;">
           <span style="background:var(--al);color:#92400E;padding:1px 7px;border-radius:10px;font-size:10px;">${catIcon} ${catLabel}</span>
-          <span style="background:${pmBg};color:${pmCol};border:1px solid ${pmBdr};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">${pmIcon} ${pmVal}</span>
+          ${pm.badgeHtml}
           ${b.notes ? `<span style="font-size:11px;color:var(--g500);">${b.notes}</span>` : ''}
         </div>
         ${b.photos && b.photos.length ? `<div class="bill-photo-strip" style="margin-top:6px;">
@@ -8526,8 +8815,9 @@ function deleteBillFromScreen(id) {
 function openBillExport() {
   const sel = document.getElementById('bill-pdf-trip');
   if (sel) {
+    const trips = typeof getSortedTrips==='function' ? getSortedTrips() : [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
     sel.innerHTML = '<option value="all">All trips</option>' +
-      getSortedTrips().map(t => `<option value="${t.id}">${t.plant} - ${fmtDate(t.date)}</option>`).join('');
+      trips.map(t => `<option value="${t.id}">${t.plant} — ${fmtDate(t.date)}</option>`).join('');
     sel.onchange = () => { updateBillExportTitle(); buildBillPDFPreview(); };
   }
   // Always reset title on open so it auto-generates fresh
@@ -8604,8 +8894,9 @@ function buildBillPDFPreview() {
       </div>
       ${dayBills.map(b=>{
         const catIcon={accommodation:'🏨',travel:'✈️',meals:'🍽',parts:'🔩',tools:'🔧',other:'📋'}[b.category]||'📋';
-        return `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--g100);">
-          <div><div style="font-weight:500;">${catIcon} ${b.billNumber?'[#'+b.billNumber+'] ':''}${b.detail}</div>
+        const pm=getPaymentStyle(b.paymentMethod||b.paymentTerm);
+        return `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--g100);border-left:3px solid ${pm.border};padding-left:6px;margin-bottom:2px;">
+          <div><div style="font-weight:500;">${catIcon} ${b.billNumber?'[#'+b.billNumber+'] ':''}${b.detail} ${pm.badgeHtml}</div>
           ${b.notes?`<div style="font-size:10px;color:var(--g500);">${b.notes}</div>`:''}
           ${b.photos&&b.photos.length?`<div style="font-size:10px;color:var(--blue);">📷 ${b.photos.length} photo${b.photos.length>1?'s':''}</div>`:''}
           </div>
@@ -8663,7 +8954,7 @@ function exportBillsPDF() {
         if(b.billNumber){doc.setFontSize(7.5);doc.setTextColor(140,140,140);doc.text('Receipt #'+b.billNumber,mg+4,y);y+=4;chk();}
         const bl=doc.splitTextToSize('• '+b.detail,W-mg*2-42);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);doc.text(bl,mg+2,y);doc.setFont('helvetica','bold');rtxt(fmtAmt(b.amount,b.currency)+' '+(b.currency||'VND'),y,[146,64,14]);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);y+=bl.length*5;
         if(b.currency!=='VND'&&b.vndAmount){doc.setFontSize(8);doc.setTextColor(120,80,0);rtxt('= '+fmtAmt(b.vndAmount,'VND')+' VND',y);y+=4;}
-        const meta=[catLabel,b.notes].filter(Boolean).join('  ·  ');if(meta){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(meta,mg+6,y);y+=4;}
+        const meta=[catLabel,b.paymentMethod||b.paymentTerm||'1-Cash',b.notes].filter(Boolean).join('  ·  ');if(meta){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(meta,mg+6,y);y+=4;}
         if(b.photos&&b.photos.length){const mx=Math.min(b.photos.length,3);chk();for(let pi=0;pi<mx;pi++){try{if(y+28>265){doc.addPage();y=20;pageNum++;addPN();}doc.addImage(b.photos[pi],'JPEG',mg+6+(pi*36),y,30,23);}catch(e){}}if(mx>0)y+=26;}
         y+=2;chk();
       });
@@ -8694,7 +8985,6 @@ function emailBillsReport() {
     `Please find attached the expense report.\n\nTitle: ${title}\nBills: ${bills.length}\nTotal: ${totalStr}\nPrepared by: ${S.profile.name||'Engineer'}\nDate: ${new Date().toLocaleDateString('en-GB')}\n\nPlease download and attach the PDF from the app.\n\nBest regards,\n${S.profile.name||'Engineer'}`;
   openModal('modal-email');
 }
-
 
 // ====== sync.js ======
 // =====================================================
@@ -8813,6 +9103,9 @@ async function syncToSheets(){
   const btn=document.getElementById('gs-sync-btn');
   if(btn){btn.disabled=true;btn.textContent='Syncing...';}
   showToast('Syncing to Google Sheets…');
+
+  // IMP-02: Tải bù ảnh nền offline lên Google Drive trước khi gửi dữ liệu lên Sheets
+  try { await flushPendingMedia(); } catch(x){}
 
   // ── Every field explicitly cast to String to prevent type issues ──
   const s=v=>(v===null||v===undefined)?'':String(v);
@@ -8967,6 +9260,65 @@ async function syncToSheets(){
   }
 }
 
+// ═══════ PER-ITEM TIMESTAMP MERGE (IMP-05) ═══════
+/**
+ * So sánh & Gộp danh sách dữ liệu 2 chiều theo Timestamp (IMP-05)
+ * Chống ghi đè mất dữ liệu offline khi đồng bộ từ Google Sheets
+ */
+function mergeCollectionByTimestamp(localList, remoteList, idKey = 'id') {
+  localList = Array.isArray(localList) ? localList : [];
+  remoteList = Array.isArray(remoteList) ? remoteList : [];
+
+  const localMap = new Map();
+  for (const item of localList) {
+    if (item && item[idKey]) localMap.set(String(item[idKey]), item);
+  }
+
+  const merged = [];
+  const processedIds = new Set();
+
+  for (const remote of remoteList) {
+    const id = String(remote[idKey] || '');
+    if (!id) continue;
+    processedIds.add(id);
+
+    const local = localMap.get(id);
+    if (!local) {
+      // Bản ghi mới từ Google Sheets mà máy chưa có
+      merged.push(remote);
+    } else {
+      // Cả 2 đều có -> So sánh updatedAt
+      const localTime = new Date(local.updatedAt || local.createdAt || 0).getTime();
+      const remoteTime = new Date(remote.updatedAt || remote.createdAt || 0).getTime();
+
+      if (localTime > remoteTime) {
+        // Cục bộ mới sửa offline -> Giữ nguyên dữ liệu cục bộ
+        merged.push(local);
+      } else {
+        // Sheets mới hơn hoặc bằng -> Lấy remote, nhưng giữ lại các trường cục bộ quan trọng (như ảnh chất lượng cao hoặc photoMeta)
+        if (local.photoMeta && (!remote.photoMeta || !remote.photoMeta.length)) {
+          remote.photoMeta = local.photoMeta;
+        }
+        if (Array.isArray(local.photos) && local.photos.some(p => typeof p === 'string' && p.includes('drive.google.com'))) {
+          remote.photos = local.photos;
+        }
+        merged.push(remote);
+      }
+    }
+  }
+
+  // Giữ lại các bản ghi được tạo mới Offline chưa kịp đồng bộ lên Sheets
+  for (const local of localList) {
+    const id = String(local[idKey] || '');
+    if (id && !processedIds.has(id)) {
+      console.log(`[Sync Merge] Preserving offline local ${idKey}:`, id);
+      merged.push(local);
+    }
+  }
+
+  return merged;
+}
+
 async function loadFromSheets(silent){
   const url=getGSUrl();
   if(!url){if(!silent){showToast('Set your Google Sheet URL first');openModal('modal-gsheet');}return;}
@@ -9058,7 +9410,7 @@ async function loadFromSheets(silent){
       if(d.trips&&d.trips.length){
         const strV=v=>safeDate(v)||ss(v);
         const existingTrips = S.trips || [];
-        S.trips=d.trips.map(tr=>{
+        const remoteTrips=d.trips.map(tr=>{
           const st = ss(tr.Status)||'planned';
           const localTr = existingTrips.find(x=>x.id===ss(tr.ID));
           const finalSt = (localTr && (localTr.status==='in_progress'||localTr.status==='done') && st==='planned') ? localTr.status : st;
@@ -9072,19 +9424,21 @@ async function loadFromSheets(silent){
             contact:   ss(tr.Contact),
             transport: ss(tr.Transport),
             status:    finalSt,
-          notes:     ss(tr.Notes),
-          flight:       tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
-          ta:           tr.TA?(()=>{try{return JSON.parse(ss(tr.TA));}catch(e){return null;}})():null,
-          savedReports: (()=>{
-            const raw = ss(tr.SavedReports||tr.savedReports||'');
-            if(!raw) return [];
-            try{ const p=JSON.parse(raw); return Array.isArray(p)?p:[]; }
-            catch(e){ return []; }
-          })(),
-          createdAt: ss(tr.CreatedAt)
-        };
-      });
-    }
+            notes:     ss(tr.Notes),
+            flight:       tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
+            ta:           tr.TA?(()=>{try{return JSON.parse(ss(tr.TA));}catch(e){return null;}})():null,
+            savedReports: (()=>{
+              const raw = ss(tr.SavedReports||tr.savedReports||'');
+              if(!raw) return [];
+              try{ const p=JSON.parse(raw); return Array.isArray(p)?p:[]; }
+              catch(e){ return []; }
+            })(),
+            createdAt: ss(tr.CreatedAt),
+            updatedAt: ss(tr.UpdatedAt||tr.CreatedAt)
+          };
+        });
+        S.trips = mergeCollectionByTimestamp(existingTrips, remoteTrips, 'id');
+      }
       if(d.tasks&&d.tasks.length){
         // Helper: safely convert any value to string, handle Date objects
         const str=v=>{
@@ -9093,7 +9447,8 @@ async function loadFromSheets(silent){
           return String(v);
         };
         const num=v=>parseFloat(str(v))||0;
-        S.tasks=d.tasks.map(tk=>{
+        const existingTasks = S.tasks || [];
+        const remoteTasks=d.tasks.map(tk=>{
           let cl=[];
           try{
             const cj=str(tk.ChecklistJson||tk.checklistJson||'');
@@ -9153,9 +9508,10 @@ async function loadFromSheets(silent){
             date:         ds,
             time:         ts,
             createdAt:    ss(tk.CreatedAt),
-            updatedAt:    ss(tk.UpdatedAt)
+            updatedAt:    ss(tk.UpdatedAt||tk.CreatedAt)
           };
         });
+        S.tasks = mergeCollectionByTimestamp(existingTasks, remoteTasks, 'id');
       }
       if(d.leave&&d.leave.length){
         S.leaveData={};
@@ -9167,7 +9523,8 @@ async function loadFromSheets(silent){
       // Load bills
       if(d.bills&&d.bills.length){
         const strB=v=>v===null||v===undefined?'':v instanceof Date?v.toISOString().slice(0,10):String(v);
-        S.bills=d.bills.map(b=>{
+        const existingBills = S.bills || [];
+        const remoteBills=d.bills.map(b=>{
           let photos=[];
           try{
             const pj=strB(b.PhotosJson||b.photosJson||'');
@@ -9186,9 +9543,11 @@ async function loadFromSheets(silent){
             paymentMethod: strB(b.PaymentMethod||b.paymentMethod||b.PaymentTerm||b.paymentTerm)||'1-Cash',
             notes:      strB(b.Notes),
             photos:     photos,
-            createdAt:  strB(b.CreatedAt)
+            createdAt:  strB(b.CreatedAt),
+            updatedAt:  strB(b.UpdatedAt||b.CreatedAt)
           };
         });
+        S.bills = mergeCollectionByTimestamp(existingBills, remoteBills, 'id');
       }
       sv();
       try{ if(typeof autoStartTodayItems==='function') autoStartTodayItems(); }catch(e){}
@@ -9272,20 +9631,13 @@ function renderTripBills(tripId){
 
       dayBills.forEach(b=>{
         const amt=fmtAmt(b.amount, b.currency);
-        const pmVal=b.paymentMethod||b.paymentTerm||'1-Cash';
-        const isBank=pmVal.includes('Bank'), isCredit=pmVal.includes('Credit')||pmVal.includes('Card');
-        const pmBg=isBank?'#DBEAFE':isCredit?'#EDE9FE':'#DCFCE7';
-        const pmCol=isBank?'#1E40AF':isCredit?'#5B21B6':'#166534';
-        const pmBdr=isBank?'#2563EB':isCredit?'#7C3AED':'#059669';
-        const pmIcon=isBank?'🏦':isCredit?'💳':'💵';
-        html+=`<div class="bill-card" style="border-left:4px solid ${pmBdr};">
+        html+=`<div class="bill-card">
           <div class="bill-head">
             <div style="flex:1;min-width:0;">
               ${b.billNumber?`<div class="bill-num">Receipt #${b.billNumber}</div>`:''}
               <div class="bill-detail-text">${b.detail}</div>
               <div class="bill-meta">
                 <span style="background:var(--al);color:#92400E;padding:1px 7px;border-radius:10px;font-size:10px;">${BILL_CAT_LABELS[b.category]||b.category||'Other'}</span>
-                <span style="background:${pmBg};color:${pmCol};border:1px solid ${pmBdr};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">${pmIcon} ${pmVal}</span>
                 ${b.notes?`<span style="color:var(--g500);">${b.notes}</span>`:''}
               </div>
             </div>
@@ -9348,14 +9700,13 @@ function openAddBill(tripId){
   document.getElementById('bill-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('bill-currency').value='VND';
   document.getElementById('bill-category').value='other';
-  const pmEl=document.getElementById('bill-payment-method');if(pmEl)pmEl.value='1-Cash';
   const vndElR=document.getElementById('bill-vnd');if(vndElR)vndElR.value='';
   toggleVNDRow();
   renderBillPhotoGrid();
   // Populate trip selector
   const ts=document.getElementById('bill-trip-select');
   if(ts){
-    ts.innerHTML='<option value="">No trip link</option>'+getSortedTrips().map(t=>`<option value="${t.id}"${t.id===tripId?' selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
+    ts.innerHTML='<option value="">No trip link</option>'+S.trips.map(t=>`<option value="${t.id}"${t.id===tripId?' selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
   }
   document.getElementById('bill-save-btn').dataset.tripid=tripId||'';
   openModal('modal-add-bill');
@@ -9386,12 +9737,12 @@ function openEditBill(id){
   if(vndEl2)vndEl2.value=(b.currency!=='VND'&&b.vndAmount)?b.vndAmount:'';
   toggleVNDRow();
   document.getElementById('bill-category').value=b.category||'other';
-  const pmEl2=document.getElementById('bill-payment-method');if(pmEl2)pmEl2.value=b.paymentMethod||b.paymentTerm||'1-Cash';
+  const pmEl3=document.getElementById('bill-payment-method');if(pmEl3)pmEl3.value=b.paymentMethod||b.paymentTerm||'1-Cash';
   document.getElementById('bill-notes').value=b.notes||'';
   document.getElementById('bill-save-btn').dataset.tripid=b.tripId||'';
   const ts2=document.getElementById('bill-trip-select');
   if(ts2){
-    ts2.innerHTML='<option value="">No trip link</option>'+getSortedTrips().map(t=>`<option value="${t.id}"${t.id===b.tripId?' selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
+    ts2.innerHTML='<option value="">No trip link</option>'+S.trips.map(t=>`<option value="${t.id}"${t.id===b.tripId?' selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
   }
   renderBillPhotoGrid();
   openModal('modal-add-bill');
@@ -9474,7 +9825,8 @@ async function saveBill(){
       })),
       createdAt: editingBillId
         ? (S.bills.find(b=>b.id===editingBillId)||{}).createdAt || new Date().toISOString()
-        : new Date().toISOString()
+        : new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     if(editingBillId){
@@ -9601,16 +9953,106 @@ async function uploadBillPhotoToDrive(src, billId, tripId){
 }
 
 // ── Simple add: just store locally, no background upload ─
-function handleBillPhotos(newPhotos, billId, tripId){
+async function handleBillPhotos(newPhotos, billId, tripId){
   // Store as simple objects — uploaded during saveBill()
-  for(const src of newPhotos){
+  for(let src of newPhotos){
+    // Safeguard: nếu ảnh base64 lớn hơn 250KB, tự động nén trước khi lưu vào tmpBillPhotos
+    if(typeof src === 'string' && src.startsWith('data:image/') && src.length > 250000 && typeof compressImageFile === 'function'){
+      try { src = await compressImageFile(src, 1280, 0.72); } catch(x){}
+    }
     tmpBillPhotos.push({src, driveUrl:'', fileId:''});
   }
   renderBillPhotoGrid();
 }
 
+// ═══════ BACKGROUND MEDIA QUEUE (IMP-02) ═══════
+let _flushingMedia = false;
 
+/**
+ * Hàng đợi quét và tải bù ảnh Offline lên Google Drive (IMP-02)
+ * Tự động kích hoạt khi có mạng (online event) hoặc khi bắt đầu Đồng bộ (Sync)
+ */
+async function flushPendingMedia(){
+  if(_flushingMedia) return;
+  const gsUrl = getGSUrl ? getGSUrl() : (S && S.gsUrl || '');
+  if(!gsUrl || !gsUrl.includes('/exec')) return;
 
+  _flushingMedia = true;
+  let uploadCount = 0;
+
+  try {
+    // 1. Quét hóa đơn (Bills)
+    if(Array.isArray(S.bills)){
+      for(const bill of S.bills){
+        if(!Array.isArray(bill.photos)) continue;
+        for(let i = 0; i < bill.photos.length; i++){
+          const src = bill.photos[i];
+          if(typeof src === 'string' && src.startsWith('data:')){
+            try {
+              const res = await uploadBillPhotoToDrive(src, bill.id, bill.tripId);
+              if(res && res.driveUrl){
+                bill.photos[i] = res.driveUrl;
+                if(!bill.photoMeta) bill.photoMeta = [];
+                bill.photoMeta.push({
+                  src: res.driveUrl,
+                  driveUrl: res.driveUrl,
+                  fileId: res.fileId
+                });
+                uploadCount++;
+              }
+            } catch(upErr){
+              console.warn('[flushPendingMedia] Bill photo upload failed:', upErr);
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Quét sự cố trong Báo cáo (Report Issues)
+    if(S.reports && typeof S.reports === 'object'){
+      for(const [tripId, rep] of Object.entries(S.reports)){
+        if(!rep || !Array.isArray(rep.issues)) continue;
+        for(const issue of rep.issues){
+          if(!Array.isArray(issue.photos)) continue;
+          for(let i = 0; i < issue.photos.length; i++){
+            const src = issue.photos[i];
+            if(typeof src === 'string' && src.startsWith('data:')){
+              try {
+                const res = await uploadBillPhotoToDrive(src, 'issue_' + (issue.title||'').slice(0,10), tripId);
+                if(res && res.driveUrl){
+                  issue.photos[i] = res.driveUrl;
+                  uploadCount++;
+                }
+              } catch(upErr){
+                console.warn('[flushPendingMedia] Issue photo upload failed:', upErr);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if(uploadCount > 0){
+      sv(); // Lưu state mới (đã giải phóng Base64, thay bằng driveUrl)
+      if(typeof showToast === 'function'){
+        showToast(`✓ Đã tải bù ${uploadCount} ảnh offline lên Google Drive!`);
+      }
+      console.log(`[flushPendingMedia] Successfully uploaded ${uploadCount} offline photos to Drive.`);
+    }
+  } catch(e) {
+    console.warn('[flushPendingMedia] Error flushing offline media:', e);
+  } finally {
+    _flushingMedia = false;
+  }
+}
+
+// Lắng nghe sự kiện Online để tự động kích hoạt đẩy ảnh bù
+if(typeof window !== 'undefined'){
+  window.addEventListener('online', () => {
+    console.log('[PlantLog] Network back online, checking pending media queue…');
+    setTimeout(flushPendingMedia, 2500);
+  });
+}
 
 </script>
 </body>

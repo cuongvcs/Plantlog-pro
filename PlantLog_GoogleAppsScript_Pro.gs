@@ -20,22 +20,23 @@
 
 const SN={TRIPS:'Trips',TASKS:'Tasks',LEAVE:'Leave',REPORTS:'Reports',
   CHECKLIST:'Checklist',READINGS:'Readings',ISSUES:'Issues',TEAM:'Team',
-  BILLS:'Bills',MACHINES:'Machines',PLANS:'Plans',LOG:'SyncLog',REMINDERS:'Reminders'};
+  BILLS:'Bills',MACHINES:'Machines',PLANS:'Plans',LOG:'SyncLog',REMINDERS:'Reminders',FLIGHT_TA:'Flight_TA_Schedule'};
 
 const COLS={
-  trips:    ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','TA','SavedReports','CreatedAt'],
-  tasks:    ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','PartsJson','FlightJson','FilesJson','AutoDuration','DurationMins','CreatedAt','UpdatedAt'],
-  leave:    ['Date','Type','Note'],
+  trips:     ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','TA','SavedReports','CreatedAt'],
+  flight_ta: ['TripID','TACode','Plant','Location','Date','DateEnd','Purpose','OutboundDepart','OutboundArrive','ReturnDepart','ReturnArrive'],
+  tasks:     ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','PartsJson','FlightJson','FilesJson','AutoDuration','DurationMins','CreatedAt','UpdatedAt'],
+  leave:     ['Date','Type','Note'],
   reports:   ['TripID','SignoffSummary','SignoffResult','SignoffRemarks','SignedAt'],
   reminders: ['ID','Title','Freq','Weekday','Monthday','YearMonth','YearDay','Time','Note','NotifyTele','NotifyCalendar','Status','CreatedAt'],
-  checklist:['TripID','ItemID','Name','Result','Note'],
-  readings: ['TripID','Type','Name','Tag','Value','Unit','Status','Condition','Notes'],
-  issues:   ['TripID','Title','Description','Severity','IssueStatus','Action','PhotoCount'],
-  team:     ['TripID','Name','Role','Organization','SignoffRequired'],
-  bills:    ['ID','TripID','Date','BillNumber','Detail','Amount','Currency','VndAmount','Category','PaymentMethod','Notes','PhotoCount','PhotosJson','CreatedAt'],
-  machines: ['Name'],
-  plans:    ['Name'],
-  log:      ['Timestamp','Action','Entity','EntityID','Status','Details']
+  checklist: ['TripID','ItemID','Name','Result','Note'],
+  readings:  ['TripID','Type','Name','Tag','Value','Unit','Status','Condition','Notes'],
+  issues:    ['TripID','Title','Description','Severity','IssueStatus','Action','PhotoCount'],
+  team:      ['TripID','Name','Role','Organization','SignoffRequired'],
+  bills:     ['ID','TripID','Date','BillNumber','Detail','Amount','Currency','VndAmount','Category','PaymentMethod','Notes','PhotoCount','PhotosJson','CreatedAt'],
+  machines:  ['Name'],
+  plans:     ['Name'],
+  log:       ['Timestamp','Action','Entity','EntityID','Status','Details']
 };
 
 function db_(){
@@ -153,6 +154,8 @@ function doPost(e){
     if(act==='syncToCalendar')   return json_(syncPlantLogToCalendar(body));
     if(act==='syncFromCalendar') return json_(syncCalendarToPlantLog(body));
     if(act==='getCalendarEvents') return json_(getUpcomingCalendarEvents(body));
+    if(act==='sendTelegram')     return json_(sendTelegramNotification(body));
+    if(act==='setupSecrets')     return json_(setupSecretProperties(body.powerAutomateUrl, body.telegramToken, body.telegramChatId));
     return json_({ok:false,error:'Unknown action: '+act});
   }catch(x){return json_({ok:false,error:x.message+'|'+x.stack});}
 }
@@ -169,6 +172,31 @@ function syncAll(p){
       t.savedReports||'',
       t.createdAt
     ]));r.trips=p.trips.length;
+
+    // Sync dedicated Flight & TA Schedule sheet tab (10 fields, no PNR)
+    var flightRows = p.trips.map(function(t){
+      var ta = (t.ta && typeof t.ta === 'object') ? t.ta : {};
+      var fl = (t.flight && typeof t.flight === 'object') ? t.flight : {};
+      if (typeof t.ta === 'string') { try { ta = JSON.parse(t.ta); } catch(e){} }
+      if (typeof t.flight === 'string') { try { fl = JSON.parse(t.flight); } catch(e){} }
+      return [
+        t.id || '',
+        ta.taNo || '',
+        t.plant || '',
+        t.location || '',
+        t.date || '',
+        t.dateEnd || t.date || '',
+        t.purpose || '',
+        fl.depart || '',
+        fl.arrive || '',
+        fl.ret_depart || '',
+        fl.ret_arrive || ''
+      ];
+    });
+    writeSheet(s, SN.FLIGHT_TA, COLS.flight_ta, flightRows);
+
+    // Optional: Push to Power Automate Webhook directly (bypasses Google Sheets connector)
+    pushToPowerAutomateWebhook(p.trips);
   }
 
   if(p.tasks&&p.tasks.length){
@@ -232,7 +260,7 @@ function syncAll(p){
 
 function setupSheets(){
   const s=db_();
-  [['Trips',COLS.trips],['Tasks',COLS.tasks],['Leave',COLS.leave],['Reports',COLS.reports],['Reminders',COLS.reminders],
+  [['Trips',COLS.trips],['Flight_TA_Schedule',COLS.flight_ta],['Tasks',COLS.tasks],['Leave',COLS.leave],['Reports',COLS.reports],['Reminders',COLS.reminders],
    ['Checklist',COLS.checklist],['Readings',COLS.readings],['Issues',COLS.issues],['Team',COLS.team],
    ['Bills',COLS.bills],['Machines',COLS.machines],['Plans',COLS.plans],['SyncLog',COLS.log]
   ].forEach(([n,h])=>ensureSheet(s,n,h));
@@ -1167,3 +1195,97 @@ function setupReminderTrigger() {
     .timeBased().everyHours(1).create();
   Logger.log('Reminder trigger set: checks every hour');
 }
+
+/**
+ * Bảo mật Webhook & Secrets qua Script Properties (IMP-03)
+ * Tuyệt đối không gán cứng URL hoặc Secret Signature trong mã nguồn.
+ * Cấu hình bảo mật qua hàm setupSecretProperties() hoặc Project Settings > Script Properties.
+ */
+var POWER_AUTOMATE_WEBHOOK_URL = '';
+
+function pushToPowerAutomateWebhook(tripsData) {
+  var url = PropertiesService.getScriptProperties().getProperty('POWER_AUTOMATE_WEBHOOK_URL') || POWER_AUTOMATE_WEBHOOK_URL;
+  if (!url || !tripsData || !tripsData.length) return;
+
+  tripsData.forEach(function(t) {
+    var ta = (t.ta && typeof t.ta === 'object') ? t.ta : {};
+    var fl = (t.flight && typeof t.flight === 'object') ? t.flight : {};
+    if (typeof t.ta === 'string') { try { ta = JSON.parse(t.ta); } catch(e){} }
+    if (typeof t.flight === 'string') { try { fl = JSON.parse(t.flight); } catch(e){} }
+
+    var payload = {
+      tripId: t.id || '',
+      taCode: ta.taNo || '',
+      plant: t.plant || '',
+      location: t.location || '',
+      date: t.date || '',
+      dateEnd: t.dateEnd || t.date || '',
+      purpose: t.purpose || '',
+      outboundDepart: fl.depart || '',
+      outboundArrive: fl.arrive || '',
+      returnDepart: fl.ret_depart || '',
+      returnArrive: fl.ret_arrive || ''
+    };
+
+    try {
+      UrlFetchApp.fetch(url, {
+        method: 'post',
+        contentType: 'application/json',
+        payload: JSON.stringify(payload),
+        muteHttpExceptions: true
+      });
+    } catch (e) {
+      Logger.log('Power Automate webhook error: ' + e.message);
+    }
+  });
+}
+
+/**
+ * Server-side Telegram sender (IMP-03)
+ * Gửi tin nhắn Telegram từ backend Google Apps Script để bảo vệ Bot Token
+ */
+function sendTelegramNotification(p){
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var token = (p && p.token) || props.getProperty('TELEGRAM_BOT_TOKEN');
+    var chatId = (p && p.chatId) || props.getProperty('TELEGRAM_CHAT_ID');
+    var text = (p && p.text) || '';
+
+    if (!token || !chatId || !text) {
+      return { ok: false, error: 'Missing token, chatId, or text' };
+    }
+
+    var url = 'https://api.telegram.org/bot' + token + '/sendMessage';
+    var payload = {
+      chat_id: chatId,
+      text: text,
+      parse_mode: (p && p.parseMode) || 'HTML',
+      disable_web_page_preview: true
+    };
+
+    var resp = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    });
+
+    var data = JSON.parse(resp.getContentText());
+    return { ok: data.ok, result: data };
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+/**
+ * Hàm cài đặt Secret 1 lần trong Script Properties (IMP-03)
+ */
+function setupSecretProperties(powerAutomateUrl, telegramToken, telegramChatId) {
+  var props = PropertiesService.getScriptProperties();
+  if (powerAutomateUrl) props.setProperty('POWER_AUTOMATE_WEBHOOK_URL', powerAutomateUrl);
+  if (telegramToken) props.setProperty('TELEGRAM_BOT_TOKEN', telegramToken);
+  if (telegramChatId) props.setProperty('TELEGRAM_CHAT_ID', telegramChatId);
+  Logger.log('✅ Secrets updated in ScriptProperties successfully.');
+  return { ok: true, message: 'Script properties updated securely.' };
+}
+

@@ -119,9 +119,222 @@ let photoCtx=null,tmpPhotos=[];
 let taskView='list',taskFilter='all';
 let deferredPrompt=null;
 
-function sv(){try{localStorage.setItem('plpro1',JSON.stringify(S));}catch(e){}}
+function sv(){
+  try{
+    localStorage.setItem('plpro1',JSON.stringify(S));
+  }catch(e){
+    console.error('[PlantLog] LocalStorage save error:', e);
+    if(e.name==='QuotaExceededError'||e.code===22||e.code===1014||(e.message&&e.message.toLowerCase().includes('quota'))){
+      if(typeof showToast==='function'){
+        showToast('⚠️ Bộ nhớ máy bị đầy (LocalStorage Quota)! Vui lòng xóa bớt ảnh hoặc đồng bộ dữ liệu.', 6000);
+      }
+    }
+  }
+}
 function ld(){try{const d=localStorage.getItem('plpro1');if(d)S={...S,...JSON.parse(d)};}catch(e){}}
 function t(k){return T[S.lang][k]||T.en[k]||k;}
+
+// ═══════ STORAGE & IMAGE OPTIMIZATION (IMP-01) ═══════
+function getStorageUsage(){
+  try {
+    let total = 0;
+    for (let x in localStorage) {
+      if (Object.prototype.hasOwnProperty.call(localStorage, x)) {
+        total += ((localStorage[x].length + x.length) * 2);
+      }
+    }
+    return {
+      usedBytes: total,
+      usedMB: (total / (1024 * 1024)).toFixed(2),
+      percent: Math.min(100, Math.round((total / (5 * 1024 * 1024)) * 100))
+    };
+  } catch(e) {
+    return { usedBytes: 0, usedMB: '0', percent: 0 };
+  }
+}
+
+/**
+ * Nén ảnh tự động tại Client qua Canvas (IMP-01)
+ * Giảm dung lượng ảnh từ 3MB - 12MB xuống ~150KB - 250KB JPEG (giảm 97%)
+ * @param {File|Blob|string} source - Tệp ảnh hoặc Data URL
+ * @param {number} [maxDimension=1280] - Chiều tối đa (width/height)
+ * @param {number} [quality=0.72] - Chất lượng nén JPEG (0 - 1)
+ * @returns {Promise<string>} Chuỗi Data URL đã được nén
+ */
+function compressImageFile(source, maxDimension = 1280, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    if (!source) return resolve('');
+
+    // Nếu là Blob/File không phải ảnh (PDF, text, ...), đọc thẳng DataURL
+    if (source instanceof Blob && source.type && !source.type.startsWith('image/')) {
+      const r = new FileReader();
+      r.onload = e => resolve(e.target.result);
+      r.onerror = reject;
+      r.readAsDataURL(source);
+      return;
+    }
+
+    const processImg = (img) => {
+      try {
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+
+        if (!w || !h) {
+          return resolve(typeof source === 'string' ? source : '');
+        }
+
+        if (w > maxDimension || h > maxDimension) {
+          if (w > h) {
+            h = Math.round((h * maxDimension) / w);
+            w = maxDimension;
+          } else {
+            w = Math.round((w * maxDimension) / h);
+            h = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(typeof source === 'string' ? source : '');
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      } catch (err) {
+        console.warn('[compressImageFile] Canvas compression error:', err);
+        if (typeof source === 'string') resolve(source);
+        else {
+          const r = new FileReader();
+          r.onload = e => resolve(e.target.result);
+          r.onerror = reject;
+          r.readAsDataURL(source);
+        }
+      }
+    };
+
+    const img = new Image();
+    if (typeof source === 'string') {
+      img.onload = () => processImg(img);
+      img.onerror = () => resolve(source);
+      img.src = source;
+    } else if (source instanceof Blob) {
+      const objUrl = URL.createObjectURL(source);
+      img.onload = () => {
+        URL.revokeObjectURL(objUrl);
+        processImg(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objUrl);
+        const r = new FileReader();
+        r.onload = ev => resolve(ev.target.result);
+        r.onerror = reject;
+        r.readAsDataURL(source);
+      };
+      img.src = objUrl;
+    } else {
+      resolve('');
+    }
+  });
+}
+
+// ═══════ DATA BACKUP & RESTORE (IMP-06) ═══════
+function exportDataBackupJSON() {
+  try {
+    const backupObj = {
+      app: 'VCS PlantLog Pro',
+      version: 'v4.9',
+      exportDate: new Date().toISOString(),
+      data: S
+    };
+    const jsonStr = JSON.stringify(backupObj, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `PlantLog_Backup_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if(typeof showToast === 'function') showToast('✓ Đã xuất file sao lưu JSON thành công!');
+  } catch (e) {
+    console.error('[Backup]', e);
+    if(typeof showToast === 'function') showToast('Lỗi khi xuất file sao lưu: ' + e.message);
+  }
+}
+
+function importDataBackupJSON() {
+  const input = document.getElementById('backup-json-input');
+  if (input) {
+    input.value = '';
+    input.click();
+  }
+}
+
+function handleBackupFileSelect(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      const incomingData = parsed.data || parsed;
+      if (!incomingData || typeof incomingData !== 'object' || (!incomingData.trips && !incomingData.tasks && !incomingData.profile)) {
+        if(typeof showToast === 'function') showToast('❌ Tệp sao lưu không đúng định dạng PlantLog Pro!');
+        return;
+      }
+
+      if (!confirm('Bạn có chắc chắn muốn khôi phục dữ liệu từ tệp này? Dữ liệu hiện tại sẽ được cập nhật.')) {
+        return;
+      }
+
+      S = { ...S, ...incomingData };
+      sv();
+      if(typeof showToast === 'function') showToast('✅ Khôi phục dữ liệu thành công!');
+
+      // Re-render toàn bộ giao diện
+      if (typeof renderDash === 'function') renderDash();
+      if (typeof renderTripList === 'function') renderTripList();
+      if (typeof renderTasks === 'function') renderTasks();
+      if (typeof renderCalendar === 'function') renderCalendar();
+      if (typeof loadProfile === 'function') loadProfile();
+    } catch (err) {
+      console.error('[Restore]', err);
+      if(typeof showToast === 'function') showToast('❌ Lỗi đọc tệp JSON: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ═══════ NETWORK STATUS INDICATOR (IMP-07) ═══════
+function updateNetworkStatus() {
+  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  const badge = document.getElementById('net-status-badge');
+  const dot = document.getElementById('net-dot');
+  const text = document.getElementById('net-text');
+  if (!badge || !dot || !text) return;
+
+  if (isOnline) {
+    dot.style.background = '#4ADE80';
+    text.textContent = 'Online';
+    badge.title = 'Đang kết nối Internet';
+  } else {
+    dot.style.background = '#F87171';
+    text.textContent = 'Offline';
+    badge.title = 'Mất kết nối Internet - Chạy chế độ Offline';
+  }
+}
+if(typeof window !== 'undefined'){
+  window.addEventListener('online', updateNetworkStatus);
+  window.addEventListener('offline', updateNetworkStatus);
+}
 
 // ═══════ PWA ═══════
 function setupPWA(){
@@ -318,6 +531,7 @@ function init(){
   safeRun(() => setLang(S.lang||'en'), 'setLang');
   safeRun(checkNotifPrompt, 'checkNotifPrompt');
   safeRun(updateGSStatus,   'updateGSStatus');
+  safeRun(updateNetworkStatus, 'updateNetworkStatus');
 
   // Auth MUST run last — it controls app visibility
   // Do NOT hide app before this — a crash would leave it blank

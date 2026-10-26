@@ -44,6 +44,10 @@
       <div id="today-date" style="font-size:11px;opacity:0.78;margin-top:1px;"></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <div id="net-status-badge" style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;background:rgba(255,255,255,0.18);font-size:11px;font-weight:600;color:#fff;">
+        <span id="net-dot" style="width:7px;height:7px;border-radius:50%;background:#4ADE80;"></span>
+        <span id="net-text">Online</span>
+      </div>
       <div class="ltog">
         <button class="lbtn act" id="lang-en" onclick="setLang('en')">EN</button>
         <button class="lbtn" id="lang-vi" onclick="setLang('vi')">VI</button>
@@ -370,10 +374,17 @@
 
   <!-- Filter bar -->
   <div style="background:#fff;padding:8px 12px;flex-shrink:0;border-bottom:1px solid var(--g200);">
-    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;">
+    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px;">
       <button class="tf-btn active" id="bf-all"   onclick="setBillFilter('all')">All</button>
       <button class="tf-btn"        id="bf-trip"  onclick="setBillFilter('trip')">By Trip</button>
       <button class="tf-btn"        id="bf-month" onclick="setBillFilter('month')">This Month</button>
+    </div>
+    <!-- Payment method tabs (IMP-07) -->
+    <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px;">
+      <button class="tf-btn active" id="bpf-all"  onclick="setBillPaymentFilter('all')"  style="font-size:11px;padding:3px 9px;">All PM</button>
+      <button class="tf-btn"        id="bpf-cash" onclick="setBillPaymentFilter('cash')" style="font-size:11px;padding:3px 9px;">💵 Cash</button>
+      <button class="tf-btn"        id="bpf-bank" onclick="setBillPaymentFilter('bank')" style="font-size:11px;padding:3px 9px;">🏦 Bank</button>
+      <button class="tf-btn"        id="bpf-card" onclick="setBillPaymentFilter('card')" style="font-size:11px;padding:3px 9px;">💳 Card</button>
     </div>
   </div>
 
@@ -526,11 +537,17 @@
       </div>
     </div>
     <div class="card">
-      <div class="si" onclick="showScreen('leave')">
-        <div class="sic" style="background:var(--al);color:#92400E;">🌴</div>
-        <div class="sin"><div class="sil">Leave / Calendar Planner</div><div class="sis">Manage leave, WFH and holiday days</div></div>
-        <div style="color:var(--g400);">›</div>
+      <div class="si" onclick="exportDataBackupJSON()">
+        <div class="sic" style="background:#E0F2FE;color:#0369A1;">💾</div>
+        <div class="sin"><div class="sil">Xuất dữ liệu dự phòng (.json)</div><div class="sis">Lưu toàn bộ dữ liệu ra tệp JSON về máy</div></div>
+        <div style="color:var(--g400);">↓</div>
       </div>
+      <div class="si" onclick="importDataBackupJSON()">
+        <div class="sic" style="background:#FEF3C7;color:#B45309;">📥</div>
+        <div class="sin"><div class="sil">Khôi phục từ tệp dự phòng</div><div class="sis">Nhập dữ liệu JSON khi chuyển máy mới</div></div>
+        <div style="color:var(--g400);">↑</div>
+      </div>
+      <input type="file" id="backup-json-input" accept=".json,application/json" style="display:none;" onchange="handleBackupFileSelect(event)">
       <div class="si" onclick="clearAllData()" style="border-bottom:none;">
         <div class="sic" style="background:var(--rl);color:var(--red);">🗑</div>
         <div class="sin"><div class="sil" style="color:var(--red);" data-t="clearData">Clear all data</div></div>

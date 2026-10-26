@@ -1,5 +1,95 @@
 # 📝 Nhật ký cập nhật (Changelog) — PlantLog Pro
 
+## [Đề xuất nâng cấp / Upcoming Plan] - Kế hoạch Cải tiến & Tối ưu hóa Hệ thống (22/10/2026)
+
+> Chi tiết kế hoạch và phân tích kỹ thuật được lưu trữ tại tệp: [`IMPROVEMENT_PLAN.md`](file:///d:/AI%20Lean/Plantlog-pro-main/IMPROVEMENT_PLAN.md)
+
+### 📌 Danh mục các hạng mục cải tiến theo mức độ ưu tiên & tính cấp thiết:
+
+1. **🔴 [P0 - Bắt buộc / Khẩn cấp] Nén ảnh tự động tại Client & Chống tràn LocalStorage:**
+   - **Vấn đề:** Ảnh chụp từ camera điện thoại (4MB – 12MB) đọc trực tiếp thành Base64 gây lỗi `QuotaExceededError` (tràn giới hạn 5MB của `localStorage`), dẫn đến việc dữ liệu bị xóa sạch khi tải lại trang.
+   - **Kế hoạch xử lý:** Xây dựng hàm `compressImageFile()` nén ảnh tự động qua Canvas (max 1280px, chất lượng 0.72) giảm dung lượng còn ~150KB - 250KB; bổ sung cơ chế cảnh báo bộ nhớ đầy.
+
+2. **🟠 [P1 - Rất cần thiết] Hàng đợi tải ảnh nền khi Offline (Background Media Queue):**
+   - **Vấn đề:** Khi kỹ sư chụp hóa đơn / sự cố tại nơi mất mạng, ảnh Base64 bị kẹt lại máy và không tự động đẩy bù lên Google Drive khi có mạng trở lại.
+   - **Kế hoạch xử lý:** Thêm hàng đợi `pendingMedia` và hàm tự động quét đẩy ảnh lên Drive khi mạng kết nối lại (`online` event) hoặc khi bấm nút Sync.
+
+3. **🟠 [P1 - Rất cần thiết] Bảo mật Webhook Secret & Token trong Google Apps Script:**
+   - **Vấn đề:** Lộ chuỗi ký bí mật của Webhook Power Automate trong mã nguồn backend (`PlantLog_GoogleAppsScript_Pro.gs`) và Token Telegram lưu trên trình duyệt.
+   - **Kế hoạch xử lý:** Đưa các khóa bí mật vào `Script Properties` của Google Apps Script; chuyển việc gửi tin Telegram sang server backend xử lý.
+
+4. **🟠 [P1 - Rất cần thiết] Script đóng gói tự động (Automated Bundler Script):**
+   - **Vấn đề:** Hiện tượng lệch code khi phải sửa đồng thời ở 4 nơi (`src/modules/`, `src/index.html`, `plantlog_pro_mobile.html`, `plantlog_debug.html`).
+   - **Kế hoạch xử lý:** Viết script tự động hóa `bundle.ps1` đọc các file từ `src/modules/` tự động inject vào file bundle và tự động tăng version cache của Service Worker.
+
+5. **🟡 [P2 - Cần thiết] Đồng bộ 2 chiều chống xung đột (Per-Item Timestamp Merge):**
+   - **Kế hoạch xử lý:** Bổ sung so sánh `updatedAt` theo từng dòng dữ liệu (Trip, Task, Bill) thay vì ghi đè toàn bộ danh sách khi kéo dữ liệu từ Sheets về.
+
+6. **🟡 [P2 - Cần thiết] Sao lưu & Khôi phục dữ liệu thủ công (Backup / Restore JSON):**
+   - **Kế hoạch xử lý:** Bổ sung tính năng tải file `plantlog_backup.json` và khôi phục dữ liệu trong màn hình Cài đặt, bảo vệ an toàn dữ liệu khi đổi máy.
+
+7. **🟢 [P3 - Cải thiện UX] Tối ưu hóa RAM xuất PDF & Chỉ báo trạng thái mạng trực quan:**
+   - **Kế hoạch xử lý:** Thêm chấm báo Online/Offline trên Header, thanh Loading khi tạo PDF và bộ lọc nhanh hóa đơn theo hình thức thanh toán.
+
+---
+
+## [v4.9] - 26/10/2026
+
+### 🚀 Triển khai Giai đoạn 1 Kế hoạch Cải tiến Hệ thống (IMPROVEMENT_PLAN)
+
+#### 🔴 1. [IMP-01] Nén ảnh tự động tại Client & Chống tràn LocalStorage:
+- **Hàm nén Canvas `compressImageFile(source, maxDimension = 1280, quality = 0.72)`:** Tự động điều chỉnh kích thước lớn nhất về 1280px và nén JPEG chất lượng 0.72, giảm dung lượng ảnh camera từ 4MB – 12MB xuống còn ~150KB - 250KB (giảm 97%), bảo toàn độ sắc nét văn bản trên hóa đơn và thiết bị hiện trường.
+- **Tích hợp nén trực tiếp:** Áp dụng nén tự động ngay khi chọn ảnh trong `handlePhoto()` (sự cố/hóa đơn/ảnh chụp) và `handleBillPhotos()`.
+- **Cơ chế bắt lỗi bộ nhớ `sv()`:** Xử lý ngoại lệ `QuotaExceededError` khi trình duyệt đạt giới hạn lưu trữ, hiển thị Toast cảnh báo trực quan cho kỹ sư thay vì âm thầm bỏ qua gây mất dữ liệu.
+- **Tiện ích giám sát dung lượng `getStorageUsage()`:** Cung cấp hàm đo lường dung lượng đã dùng (bytes, MB, tỷ lệ %) của `localStorage`.
+
+#### 🟠 2. [IMP-02] Hàng đợi Upload ảnh nền khi Offline (Background Media Queue):
+- **Cơ chế quét tự động `flushPendingMedia()`:** Quét toàn bộ ảnh còn lưu cục bộ dưới dạng Base64 trong hóa đơn (`S.bills`) và sự cố báo cáo (`S.reports`) để tuần tự tải bù lên thư mục Google Drive tương ứng qua `uploadBillPhotoToDrive()`.
+- **Tự động thay thế & giải phóng dung lượng:** Sau khi upload Drive thành công, thay thế chuỗi Base64 bằng đường dẫn `driveUrl` và gọi `sv()`, giúp giải phóng ngay lập tức hàng chục MB bộ nhớ cache trên điện thoại.
+- **Kích hoạt thông minh:** Tự động chạy khi thiết bị kết nối mạng trở lại (`online` event listener) hoặc khi người dùng bắt đầu quy trình Đồng bộ (`syncToSheets()`).
+
+#### 🟠 3. [IMP-03] Bảo mật Webhook Secret & Token trong Google Apps Script:
+- **Loại bỏ Secret URL gán cứng:** Xóa hoàn toàn URL kèm chữ ký bí mật Power Automate khỏi mã nguồn `PlantLog_GoogleAppsScript_Pro.gs` và `PlantLog_GoogleAppsScript.gs`, chuyển sang đọc từ đám mây qua `PropertiesService.getScriptProperties().getProperty('POWER_AUTOMATE_WEBHOOK_URL')`.
+- **Hàm cấu hình một chạm `setupSecretProperties()`:** Cho phép thiết lập an toàn Webhook URL, Telegram Token, và Chat ID vào `Script Properties` mà không để lộ trong Git repository.
+- **Relay Telegram Backend an toàn:** Bổ sung endpoint `action: 'sendTelegram'` trong Apps Script để gửi tin nhắn Telegram từ máy chủ, tránh lỗi trình duyệt CORS và bảo vệ Bot Token không bị lộ ở client.
+
+#### 🟠 4. [IMP-04] Script Tự Động Đóng Gói Mã Nguồn (Automated Bundler Script):
+- **Xây dựng `bundle.js` & `bundle.ps1`:** Đọc tự động 12 module cốt lõi từ `src/modules/` theo đúng thứ tự phụ thuộc, kiểm tra cú pháp JS (`new Function()`), inject vào thẻ `<script>` của `src/index.html` và đồng bộ tức thì sang `plantlog_pro_mobile.html`.
+- **Tự động tăng phiên bản Cache Service Worker:** Tự động phát hiện và nâng version trong `src/sw.js` (ví dụ `plantlog-pro-v13` ➔ `v14`), kích hoạt trình duyệt client xóa cache cũ và tải mã nguồn mới nhất khi online.
+- **Tiêu chuẩn hóa quy trình phát triển:** Lập trình viên chỉ cần chỉnh sửa các file nhỏ trong `src/modules/` và chạy `node bundle.js` hoặc `./bundle.ps1`.
+
+#### 🟡 5. [IMP-05] Đồng Bộ 2 Chiều Chống Xung Đột (Per-Item Timestamp Merge):
+- **Thuật toán gộp thông minh `mergeCollectionByTimestamp()`:** Khi tải dữ liệu từ Google Sheets về (`loadFromSheets()`), tiến hành so khớp theo từng bản ghi (Trips, Tasks, Bills) dựa trên mốc thời gian `updatedAt` / `createdAt` thay vì ghi đè toàn bộ mảng.
+- **Bảo vệ dữ liệu ngoại tuyến (Offline Safety):** Các bản ghi mới được tạo offline chưa kịp đồng bộ lên Sheets được giữ nguyên 100%, không bị xóa mất khi kéo dữ liệu từ Sheets về.
+- **Ưu tiên chỉnh sửa mới nhất:** Nếu kỹ sư vừa cập nhật công việc hoặc hóa đơn cục bộ (`local.updatedAt > remote.updatedAt`), dữ liệu cục bộ được ưu tiên bảo lưu và sẵn sàng đẩy ngược lên Sheets trong lần đồng bộ tiếp theo.
+
+#### 🟡 6. [IMP-06] Sao Lưu & Khôi Phục Dữ Liệu Thủ Công (Backup / Restore JSON):
+- **Xuất tệp dự phòng `exportDataBackupJSON()`:** Bổ sung tính năng tải ngay tệp sao lưu chuẩn `PlantLog_Backup_YYYY-MM-DD.json` về điện thoại/máy tính trong mục Cài đặt.
+- **Khôi phục từ tệp `importDataBackupJSON()`:** Cho phép kỹ sư chọn tệp JSON dự phòng để khôi phục toàn bộ trạng thái làm việc (Trips, Tasks, Bills, Báo cáo, Profile) khi đổi máy mới hoặc sau khi xóa dữ liệu trình duyệt.
+- **Giao diện trực quan:** Bổ sung nút thao tác trực quan với icon và chỉ dẫn rõ ràng trong màn hình Cài đặt.
+
+#### 🟢 7. [IMP-07] Tối Ưu RAM Xuất PDF, Chỉ Báo Mạng Trực Quan & Bộ Lọc Nhanh Hóa Đơn:
+- **Chỉ báo kết nối mạng (Network Status Badge):** Bổ sung huy hiệu trạng thái mạng trực quan ngay trên thanh tiêu đề Home (`net-status-badge`) với đèn chấm xanh `Online` và đỏ `Offline`, tự động cập nhật phản hồi sự kiện mạng theo thời gian thực (`online`/`offline`).
+- **Thanh tiến trình & Tối ưu RAM khi xuất PDF:** Bổ sung hiệu ứng phản hồi trực quan khi bấm xuất báo cáo (`⏳ Đang kết xuất tệp PDF...`), tự động khóa tạm nút xuất chống bấm liên tục làm quá tải bộ nhớ trình duyệt, đồng thời ngăn lỗi văng trang khi ảnh sự cố đã tải lên Google Drive URL.
+- **Bộ lọc nhanh hình thức thanh toán trên Bills Screen:** Bổ sung thanh 4 nút lọc nhanh ngay trên màn hình Expense Bills (`All PM`, `💵 Cash`, `🏦 Bank`, `💳 Card`), giúp kỹ sư dễ dàng theo dõi và đối soát chi phí theo từng phương thức thanh toán.
+
+---
+
+## [v4.8] - 25/09/2026
+
+### 🔗 Tích hợp Đồng bộ Microsoft Lists & Tự động bóc tách Sheet Tab `Flight_TA_Schedule`
+
+#### 1. 📊 Backend Google Apps Script (`PlantLog_GoogleAppsScript_Pro.gs` & `PlantLog_GoogleAppsScript.gs`)
+- **Tự động bóc tách 10 trường dữ liệu riêng:** Tự động tạo và cập nhật Sheet tab **`Flight_TA_Schedule`** mỗi khi đồng bộ chuyến đi.
+- **Trường thông tin chuẩn hóa (Bỏ PNR):** `TripID`, `TACode`, `Plant`, `Location`, `Date`, `DateEnd`, `Purpose`, `OutboundDepart`, `OutboundArrive`, `ReturnDepart`, `ReturnArrive`.
+- **Hỗ trợ tự động khởi tạo:** Đã tích hợp khởi tạo tự động trong hàm `setupSheets()` với hàng tiêu đề xanh lá chuẩn đẹp.
+
+#### 2. 📋 Tài liệu Kế hoạch Đồng bộ Microsoft Lists via Power Automate
+- Xây dựng tài liệu hướng dẫn chi tiết quy trình đồng bộ tự động từ Google Sheets sang Microsoft Lists (SharePoint List) công ty bằng Power Automate trong tệp [`microsoft_lists_integration_plan.md`](file:///C:/Users/ngo.van-cuong/.gemini/antigravity-ide/brain/5363a3f4-76a6-4788-86e5-72d97127c019/microsoft_lists_integration_plan.md).
+- Hỗ trợ xử lý tra cứu trùng lặp (Upsert logic: Get Items ➔ Filter Query ➔ Create/Update Item) giúp dữ liệu không bao giờ bị trùng lặp khi người dùng sửa chuyến đi.
+
+---
+
 ## [v4.7] - 20/09/2026
 
 ### 📝 Bổ sung Mô tả Công việc (`Task Description`) vào Báo cáo Chuyến đi (Trip Report) & PDF
@@ -32,6 +122,11 @@
   - **Sửa lỗi tràn chữ & lỗi ký tự:** Chuyển đổi ký tự Unicode arrow `→` sang chuẩn ASCII `->` giúp font chữ Helvetica trong PDF tính toán chính xác độ rộng chuỗi (`getTextWidth`), tự động ngắt dòng thông minh mà không bị biến dạng thành `'" ` hoặc bị mất chữ ở lề phải (`DaNang -> Ho Chi Minh`).
   - **Cỡ chữ chuẩn:** Đặt cỡ chữ `8pt` vừa vặn, định khoảng cách dòng hợp lý (`lh = 4mm`), giúp toàn bộ thông tin chặng đi, chặng về và PNR hiển thị đầy đủ, đẹp mắt.
 - **Đồng bộ toàn bộ:** Đã cập nhật trên giao diện chi tiết chuyến đi (Trip Detail Card), Modal xem báo cáo (View Report Modal) và tệp PDF xuất ra (`exportReportPDF`).
+
+#### 6. 📊 Tự động bóc tách Sheet tab riêng `Flight_TA_Schedule` cho Microsoft Lists Sync
+- **Bổ sung Sheet tab riêng:** Tự động tạo và cập nhật tab **`Flight_TA_Schedule`** trên Google Sheets với đúng 10 trường thông tin cơ bản: `TripID`, `TACode`, `Plant`, `Location`, `Date`, `DateEnd`, `Purpose`, `OutboundDepart`, `OutboundArrive`, `ReturnDepart`, `ReturnArrive`.
+- **Cập nhật Backend Apps Script:** Đã bổ sung mã nguồn sẵn sàng trong `PlantLog_GoogleAppsScript_Pro.gs` và `PlantLog_GoogleAppsScript.gs`.
+- **Power Automate Integration Plan:** Đã chuẩn bị tài liệu chi tiết quy trình đồng bộ sang Microsoft Lists qua Power Automate trong tệp [`microsoft_lists_integration_plan.md`](file:///C:/Users/ngo.van-cuong/.gemini/antigravity-ide/brain/5363a3f4-76a6-4788-86e5-72d97127c019/microsoft_lists_integration_plan.md).
 
 ## [v4.6] - 10/08/2026
 

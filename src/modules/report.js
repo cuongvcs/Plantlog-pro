@@ -366,41 +366,56 @@ function pickPhotoSource(source){
   setTimeout(()=>input.click(), 120);
 }
 
-function handlePhoto(e){
+async function handlePhoto(e){
   const files = Array.from(e.target.files);
   if(!files.length) return;
   const context = (e.target.dataset && e.target.dataset.context) || '';
-  let loaded = 0;
-  const photos = [];
 
-  files.forEach(f => {
-    const r = new FileReader();
-    r.onload = ev => {
-      photos.push(ev.target.result);
-      if(++loaded === files.length){
-        if(context === 'bill'){
-          // Get trip + bill IDs from the open modal
-          const ts     = document.getElementById('bill-trip-select');
-          const tripId = (ts && ts.value) || (document.getElementById('bill-save-btn').dataset.tripid||'');
-          const billId = editingBillId || '';
-          // Call Drive-aware handler
-          handleBillPhotos(photos, billId, tripId);
-          e.target.dataset.context = '';
-          _photoCtxPending = null;
-        } else if(context === 'issue' && typeof photoCtx === 'number'){
-          if(!curReport.issues[photoCtx].photos) curReport.issues[photoCtx].photos = [];
-          curReport.issues[photoCtx].photos.push(...photos);
-          sv(); renderIssues(); photoCtx = null;
-          e.target.dataset.context = '';
-          _photoCtxPending = null;
-        } else {
-          tmpPhotos.push(...photos);
-          renderTmpPhotos();
-        }
-      }
-    };
-    r.readAsDataURL(f);
-  });
+  if (typeof showToast === 'function' && files.length > 0) {
+    showToast('⏳ Đang tối ưu & nén ảnh…');
+  }
+
+  const photos = [];
+  for(const f of files){
+    try {
+      const compressed = await compressImageFile(f, 1280, 0.72);
+      if(compressed) photos.push(compressed);
+    } catch(err){
+      console.warn('[handlePhoto] Compression failed, fallback to raw', err);
+      const raw = await new Promise(res => {
+        const r = new FileReader();
+        r.onload = ev => res(ev.target.result);
+        r.onerror = () => res('');
+        r.readAsDataURL(f);
+      });
+      if(raw) photos.push(raw);
+    }
+  }
+
+  if(!photos.length){
+    e.target.value = '';
+    return;
+  }
+
+  if(context === 'bill'){
+    // Get trip + bill IDs from the open modal
+    const ts     = document.getElementById('bill-trip-select');
+    const tripId = (ts && ts.value) || (document.getElementById('bill-save-btn') && document.getElementById('bill-save-btn').dataset.tripid||'');
+    const billId = (typeof editingBillId !== 'undefined' && editingBillId) ? editingBillId : '';
+    // Call Drive-aware handler
+    handleBillPhotos(photos, billId, tripId);
+    e.target.dataset.context = '';
+    _photoCtxPending = null;
+  } else if(context === 'issue' && typeof photoCtx === 'number' && curReport && curReport.issues && curReport.issues[photoCtx]){
+    if(!curReport.issues[photoCtx].photos) curReport.issues[photoCtx].photos = [];
+    curReport.issues[photoCtx].photos.push(...photos);
+    sv(); renderIssues(); photoCtx = null;
+    e.target.dataset.context = '';
+    _photoCtxPending = null;
+  } else {
+    tmpPhotos.push(...photos);
+    renderTmpPhotos();
+  }
   e.target.value = '';
 }
 function addPhotoToIssue(idx){photoCtx=idx;_photoCtxPending='issue';openPhotoSheet('issue');}
@@ -724,6 +739,18 @@ function exportPDF(){
     }
     return;
   }
+
+  // IMP-07: Visual loading feedback & RAM protection
+  if(typeof showToast === 'function') showToast('⏳ Đang kết xuất tệp PDF...');
+  const expBtn = document.activeElement;
+  let origText = '';
+  if(expBtn && expBtn.tagName === 'BUTTON') {
+    expBtn.disabled = true;
+    origText = expBtn.innerHTML;
+    expBtn.innerHTML = '⟳ Generating PDF…';
+    setTimeout(() => { try { expBtn.disabled = false; expBtn.innerHTML = origText; } catch(x){} }, 3000);
+  }
+
   const{jsPDF}=window.jspdf;
   const trip=S.trips.find(tr=>tr.id===curTrip);const r=curReport;const p=S.profile;
   if(!trip||!r)return;
@@ -770,7 +797,7 @@ function exportPDF(){
   r.readings.forEach(rd=>{const isCond=rd.type==='condition'||(!rd.value&&rd.condition);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);const nl=doc.splitTextToSize('• '+rd.name+(rd.tag?' ['+rd.tag+']':''),W-mg*2-40);doc.text(nl,mg+2,y);doc.setFont('helvetica','bold');if(isCond){const cond=rd.condition||'ok';rtxt(cond==='ok'?'OK':cond==='notok'?'NOT OK':'OTHER',y,cond==='ok'?[15,110,86]:cond==='notok'?[226,75,74]:[245,158,11]);}else{rtxt((rd.value||'')+(rd.unit?' '+rd.unit:''),y,rd.status==='bad'?[226,75,74]:rd.status==='na'?[100,100,100]:[15,110,86]);}doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);if(rd.notes){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(rd.notes,mg+6,y+5);y+=5;}y+=nl.length*5;chk();});
   if(!r.readings.length){doc.setFontSize(9);doc.text('None.',mg+2,y);y+=5;}ln();
   sec(`ISSUES (${r.issues.length})`);
-  r.issues.forEach(is=>{const sc=is.severity==='critical'?[91,33,182]:is.severity==='high'?[226,75,74]:is.severity==='medium'?[245,158,11]:[55,138,221];const istLabel={'pending':'Pending','waiting_part':'Waiting part','processing':'Processing','done':'Done'}[is.istatus||'pending']||'Pending';const istCol={pending:[100,100,100],waiting_part:[55,138,221],processing:[245,158,11],done:[15,110,86]}[is.istatus||'pending'];doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...sc);doc.text(`[${is.severity.toUpperCase()}]`,mg+2,y);doc.setTextColor(33,37,41);const tl=doc.splitTextToSize(is.title,W-mg*2-50);doc.text(tl,mg+22,y);doc.setFontSize(8);doc.setFont('helvetica','normal');rtxt(istLabel,y,istCol);y+=tl.length*5;if(is.description){doc.setFontSize(8);doc.setTextColor(80,80,80);const dl=doc.splitTextToSize(is.description,W-mg*2-6);doc.text(dl,mg+4,y);y+=dl.length*4+2;}if(is.action){doc.setFontSize(8);doc.setTextColor(80,80,80);const al=doc.splitTextToSize('→ '+is.action,W-mg*2-6);doc.text(al,mg+4,y);y+=al.length*4+2;}if(is.photos&&is.photos.length){is.photos.forEach(ph=>{try{doc.addImage(ph,'JPEG',mg+4,y,35,26);y+=28;}catch(e){}chk();});}chk();});
+  r.issues.forEach(is=>{const sc=is.severity==='critical'?[91,33,182]:is.severity==='high'?[226,75,74]:is.severity==='medium'?[245,158,11]:[55,138,221];const istLabel={'pending':'Pending','waiting_part':'Waiting part','processing':'Processing','done':'Done'}[is.istatus||'pending']||'Pending';const istCol={pending:[100,100,100],waiting_part:[55,138,221],processing:[245,158,11],done:[15,110,86]}[is.istatus||'pending'];doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...sc);doc.text(`[${is.severity.toUpperCase()}]`,mg+2,y);doc.setTextColor(33,37,41);const tl=doc.splitTextToSize(is.title,W-mg*2-50);doc.text(tl,mg+22,y);doc.setFontSize(8);doc.setFont('helvetica','normal');rtxt(istLabel,y,istCol);y+=tl.length*5;if(is.description){doc.setFontSize(8);doc.setTextColor(80,80,80);const dl=doc.splitTextToSize(is.description,W-mg*2-6);doc.text(dl,mg+4,y);y+=dl.length*4+2;}if(is.action){doc.setFontSize(8);doc.setTextColor(80,80,80);const al=doc.splitTextToSize('→ '+is.action,W-mg*2-6);doc.text(al,mg+4,y);y+=al.length*4+2;}if(is.photos&&is.photos.length){is.photos.forEach(ph=>{if(typeof ph==='string'&&ph.startsWith('data:image/')){try{doc.addImage(ph,'JPEG',mg+4,y,35,26);y+=28;}catch(e){}}chk();});}chk();});
   if(!r.issues.length){doc.setFontSize(9);doc.text('None.',mg+2,y);y+=5;}ln();
   if(r.team&&r.team.length){sec(`TEAM (${r.team.length})`);r.team.forEach(m=>{doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);doc.text('• '+m.name+(m.role?' — '+m.role:''),mg+2,y);doc.setFont('helvetica','bold');rtxt(m.signoff==='yes'?'SIGNOFF':'ATTEND',y,m.signoff==='yes'?[15,110,86]:[100,100,100]);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);y+=5;chk();});ln();}
   const rptTaskIds=r.reportTasks||[];

@@ -117,6 +117,18 @@ function setBillFilter(f) {
   renderBillsScreen();
 }
 
+// ═══════ PAYMENT METHOD FILTER (IMP-07) ═══════
+let billPaymentFilter = 'all';
+
+function setBillPaymentFilter(pm) {
+  billPaymentFilter = pm;
+  ['all','cash','bank','card'].forEach(k => {
+    const el = document.getElementById('bpf-' + k);
+    if(el) el.classList.toggle('active', k === pm);
+  });
+  renderBillsScreen();
+}
+
 function openAddBillFromScreen() {
   // Open add bill modal without pre-selecting a trip
   editingBillId = null;
@@ -169,6 +181,15 @@ function renderBillsScreen() {
     const year  = (yearSel  && yearSel.value)  || new Date().getFullYear().toString();
     const month = (monthSel && monthSel.value) || String(new Date().getMonth()+1).padStart(2,'0');
     bills = bills.filter(b => (b.date||'').startsWith(`${year}-${month}`));
+  }
+
+  // Lọc theo hình thức thanh toán (IMP-07)
+  if (billPaymentFilter === 'cash') {
+    bills = bills.filter(b => (b.paymentMethod || '1-Cash').includes('Cash') || (b.paymentMethod || '').includes('1-'));
+  } else if (billPaymentFilter === 'bank') {
+    bills = bills.filter(b => (b.paymentMethod || '').includes('Bank') || (b.paymentMethod || '').includes('2-'));
+  } else if (billPaymentFilter === 'card') {
+    bills = bills.filter(b => (b.paymentMethod || '').includes('Card') || (b.paymentMethod || '').includes('Credit') || (b.paymentMethod || '').includes('3-'));
   }
 
   bills.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
