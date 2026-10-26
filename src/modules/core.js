@@ -614,8 +614,15 @@ function openModal(id){
   if(id==='modal-new-task'){populateTaskTripSelect();populateMachineSelect();populatePlanSelect();}
   if(id==='modal-add-reading'){rdType='condition';setReadingType('condition');}
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-document.addEventListener('click',e=>{if(e.target.classList.contains('mo'))e.target.classList.remove('open');});
+function closeModal(id){
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+  if (id === 'modal-voice-input' && typeof _activeRecognition !== 'undefined' && _activeRecognition) {
+    try { _activeRecognition.abort(); } catch(e){}
+    _activeRecognition = null;
+  }
+}
+document.addEventListener('click',e=>{if(e.target.classList.contains('mo'))closeModal(e.target.id);});
 
 // ═══════ PROFILE ═══════
 function loadProfile(){

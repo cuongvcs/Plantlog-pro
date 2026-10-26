@@ -63,6 +63,7 @@
 - **Điền & Lưu tự động vào Ghi chú:** Bản dịch tiếng Anh được tự động chèn vào ô nhập tương ứng và gọi hàm lưu ngay lập tức (hỗ trợ tại: *Ghi chú chuyến đi Trip Notes, Mô tả công việc Task Details, Chi tiết sự cố Issue Details, Ghi chú hóa đơn Bill Notes*).
 - **Giao diện Tiếng Anh chuẩn hóa:** Toàn bộ thông báo và nhãn thao tác trong Modal Voice Note được thiết kế bằng tiếng Anh đồng bộ với toàn bộ ứng dụng (`Listening (Vietnamese)... Speak into microphone`, `Voice VI ➔ EN`, `Stop & Translate`, `Insert & Save`).
 - **Cơ chế an toàn khi Offline:** Nếu thiết bị mất kết nối mạng khiến việc dịch bị gián đoạn, ứng dụng tự động bảo lưu văn bản tiếng Việt gốc vào ghi chú để không bị mất thông tin.
+- **Khắc phục triệt để lỗi hiển thị Modal & Cài đặt:** Đã sửa lỗi thẻ `<div>` chưa đóng trong `<div class="frow">` của `modal-add-bill`, khôi phục tính độc lập cho toàn bộ các modal (`modal-pin`, `modal-voice-input`, `modal-gsheet`). Bây giờ cả màn hình **Settings (Cài đặt)** và hộp thoại **Voice Note (`🎙️ VI ➔ EN`)** đều bật lên ngay lập tức và hoạt động ổn định 100%.
 
 ---
 
