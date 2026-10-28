@@ -141,8 +141,15 @@ function renderTripList(filter){
   list.innerHTML=trips.map(tr=>{
     const bc=tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba';
     const bt=tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned');
+    const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
     return `<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')">
-      <div class="ch"><div class="ct">${tr.plant}</div><span class="badge ${bc}">${bt}</span></div>
+      <div class="ch">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
+          <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
+          ${wk?`<span class="badge-week">${wk}</span>`:''}
+        </div>
+        <span class="badge ${bc}" style="flex-shrink:0;">${bt}</span>
+      </div>
       <div class="cs">${fmtDate(tr.date)}${tr.location?' · '+tr.location:''}</div>
       ${tr.purpose?`<div style="font-size:12px;color:var(--g500);margin-top:4px;">${tr.purpose.substring(0,55)}${tr.purpose.length>55?'...':''}</div>`:''}
     </div>`;
@@ -151,7 +158,11 @@ function renderTripList(filter){
 function openTripDetail(id){
   curTrip=id;
   const tr=S.trips.find(t=>t.id===id);if(!tr)return;
-  document.getElementById('detail-plant-name').textContent=tr.plant;
+  const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+  const nameEl=document.getElementById('detail-plant-name');
+  if(nameEl){
+    nameEl.innerHTML=`<span>${tr.plant}</span>${wk?` <span class="badge-week" style="background:rgba(255,255,255,0.22);color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px;vertical-align:middle;margin-left:6px;">${wk}</span>`:''}`;
+  }
   document.getElementById('detail-date').textContent=fmtDate(tr.date)+(tr.location?' · '+tr.location:'');
   // render bills for this trip
   setTimeout(()=>renderTripBills(id),50);
@@ -619,9 +630,33 @@ function renderDash(){
 
   const upcoming=S.trips.filter(tr=>tr.status!=='completed').sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);
   const upEl=document.getElementById('upcoming-trips');
-  upEl.innerHTML=upcoming.length?upcoming.map(tr=>`<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')"><div class="ch"><div class="ct">${tr.plant}</div><span class="badge ${tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):t('planned')}</span></div><div class="cs">${fmtDate(tr.date)}${tr.location?' · '+tr.location:''}</div></div>`).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noTrips')}</div>`;
+  upEl.innerHTML=upcoming.length?upcoming.map(tr=>{
+    const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+    return `<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')">
+      <div class="ch">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
+          <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
+          ${wk?`<span class="badge-week">${wk}</span>`:''}
+        </div>
+        <span class="badge ${tr.status==='in_progress'?'bb':'ba'}" style="flex-shrink:0;">${tr.status==='in_progress'?t('inProgress'):t('planned')}</span>
+      </div>
+      <div class="cs">${fmtDate(tr.date)}${tr.location?' · '+tr.location:''}</div>
+    </div>`;
+  }).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noTrips')}</div>`;
   const completed=S.trips.filter(tr=>tr.status==='completed').sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,3);
   const recEl=document.getElementById('recent-reports');
-  recEl.innerHTML=completed.length?completed.map(tr=>`<div class="card" style="cursor:pointer;" onclick="openTripDetail('${tr.id}')"><div class="ch"><div class="ct">${tr.plant}</div><span class="badge bg">${t('completed')}</span></div><div class="cs">${fmtDate(tr.date)}</div></div>`).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noReports')}</div>`;
+  recEl.innerHTML=completed.length?completed.map(tr=>{
+    const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+    return `<div class="card" style="cursor:pointer;" onclick="openTripDetail('${tr.id}')">
+      <div class="ch">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
+          <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
+          ${wk?`<span class="badge-week">${wk}</span>`:''}
+        </div>
+        <span class="badge bg" style="flex-shrink:0;">${t('completed')}</span>
+      </div>
+      <div class="cs">${fmtDate(tr.date)}</div>
+    </div>`;
+  }).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noReports')}</div>`;
 }
 

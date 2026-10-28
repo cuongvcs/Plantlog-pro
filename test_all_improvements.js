@@ -253,6 +253,34 @@ it('cleanSpeechText và mergeSpeechSegments loại bỏ triệt để từ lặp
   assert(t3 === 'Motor này hỏng rồi', 'mergeSpeechSegments removes Android segment overlap: got ' + t3);
 });
 
+// ── IMP-09 TESTS ──────────────────────────────────────────────────────────
+console.log('\n--- [IMP-09] Trip Week Number (ISO-8601) Display ---');
+it('core.js có hàm getWeekInfo và getTripWeekLabel tính chính xác tuần theo ISO-8601', () => {
+  const coreCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'core.js'), 'utf8');
+  const vm = require('vm');
+  const sandbox = { console };
+  vm.createContext(sandbox);
+  vm.runInContext(coreCode.substring(coreCode.indexOf('function getWeekInfo'), coreCode.indexOf('function getSortedTrips')), sandbox);
+
+  // Single date in Oct 2026 -> W44/26
+  assert(sandbox.getTripWeekLabel('2026-10-28') === 'W44/26', 'Single date W44/26 check');
+  // Same week range -> W44/26
+  assert(sandbox.getTripWeekLabel('2026-10-28', '2026-10-30') === 'W44/26', 'Same week range W44/26 check');
+  // Cross week range -> W44-W45/26
+  assert(sandbox.getTripWeekLabel('2026-10-28', '2026-11-04') === 'W44-W45/26', 'Cross week range W44-W45/26 check');
+  // First week of year 2026 -> W1/26
+  assert(sandbox.getTripWeekLabel('2026-01-01') === 'W1/26', 'Week 1 check');
+});
+
+it('trips.js và HTML render badge-week cạnh Plant name trong trip cards và detail', () => {
+  const tripsCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'trips.js'), 'utf8');
+  const indexHtml = fs.readFileSync(path.join(__dirname, 'src', 'index.html'), 'utf8');
+
+  assert(tripsCode.includes('badge-week'), 'trips.js contains badge-week');
+  assert(tripsCode.includes('getTripWeekLabel(tr.date,tr.dateEnd)'), 'trips.js calls getTripWeekLabel');
+  assert(indexHtml.includes('.badge-week'), 'index.html has .badge-week style');
+});
+
 console.log('\n====================================================');
 console.log(`🎉 KẾT QUẢ KIỂM THỬ: ${passedTests}/${totalTests} TESTS ĐẠT YÊU CẦU (${Math.round((passedTests/totalTests)*100)}% PASS)`);
 console.log('====================================================');

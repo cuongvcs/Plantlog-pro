@@ -336,6 +336,15 @@ input, textarea, select, button { font-family: var(--font); }
 .bb  { background:var(--bl); color:var(--bd); }
 .bp  { background:var(--pl); color:var(--pd); }
 .bgr { background:var(--n100); color:var(--n600); }
+.badge-week {
+  display:inline-flex; align-items:center;
+  padding:1px 6px; border-radius:var(--r-xs, 4px);
+  background:var(--n100, #F1F5F9); color:var(--n700, #334155);
+  font-size:10px; font-weight:700;
+  font-family:var(--font-mono, var(--mono, monospace));
+  border:1px solid var(--n200, #CBD5E1);
+  white-space:nowrap; letter-spacing:0.02em; flex-shrink:0;
+}
 
 /* ── SPILL status pill ─────────────────────────────────── */
 .spill { border:none; border-radius:20px; font-size:11px; font-weight:600; padding:3px 10px; cursor:pointer; font-family:var(--font); transition:all var(--dur-fast); }

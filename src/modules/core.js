@@ -684,6 +684,38 @@ function fmtDate(d){
     return dt.toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{day:'numeric',month:'short',year:'numeric'});
   }catch(e){return String(d);}
 }
+
+// ── ISO-8601 Week Number Calculation (IMP-09) ─────────────────
+function getWeekInfo(dateStr){
+  if(!dateStr||typeof dateStr!=='string')return null;
+  const dateOnly=dateStr.trim().slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly))return null;
+  const[y,m,day]=dateOnly.split('-').map(Number);
+  if(isNaN(y)||isNaN(m)||isNaN(day))return null;
+  const d=new Date(y,m-1,day);
+  if(isNaN(d.getTime()))return null;
+
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate()+4-(d.getDay()||7));
+  const yearStart=new Date(d.getFullYear(),0,1);
+  const weekNo=Math.ceil((((d-yearStart)/86400000)+1)/7);
+  const year2d=String(d.getFullYear()).slice(-2);
+  return {week:weekNo,year2d,year:d.getFullYear()};
+}
+
+function getTripWeekLabel(startDateStr,endDateStr){
+  const startInfo=getWeekInfo(startDateStr);
+  if(!startInfo)return'';
+  const endInfo=(endDateStr&&endDateStr!==startDateStr)?getWeekInfo(endDateStr):null;
+  if(!endInfo||(startInfo.week===endInfo.week&&startInfo.year===endInfo.year)){
+    return `W${startInfo.week}/${startInfo.year2d}`;
+  }
+  if(startInfo.year===endInfo.year){
+    return `W${startInfo.week}-W${endInfo.week}/${startInfo.year2d}`;
+  }
+  return `W${startInfo.week}/${startInfo.year2d}-W${endInfo.week}/${endInfo.year2d}`;
+}
+
 function getSortedTrips(){
   return [...(S.trips||[])].sort((a,b)=>{
     const dateA = a.dateEnd || a.date || '';

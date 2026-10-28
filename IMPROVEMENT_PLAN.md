@@ -32,6 +32,8 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 | **IMP-05** | **Đồng bộ 2 chiều chống xung đột (Per-Item Timestamp Merge)** | 🟡 **P2** | **Cần thiết** | **Trung bình** (Ghi đè mất dữ liệu khi sửa offline đồng thời với Sheets) | 1.0 ngày |
 | **IMP-06** | **Sao lưu / Khôi phục dữ liệu thủ công (Backup/Restore JSON)** | 🟡 **P2** | **Cần thiết** | **Trung bình** (Mất dữ liệu nếu kỹ sư xóa cache hoặc đổi điện thoại mới) | 0.5 ngày |
 | **IMP-07** | **Tối ưu RAM khi xuất PDF & Chỉ báo trạng thái mạng trực quan** | 🟢 **P3** | **Khuyến nghị** | **Thấp** (Trình duyệt đơ tạm thời khi tạo PDF nhiều ảnh, thiếu nhận diện Online) | 0.5 ngày |
+| **IMP-08** | **Voice-to-Text Tiếng Việt tự động dịch sang Tiếng Anh** | 🎙️ **P2** | **Cần thiết** | **Thấp** (Tối ưu năng suất ghi chú hiện trường) | 0.5 ngày |
+| **IMP-09** | **Tính & Hiển thị Số tuần trong năm (ISO-8601 Week Number)** | 📅 **P2** | **Cần thiết** | **Thấp** (Theo dõi tiến độ và tuần công tác theo chuẩn W44/26) | 0.25 ngày |
 
 ---
 
@@ -187,6 +189,7 @@ gantt
   - [x] Thêm trạng thái kết nối Online/Offline trực quan trên Header. (Đã xong - IMP-07)
   - [x] Thêm hiệu ứng Loading khi tạo file PDF và bộ lọc thanh toán Bills. (Đã xong - IMP-07)
   - [x] Tích hợp tính năng Voice-to-Text Tiếng Việt dịch sang Tiếng Anh (Đã xong - IMP-08)
+  - [x] Tính & Hiển thị Số tuần trong năm chuẩn ISO-8601 `W44/26` trên Thẻ Chuyến đi (Đã xong - IMP-09)
 
 ---
 

@@ -14,6 +14,24 @@
 6. **🟡 [P2 - Cần thiết] Sao lưu & Khôi phục dữ liệu thủ công (Backup / Restore JSON):** (Hoàn tất - IMP-06)
 7. **🟢 [P3 - Cải thiện UX] Tối ưu hóa RAM xuất PDF & Chỉ báo trạng thái mạng trực quan:** (Hoàn tất - IMP-07)
 8. **🎙️ [P2 - Năng suất hiện trường] Nhập giọng nói Tiếng Việt dịch sang Tiếng Anh & Lưu ghi chú:** (Hoàn tất - IMP-08)
+9. **📅 [P2 - Kế hoạch & Tiến độ] Tính & Hiển thị Số tuần trong năm (ISO-8601 Week Number):** (Hoàn tất - IMP-09)
+
+---
+
+## [v4.10] - 28/10/2026
+
+### 📅 [IMP-09] Tính & Hiển thị Số tuần trong năm (ISO-8601 Week Number) trên Thẻ Chuyến đi
+
+- **Thuật toán tính số tuần chuẩn ISO-8601 (`getWeekInfo`, `getTripWeekLabel`):** Tự động tính chính xác số tuần trong năm (Week 1 – Week 52/53) từ ngày bắt đầu (`tr.date`) và ngày kết thúc (`tr.dateEnd`) của chuyến đi, bóc tách chuỗi ngày an toàn tuyệt đối tránh lỗi lệch ngày do múi giờ UTC/GMT+7.
+- **Định dạng hiển thị chuẩn công nghiệp (`W44/26`):**
+  - Chuyến đi trong cùng tuần: hiển thị dạng `W44/26` (Tuần 44 năm 2026).
+  - Chuyến đi kéo dài xuyên tuần: tự động hiển thị dải tuần linh hoạt `W44-W45/26`.
+  - Chuyến đi xuyên năm: hiển thị `W53/26-W01/27`.
+- **Huy hiệu trực quan (`.badge-week`):** Thiết kế huy hiệu xám bạc kỹ thuật tinh tế, đặt ngay bên phải tên Nhà máy (`Plant name`) trên thẻ chuyến đi, không làm vỡ bố cục trên màn hình điện thoại hẹp.
+- **Đồng bộ hiển thị trên toàn bộ các màn hình:**
+  - Danh sách tất cả chuyến đi (`screen-trips`).
+  - Mục Chuyến đi sắp tới (Upcoming Trips) và Báo cáo gần đây trên Trang chủ (`screen-home`).
+  - Tiêu đề màn hình Chi tiết chuyến đi (`screen-trip-detail`).
 
 ---
 
