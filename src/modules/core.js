@@ -262,10 +262,10 @@ function exportDataBackupJSON() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    if(typeof showToast === 'function') showToast('✓ Đã xuất file sao lưu JSON thành công!');
+    if(typeof showToast === 'function') showToast('✓ Backup file exported successfully!');
   } catch (e) {
     console.error('[Backup]', e);
-    if(typeof showToast === 'function') showToast('Lỗi khi xuất file sao lưu: ' + e.message);
+    if(typeof showToast === 'function') showToast('❌ Export backup failed: ' + e.message);
   }
 }
 
@@ -287,19 +287,19 @@ function handleBackupFileSelect(e) {
       const parsed = JSON.parse(ev.target.result);
       const incomingData = parsed.data || parsed;
       if (!incomingData || typeof incomingData !== 'object' || (!incomingData.trips && !incomingData.tasks && !incomingData.profile)) {
-        if(typeof showToast === 'function') showToast('❌ Tệp sao lưu không đúng định dạng PlantLog Pro!');
+        if(typeof showToast === 'function') showToast('❌ Invalid PlantLog Pro backup file!');
         return;
       }
 
-      if (!confirm('Bạn có chắc chắn muốn khôi phục dữ liệu từ tệp này? Dữ liệu hiện tại sẽ được cập nhật.')) {
+      if (!confirm('Are you sure you want to restore data from this backup file? Existing data will be updated.')) {
         return;
       }
 
       S = { ...S, ...incomingData };
       sv();
-      if(typeof showToast === 'function') showToast('✅ Khôi phục dữ liệu thành công!');
+      if(typeof showToast === 'function') showToast('✅ Data restored successfully!');
 
-      // Re-render toàn bộ giao diện
+      // Re-render whole interface
       if (typeof renderDash === 'function') renderDash();
       if (typeof renderTripList === 'function') renderTripList();
       if (typeof renderTasks === 'function') renderTasks();
@@ -307,7 +307,7 @@ function handleBackupFileSelect(e) {
       if (typeof loadProfile === 'function') loadProfile();
     } catch (err) {
       console.error('[Restore]', err);
-      if(typeof showToast === 'function') showToast('❌ Lỗi đọc tệp JSON: ' + err.message);
+      if(typeof showToast === 'function') showToast('❌ Error reading JSON file: ' + err.message);
     }
   };
   reader.readAsText(file);

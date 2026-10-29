@@ -32,6 +32,7 @@
   - Danh sách tất cả chuyến đi (`screen-trips`).
   - Mục Chuyến đi sắp tới (Upcoming Trips) và Báo cáo gần đây trên Trang chủ (`screen-home`).
   - Tiêu đề màn hình Chi tiết chuyến đi (`screen-trip-detail`).
+- **Chuẩn hóa ngôn ngữ Tiếng Anh toàn bộ mục Sao lưu (Backup & Restore):** Chuyển đổi 2 dòng nhãn giao diện ("Xuất dữ liệu dự phòng" ➔ "Export Backup Data (.json)", "Khôi phục từ tệp dự phòng" ➔ "Restore from Backup (.json)") cùng toàn bộ hộp thoại thông báo/xác nhận Toast sang Tiếng Anh đồng bộ với toàn bộ ứng dụng.
 
 ---
 
