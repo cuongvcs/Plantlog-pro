@@ -1,20 +1,46 @@
 # 📝 Nhật ký cập nhật (Changelog) — PlantLog Pro
 
-## [Đề xuất nâng cấp / Upcoming Plan] - Kế hoạch Cải tiến & Tối ưu hóa Hệ thống (22/10/2026)
+## [v4.11] - 01/11/2026
 
-> Chi tiết kế hoạch và phân tích kỹ thuật được lưu trữ tại tệp: [`IMPROVEMENT_PLAN.md`](file:///d:/AI%20Lean/Plantlog-pro-main/IMPROVEMENT_PLAN.md)
+### 🎨 Triển Khai Toàn Diện Giai Đoạn 4: Hoàn Thiện Trải Nghiệm Người Dùng (UI/UX) & Tương Tác Hiện Trường (IMP-10 ➔ IMP-16)
 
-### 📌 Danh mục các hạng mục cải tiến theo mức độ ưu tiên & tính cấp thiết:
+#### 🔴 1. [IMP-10] Đồng Bộ Thanh Điều Hướng (Bottom Navigation) Chuẩn 5 Tab Trên Toàn Bộ Màn Hình:
+- **Nhất quán kiến trúc điều hướng:** Thanh Bottom Navigation chuẩn 5 nút (`Home`, `Trips`, `Tasks`, `Bills`, `Settings`) xuất hiện đồng nhất trên tất cả màn hình chính, bao gồm cả Trang chủ (`screen-home`) và Màn hình Nghỉ phép (`screen-leave`).
+- **Tự động theo dõi tab hoạt động (`updateBottomNav`):** Mỗi khi chuyển màn hình qua `showScreen(id)`, ứng dụng tự động kích hoạt trạng thái `.active` đúng cho tab tương ứng, xóa bỏ hoàn toàn hiện tượng sáng nhầm tab hoặc mất thanh điều hướng khi điều hướng sâu.
+- **Nút quay lại chuẩn:** Bổ sung nút quay lại trực quan (`⬅ Quay lại`) trên màn hình Nghỉ phép (`screen-leave`) giúp kỹ sư quay về màn hình trước mượt mà.
 
-1. **🔴 [P0 - Bắt buộc / Khẩn cấp] Nén ảnh tự động tại Client & Chống tràn LocalStorage:** (Hoàn tất - IMP-01)
-2. **🟠 [P1 - Rất cần thiết] Hàng đợi tải ảnh nền khi Offline (Background Media Queue):** (Hoàn tất - IMP-02)
-3. **🟠 [P1 - Rất cần thiết] Bảo mật Webhook Secret & Token trong Google Apps Script:** (Hoàn tất - IMP-03)
-4. **🟠 [P1 - Rất cần thiết] Script đóng gói tự động (Automated Bundler Script):** (Hoàn tất - IMP-04)
-5. **🟡 [P2 - Cần thiết] Đồng bộ 2 chiều chống xung đột (Per-Item Timestamp Merge):** (Hoàn tất - IMP-05)
-6. **🟡 [P2 - Cần thiết] Sao lưu & Khôi phục dữ liệu thủ công (Backup / Restore JSON):** (Hoàn tất - IMP-06)
-7. **🟢 [P3 - Cải thiện UX] Tối ưu hóa RAM xuất PDF & Chỉ báo trạng thái mạng trực quan:** (Hoàn tất - IMP-07)
-8. **🎙️ [P2 - Năng suất hiện trường] Nhập giọng nói Tiếng Việt dịch sang Tiếng Anh & Lưu ghi chú:** (Hoàn tất - IMP-08)
-9. **📅 [P2 - Kế hoạch & Tiến độ] Tính & Hiển thị Số tuần trong năm (ISO-8601 Week Number):** (Hoàn tất - IMP-09)
+#### 🔴 2. [IMP-11] Hệ Thống Hộp Thoại Tùy Biến Native Sheet (Custom Dialogs - Xóa Bỏ Hoàn Toàn Prompt / Confirm Browser):
+- **Loại bỏ hộp thoại nguyên thủy:** Thay thế toàn bộ 18 vị trí gọi `window.confirm()` và `window.prompt()` mặc định của trình duyệt (vốn bị chặn trên PWA standalone hoặc gây gián đoạn giao diện).
+- **Hộp thoại Custom Bottom Sheet bất đồng bộ (`appConfirm`, `appPrompt`):**
+  - Xây dựng 2 hàm trả về `Promise<boolean>` và `Promise<string|null>` tích hợp trực tiếp vào DOM (`modal-app-confirm`, `modal-app-prompt`).
+  - Giao diện bo góc công nghiệp hiện đại, có nút Cancel và nút Confirm rõ ràng, tự động gắn cờ nguy hiểm `btn-danger` đỏ cho các hành động nhạy cảm (Xóa chuyến đi, Xóa nhiệm vụ, Xóa hóa đơn, Reset PIN, Khôi phục bản sao lưu, Xóa toàn bộ dữ liệu).
+  - Hỗ trợ phím tắt bàn phím: bấm `Enter` để xác nhận, bấm `Esc` để hủy.
+
+#### 🟠 3. [IMP-12] Giao Diện Co Giãn Đa Thiết Bị (Responsive Tablet/Desktop) & Bảng Kanban 3 Cột Ngang:
+- **Mở rộng không gian hiển thị cho Tablet/Laptop:** Định dạng `@media (min-width: 768px)` nâng trần độ rộng tối đa `max-width: 1080px`, căn giữa mượt mà trên iPad, tablet hiện trường và màn hình máy tính văn phòng.
+- **Bảng Kanban 3 cột ngang song song (`.kanban-board`):** Trên tablet và màn hình lớn, 3 trạng thái công việc (`To Do`, `In Progress`, `Done`) tự động chuyển thành 3 cột song song có thanh cuộn riêng, giúp quản trị viên và kỹ sư giám sát toàn diện luồng công việc mà không phải cuộn trang dọc liên tục.
+- **Bố cục lưới đa cột (Multi-column CSS Grid):** Chuyển đổi danh sách Thẻ chuyến đi (`.trip-card`), thẻ tài liệu thư viện (`.lib-grid`), danh mục cài đặt (`.settings-grid`) và thẻ thống kê (`.stat-grid`) sang dạng 2 - 3 cột cân đối trên màn hình rộng.
+
+#### 🟠 4. [IMP-13] Chế Độ Giao Diện Tối Công Nghiệp (Dark Mode Industrial Slate):
+- **Bảng màu Than Chì Công Nghiệp (`[data-theme="dark"]`):** Thiết kế bảng màu tương phản cao chuyên biệt cho môi trường kỹ thuật hiện trường: Nền sâu `#0B131E`, thẻ card `#15202E`, viền kỹ thuật `#233348`, chữ sáng `#F1F5F9`. Giúp giảm mỏi mắt cho kỹ sư khi làm việc ban đêm, trong buồng máy tối và tiết kiệm tối đa pin OLED.
+- **Quản lý cấu hình chủ động (`S.theme`):** Hỗ trợ 3 tùy chọn linh hoạt: `Auto` (tự động theo cài đặt hệ thống của điện thoại/máy tính), `Light` (giao diện sáng), `Dark` (giao diện tối).
+- **Cụm điều khiển trực quan:** Tích hợp cụm nút chọn giao diện 3 trạng thái (`☀️ Sáng`, `🌙 Tối`, `⚙️ Tự động`) trong màn hình Cài đặt (Settings), lưu cấu hình bền vững vào `localStorage`.
+
+#### 🟠 5. [IMP-14] Chuẩn Hóa Vùng Bấm Cảm Ứng (Touch Targets ≥ 44px) & Rung Phản Hồi (Haptic Feedback):
+- **Chuẩn hóa công thái học cảm ứng di động:** Mở rộng vùng bấm tối thiểu cho tất cả các nút bấm nhỏ (icon thao tác, nút xóa, nút checklist, nút chụp ảnh, tab lọc chi phí) đạt kích thước chuẩn ≥ 44px × 44px, ngăn ngừa hoàn toàn hiện tượng bấm nhầm khi kỹ sư đang di chuyển hoặc đeo găng tay bảo hộ.
+- **Rung phản hồi vật lý (`triggerHaptic`):** Tích hợp Web Vibration API phản hồi xúc giác tinh tế (12ms – 40ms) khi kỹ sư bấm nút checklist Pass/Fail, hoàn tất nhiệm vụ, dịch giọng nói, ký duyệt hoặc thực hiện các thao tác xác nhận quan trọng.
+
+#### 🟡 6. [IMP-15] Nâng Cấp Canvas Chữ Ký Số Sắc Nét Cho Màn Hình Retina (High-DPI Scaling):
+- **Tự động cân chỉnh độ phân giải Canvas:** Sử dụng `window.devicePixelRatio` để nhân đôi/nhân ba độ phân giải thực của Canvas ký duyệt trong khi vẫn giữ nguyên kích thước hiển thị CSS.
+- **Nét ký sắc nét, mượt mà:** Khắc phục triệt để hiện tượng vỡ hạt, răng cưa của nét mực khi ký trên iPhone, iPad Retina và màn hình độ phân giải cao; chữ ký kết xuất vào tệp PDF biên bản nghiệm thu đạt độ chuyên nghiệp và thẩm mỹ cao nhất.
+
+#### 🟡 7. [IMP-16] Thanh Tiến Độ Công Việc Trên Thẻ Chuyến Đi & Widget Tổng Hợp Chi Phí:
+- **Thanh tiến độ % công việc (`renderTripList`):** Tích hợp thanh tiến độ mini kèm tỷ lệ hoàn thành phần trăm trực tiếp trên từng Thẻ Chuyến Đi (VD: `3/5 việc (60%)`), tự động chuyển sang dải xanh ngọc hoàn tất khi đạt 100% nhiệm vụ.
+- **Widget tóm tắt chi phí chuyến đi (`openTripDetail`):** Tự động tổng hợp toàn bộ các hóa đơn thuộc chuyến đi và hiển thị nổi bật dạng thẻ tài chính công tác `💰 Tổng chi phí: X.XXX.XXX đ (N hóa đơn)`, giúp kỹ sư và quản lý kiểm soát ngân sách tức thì.
+
+#### ⚙️ 8. Nâng Cấp Hệ Thống Đóng Gói (Bundler) & Service Worker Cache:
+- **Đồng bộ hóa CSS tự động (`bundle.js`):** Nâng cấp công cụ đóng gói để tự động đọc `src/styles.css` và inject vào thẻ `<style>` của cả `src/index.html` và `plantlog_pro_mobile.html`, đảm bảo tính toàn vẹn 100% giữa phiên bản module hóa và tệp đơn (standalone file).
+- **Nâng cấp Service Worker Cache:** Tự động tăng phiên bản cache từ `plantlog-pro-v32` lên `v33` trong `src/sw.js`, đảm bảo trình duyệt client xóa bộ nhớ đệm cũ và cập nhật ngay lập tức giao diện mới khi online.
 
 ---
 

@@ -70,8 +70,14 @@ function renderLibrary(){
     }).join('');
 }
 
-function deleteLibraryItem(id){
-  if(!confirm('Delete this library item?')) return;
+async function deleteLibraryItem(id){
+  const ok = await appConfirm('Delete this library template?', {
+    title: 'Delete Template',
+    danger: true,
+    confirmText: 'Delete',
+    icon: '📚'
+  });
+  if(!ok) return;
   S.library = (S.library||[]).filter(i => i.id !== id);
   sv(); renderLibrary();
   showToast('Deleted');

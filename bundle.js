@@ -8,6 +8,7 @@ const path = require('path');
 
 const ROOT_DIR = __dirname;
 const MODULES_DIR = path.join(ROOT_DIR, 'src', 'modules');
+const STYLES_CSS_PATH = path.join(ROOT_DIR, 'src', 'styles.css');
 const INDEX_HTML_PATH = path.join(ROOT_DIR, 'src', 'index.html');
 const MOBILE_HTML_PATH = path.join(ROOT_DIR, 'plantlog_pro_mobile.html');
 const SW_PATH = path.join(ROOT_DIR, 'src', 'sw.js');
@@ -72,8 +73,18 @@ function bundle() {
   }
 
   const startIndex = match.index;
-  const newIndexHtml = indexHtml.substring(0, startIndex) +
+  let newIndexHtml = indexHtml.substring(0, startIndex) +
     `<script>\n${bundleCode}\n</script>\n</body>\n</html>\n`;
+
+  // 4b. Cập nhật CSS từ styles.css vào thẻ <style>
+  if (fs.existsSync(STYLES_CSS_PATH)) {
+    const cssContent = fs.readFileSync(STYLES_CSS_PATH, 'utf8').replace(/\r\n/g, '\n');
+    const styleTagRegex = /<style>[\s\S]*?<\/style>/;
+    if (styleTagRegex.test(newIndexHtml)) {
+      newIndexHtml = newIndexHtml.replace(styleTagRegex, `<style>${cssContent}</style>`);
+      console.log('✅ Đã đồng bộ CSS từ src/styles.css');
+    }
+  }
 
   fs.writeFileSync(INDEX_HTML_PATH, newIndexHtml, 'utf8');
   console.log('✅ Đã cập nhật thành công: src/index.html');

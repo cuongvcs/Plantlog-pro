@@ -108,6 +108,49 @@
   --transition:var(--dur-fast); --transition-slow:var(--dur-slow);
 }
 
+/* ── DARK THEME (IMP-13) ─────────────────────────────────── */
+[data-theme="dark"] {
+  --brand:       #19A859;
+  --brand-dark:  #108242;
+  --brand-deep:  #084A24;
+  --brand-mid:   #22C55E;
+  --brand-light: #123321;
+  --brand-pale:  #0D2619;
+
+  --amber:  #D97706;  --al: #2D2305;  --ad: #FDE68A;  --am: #F59E0B;
+  --red:    #EF4444;  --rl: #2D1212;  --rd: #FECACA;
+  --blue:   #3B82F6;  --bl: #0E223D;  --bd: #BFDBFE;
+  --purple: #8B5CF6;  --pl: #1E1238;  --pd: #DDD6FE;
+  --teal:   #14B8A6;  --tl: #082824;
+
+  /* Neutrals - dark slate */
+  --n0:   #15202E;
+  --n50:  #182638;
+  --n100: #1E3046;
+  --n150: #263C57;
+  --n200: #314B6C;
+  --n300: #4A6E9B;
+  --n400: #789CC7;
+  --n500: #A2BFDE;
+  --n600: #CBDDF1;
+  --n700: #E4EFFB;
+  --n800: #F3F8FD;
+  --n900: #FFFFFF;
+
+  /* Surfaces & Background */
+  --surface:    #15202E;
+  --surface-2:  #1A283A;
+  --surface-3:  #203248;
+  --bg:         #0C141F;
+
+  --topbar-bg: linear-gradient(150deg, #073D1E 0%, #0A5C2D 100%);
+  --sh-xs: 0 1px 2px rgba(0,0,0,0.4);
+  --sh:    0 0 0 1px rgba(255,255,255,0.07), 0 1px 4px rgba(0,0,0,0.45);
+  --sh-md: 0 0 0 1px rgba(255,255,255,0.09), 0 4px 12px rgba(0,0,0,0.55);
+  --sh-lg: 0 0 0 1px rgba(255,255,255,0.11), 0 8px 24px rgba(0,0,0,0.65);
+  --sh-xl: 0 0 0 1px rgba(255,255,255,0.13), 0 20px 48px rgba(0,0,0,0.8);
+}
+
 /* ── RESET ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -129,9 +172,39 @@ input, textarea, select, button { font-family: var(--font); }
   margin: 0 auto; background: var(--bg);
   position: relative; overflow: hidden;
   box-shadow: var(--sh-xl);
+  transition: max-width var(--dur-base);
 }
 @media (min-width:768px) {
-  #app { border-radius: var(--r-xl); height: calc(100vh - 40px); margin-top: 20px; }
+  #app {
+    max-width: 920px;
+    height: calc(100vh - 40px);
+    margin-top: 20px;
+    border-radius: var(--r-xl);
+    border: 1px solid var(--n200);
+  }
+  .modal {
+    max-width: 600px;
+    margin: auto;
+    border-radius: var(--r-xl) !important;
+  }
+  /* Kanban 3-Column horizontal side-by-side view (IMP-12) */
+  #kanban-view {
+    display: flex !important;
+    gap: 12px;
+    align-items: flex-start;
+    overflow-x: auto;
+  }
+  .kanban-col {
+    flex: 1;
+    min-width: 260px;
+    background: var(--n50);
+    border-radius: var(--r);
+    padding: 12px;
+    border: 1px solid var(--n150);
+  }
+}
+@media (min-width:1024px) {
+  #app { max-width: 1040px; }
 }
 
 /* ── SCREENS ───────────────────────────────────────────── */
@@ -736,6 +809,86 @@ input, textarea, select, button { font-family: var(--font); }
   padding-top:7px;
   border-top:1px solid var(--n100);
 }
+
+/* ── TOUCH TARGETS & ACCESSIBILITY (IMP-14) ─────────────── */
+.db, .pdel, .rb, .tb-back, .tb-action, .cn {
+  min-width: 36px; min-height: 36px;
+  touch-action: manipulation;
+}
+.btn, .fi, .fsel, .cat-opt, .dtb, .ropt {
+  min-height: 42px;
+}
+
+/* ── CUSTOM DIALOGS (IMP-11) ─────────────────────────────── */
+.custom-dialog {
+  background: var(--surface);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  width: 100%; max-width: 440px;
+  padding: 24px 20px;
+  box-shadow: var(--sh-xl);
+  border-top: 1px solid var(--n150);
+  animation: slideUp var(--dur-slow) var(--ease) both;
+}
+@media (min-width: 768px) {
+  .custom-dialog {
+    border-radius: var(--r-xl) !important;
+    margin: auto;
+    border: 1px solid var(--n200);
+  }
+}
+.cd-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; margin: 0 auto 12px;
+  background: var(--brand-light); color: var(--brand);
+}
+.cd-icon.danger {
+  background: var(--rl); color: var(--red);
+}
+.cd-title {
+  font-family: var(--font-hd); font-size: 16px; font-weight: 700;
+  color: var(--n900); text-align: center; margin-bottom: 6px;
+}
+.cd-msg {
+  font-size: 13px; color: var(--n500); text-align: center;
+  line-height: 1.5; margin-bottom: 18px; white-space: pre-line;
+}
+.cd-btns {
+  display: flex; gap: 10px;
+}
+.cd-btn {
+  flex: 1; padding: 11px 16px; border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: all var(--dur-fast);
+}
+.cd-btn-cancel {
+  background: var(--n100); color: var(--n700);
+}
+.cd-btn-cancel:active { background: var(--n200); }
+.cd-btn-confirm {
+  background: var(--brand); color: #fff;
+}
+.cd-btn-confirm:active { background: var(--brand-dark); }
+.cd-btn-danger {
+  background: var(--red); color: #fff;
+}
+.cd-btn-danger:active { background: #991B1B; }
+
+/* ── TRIP PROGRESS & EXPENSE (IMP-16) ─────────────────────── */
+.tc-progress-bar {
+  height: 4px; border-radius: 2px;
+  background: var(--n150); overflow: hidden; margin-top: 4px;
+}
+.tc-progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-mid));
+  border-radius: 2px; transition: width 0.4s var(--ease);
+}
+.trip-expense-summary-badge {
+  background: var(--n100); border-radius: var(--r-sm);
+  padding: 8px 12px; margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  border: 1px solid var(--n150);
+}
 </style>
 </head>
 <body>
@@ -818,29 +971,23 @@ input, textarea, select, button { font-family: var(--font); }
     <button style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--g500);" onclick="document.getElementById('pwa-install-bar').style.display='none';localStorage.setItem('plpro_pwa_dismissed','1');">×</button>
   </div>
   <div class="bnav">
-    <button class="nb active" onclick="showScreen('home')">
+    <button class="nb active" data-screen="home" onclick="showScreen('home')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span data-t="home">Home</span>
     </button>
-    <button class="nb" onclick="showScreen('trips')">
+    <button class="nb" data-screen="trips" onclick="showScreen('trips')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span data-t="trips">Trips</span>
     </button>
-    <button class="nb" onclick="showScreen('tasks')">
+    <button class="nb" data-screen="tasks" onclick="showScreen('tasks')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       <span data-t="tasks">Tasks</span>
     </button>
-    <button class="nb" onclick="showScreen('leave')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      <span data-t="leave">Leave</span>
+    <button class="nb" data-screen="bills" onclick="showScreen('bills')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span>Bills</span>
     </button>
-    <button class="nb" onclick="showScreen('reminders')" id="nb-reminders">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
-      </svg>
-      <span>Reminders</span>
-    </button>
-    <button class="nb" onclick="showScreen('settings')">
+    <button class="nb" data-screen="settings" onclick="showScreen('settings')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       <span data-t="settings">Settings</span>
     </button>
@@ -1710,7 +1857,7 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="nb" onclick="showScreen('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span data-t="home">Home</span></button>
     <button class="nb" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
     <button class="nb" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
-    <button class="nb active" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
+    <button class="nb" data-screen="bills" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
     <button class="nb" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
   </div>
 </div>
@@ -1741,6 +1888,7 @@ input, textarea, select, button { font-family: var(--font); }
 
 <div id="screen-leave" class="screen">
   <div class="topbar">
+    <button class="tb-back" onclick="showScreen('home')">←</button>
     <div class="tb-title" data-t="leavePlanner">Leave Planner</div>
     <button class="tb-action" onclick="showScreen('reminders')" title="Reminders" style="font-size:16px;">🔔</button>
   </div>
@@ -1784,7 +1932,7 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="nb" onclick="showScreen('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span data-t="home">Home</span></button>
     <button class="nb" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
     <button class="nb" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
-    <button class="nb active" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
+    <button class="nb" data-screen="bills" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
     <button class="nb" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
   </div>
 </div>
@@ -1813,6 +1961,18 @@ input, textarea, select, button { font-family: var(--font); }
       </div>
     </div>
     <div class="card">
+      <div class="si" style="cursor:default;">
+        <div class="sic" style="background:var(--n100);color:var(--n700);">🌓</div>
+        <div class="sin">
+          <div class="sil">Appearance / Theme</div>
+          <div class="sis">Light, Dark or System Auto</div>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button type="button" class="tf-btn" id="theme-btn-auto" onclick="setTheme('auto')" style="padding:4px 9px;font-size:11px;">Auto</button>
+          <button type="button" class="tf-btn" id="theme-btn-light" onclick="setTheme('light')" style="padding:4px 9px;font-size:11px;">☀️ Light</button>
+          <button type="button" class="tf-btn" id="theme-btn-dark" onclick="setTheme('dark')" style="padding:4px 9px;font-size:11px;">🌙 Dark</button>
+        </div>
+      </div>
       <div class="si" onclick="openModal('modal-industry')">
         <div class="sic">🏭</div>
         <div class="sin"><div class="sil" data-t="industryTemplates">Industry templates</div><div class="sis" data-t="loadChecklistTemplates">Load checklist for your industry</div></div>
@@ -2620,6 +2780,34 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 </div>
 
+<!-- ── CUSTOM CONFIRM DIALOG (IMP-11) ── -->
+<div id="modal-app-confirm" class="mo" style="z-index:400;">
+  <div class="custom-dialog">
+    <div class="cd-icon" id="app-confirm-icon">❓</div>
+    <div class="cd-title" id="app-confirm-title">Confirm Action</div>
+    <div class="cd-msg" id="app-confirm-msg">Are you sure?</div>
+    <div class="cd-btns">
+      <button type="button" class="cd-btn cd-btn-cancel" id="app-confirm-btn-cancel" onclick="resolveAppConfirm(false)">Cancel</button>
+      <button type="button" class="cd-btn cd-btn-confirm" id="app-confirm-btn-ok" onclick="resolveAppConfirm(true)">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CUSTOM PROMPT DIALOG (IMP-11) ── -->
+<div id="modal-app-prompt" class="mo" style="z-index:400;">
+  <div class="custom-dialog">
+    <div class="cd-title" id="app-prompt-title">Enter Value</div>
+    <div class="cd-msg" id="app-prompt-msg" style="margin-bottom:10px;">Please enter a value:</div>
+    <div style="margin-bottom:18px;">
+      <input type="text" id="app-prompt-input" class="fi" style="width:100%;font-size:14px;" onkeydown="if(event.key==='Enter')resolveAppPrompt(true);else if(event.key==='Escape')resolveAppPrompt(false);">
+    </div>
+    <div class="cd-btns">
+      <button type="button" class="cd-btn cd-btn-cancel" id="app-prompt-btn-cancel" onclick="resolveAppPrompt(false)">Cancel</button>
+      <button type="button" class="cd-btn cd-btn-confirm" id="app-prompt-btn-ok" onclick="resolveAppPrompt(true)">OK</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 </div>
 
@@ -2740,11 +2928,11 @@ const IND={
 let S={
   profile:{name:'',title:'',company:'',empid:''},
   trips:[],reports:{},tasks:[],leaveData:{},
-  trips:[],reports:{},tasks:[],leaveData:{},
   machines:[],plans:[],bills:[],
   inspections:[],
   library:[],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
   defaultTeam:[],lang:'en',
+  theme:'auto', // 'auto' | 'light' | 'dark' (IMP-13)
   telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
   calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
   reminders:[]  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
@@ -2754,6 +2942,59 @@ let calY,calM,selDay=null,signoffRes='Completed';
 let photoCtx=null,tmpPhotos=[];
 let taskView='list',taskFilter='all';
 let deferredPrompt=null;
+
+// ── Haptic feedback helper (IMP-14) ──
+function triggerHaptic(type = 'light') {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    try {
+      if (type === 'light') navigator.vibrate(10);
+      else if (type === 'medium') navigator.vibrate(25);
+      else if (type === 'heavy') navigator.vibrate([35, 30, 35]);
+      else if (type === 'success') navigator.vibrate([15, 40, 20]);
+    } catch(e) {}
+  }
+}
+
+// ── Theme / Dark Mode (IMP-13) ──
+function applyTheme(theme) {
+  const t = theme || (S && S.theme) || 'auto';
+  let targetTheme = t;
+  if (t === 'auto') {
+    targetTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', targetTheme);
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) {
+    themeMeta.setAttribute('content', targetTheme === 'dark' ? '#084A24' : '#00843D');
+  }
+  updateThemeUI();
+}
+
+function setTheme(mode) {
+  if (!S) S = {};
+  S.theme = mode;
+  sv();
+  applyTheme(mode);
+  triggerHaptic('light');
+  showToast(mode === 'dark' ? '🌙 Dark Mode enabled' : mode === 'light' ? '☀️ Light Mode enabled' : '🌓 Theme set to System Auto');
+}
+
+function updateThemeUI() {
+  const cur = (S && S.theme) || 'auto';
+  ['auto', 'light', 'dark'].forEach(m => {
+    const btn = document.getElementById('theme-btn-' + m);
+    if (btn) btn.classList.toggle('active', m === cur);
+  });
+}
+
+// Listen to system theme change if set to auto
+if (typeof window !== 'undefined' && window.matchMedia) {
+  try {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if ((S && S.theme) === 'auto') applyTheme('auto');
+    });
+  } catch(e) {}
+}
 
 function sv(){
   try{
@@ -2767,7 +3008,13 @@ function sv(){
     }
   }
 }
-function ld(){try{const d=localStorage.getItem('plpro1');if(d)S={...S,...JSON.parse(d)};}catch(e){}}
+function ld(){
+  try{
+    const d=localStorage.getItem('plpro1');
+    if(d)S={...S,...JSON.parse(d)};
+  }catch(e){}
+  applyTheme();
+}
 function t(k){return T[S.lang][k]||T.en[k]||k;}
 
 // ═══════ STORAGE & IMAGE OPTIMIZATION (IMP-01) ═══════
@@ -2918,7 +3165,7 @@ function handleBackupFileSelect(e) {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = (ev) => {
+  reader.onload = async (ev) => {
     try {
       const parsed = JSON.parse(ev.target.result);
       const incomingData = parsed.data || parsed;
@@ -2927,9 +3174,12 @@ function handleBackupFileSelect(e) {
         return;
       }
 
-      if (!confirm('Are you sure you want to restore data from this backup file? Existing data will be updated.')) {
-        return;
-      }
+      const ok = await appConfirm('Are you sure you want to restore data from this backup file? Existing data will be updated.', {
+        title: 'Restore Data Backup',
+        confirmText: 'Restore Data',
+        icon: '📥'
+      });
+      if (!ok) return;
 
       S = { ...S, ...incomingData };
       sv();
@@ -3222,7 +3472,9 @@ function showScreen(n){
   // Reset settings unlock when navigating away
   if (n !== 'settings') _settingsUnlocked = false;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-'+n).classList.add('active');
+  const target = document.getElementById('screen-'+n);
+  if(target) target.classList.add('active');
+  updateBottomNav(n);
   if(n==='home')renderDash();
   if(n==='trips')renderTripList();
   if(n==='tasks')renderTasks();
@@ -3238,6 +3490,131 @@ function showScreen(n){
     return; // Don't navigate yet — openModal will navigate after PIN
   }
   if(n==='bill-export')buildBillPDFPreview();
+}
+
+// ── Unified Bottom Nav synchronization (IMP-10) ──
+function updateBottomNav(activeScreen){
+  document.querySelectorAll('.bnav').forEach(nav => {
+    nav.querySelectorAll('.nb').forEach(btn => {
+      const onclickAttr = btn.getAttribute('onclick') || '';
+      const dataScreen = btn.getAttribute('data-screen');
+      const match = onclickAttr.match(/showScreen\(['"]([^'"]+)['"]\)/);
+      const screenName = dataScreen || (match ? match[1] : null);
+      if(screenName){
+        if(screenName === activeScreen){
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      }
+    });
+  });
+}
+
+// ── CUSTOM DIALOGS SYSTEM: PROMPT & CONFIRM (IMP-11) ──
+let _confirmPromiseResolve = null;
+let _promptPromiseResolve = null;
+
+function appConfirm(message, options = {}) {
+  const {
+    title = 'Confirm Action',
+    confirmText = 'Confirm',
+    cancelText = 'Cancel',
+    danger = false,
+    icon = danger ? '🗑️' : '❓'
+  } = options;
+
+  return new Promise(resolve => {
+    _confirmPromiseResolve = resolve;
+    const modal = document.getElementById('modal-app-confirm');
+    if (!modal) {
+      resolve(window.confirm(message));
+      return;
+    }
+    const iconEl = document.getElementById('app-confirm-icon');
+    const titleEl = document.getElementById('app-confirm-title');
+    const msgEl = document.getElementById('app-confirm-msg');
+    const btnConfirm = document.getElementById('app-confirm-btn-ok');
+    const btnCancel = document.getElementById('app-confirm-btn-cancel');
+
+    if (iconEl) {
+      iconEl.textContent = icon;
+      iconEl.className = 'cd-icon' + (danger ? ' danger' : '');
+    }
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+    if (btnConfirm) {
+      btnConfirm.textContent = confirmText;
+      btnConfirm.className = 'cd-btn ' + (danger ? 'cd-btn-danger' : 'cd-btn-confirm');
+    }
+    if (btnCancel) btnCancel.textContent = cancelText;
+
+    triggerHaptic('light');
+    openModal('modal-app-confirm');
+  });
+}
+
+function resolveAppConfirm(result) {
+  closeModal('modal-app-confirm');
+  if (result) triggerHaptic('medium');
+  if (_confirmPromiseResolve) {
+    const cb = _confirmPromiseResolve;
+    _confirmPromiseResolve = null;
+    cb(result);
+  }
+}
+
+function appPrompt(message, defaultValue = '', options = {}) {
+  const {
+    title = 'Enter Value',
+    placeholder = 'Type here…',
+    confirmText = 'OK',
+    cancelText = 'Cancel'
+  } = options;
+
+  return new Promise(resolve => {
+    _promptPromiseResolve = resolve;
+    const modal = document.getElementById('modal-app-prompt');
+    if (!modal) {
+      resolve(window.prompt(message, defaultValue));
+      return;
+    }
+    const titleEl = document.getElementById('app-prompt-title');
+    const msgEl = document.getElementById('app-prompt-msg');
+    const inputEl = document.getElementById('app-prompt-input');
+    const btnConfirm = document.getElementById('app-prompt-btn-ok');
+    const btnCancel = document.getElementById('app-prompt-btn-cancel');
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+    if (inputEl) {
+      inputEl.value = defaultValue || '';
+      inputEl.placeholder = placeholder;
+    }
+    if (btnConfirm) btnConfirm.textContent = confirmText;
+    if (btnCancel) btnCancel.textContent = cancelText;
+
+    triggerHaptic('light');
+    openModal('modal-app-prompt');
+    setTimeout(() => {
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.select();
+      }
+    }, 150);
+  });
+}
+
+function resolveAppPrompt(isConfirm) {
+  const inputEl = document.getElementById('app-prompt-input');
+  const val = inputEl ? inputEl.value : '';
+  closeModal('modal-app-prompt');
+  if (isConfirm) triggerHaptic('light');
+  if (_promptPromiseResolve) {
+    const cb = _promptPromiseResolve;
+    _promptPromiseResolve = null;
+    cb(isConfirm ? val : null);
+  }
 }
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
 function openModal(id){
@@ -3409,7 +3786,17 @@ function autoStartTodayItems(){
   localStorage.setItem('plpro_autostart_date', today);
 }
 
-function clearAllData(){if(!confirm('Delete ALL data? This cannot be undone.'))return;S={profile:{name:'',title:'',company:'',empid:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],inspections:[],library:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang};sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();showToast('Data cleared');}
+async function clearAllData(){
+  const ok = await appConfirm('Delete ALL data? Trips, tasks, reports, and bills will be permanently erased. This cannot be undone.', {
+    title: 'Erase All Data',
+    danger: true,
+    confirmText: 'Delete All Data',
+    icon: '⚠️'
+  });
+  if(!ok) return;
+  S={profile:{name:'',title:'',company:'',empid:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],inspections:[],library:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang,theme:S.theme||'auto'};
+  sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();showToast('All data cleared');
+}
 
 
 // ═══════ STORE — lightweight reactive state ═══════════════
@@ -3822,8 +4209,14 @@ function showPINError() {
   }, 800);
 }
 
-function pinForgot() {
-  if (confirm('Reset PIN?\n\nThis will remove PIN protection. You will need to set a new PIN in Settings.')) {
+async function pinForgot() {
+  const ok = await appConfirm('Reset PIN?\n\nThis will remove PIN protection. You will need to set a new PIN in Settings.', {
+    title: 'Reset PIN',
+    danger: true,
+    confirmText: 'Reset PIN',
+    icon: '🔑'
+  });
+  if (ok) {
     storeHash('');
     unlockApp();
     showToast('PIN removed. Set a new PIN in Settings.');
@@ -3943,8 +4336,14 @@ function flashModalError(msg) {
   }, 800);
 }
 
-function removePIN() {
-  if (!confirm('Remove PIN protection?\n\nAnyone with access to your device will be able to open the app.')) return;
+async function removePIN() {
+  const ok = await appConfirm('Remove PIN protection?\n\nAnyone with access to your device will be able to open the app.', {
+    title: 'Remove PIN',
+    danger: true,
+    confirmText: 'Remove PIN',
+    icon: '🔓'
+  });
+  if (!ok) return;
   storeHash('');
   closeModal('modal-pin');
   showToast('PIN removed');
@@ -3986,9 +4385,15 @@ function authInit() {
 function pinDel() { pinBackspace(); }
 
 // ── showResetPIN ─────────────────────────────────────────────
-function showResetPIN() {
+async function showResetPIN() {
   document.getElementById('lock-forgot').style.display = 'block';
-  if (confirm('Reset your PIN?\n\nYou will lose PIN protection until you set a new one in Settings → Change PIN.')) {
+  const ok = await appConfirm('Reset your PIN?\n\nYou will lose PIN protection until you set a new one in Settings → Change PIN.', {
+    title: 'Reset PIN',
+    danger: true,
+    confirmText: 'Reset PIN',
+    icon: '🔑'
+  });
+  if (ok) {
     storeHash('');
     unlockApp();
     showToast('PIN removed — set a new PIN in Settings');
@@ -4070,8 +4475,13 @@ function saveNewTrip(){
   if(Notification.permission==='granted')scheduleNotifications();
   // Offer to generate TA PDF immediately if this trip has flight info
   if(trip.flight && trip.ta && trip.ta.taNo){
-    setTimeout(()=>{
-      if(confirm('✈️ Flight trip created!\n\nGenerate Travel Authorization PDF now?')){
+    setTimeout(async ()=>{
+      const ok = await appConfirm('Flight trip created!\n\nGenerate Travel Authorization PDF now?', {
+        title: 'Travel Authorization',
+        confirmText: 'Generate PDF',
+        icon: '✈️'
+      });
+      if(ok){
         generateTAPdf(trip.id);
       }
     }, 600);
@@ -4163,6 +4573,9 @@ function renderTripList(filter){
     const bc=tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba';
     const bt=tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned');
     const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+    const tripTasks=(S.tasks||[]).filter(tk=>tk.tripId===tr.id);
+    const doneTasks=tripTasks.filter(tk=>tk.status==='done'||tk.status==='completed');
+    const pct=tripTasks.length?Math.round(doneTasks.length/tripTasks.length*100):0;
     return `<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
@@ -4173,6 +4586,14 @@ function renderTripList(filter){
       </div>
       <div class="cs">${fmtDate(tr.date)}${tr.location?' · '+tr.location:''}</div>
       ${tr.purpose?`<div style="font-size:12px;color:var(--g500);margin-top:4px;">${tr.purpose.substring(0,55)}${tr.purpose.length>55?'...':''}</div>`:''}
+      ${tripTasks.length?`
+        <div class="tc-progress-bar">
+          <div class="tc-progress-fill" style="width:${pct}%;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--n500);margin-top:3px;font-weight:600;">
+          <span>📋 Tasks: ${doneTasks.length}/${tripTasks.length}</span>
+          <span>${pct}%</span>
+        </div>`:''}
     </div>`;
   }).join('');
 }
@@ -4187,8 +4608,22 @@ function openTripDetail(id){
   document.getElementById('detail-date').textContent=fmtDate(tr.date)+(tr.location?' · '+tr.location:'');
   // render bills for this trip
   setTimeout(()=>renderTripBills(id),50);
+  const tripBills = (S.bills || []).filter(b => b.tripId === id);
+  const totalVND = tripBills.reduce((acc, b) => acc + (parseFloat(b.vndAmount) || (b.currency === 'VND' ? parseFloat(b.amount) || 0 : 0)), 0);
+  const expenseSummaryHtml = tripBills.length ? `
+    <div class="trip-expense-summary-badge" style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:13px;">💰</span>
+        <span style="font-size:12px;font-weight:700;color:var(--n800);">Expenses Total:</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--am);">
+        ${totalVND ? totalVND.toLocaleString() + ' VND' : tripBills.length + ' bills'} (${tripBills.length})
+      </div>
+    </div>` : '';
+
   document.getElementById('trip-detail-card').innerHTML=`
     <div style="margin-bottom:10px;"><span class="badge ${tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned')}</span></div>
+    ${expenseSummaryHtml}
     ${kv(t('plantName').replace(' *',''),tr.plant)}${kv(t('location'),tr.location||'—')}${kv(t('visitDate').replace(' *',''),fmtDate(tr.date))}
     ${tr.dateEnd&&tr.dateEnd!==tr.date?kv(t('endDate'),fmtDate(tr.dateEnd)):''}
     ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}
@@ -4360,7 +4795,21 @@ function openEditTrip(){
   if(tr.ta)loadTripTAFields(tr.ta);
   openModal('modal-new-trip');
 }
-function deleteTripCurrent(){if(!confirm('Delete this trip?'))return;S.trips=S.trips.filter(tr=>tr.id!==curTrip);delete S.reports[curTrip];sv();showScreen('trips');renderTripList();}
+async function deleteTripCurrent(){
+  const ok = await appConfirm('Delete this trip and all its associated reports? This cannot be undone.', {
+    title: 'Delete Trip',
+    danger: true,
+    confirmText: 'Delete Trip',
+    icon: '🗑️'
+  });
+  if(!ok) return;
+  S.trips=S.trips.filter(tr=>tr.id!==curTrip);
+  delete S.reports[curTrip];
+  sv();
+  showScreen('trips');
+  renderTripList();
+  svAndSync('trip_delete');
+}
 
 function setTripStatus(status){
   const tr=S.trips.find(t=>t.id===curTrip);
@@ -4704,16 +5153,24 @@ function populatePlanSelect(){
   const plans=S.plans||[];
   sel.innerHTML='<option value="">None</option>'+plans.map(p=>`<option value="${p}">${p}</option>`).join('');
 }
-function addNewMachine(){
-  const name=prompt('New machine / equipment name:');
+async function addNewMachine(){
+  const name = await appPrompt('Enter new machine / equipment name:', '', {
+    title: 'Add Machine',
+    placeholder: 'e.g. Pump #1, Air Compressor A',
+    confirmText: 'Add'
+  });
   if(!name||!name.trim())return;
   if(!S.machines)S.machines=[];
   if(!S.machines.includes(name.trim()))S.machines.push(name.trim());
   sv();populateMachineSelect();
   document.getElementById('task-machine').value=name.trim();
 }
-function addNewPlan(){
-  const name=prompt('New plan / project name:');
+async function addNewPlan(){
+  const name = await appPrompt('Enter new plan / project name:', '', {
+    title: 'Add Plan / Project',
+    placeholder: 'e.g. Overhaul 2026, Q4 Inspection',
+    confirmText: 'Add'
+  });
   if(!name||!name.trim())return;
   if(!S.plans)S.plans=[];
   if(!S.plans.includes(name.trim()))S.plans.push(name.trim());
@@ -5278,8 +5735,14 @@ function setTaskStatus(id,status){
   tk.status=status;tk.updatedAt=new Date().toISOString();
   Store.commit('task:status');
 }
-function deleteTask(id){
-  if(!confirm('Delete this task?'))return;
+async function deleteTask(id){
+  const ok = await appConfirm('Delete this task? This cannot be undone.', {
+    title: 'Delete Task',
+    danger: true,
+    confirmText: 'Delete Task',
+    icon: '🗑️'
+  });
+  if(!ok) return;
   S.tasks=S.tasks.filter(t=>t.id!==id);sv();renderTasks();renderDash();renderCalendar();
   svAndSync('task_delete');
 }
@@ -6485,16 +6948,52 @@ function initSig(){
   if(!sigCanvas){ console.warn('sigCanvas not found'); return; }
   sigCtx=sigCanvas.getContext('2d');
   if(!sigCtx){ console.warn('Cannot get 2d context'); return; }
-  sigCtx.strokeStyle='#1E3A5F';sigCtx.lineWidth=2;sigCtx.lineCap='round';sigCtx.lineJoin='round';
-  const gp=e=>{const r=sigCanvas.getBoundingClientRect();const sc=sigCanvas.width/r.width;return e.touches?{x:(e.touches[0].clientX-r.left)*sc,y:(e.touches[0].clientY-r.top)*sc}:{x:(e.clientX-r.left)*sc,y:(e.clientY-r.top)*sc};};
-  sigCanvas.addEventListener('mousedown',e=>{isDrw=true;const p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);});
+
+  // IMP-15: Retina High-DPI Canvas scaling for crisp signatures
+  const dpr = window.devicePixelRatio || 1;
+  const rect = sigCanvas.getBoundingClientRect();
+  const width = rect.width || 340;
+  const height = rect.height || 140;
+
+  if (sigCanvas.width !== Math.round(width * dpr) || sigCanvas.height !== Math.round(height * dpr)) {
+    sigCanvas.width = Math.round(width * dpr);
+    sigCanvas.height = Math.round(height * dpr);
+    sigCanvas.style.width = width + 'px';
+    sigCanvas.style.height = height + 'px';
+  }
+  sigCtx.scale(dpr, dpr);
+  sigCtx.strokeStyle='#1E3A5F';
+  sigCtx.lineWidth=2.2;
+  sigCtx.lineCap='round';
+  sigCtx.lineJoin='round';
+
+  const gp=e=>{
+    const r=sigCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - r.left),
+      y: (clientY - r.top)
+    };
+  };
+  sigCanvas.addEventListener('mousedown',e=>{isDrw=true;const p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);triggerHaptic('light');});
   sigCanvas.addEventListener('mousemove',e=>{if(!isDrw)return;const p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();});
   sigCanvas.addEventListener('mouseup',()=>isDrw=false);
-  sigCanvas.addEventListener('touchstart',e=>{e.preventDefault();isDrw=true;const p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);},{passive:false});
+  sigCanvas.addEventListener('touchstart',e=>{e.preventDefault();isDrw=true;const p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);triggerHaptic('light');},{passive:false});
   sigCanvas.addEventListener('touchmove',e=>{e.preventDefault();if(!isDrw)return;const p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();},{passive:false});
   sigCanvas.addEventListener('touchend',()=>isDrw=false);
 }
-function clearSig(){sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);if(curReport){curReport.signature='';sv();}}
+function clearSig(){
+  if(sigCtx&&sigCanvas){
+    sigCtx.save();
+    sigCtx.setTransform(1,0,0,1,0,0);
+    sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
+    sigCtx.restore();
+    const dpr = window.devicePixelRatio || 1;
+    sigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  if(curReport){curReport.signature='';sv();}
+}
 function updateSigDate(){const el=document.getElementById('sig-name-date');if(el)el.textContent=(S.profile.name||'Engineer')+' · '+new Date().toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{day:'numeric',month:'short',year:'numeric'});}
 
 // ═══════ PDF ═══════
@@ -6760,8 +7259,13 @@ function showPdfSaveOptions(doc, fileName, type, overrideTripId){
   // Show Drive upload option if GS URL is configured
   const gsUrl = getGSUrl ? getGSUrl() : (S.gsUrl||'');
   if(gsUrl && gsUrl.includes('/exec')){
-    setTimeout(()=>{
-      if(confirm('✅ PDF downloaded!\n\nAlso save to Google Drive (PlantLog Raw Data/Reports)?')){
+    setTimeout(async ()=>{
+      const ok = await appConfirm('PDF report downloaded successfully!\n\nAlso save a copy to Google Drive (PlantLog Raw Data/Reports)?', {
+        title: 'Save to Google Drive',
+        confirmText: 'Upload to Drive',
+        icon: '☁️'
+      });
+      if(ok){
         savePdfToDrive(doc, fileName, type, overrideTripId);
       }
     }, 500);
@@ -7373,8 +7877,14 @@ function editInspectionItem(id){
   openModal('modal-add-insp');
 }
 
-function deleteInspectionItem(id){
-  if(!confirm('Delete this inspection record?')) return;
+async function deleteInspectionItem(id){
+  const ok = await appConfirm('Delete this inspection record?', {
+    title: 'Delete Inspection',
+    danger: true,
+    confirmText: 'Delete',
+    icon: '📋'
+  });
+  if(!ok) return;
   S.inspections = (S.inspections||[]).filter(i => i.id !== id);
   sv(); renderInspectionScreen(); renderTripInspCounts();
   showToast('Deleted');
@@ -7712,8 +8222,14 @@ function renderLibrary(){
     }).join('');
 }
 
-function deleteLibraryItem(id){
-  if(!confirm('Delete this library item?')) return;
+async function deleteLibraryItem(id){
+  const ok = await appConfirm('Delete this library template?', {
+    title: 'Delete Template',
+    danger: true,
+    confirmText: 'Delete',
+    icon: '📚'
+  });
+  if(!ok) return;
   S.library = (S.library||[]).filter(i => i.id !== id);
   sv(); renderLibrary();
   showToast('Deleted');
@@ -8741,8 +9257,14 @@ function toggleReminderStatus(id){
   showToast(r.status === 'active' ? '✅ Reminder active' : '⏸ Reminder paused');
 }
 
-function deleteReminder(id){
-  if(!confirm('Delete this reminder?')) return;
+async function deleteReminder(id){
+  const ok = await appConfirm('Delete this recurring reminder?', {
+    title: 'Delete Reminder',
+    danger: true,
+    confirmText: 'Delete',
+    icon: '🔔'
+  });
+  if(!ok) return;
   S.reminders = (S.reminders||[]).filter(r => r.id !== id);
   sv(); renderRemindersScreen();
   showToast('Deleted');
@@ -9163,8 +9685,14 @@ function renderBillRow(b) {
   </div>`;
 }
 
-function deleteBillFromScreen(id) {
-  if (!confirm('Delete this bill?')) return;
+async function deleteBillFromScreen(id) {
+  const ok = await appConfirm('Delete this expense bill? This cannot be undone.', {
+    title: 'Delete Bill',
+    danger: true,
+    confirmText: 'Delete Bill',
+    icon: '🧾'
+  });
+  if (!ok) return;
   S.bills = S.bills.filter(b => b.id !== id);
   sv(); renderBillsScreen(); renderDash(); svAndSync('bill_delete');
 }
@@ -10213,8 +10741,14 @@ async function saveBill(){
   }
 }
 
-function deleteBill(id){
-  if(!confirm('Delete this bill?'))return;
+async function deleteBill(id){
+  const ok = await appConfirm('Delete this expense bill? This cannot be undone.', {
+    title: 'Delete Bill',
+    danger: true,
+    confirmText: 'Delete Bill',
+    icon: '🧾'
+  });
+  if(!ok) return;
   S.bills=S.bills.filter(b=>b.id!==id);
   sv();
   if(curTrip)renderTripBills(curTrip);

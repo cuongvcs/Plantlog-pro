@@ -164,8 +164,14 @@ function showPINError() {
   }, 800);
 }
 
-function pinForgot() {
-  if (confirm('Reset PIN?\n\nThis will remove PIN protection. You will need to set a new PIN in Settings.')) {
+async function pinForgot() {
+  const ok = await appConfirm('Reset PIN?\n\nThis will remove PIN protection. You will need to set a new PIN in Settings.', {
+    title: 'Reset PIN',
+    danger: true,
+    confirmText: 'Reset PIN',
+    icon: '🔑'
+  });
+  if (ok) {
     storeHash('');
     unlockApp();
     showToast('PIN removed. Set a new PIN in Settings.');
@@ -285,8 +291,14 @@ function flashModalError(msg) {
   }, 800);
 }
 
-function removePIN() {
-  if (!confirm('Remove PIN protection?\n\nAnyone with access to your device will be able to open the app.')) return;
+async function removePIN() {
+  const ok = await appConfirm('Remove PIN protection?\n\nAnyone with access to your device will be able to open the app.', {
+    title: 'Remove PIN',
+    danger: true,
+    confirmText: 'Remove PIN',
+    icon: '🔓'
+  });
+  if (!ok) return;
   storeHash('');
   closeModal('modal-pin');
   showToast('PIN removed');
@@ -328,9 +340,15 @@ function authInit() {
 function pinDel() { pinBackspace(); }
 
 // ── showResetPIN ─────────────────────────────────────────────
-function showResetPIN() {
+async function showResetPIN() {
   document.getElementById('lock-forgot').style.display = 'block';
-  if (confirm('Reset your PIN?\n\nYou will lose PIN protection until you set a new one in Settings → Change PIN.')) {
+  const ok = await appConfirm('Reset your PIN?\n\nYou will lose PIN protection until you set a new one in Settings → Change PIN.', {
+    title: 'Reset PIN',
+    danger: true,
+    confirmText: 'Reset PIN',
+    icon: '🔑'
+  });
+  if (ok) {
     storeHash('');
     unlockApp();
     showToast('PIN removed — set a new PIN in Settings');

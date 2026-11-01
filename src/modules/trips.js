@@ -49,8 +49,13 @@ function saveNewTrip(){
   if(Notification.permission==='granted')scheduleNotifications();
   // Offer to generate TA PDF immediately if this trip has flight info
   if(trip.flight && trip.ta && trip.ta.taNo){
-    setTimeout(()=>{
-      if(confirm('✈️ Flight trip created!\n\nGenerate Travel Authorization PDF now?')){
+    setTimeout(async ()=>{
+      const ok = await appConfirm('Flight trip created!\n\nGenerate Travel Authorization PDF now?', {
+        title: 'Travel Authorization',
+        confirmText: 'Generate PDF',
+        icon: '✈️'
+      });
+      if(ok){
         generateTAPdf(trip.id);
       }
     }, 600);
@@ -142,6 +147,9 @@ function renderTripList(filter){
     const bc=tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba';
     const bt=tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned');
     const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+    const tripTasks=(S.tasks||[]).filter(tk=>tk.tripId===tr.id);
+    const doneTasks=tripTasks.filter(tk=>tk.status==='done'||tk.status==='completed');
+    const pct=tripTasks.length?Math.round(doneTasks.length/tripTasks.length*100):0;
     return `<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
@@ -152,6 +160,14 @@ function renderTripList(filter){
       </div>
       <div class="cs">${fmtDate(tr.date)}${tr.location?' · '+tr.location:''}</div>
       ${tr.purpose?`<div style="font-size:12px;color:var(--g500);margin-top:4px;">${tr.purpose.substring(0,55)}${tr.purpose.length>55?'...':''}</div>`:''}
+      ${tripTasks.length?`
+        <div class="tc-progress-bar">
+          <div class="tc-progress-fill" style="width:${pct}%;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--n500);margin-top:3px;font-weight:600;">
+          <span>📋 Tasks: ${doneTasks.length}/${tripTasks.length}</span>
+          <span>${pct}%</span>
+        </div>`:''}
     </div>`;
   }).join('');
 }
@@ -166,8 +182,22 @@ function openTripDetail(id){
   document.getElementById('detail-date').textContent=fmtDate(tr.date)+(tr.location?' · '+tr.location:'');
   // render bills for this trip
   setTimeout(()=>renderTripBills(id),50);
+  const tripBills = (S.bills || []).filter(b => b.tripId === id);
+  const totalVND = tripBills.reduce((acc, b) => acc + (parseFloat(b.vndAmount) || (b.currency === 'VND' ? parseFloat(b.amount) || 0 : 0)), 0);
+  const expenseSummaryHtml = tripBills.length ? `
+    <div class="trip-expense-summary-badge" style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:13px;">💰</span>
+        <span style="font-size:12px;font-weight:700;color:var(--n800);">Expenses Total:</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--am);">
+        ${totalVND ? totalVND.toLocaleString() + ' VND' : tripBills.length + ' bills'} (${tripBills.length})
+      </div>
+    </div>` : '';
+
   document.getElementById('trip-detail-card').innerHTML=`
     <div style="margin-bottom:10px;"><span class="badge ${tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned')}</span></div>
+    ${expenseSummaryHtml}
     ${kv(t('plantName').replace(' *',''),tr.plant)}${kv(t('location'),tr.location||'—')}${kv(t('visitDate').replace(' *',''),fmtDate(tr.date))}
     ${tr.dateEnd&&tr.dateEnd!==tr.date?kv(t('endDate'),fmtDate(tr.dateEnd)):''}
     ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}
@@ -339,7 +369,21 @@ function openEditTrip(){
   if(tr.ta)loadTripTAFields(tr.ta);
   openModal('modal-new-trip');
 }
-function deleteTripCurrent(){if(!confirm('Delete this trip?'))return;S.trips=S.trips.filter(tr=>tr.id!==curTrip);delete S.reports[curTrip];sv();showScreen('trips');renderTripList();}
+async function deleteTripCurrent(){
+  const ok = await appConfirm('Delete this trip and all its associated reports? This cannot be undone.', {
+    title: 'Delete Trip',
+    danger: true,
+    confirmText: 'Delete Trip',
+    icon: '🗑️'
+  });
+  if(!ok) return;
+  S.trips=S.trips.filter(tr=>tr.id!==curTrip);
+  delete S.reports[curTrip];
+  sv();
+  showScreen('trips');
+  renderTripList();
+  svAndSync('trip_delete');
+}
 
 function setTripStatus(status){
   const tr=S.trips.find(t=>t.id===curTrip);

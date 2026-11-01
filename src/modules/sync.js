@@ -867,8 +867,14 @@ async function saveBill(){
   }
 }
 
-function deleteBill(id){
-  if(!confirm('Delete this bill?'))return;
+async function deleteBill(id){
+  const ok = await appConfirm('Delete this expense bill? This cannot be undone.', {
+    title: 'Delete Bill',
+    danger: true,
+    confirmText: 'Delete Bill',
+    icon: '🧾'
+  });
+  if(!ok) return;
   S.bills=S.bills.filter(b=>b.id!==id);
   sv();
   if(curTrip)renderTripBills(curTrip);

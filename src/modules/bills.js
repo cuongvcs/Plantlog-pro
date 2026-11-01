@@ -320,8 +320,14 @@ function renderBillRow(b) {
   </div>`;
 }
 
-function deleteBillFromScreen(id) {
-  if (!confirm('Delete this bill?')) return;
+async function deleteBillFromScreen(id) {
+  const ok = await appConfirm('Delete this expense bill? This cannot be undone.', {
+    title: 'Delete Bill',
+    danger: true,
+    confirmText: 'Delete Bill',
+    icon: '🧾'
+  });
+  if (!ok) return;
   S.bills = S.bills.filter(b => b.id !== id);
   sv(); renderBillsScreen(); renderDash(); svAndSync('bill_delete');
 }

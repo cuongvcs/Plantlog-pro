@@ -21,19 +21,26 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 
 ---
 
-### Bảng Tổng Hợp Các Hạng Mục Đề Xuất
+### Bảng Tổng Hợp Các Hạng Mục Cải Tiến (Đã hoàn thành & Đang triển khai)
 
-| Mã | Hạng mục cải tiến | Mức độ ưu tiên | Tính cần thiết | Mức độ rủi ro nếu không sửa | Thời gian dự kiến |
-|:---:|---|:---:|:---:|---|:---:|
-| **IMP-01** | **Nén ảnh tại client & Chống tràn LocalStorage** | 🔴 **P0** | **Bắt buộc** | **Cực cao** (Tràn bộ nhớ 5MB `QuotaExceededError`, mất trắng dữ liệu khi chụp ảnh) | 0.5 ngày |
-| **IMP-02** | **Hàng đợi Upload ảnh khi Offline (Background Queue)** | 🟠 **P1** | **Rất cần thiết** | **Cao** (Ảnh chụp khi mất mạng bị kẹt vĩnh viễn ở dạng Base64 trên máy) | 0.5 ngày |
-| **IMP-03** | **Bảo mật Webhook Secret & Token trong Apps Script** | 🟠 **P1** | **Rất cần thiết** | **Cao** (Lộ URL và chữ ký bảo mật Webhook Power Automate trong mã nguồn) | 0.5 ngày |
-| **IMP-04** | **Script tự động đóng gói (Automated Bundler Script)** | 🟠 **P1** | **Rất cần thiết** | **Trung bình** (Lệch code giữa `src/modules/`, `src/index.html` và file mobile) | 0.5 ngày |
-| **IMP-05** | **Đồng bộ 2 chiều chống xung đột (Per-Item Timestamp Merge)** | 🟡 **P2** | **Cần thiết** | **Trung bình** (Ghi đè mất dữ liệu khi sửa offline đồng thời với Sheets) | 1.0 ngày |
-| **IMP-06** | **Sao lưu / Khôi phục dữ liệu thủ công (Backup/Restore JSON)** | 🟡 **P2** | **Cần thiết** | **Trung bình** (Mất dữ liệu nếu kỹ sư xóa cache hoặc đổi điện thoại mới) | 0.5 ngày |
-| **IMP-07** | **Tối ưu RAM khi xuất PDF & Chỉ báo trạng thái mạng trực quan** | 🟢 **P3** | **Khuyến nghị** | **Thấp** (Trình duyệt đơ tạm thời khi tạo PDF nhiều ảnh, thiếu nhận diện Online) | 0.5 ngày |
-| **IMP-08** | **Voice-to-Text Tiếng Việt tự động dịch sang Tiếng Anh** | 🎙️ **P2** | **Cần thiết** | **Thấp** (Tối ưu năng suất ghi chú hiện trường) | 0.5 ngày |
-| **IMP-09** | **Tính & Hiển thị Số tuần trong năm (ISO-8601 Week Number)** | 📅 **P2** | **Cần thiết** | **Thấp** (Theo dõi tiến độ và tuần công tác theo chuẩn W44/26) | 0.25 ngày |
+| Mã | Hạng mục cải tiến | Mức độ ưu tiên | Tính cần thiết | Trạng thái | Thời gian |
+|:---:|---|:---:|:---:|:---:|:---:|
+| **IMP-01** | **Nén ảnh tại client & Chống tràn LocalStorage** | 🔴 **P0** | **Bắt buộc** | ✅ Hoàn tất (v4.9) | 0.5 ngày |
+| **IMP-02** | **Hàng đợi Upload ảnh khi Offline (Background Queue)** | 🟠 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.9) | 0.5 ngày |
+| **IMP-03** | **Bảo mật Webhook Secret & Token trong Apps Script** | 🟠 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.9) | 0.5 ngày |
+| **IMP-04** | **Script tự động đóng gói (Automated Bundler Script)** | 🟠 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.9) | 0.5 ngày |
+| **IMP-05** | **Đồng bộ 2 chiều chống xung đột (Per-Item Timestamp Merge)** | 🟡 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.9) | 1.0 ngày |
+| **IMP-06** | **Sao lưu / Khôi phục dữ liệu thủ công (Backup/Restore JSON)** | 🟡 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.9) | 0.5 ngày |
+| **IMP-07** | **Tối ưu RAM khi xuất PDF & Chỉ báo trạng thái mạng trực quan** | 🟢 **P3** | **Khuyến nghị** | ✅ Hoàn tất (v4.9) | 0.5 ngày |
+| **IMP-08** | **Voice-to-Text Tiếng Việt tự động dịch sang Tiếng Anh** | 🎙️ **P2** | **Cần thiết** | ✅ Hoàn tất (v4.9) | 0.5 ngày |
+| **IMP-09** | **Tính & Hiển thị Số tuần trong năm (ISO-8601 Week Number)** | 📅 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.10) | 0.25 ngày |
+| **IMP-10** | **Đồng bộ thanh Bottom Navigation chuẩn 5 tab trên toàn bộ màn hình** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.11) | 0.5 ngày |
+| **IMP-11** | **Custom Dialogs Native Sheet (Xóa bỏ hoàn toàn prompt/confirm browser)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.11) | 0.5 ngày |
+| **IMP-12** | **Responsive mở rộng Tablet/Laptop & Kanban 3 cột song song** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.11) | 0.5 ngày |
+| **IMP-13** | **Chế độ Giao diện Ban đêm (Dark Mode Industrial Slate)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.11) | 0.5 ngày |
+| **IMP-14** | **Chuẩn hóa Touch Targets (≥ 44px) & Rung phản hồi (Haptic Feedback)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.11) | 0.25 ngày |
+| **IMP-15** | **Nâng cấp Canvas Chữ ký số Sắc Nét Retina (High-DPI Scaling)** | 🟡 **P3** | **Khuyến nghị** | ✅ Hoàn tất (v4.11) | 0.25 ngày |
+| **IMP-16** | **Thanh tiến độ % hoàn thành trên Trip Card & Widget Tổng chi phí** | 🟡 **P3** | **Khuyến nghị** | ✅ Hoàn tất (v4.11) | 0.25 ngày |
 
 ---
 
@@ -154,6 +161,81 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 
 ---
 
+### 📅 IMP-09: Tính & Hiển thị Số tuần trong năm (ISO-8601 Week Number)
+* **Mức độ ưu tiên:** 🟡 **P2**
+* **Trạng thái:** ✅ Đã hoàn thành (v4.10)
+* **Chi tiết:** Tự động tính số tuần chuẩn ISO-8601 (Week 1 – Week 52/53) từ ngày chuyến đi và hiển thị huy hiệu `W44/26` trên thẻ chuyến đi ở Home, Trips, và Trip Detail.
+
+---
+
+### 🔴 IMP-10: Đồng bộ hóa thanh Bottom Navigation Bar (Unified Bottom Navigation Shell)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao)**
+* **Tính cần thiết:** Sửa lỗi giao diện nhảy vị trí nút bấm khi chuyển trang.
+* **Chi tiết cải tiến:**
+  1. Thống nhất thanh điều hướng cố định chuẩn 5 tab trên toàn bộ các màn hình:
+     `Home 🏠` | `Trips 📋` | `Tasks ✅` | `Bills 💳` | `Settings ⚙️`
+  2. Bổ sung hàm `updateBottomNav(activeScreen)` tự động cập nhật trạng thái `.active` chính xác cho tab đang mở.
+  3. Đảm bảo trải nghiệm chuyển màn hình mượt mà, không bị giật hay đổi thứ tự nút bấm.
+
+---
+
+### 🔴 IMP-11: Custom Dialogs Native Sheet (Xóa bỏ hoàn toàn window.prompt & confirm)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao)**
+* **Tính cần thiết:** Loại bỏ hộp thoại thô của trình duyệt, nâng tầm PWA chuẩn Native Mobile.
+* **Chi tiết cải tiến:**
+  1. Xây dựng 2 hàm `appConfirm(message, options)` và `appPrompt(message, defaultValue, options)` trả về Promise.
+  2. Giao diện dạng Bottom Sheet sang trọng, hỗ trợ nút xác nhận nổi bật (màu đỏ khi xóa), tự động focus ô nhập và nhận phím Enter / Escape.
+  3. Thay thế toàn bộ 18 vị trí đang dùng `window.confirm` và `window.prompt` trong hệ thống (xóa bill, xóa task, xóa chuyến đi, xóa dữ liệu, thêm thiết bị mới, thêm kế hoạch mới...).
+
+---
+
+### 🟠 IMP-12: Responsive Mở Rộng Tablet/Laptop & Bảng Kanban 3 Cột Song Song
+* **Mức độ ưu tiên:** 🟠 **P2 (Ưu tiên trung bình)**
+* **Tính cần thiết:** Tận dụng tối đa màn hình lớn khi kỹ sư dùng iPad, máy tính bảng hoặc Laptop.
+* **Chi tiết cải tiến:**
+  1. Thiết lập CSS Responsive: Cho phép container `#app` mở rộng tối đa `920px - 1040px` trên màn hình `>= 768px`.
+  2. Bảng Kanban tự động dàn thành 3 cột song song (Pending, In Progress, Done) có cuộn riêng biệt từng cột thay vì xếp chồng hẹp.
+  3. Mở rộng modal dạng popup giữa màn hình trên máy tính bảng để thao tác thoải mái.
+
+---
+
+### 🟠 IMP-13: Chế độ Giao diện Ban đêm (Dark Mode Industrial Slate)
+* **Mức độ ưu tiên:** 🟠 **P2 (Ưu tiên trung bình)**
+* **Tính cần thiết:** Chống mỏi mắt khi làm việc ban đêm, trong buồng máy tối và tiết kiệm pin OLED.
+* **Chi tiết cải tiến:**
+  1. Bổ sung bộ biến màu CSS `[data-theme="dark"]` với bảng màu than chì công nghiệp (`#0B131E`, card `#15202E`, border `#233348`, text `#F1F5F9`).
+  2. Lưu cấu hình vào State `S.theme` (`'auto'` | `'light'` | `'dark'`).
+  3. Bổ sung nút chuyển đổi giao diện trong màn hình Cài đặt (Settings).
+
+---
+
+### 🟠 IMP-14: Chuẩn hóa Touch Targets (≥ 44px) & Rung phản hồi (Haptic Feedback)
+* **Mức độ ưu tiên:** 🟠 **P2 (Ưu tiên trung bình)**
+* **Tính cần thiết:** Chống bấm trượt khi kỹ sư đeo găng tay bảo hộ hoặc đang di chuyển tại hiện trường.
+* **Chi tiết cải tiến:**
+  1. Mở rộng kích thước vùng bấm tối thiểu đạt 44px x 44px cho tất cả các nút nhỏ (nút xóa, nút checklist, nút icon).
+  2. Tích hợp `triggerHaptic(type)` sử dụng Web Vibration API: Rung nhẹ 12ms khi bấm Pass/Fail checklist, hoàn thành nhiệm vụ hoặc đổi trạng thái.
+
+---
+
+### 🟡 IMP-15: Nâng cấp Canvas Chữ ký số Sắc Nét Retina (High-DPI Scaling)
+* **Mức độ ưu tiên:** 🟡 **P3 (Khuyến nghị)**
+* **Tính cần thiết:** Tăng tính chuyên nghiệp của chữ ký số khi xuất PDF báo cáo.
+* **Chi tiết cải tiến:**
+  1. Tự động scale độ phân giải Canvas ký duyệt theo `window.devicePixelRatio`.
+  2. Khắc phục triệt để hiện tượng chữ ký bị mờ, răng cưa trên iPhone, iPad và màn hình Retina.
+
+---
+
+### 🟡 IMP-16: Thanh tiến độ % hoàn thành trên Thẻ Chuyến đi & Widget Tổng Chi phí
+* **Mức độ ưu tiên:** 🟡 **P3 (Khuyến nghị)**
+* **Tính cần thiết:** Nắm bắt tiến độ và chi phí công tác tức thì.
+* **Chi tiết cải tiến:**
+  1. Hiển thị thanh tiến độ mini trên mỗi Trip Card: `[██████░░░░] 3/5 tasks (60%)`.
+  2. Hiển thị Widget tóm tắt chi phí tổng của chuyến đi trong Trip Detail: `💰 Total Expenses: X.XXX.XXX VND (N bills)`.
+
+---
+
 ## 3. 📅 LỘ TRÌNH TRIỂN KHAI THEO GIAI ĐOẠN (ROADMAP)
 
 ```mermaid
@@ -190,6 +272,14 @@ gantt
   - [x] Thêm hiệu ứng Loading khi tạo file PDF và bộ lọc thanh toán Bills. (Đã xong - IMP-07)
   - [x] Tích hợp tính năng Voice-to-Text Tiếng Việt dịch sang Tiếng Anh (Đã xong - IMP-08)
   - [x] Tính & Hiển thị Số tuần trong năm chuẩn ISO-8601 `W44/26` trên Thẻ Chuyến đi (Đã xong - IMP-09)
+- [x] **Giai đoạn 4: Hoàn thiện Trải nghiệm Người dùng (UI/UX) & Tương tác Hiện trường**
+  - [x] Đồng bộ thanh Bottom Navigation chuẩn 5 tab có cập nhật active tab trên toàn bộ màn hình (Đã xong - IMP-10)
+  - [x] Custom Dialogs thay thế hoàn toàn 18 lệnh `prompt()` và `confirm()` trình duyệt bằng modal sheet (Đã xong - IMP-11)
+  - [x] Responsive layout mở rộng cho Tablet/Desktop với giao diện Kanban 3 cột ngang (Đã xong - IMP-12)
+  - [x] Chế độ Dark Mode Industrial Slate với tự động nhận diện hệ điều hành và tùy chọn trong Settings (Đã xong - IMP-13)
+  - [x] Chuẩn hóa kích thước vùng bấm Touch Target ≥ 44px và rung phản hồi Haptic Feedback qua Web Vibration API (Đã xong - IMP-14)
+  - [x] Tối ưu hóa Canvas chữ ký số hỗ trợ màn hình Retina High-DPI siêu nét (Đã xong - IMP-15)
+  - [x] Bổ sung thanh tiến độ công việc % trên Trip Card và Widget tổng chi phí trên Trip Detail (Đã xong - IMP-16)
 
 ---
 

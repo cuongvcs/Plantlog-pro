@@ -86,6 +86,49 @@
   --transition:var(--dur-fast); --transition-slow:var(--dur-slow);
 }
 
+/* ── DARK THEME (IMP-13) ─────────────────────────────────── */
+[data-theme="dark"] {
+  --brand:       #19A859;
+  --brand-dark:  #108242;
+  --brand-deep:  #084A24;
+  --brand-mid:   #22C55E;
+  --brand-light: #123321;
+  --brand-pale:  #0D2619;
+
+  --amber:  #D97706;  --al: #2D2305;  --ad: #FDE68A;  --am: #F59E0B;
+  --red:    #EF4444;  --rl: #2D1212;  --rd: #FECACA;
+  --blue:   #3B82F6;  --bl: #0E223D;  --bd: #BFDBFE;
+  --purple: #8B5CF6;  --pl: #1E1238;  --pd: #DDD6FE;
+  --teal:   #14B8A6;  --tl: #082824;
+
+  /* Neutrals - dark slate */
+  --n0:   #15202E;
+  --n50:  #182638;
+  --n100: #1E3046;
+  --n150: #263C57;
+  --n200: #314B6C;
+  --n300: #4A6E9B;
+  --n400: #789CC7;
+  --n500: #A2BFDE;
+  --n600: #CBDDF1;
+  --n700: #E4EFFB;
+  --n800: #F3F8FD;
+  --n900: #FFFFFF;
+
+  /* Surfaces & Background */
+  --surface:    #15202E;
+  --surface-2:  #1A283A;
+  --surface-3:  #203248;
+  --bg:         #0C141F;
+
+  --topbar-bg: linear-gradient(150deg, #073D1E 0%, #0A5C2D 100%);
+  --sh-xs: 0 1px 2px rgba(0,0,0,0.4);
+  --sh:    0 0 0 1px rgba(255,255,255,0.07), 0 1px 4px rgba(0,0,0,0.45);
+  --sh-md: 0 0 0 1px rgba(255,255,255,0.09), 0 4px 12px rgba(0,0,0,0.55);
+  --sh-lg: 0 0 0 1px rgba(255,255,255,0.11), 0 8px 24px rgba(0,0,0,0.65);
+  --sh-xl: 0 0 0 1px rgba(255,255,255,0.13), 0 20px 48px rgba(0,0,0,0.8);
+}
+
 /* ── RESET ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -107,9 +150,39 @@ input, textarea, select, button { font-family: var(--font); }
   margin: 0 auto; background: var(--bg);
   position: relative; overflow: hidden;
   box-shadow: var(--sh-xl);
+  transition: max-width var(--dur-base);
 }
 @media (min-width:768px) {
-  #app { border-radius: var(--r-xl); height: calc(100vh - 40px); margin-top: 20px; }
+  #app {
+    max-width: 920px;
+    height: calc(100vh - 40px);
+    margin-top: 20px;
+    border-radius: var(--r-xl);
+    border: 1px solid var(--n200);
+  }
+  .modal {
+    max-width: 600px;
+    margin: auto;
+    border-radius: var(--r-xl) !important;
+  }
+  /* Kanban 3-Column horizontal side-by-side view (IMP-12) */
+  #kanban-view {
+    display: flex !important;
+    gap: 12px;
+    align-items: flex-start;
+    overflow-x: auto;
+  }
+  .kanban-col {
+    flex: 1;
+    min-width: 260px;
+    background: var(--n50);
+    border-radius: var(--r);
+    padding: 12px;
+    border: 1px solid var(--n150);
+  }
+}
+@media (min-width:1024px) {
+  #app { max-width: 1040px; }
 }
 
 /* ── SCREENS ───────────────────────────────────────────── */
@@ -713,4 +786,84 @@ input, textarea, select, button { font-family: var(--font); }
   margin-top:7px;
   padding-top:7px;
   border-top:1px solid var(--n100);
+}
+
+/* ── TOUCH TARGETS & ACCESSIBILITY (IMP-14) ─────────────── */
+.db, .pdel, .rb, .tb-back, .tb-action, .cn {
+  min-width: 36px; min-height: 36px;
+  touch-action: manipulation;
+}
+.btn, .fi, .fsel, .cat-opt, .dtb, .ropt {
+  min-height: 42px;
+}
+
+/* ── CUSTOM DIALOGS (IMP-11) ─────────────────────────────── */
+.custom-dialog {
+  background: var(--surface);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  width: 100%; max-width: 440px;
+  padding: 24px 20px;
+  box-shadow: var(--sh-xl);
+  border-top: 1px solid var(--n150);
+  animation: slideUp var(--dur-slow) var(--ease) both;
+}
+@media (min-width: 768px) {
+  .custom-dialog {
+    border-radius: var(--r-xl) !important;
+    margin: auto;
+    border: 1px solid var(--n200);
+  }
+}
+.cd-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; margin: 0 auto 12px;
+  background: var(--brand-light); color: var(--brand);
+}
+.cd-icon.danger {
+  background: var(--rl); color: var(--red);
+}
+.cd-title {
+  font-family: var(--font-hd); font-size: 16px; font-weight: 700;
+  color: var(--n900); text-align: center; margin-bottom: 6px;
+}
+.cd-msg {
+  font-size: 13px; color: var(--n500); text-align: center;
+  line-height: 1.5; margin-bottom: 18px; white-space: pre-line;
+}
+.cd-btns {
+  display: flex; gap: 10px;
+}
+.cd-btn {
+  flex: 1; padding: 11px 16px; border-radius: var(--r-sm);
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: all var(--dur-fast);
+}
+.cd-btn-cancel {
+  background: var(--n100); color: var(--n700);
+}
+.cd-btn-cancel:active { background: var(--n200); }
+.cd-btn-confirm {
+  background: var(--brand); color: #fff;
+}
+.cd-btn-confirm:active { background: var(--brand-dark); }
+.cd-btn-danger {
+  background: var(--red); color: #fff;
+}
+.cd-btn-danger:active { background: #991B1B; }
+
+/* ── TRIP PROGRESS & EXPENSE (IMP-16) ─────────────────────── */
+.tc-progress-bar {
+  height: 4px; border-radius: 2px;
+  background: var(--n150); overflow: hidden; margin-top: 4px;
+}
+.tc-progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-mid));
+  border-radius: 2px; transition: width 0.4s var(--ease);
+}
+.trip-expense-summary-badge {
+  background: var(--n100); border-radius: var(--r-sm);
+  padding: 8px 12px; margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  border: 1px solid var(--n150);
 }

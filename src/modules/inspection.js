@@ -211,8 +211,14 @@ function editInspectionItem(id){
   openModal('modal-add-insp');
 }
 
-function deleteInspectionItem(id){
-  if(!confirm('Delete this inspection record?')) return;
+async function deleteInspectionItem(id){
+  const ok = await appConfirm('Delete this inspection record?', {
+    title: 'Delete Inspection',
+    danger: true,
+    confirmText: 'Delete',
+    icon: '📋'
+  });
+  if(!ok) return;
   S.inspections = (S.inspections||[]).filter(i => i.id !== id);
   sv(); renderInspectionScreen(); renderTripInspCounts();
   showToast('Deleted');

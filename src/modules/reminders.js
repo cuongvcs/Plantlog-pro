@@ -226,8 +226,14 @@ function toggleReminderStatus(id){
   showToast(r.status === 'active' ? '✅ Reminder active' : '⏸ Reminder paused');
 }
 
-function deleteReminder(id){
-  if(!confirm('Delete this reminder?')) return;
+async function deleteReminder(id){
+  const ok = await appConfirm('Delete this recurring reminder?', {
+    title: 'Delete Reminder',
+    danger: true,
+    confirmText: 'Delete',
+    icon: '🔔'
+  });
+  if(!ok) return;
   S.reminders = (S.reminders||[]).filter(r => r.id !== id);
   sv(); renderRemindersScreen();
   showToast('Deleted');

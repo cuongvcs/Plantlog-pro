@@ -104,11 +104,11 @@ const IND={
 let S={
   profile:{name:'',title:'',company:'',empid:''},
   trips:[],reports:{},tasks:[],leaveData:{},
-  trips:[],reports:{},tasks:[],leaveData:{},
   machines:[],plans:[],bills:[],
   inspections:[],
   library:[],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
   defaultTeam:[],lang:'en',
+  theme:'auto', // 'auto' | 'light' | 'dark' (IMP-13)
   telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
   calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
   reminders:[]  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
@@ -118,6 +118,59 @@ let calY,calM,selDay=null,signoffRes='Completed';
 let photoCtx=null,tmpPhotos=[];
 let taskView='list',taskFilter='all';
 let deferredPrompt=null;
+
+// ── Haptic feedback helper (IMP-14) ──
+function triggerHaptic(type = 'light') {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    try {
+      if (type === 'light') navigator.vibrate(10);
+      else if (type === 'medium') navigator.vibrate(25);
+      else if (type === 'heavy') navigator.vibrate([35, 30, 35]);
+      else if (type === 'success') navigator.vibrate([15, 40, 20]);
+    } catch(e) {}
+  }
+}
+
+// ── Theme / Dark Mode (IMP-13) ──
+function applyTheme(theme) {
+  const t = theme || (S && S.theme) || 'auto';
+  let targetTheme = t;
+  if (t === 'auto') {
+    targetTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', targetTheme);
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) {
+    themeMeta.setAttribute('content', targetTheme === 'dark' ? '#084A24' : '#00843D');
+  }
+  updateThemeUI();
+}
+
+function setTheme(mode) {
+  if (!S) S = {};
+  S.theme = mode;
+  sv();
+  applyTheme(mode);
+  triggerHaptic('light');
+  showToast(mode === 'dark' ? '🌙 Dark Mode enabled' : mode === 'light' ? '☀️ Light Mode enabled' : '🌓 Theme set to System Auto');
+}
+
+function updateThemeUI() {
+  const cur = (S && S.theme) || 'auto';
+  ['auto', 'light', 'dark'].forEach(m => {
+    const btn = document.getElementById('theme-btn-' + m);
+    if (btn) btn.classList.toggle('active', m === cur);
+  });
+}
+
+// Listen to system theme change if set to auto
+if (typeof window !== 'undefined' && window.matchMedia) {
+  try {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if ((S && S.theme) === 'auto') applyTheme('auto');
+    });
+  } catch(e) {}
+}
 
 function sv(){
   try{
@@ -131,7 +184,13 @@ function sv(){
     }
   }
 }
-function ld(){try{const d=localStorage.getItem('plpro1');if(d)S={...S,...JSON.parse(d)};}catch(e){}}
+function ld(){
+  try{
+    const d=localStorage.getItem('plpro1');
+    if(d)S={...S,...JSON.parse(d)};
+  }catch(e){}
+  applyTheme();
+}
 function t(k){return T[S.lang][k]||T.en[k]||k;}
 
 // ═══════ STORAGE & IMAGE OPTIMIZATION (IMP-01) ═══════
@@ -282,7 +341,7 @@ function handleBackupFileSelect(e) {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = (ev) => {
+  reader.onload = async (ev) => {
     try {
       const parsed = JSON.parse(ev.target.result);
       const incomingData = parsed.data || parsed;
@@ -291,9 +350,12 @@ function handleBackupFileSelect(e) {
         return;
       }
 
-      if (!confirm('Are you sure you want to restore data from this backup file? Existing data will be updated.')) {
-        return;
-      }
+      const ok = await appConfirm('Are you sure you want to restore data from this backup file? Existing data will be updated.', {
+        title: 'Restore Data Backup',
+        confirmText: 'Restore Data',
+        icon: '📥'
+      });
+      if (!ok) return;
 
       S = { ...S, ...incomingData };
       sv();
@@ -586,7 +648,9 @@ function showScreen(n){
   // Reset settings unlock when navigating away
   if (n !== 'settings') _settingsUnlocked = false;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-'+n).classList.add('active');
+  const target = document.getElementById('screen-'+n);
+  if(target) target.classList.add('active');
+  updateBottomNav(n);
   if(n==='home')renderDash();
   if(n==='trips')renderTripList();
   if(n==='tasks')renderTasks();
@@ -602,6 +666,131 @@ function showScreen(n){
     return; // Don't navigate yet — openModal will navigate after PIN
   }
   if(n==='bill-export')buildBillPDFPreview();
+}
+
+// ── Unified Bottom Nav synchronization (IMP-10) ──
+function updateBottomNav(activeScreen){
+  document.querySelectorAll('.bnav').forEach(nav => {
+    nav.querySelectorAll('.nb').forEach(btn => {
+      const onclickAttr = btn.getAttribute('onclick') || '';
+      const dataScreen = btn.getAttribute('data-screen');
+      const match = onclickAttr.match(/showScreen\(['"]([^'"]+)['"]\)/);
+      const screenName = dataScreen || (match ? match[1] : null);
+      if(screenName){
+        if(screenName === activeScreen){
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      }
+    });
+  });
+}
+
+// ── CUSTOM DIALOGS SYSTEM: PROMPT & CONFIRM (IMP-11) ──
+let _confirmPromiseResolve = null;
+let _promptPromiseResolve = null;
+
+function appConfirm(message, options = {}) {
+  const {
+    title = 'Confirm Action',
+    confirmText = 'Confirm',
+    cancelText = 'Cancel',
+    danger = false,
+    icon = danger ? '🗑️' : '❓'
+  } = options;
+
+  return new Promise(resolve => {
+    _confirmPromiseResolve = resolve;
+    const modal = document.getElementById('modal-app-confirm');
+    if (!modal) {
+      resolve(window.confirm(message));
+      return;
+    }
+    const iconEl = document.getElementById('app-confirm-icon');
+    const titleEl = document.getElementById('app-confirm-title');
+    const msgEl = document.getElementById('app-confirm-msg');
+    const btnConfirm = document.getElementById('app-confirm-btn-ok');
+    const btnCancel = document.getElementById('app-confirm-btn-cancel');
+
+    if (iconEl) {
+      iconEl.textContent = icon;
+      iconEl.className = 'cd-icon' + (danger ? ' danger' : '');
+    }
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+    if (btnConfirm) {
+      btnConfirm.textContent = confirmText;
+      btnConfirm.className = 'cd-btn ' + (danger ? 'cd-btn-danger' : 'cd-btn-confirm');
+    }
+    if (btnCancel) btnCancel.textContent = cancelText;
+
+    triggerHaptic('light');
+    openModal('modal-app-confirm');
+  });
+}
+
+function resolveAppConfirm(result) {
+  closeModal('modal-app-confirm');
+  if (result) triggerHaptic('medium');
+  if (_confirmPromiseResolve) {
+    const cb = _confirmPromiseResolve;
+    _confirmPromiseResolve = null;
+    cb(result);
+  }
+}
+
+function appPrompt(message, defaultValue = '', options = {}) {
+  const {
+    title = 'Enter Value',
+    placeholder = 'Type here…',
+    confirmText = 'OK',
+    cancelText = 'Cancel'
+  } = options;
+
+  return new Promise(resolve => {
+    _promptPromiseResolve = resolve;
+    const modal = document.getElementById('modal-app-prompt');
+    if (!modal) {
+      resolve(window.prompt(message, defaultValue));
+      return;
+    }
+    const titleEl = document.getElementById('app-prompt-title');
+    const msgEl = document.getElementById('app-prompt-msg');
+    const inputEl = document.getElementById('app-prompt-input');
+    const btnConfirm = document.getElementById('app-prompt-btn-ok');
+    const btnCancel = document.getElementById('app-prompt-btn-cancel');
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+    if (inputEl) {
+      inputEl.value = defaultValue || '';
+      inputEl.placeholder = placeholder;
+    }
+    if (btnConfirm) btnConfirm.textContent = confirmText;
+    if (btnCancel) btnCancel.textContent = cancelText;
+
+    triggerHaptic('light');
+    openModal('modal-app-prompt');
+    setTimeout(() => {
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.select();
+      }
+    }, 150);
+  });
+}
+
+function resolveAppPrompt(isConfirm) {
+  const inputEl = document.getElementById('app-prompt-input');
+  const val = inputEl ? inputEl.value : '';
+  closeModal('modal-app-prompt');
+  if (isConfirm) triggerHaptic('light');
+  if (_promptPromiseResolve) {
+    const cb = _promptPromiseResolve;
+    _promptPromiseResolve = null;
+    cb(isConfirm ? val : null);
+  }
 }
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
 function openModal(id){
@@ -773,7 +962,17 @@ function autoStartTodayItems(){
   localStorage.setItem('plpro_autostart_date', today);
 }
 
-function clearAllData(){if(!confirm('Delete ALL data? This cannot be undone.'))return;S={profile:{name:'',title:'',company:'',empid:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],inspections:[],library:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang};sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();showToast('Data cleared');}
+async function clearAllData(){
+  const ok = await appConfirm('Delete ALL data? Trips, tasks, reports, and bills will be permanently erased. This cannot be undone.', {
+    title: 'Erase All Data',
+    danger: true,
+    confirmText: 'Delete All Data',
+    icon: '⚠️'
+  });
+  if(!ok) return;
+  S={profile:{name:'',title:'',company:'',empid:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],inspections:[],library:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang,theme:S.theme||'auto'};
+  sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();showToast('All data cleared');
+}
 
 
 // ═══════ STORE — lightweight reactive state ═══════════════

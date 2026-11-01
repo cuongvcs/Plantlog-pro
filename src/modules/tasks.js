@@ -21,16 +21,24 @@ function populatePlanSelect(){
   const plans=S.plans||[];
   sel.innerHTML='<option value="">None</option>'+plans.map(p=>`<option value="${p}">${p}</option>`).join('');
 }
-function addNewMachine(){
-  const name=prompt('New machine / equipment name:');
+async function addNewMachine(){
+  const name = await appPrompt('Enter new machine / equipment name:', '', {
+    title: 'Add Machine',
+    placeholder: 'e.g. Pump #1, Air Compressor A',
+    confirmText: 'Add'
+  });
   if(!name||!name.trim())return;
   if(!S.machines)S.machines=[];
   if(!S.machines.includes(name.trim()))S.machines.push(name.trim());
   sv();populateMachineSelect();
   document.getElementById('task-machine').value=name.trim();
 }
-function addNewPlan(){
-  const name=prompt('New plan / project name:');
+async function addNewPlan(){
+  const name = await appPrompt('Enter new plan / project name:', '', {
+    title: 'Add Plan / Project',
+    placeholder: 'e.g. Overhaul 2026, Q4 Inspection',
+    confirmText: 'Add'
+  });
   if(!name||!name.trim())return;
   if(!S.plans)S.plans=[];
   if(!S.plans.includes(name.trim()))S.plans.push(name.trim());
@@ -595,8 +603,14 @@ function setTaskStatus(id,status){
   tk.status=status;tk.updatedAt=new Date().toISOString();
   Store.commit('task:status');
 }
-function deleteTask(id){
-  if(!confirm('Delete this task?'))return;
+async function deleteTask(id){
+  const ok = await appConfirm('Delete this task? This cannot be undone.', {
+    title: 'Delete Task',
+    danger: true,
+    confirmText: 'Delete Task',
+    icon: '🗑️'
+  });
+  if(!ok) return;
   S.tasks=S.tasks.filter(t=>t.id!==id);sv();renderTasks();renderDash();renderCalendar();
   svAndSync('task_delete');
 }

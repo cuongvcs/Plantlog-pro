@@ -553,16 +553,52 @@ function initSig(){
   if(!sigCanvas){ console.warn('sigCanvas not found'); return; }
   sigCtx=sigCanvas.getContext('2d');
   if(!sigCtx){ console.warn('Cannot get 2d context'); return; }
-  sigCtx.strokeStyle='#1E3A5F';sigCtx.lineWidth=2;sigCtx.lineCap='round';sigCtx.lineJoin='round';
-  const gp=e=>{const r=sigCanvas.getBoundingClientRect();const sc=sigCanvas.width/r.width;return e.touches?{x:(e.touches[0].clientX-r.left)*sc,y:(e.touches[0].clientY-r.top)*sc}:{x:(e.clientX-r.left)*sc,y:(e.clientY-r.top)*sc};};
-  sigCanvas.addEventListener('mousedown',e=>{isDrw=true;const p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);});
+
+  // IMP-15: Retina High-DPI Canvas scaling for crisp signatures
+  const dpr = window.devicePixelRatio || 1;
+  const rect = sigCanvas.getBoundingClientRect();
+  const width = rect.width || 340;
+  const height = rect.height || 140;
+
+  if (sigCanvas.width !== Math.round(width * dpr) || sigCanvas.height !== Math.round(height * dpr)) {
+    sigCanvas.width = Math.round(width * dpr);
+    sigCanvas.height = Math.round(height * dpr);
+    sigCanvas.style.width = width + 'px';
+    sigCanvas.style.height = height + 'px';
+  }
+  sigCtx.scale(dpr, dpr);
+  sigCtx.strokeStyle='#1E3A5F';
+  sigCtx.lineWidth=2.2;
+  sigCtx.lineCap='round';
+  sigCtx.lineJoin='round';
+
+  const gp=e=>{
+    const r=sigCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - r.left),
+      y: (clientY - r.top)
+    };
+  };
+  sigCanvas.addEventListener('mousedown',e=>{isDrw=true;const p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);triggerHaptic('light');});
   sigCanvas.addEventListener('mousemove',e=>{if(!isDrw)return;const p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();});
   sigCanvas.addEventListener('mouseup',()=>isDrw=false);
-  sigCanvas.addEventListener('touchstart',e=>{e.preventDefault();isDrw=true;const p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);},{passive:false});
+  sigCanvas.addEventListener('touchstart',e=>{e.preventDefault();isDrw=true;const p=gp(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);triggerHaptic('light');},{passive:false});
   sigCanvas.addEventListener('touchmove',e=>{e.preventDefault();if(!isDrw)return;const p=gp(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();},{passive:false});
   sigCanvas.addEventListener('touchend',()=>isDrw=false);
 }
-function clearSig(){sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);if(curReport){curReport.signature='';sv();}}
+function clearSig(){
+  if(sigCtx&&sigCanvas){
+    sigCtx.save();
+    sigCtx.setTransform(1,0,0,1,0,0);
+    sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
+    sigCtx.restore();
+    const dpr = window.devicePixelRatio || 1;
+    sigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  if(curReport){curReport.signature='';sv();}
+}
 function updateSigDate(){const el=document.getElementById('sig-name-date');if(el)el.textContent=(S.profile.name||'Engineer')+' · '+new Date().toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{day:'numeric',month:'short',year:'numeric'});}
 
 // ═══════ PDF ═══════
@@ -828,8 +864,13 @@ function showPdfSaveOptions(doc, fileName, type, overrideTripId){
   // Show Drive upload option if GS URL is configured
   const gsUrl = getGSUrl ? getGSUrl() : (S.gsUrl||'');
   if(gsUrl && gsUrl.includes('/exec')){
-    setTimeout(()=>{
-      if(confirm('✅ PDF downloaded!\n\nAlso save to Google Drive (PlantLog Raw Data/Reports)?')){
+    setTimeout(async ()=>{
+      const ok = await appConfirm('PDF report downloaded successfully!\n\nAlso save a copy to Google Drive (PlantLog Raw Data/Reports)?', {
+        title: 'Save to Google Drive',
+        confirmText: 'Upload to Drive',
+        icon: '☁️'
+      });
+      if(ok){
         savePdfToDrive(doc, fileName, type, overrideTripId);
       }
     }, 500);
