@@ -330,10 +330,11 @@ function openQuickScratchModal(prefillCategory = 'nameplate') {
     photoPreview.style.display = 'none';
   }
 
-  // Populate trips dropdown
+  // Populate trips dropdown with newest trips on top
   if (tripSelect) {
     let opts = '<option value="">-- No Linked Trip (Unassigned) --</option>';
-    (S.trips || []).forEach(tr => {
+    const sortedTrips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    sortedTrips.forEach(tr => {
       const sel = (curTrip && tr.id === curTrip) ? ' selected' : '';
       opts += `<option value="${tr.id}"${sel}>🏭 ${tr.plant} (${fmtDate(tr.date)})</option>`;
     });
@@ -411,10 +412,12 @@ function saveQuickScratch() {
     id: 'sp_' + Date.now(),
     title: title,
     text: text,
+    notes: text,
     photo: _scratchPhotoBase64,
     category: _scratchSelectedCategory,
     tripId: tripId,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   S.scratchpad.unshift(item);
@@ -422,6 +425,7 @@ function saveQuickScratch() {
   closeModal('modal-quick-scratch');
   triggerHaptic('success');
   showToast('Quick note saved ✓');
+  if (typeof svAndSync === 'function') svAndSync('quick_scratch');
 
   // Refresh lists if open
   renderScratchpadList();
@@ -510,6 +514,7 @@ async function deleteScratchItem(id) {
   triggerHaptic('light');
   renderScratchpadList();
   showToast('Note deleted');
+  if (typeof svAndSync === 'function') svAndSync('scratch_delete');
 }
 
 function convertScratchToTask(id) {
@@ -540,7 +545,7 @@ async function openAttachScratchTripModal(id) {
   const sp = (S.scratchpad || []).find(s => s.id === id);
   if (!sp) return;
 
-  const trips = S.trips || [];
+  const trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   if (!trips.length) {
     showToast('No trips found. Create a trip first.');
     return;
@@ -556,9 +561,11 @@ async function openAttachScratchTripModal(id) {
     const idx = parseInt(res) - 1;
     if (idx >= 0 && idx < trips.length) {
       sp.tripId = trips[idx].id;
+      sp.updatedAt = new Date().toISOString();
       sv();
       renderScratchpadList();
       showToast(`Assigned to ${trips[idx].plant} ✓`);
+      if (typeof svAndSync === 'function') svAndSync('scratch_assign');
     } else {
       showToast('Invalid trip number');
     }

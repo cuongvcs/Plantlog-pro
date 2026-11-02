@@ -2521,21 +2521,16 @@ input, textarea, select, button { font-family: var(--font); }
           <div class="calc-unit-addon">V</div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div>
-            <label class="fl">Power Factor (cos φ)</label>
-            <div class="calc-input-group">
-              <input type="number" step="any" id="motor-pf" class="calc-input" value="0.85" oninput="calc3PhaseMotor()">
-              <div class="calc-unit-addon">PF</div>
-            </div>
-          </div>
-          <div>
-            <label class="fl">Efficiency (η)</label>
-            <div class="calc-input-group">
-              <input type="number" step="any" id="motor-eff" class="calc-input" value="0.90" oninput="calc3PhaseMotor()">
-              <div class="calc-unit-addon">eff</div>
-            </div>
-          </div>
+        <label class="fl">Power Factor (cos φ)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="motor-pf" class="calc-input" value="0.85" oninput="calc3PhaseMotor()">
+          <div class="calc-unit-addon">PF</div>
+        </div>
+
+        <label class="fl">Efficiency (η)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="motor-eff" class="calc-input" value="0.90" oninput="calc3PhaseMotor()">
+          <div class="calc-unit-addon">eff</div>
         </div>
 
         <!-- Result Box -->
@@ -6350,8 +6345,12 @@ function saveServiceTicket() {
       tk.standbyHours = standbyHours;
       tk.travelHours = travelHours;
       tk.workSummary = workSummary;
+      tk.summary = workSummary;
       tk.supervisorName = supervisorName;
-      if (sig) tk.signature = sig;
+      if (sig) {
+        tk.signature = sig;
+        tk.supervisorSig = sig;
+      }
       tk.updatedAt = new Date().toISOString();
     }
   } else {
@@ -6364,9 +6363,12 @@ function saveServiceTicket() {
       standbyHours,
       travelHours,
       workSummary,
+      summary: workSummary,
       supervisorName,
       signature: sig || '',
-      createdAt: new Date().toISOString()
+      supervisorSig: sig || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     tr.timesheets.push(newTk);
   }
@@ -6376,6 +6378,7 @@ function saveServiceTicket() {
   renderTripTimesheets(curTrip);
   triggerHaptic('success');
   showToast('Service ticket saved ✓');
+  if (typeof svAndSync === 'function') svAndSync('service_ticket');
 }
 
 async function deleteServiceTicket(ticketId) {
@@ -6395,6 +6398,7 @@ async function deleteServiceTicket(ticketId) {
   renderTripTimesheets(curTrip);
   triggerHaptic('light');
   showToast('Service ticket deleted');
+  if (typeof svAndSync === 'function') svAndSync('service_ticket_delete');
 }
 
 // ═════════════════════════════════════════════════════
@@ -6643,6 +6647,7 @@ function saveTripSafety() {
   renderTripSafety(curTrip);
   triggerHaptic('success');
   showToast('Site Safety & LOTO updated ✓');
+  if (typeof svAndSync === 'function') svAndSync('trip_safety');
 }
 
 // ====== tasks.js ======
@@ -10332,10 +10337,11 @@ function openQuickScratchModal(prefillCategory = 'nameplate') {
     photoPreview.style.display = 'none';
   }
 
-  // Populate trips dropdown
+  // Populate trips dropdown with newest trips on top
   if (tripSelect) {
     let opts = '<option value="">-- No Linked Trip (Unassigned) --</option>';
-    (S.trips || []).forEach(tr => {
+    const sortedTrips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    sortedTrips.forEach(tr => {
       const sel = (curTrip && tr.id === curTrip) ? ' selected' : '';
       opts += `<option value="${tr.id}"${sel}>🏭 ${tr.plant} (${fmtDate(tr.date)})</option>`;
     });
@@ -10413,10 +10419,12 @@ function saveQuickScratch() {
     id: 'sp_' + Date.now(),
     title: title,
     text: text,
+    notes: text,
     photo: _scratchPhotoBase64,
     category: _scratchSelectedCategory,
     tripId: tripId,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
   S.scratchpad.unshift(item);
@@ -10424,6 +10432,7 @@ function saveQuickScratch() {
   closeModal('modal-quick-scratch');
   triggerHaptic('success');
   showToast('Quick note saved ✓');
+  if (typeof svAndSync === 'function') svAndSync('quick_scratch');
 
   // Refresh lists if open
   renderScratchpadList();
@@ -10512,6 +10521,7 @@ async function deleteScratchItem(id) {
   triggerHaptic('light');
   renderScratchpadList();
   showToast('Note deleted');
+  if (typeof svAndSync === 'function') svAndSync('scratch_delete');
 }
 
 function convertScratchToTask(id) {
@@ -10542,7 +10552,7 @@ async function openAttachScratchTripModal(id) {
   const sp = (S.scratchpad || []).find(s => s.id === id);
   if (!sp) return;
 
-  const trips = S.trips || [];
+  const trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   if (!trips.length) {
     showToast('No trips found. Create a trip first.');
     return;
@@ -10558,9 +10568,11 @@ async function openAttachScratchTripModal(id) {
     const idx = parseInt(res) - 1;
     if (idx >= 0 && idx < trips.length) {
       sp.tripId = trips[idx].id;
+      sp.updatedAt = new Date().toISOString();
       sv();
       renderScratchpadList();
       showToast(`Assigned to ${trips[idx].plant} ✓`);
+      if (typeof svAndSync === 'function') svAndSync('scratch_assign');
     } else {
       showToast('Invalid trip number');
     }
@@ -12848,21 +12860,29 @@ async function syncToSheets(){
     createdAt:     s(tr.createdAt)
   }));
 
-  // Compress bill photos to small JPEG thumbnails (max 200px) before sending
+  // Compress bill & field photos to small JPEG thumbnails before sending
   const compressPhoto=async dataUrl=>{
+    if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) {
+      return (typeof dataUrl === 'string' && dataUrl.startsWith('http')) ? dataUrl : '';
+    }
+    if (dataUrl.length < 3000) return dataUrl;
     try{
       return await new Promise(resolve=>{
+        const timeout = setTimeout(() => resolve(''), 2500);
         const img=new Image();
         img.onload=()=>{
-          const MAX=300;
-          let w=img.width,h=img.height;
-          if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-          if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
-          const c=document.createElement('canvas');c.width=w;c.height=h;
-          c.getContext('2d').drawImage(img,0,0,w,h);
-          resolve(c.toDataURL('image/jpeg',0.5));
+          clearTimeout(timeout);
+          try {
+            const MAX=180;
+            let w=img.width,h=img.height;
+            if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+            if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+            const c=document.createElement('canvas');c.width=w;c.height=h;
+            c.getContext('2d').drawImage(img,0,0,w,h);
+            resolve(c.toDataURL('image/jpeg',0.4));
+          } catch(ex){ resolve(''); }
         };
-        img.onerror=()=>resolve('');
+        img.onerror=()=>{ clearTimeout(timeout); resolve(''); };
         img.src=dataUrl;
       });
     }catch(e){return '';}
@@ -12912,7 +12932,7 @@ async function syncToSheets(){
         id: s(sc.id),
         category: s(sc.category) || 'nameplate',
         title: s(sc.title),
-        notes: s(sc.notes),
+        notes: s(sc.notes || sc.text),
         tripId: s(sc.tripId),
         tripPlant: tr ? s(tr.plant) : '',
         photo: photoStr,
@@ -12971,7 +12991,7 @@ async function syncToSheets(){
           const stby = parseFloat(tk.standbyHours) || 0;
           const trv = parseFloat(tk.travelHours) || 0;
           const total = norm + ot15 + ot20 + stby;
-          let sigStr = s(tk.supervisorSig);
+          let sigStr = s(tk.supervisorSig || tk.signature);
           if (sigStr.startsWith('data:image')) {
             sigStr = await compressPhoto(sigStr);
           }
@@ -12986,7 +13006,7 @@ async function syncToSheets(){
             standbyHours: stby,
             travelHours: trv,
             totalHours: total,
-            summary: s(tk.summary),
+            summary: s(tk.summary || tk.workSummary),
             supervisorName: s(tk.supervisorName),
             supervisorSig: sigStr,
             createdAt: s(tk.createdAt),
@@ -13339,6 +13359,7 @@ async function loadFromSheets(silent){
           id: ss(q.ID),
           category: ss(q.Category) || 'nameplate',
           title: ss(q.Title),
+          text: ss(q.Notes),
           notes: ss(q.Notes),
           tripId: ss(q.TripID),
           photo: ss(q.Photo),
@@ -13397,8 +13418,10 @@ async function loadFromSheets(silent){
             standbyHours: safeNum(tk.StandbyHours),
             travelHours: safeNum(tk.TravelHours),
             summary: ss(tk.Summary),
+            workSummary: ss(tk.Summary),
             supervisorName: ss(tk.SupervisorName),
             supervisorSig: ss(tk.SupervisorSig),
+            signature: ss(tk.SupervisorSig),
             createdAt: ss(tk.CreatedAt),
             updatedAt: ss(tk.UpdatedAt || tk.CreatedAt)
           });

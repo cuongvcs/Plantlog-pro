@@ -181,21 +181,29 @@ async function syncToSheets(){
     createdAt:     s(tr.createdAt)
   }));
 
-  // Compress bill photos to small JPEG thumbnails (max 200px) before sending
+  // Compress bill & field photos to small JPEG thumbnails before sending
   const compressPhoto=async dataUrl=>{
+    if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) {
+      return (typeof dataUrl === 'string' && dataUrl.startsWith('http')) ? dataUrl : '';
+    }
+    if (dataUrl.length < 3000) return dataUrl;
     try{
       return await new Promise(resolve=>{
+        const timeout = setTimeout(() => resolve(''), 2500);
         const img=new Image();
         img.onload=()=>{
-          const MAX=300;
-          let w=img.width,h=img.height;
-          if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-          if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
-          const c=document.createElement('canvas');c.width=w;c.height=h;
-          c.getContext('2d').drawImage(img,0,0,w,h);
-          resolve(c.toDataURL('image/jpeg',0.5));
+          clearTimeout(timeout);
+          try {
+            const MAX=180;
+            let w=img.width,h=img.height;
+            if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+            if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+            const c=document.createElement('canvas');c.width=w;c.height=h;
+            c.getContext('2d').drawImage(img,0,0,w,h);
+            resolve(c.toDataURL('image/jpeg',0.4));
+          } catch(ex){ resolve(''); }
         };
-        img.onerror=()=>resolve('');
+        img.onerror=()=>{ clearTimeout(timeout); resolve(''); };
         img.src=dataUrl;
       });
     }catch(e){return '';}
@@ -245,7 +253,7 @@ async function syncToSheets(){
         id: s(sc.id),
         category: s(sc.category) || 'nameplate',
         title: s(sc.title),
-        notes: s(sc.notes),
+        notes: s(sc.notes || sc.text),
         tripId: s(sc.tripId),
         tripPlant: tr ? s(tr.plant) : '',
         photo: photoStr,
@@ -304,7 +312,7 @@ async function syncToSheets(){
           const stby = parseFloat(tk.standbyHours) || 0;
           const trv = parseFloat(tk.travelHours) || 0;
           const total = norm + ot15 + ot20 + stby;
-          let sigStr = s(tk.supervisorSig);
+          let sigStr = s(tk.supervisorSig || tk.signature);
           if (sigStr.startsWith('data:image')) {
             sigStr = await compressPhoto(sigStr);
           }
@@ -319,7 +327,7 @@ async function syncToSheets(){
             standbyHours: stby,
             travelHours: trv,
             totalHours: total,
-            summary: s(tk.summary),
+            summary: s(tk.summary || tk.workSummary),
             supervisorName: s(tk.supervisorName),
             supervisorSig: sigStr,
             createdAt: s(tk.createdAt),
@@ -672,6 +680,7 @@ async function loadFromSheets(silent){
           id: ss(q.ID),
           category: ss(q.Category) || 'nameplate',
           title: ss(q.Title),
+          text: ss(q.Notes),
           notes: ss(q.Notes),
           tripId: ss(q.TripID),
           photo: ss(q.Photo),
@@ -730,8 +739,10 @@ async function loadFromSheets(silent){
             standbyHours: safeNum(tk.StandbyHours),
             travelHours: safeNum(tk.TravelHours),
             summary: ss(tk.Summary),
+            workSummary: ss(tk.Summary),
             supervisorName: ss(tk.SupervisorName),
             supervisorSig: ss(tk.SupervisorSig),
+            signature: ss(tk.SupervisorSig),
             createdAt: ss(tk.CreatedAt),
             updatedAt: ss(tk.UpdatedAt || tk.CreatedAt)
           });

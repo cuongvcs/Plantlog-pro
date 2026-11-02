@@ -300,7 +300,7 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
   2. **Bộ chuyển đổi Nhiệt độ & Lưu lượng:** Tính toán giữa `°C`, `°F`, `Kelvin` và lưu lượng `m³/h`, `L/min`, `GPM`.
   3. **Máy tính Dòng định mức Motor 3 pha (FLA Calculator):**
      * **Tùy chọn đơn vị công suất kW / HP:** Hỗ trợ chuyển đổi tức thì giữa Kilowatt (`kW`) và Mã lực (`HP` - $1\text{ HP} \approx 0.7457\text{ kW}$), tự động quy đổi thông số đầu vào.
-     * **Tối ưu bố cục công nghiệp:** Đưa Điện áp pha (`Line Voltage - V`) lên hàng riêng biệt phía trên, đưa Hệ số công suất (`Power Factor - cos φ`) xuống hàng dưới song song với Hiệu suất động cơ (`Efficiency - η`).
+     * **Tối ưu bố cục công nghiệp:** Bố trí tuần tự các hàng: Hàng 1 (Motor Power với bộ chọn kW/HP), Hàng 2 (Line Voltage), Hàng 3 (Power Factor), Hàng 4 (Efficiency nằm ngay dưới dòng Power Factor) hiển thị rõ ràng, dễ thao tác trên màn hình hẹp.
      * Công thức: $I = \frac{P_{\text{kW}} \times 1000}{\sqrt{3} \times V \times \cos\varphi \times \eta}$.
      * Tự động đưa ra dòng định mức (FLA), khuyến nghị dải cài đặt Rơ-le nhiệt (Thermal Overload 1.05 - 1.15x), Cỡ Aptomat MCCB/MCB (1.5 - 2.5x) và tiết diện dây cáp đồng tối thiểu.
   4. **Bộ chia tỉ lệ tín hiệu Đo lường 4-20mA (Instrumentation Scaler):**
@@ -401,6 +401,8 @@ gantt
   - [x] Sổ tay ghi chú nhanh & Chụp ảnh Nameplate máy hiện trường: nén ảnh siêu nhẹ, Voice-to-Text và chuyển đổi 1 chạm sang Task / Trip (Đã xong - IMP-22)
   - [x] An toàn Hiện trường EHS, Giấy phép công tác & Kiểm tra 4 điểm cô lập năng lượng LOTO kèm ảnh hiện trường và gọi khẩn cấp 1 chạm (Đã xong - IMP-23)
   - [x] Quản lý Hồ sơ Lý lịch Thiết bị (Asset Passport) & Quét dòng thời gian lịch sử dịch vụ/bảo trì tự động từ Trips, Tasks, Reports (Đã xong - IMP-24)
+  - [x] Đồng bộ Đa bảng Google Sheets: Tạo mới 3 Sheet chuyên dụng (`QuickSnap`, `SiteSafety`, `ServiceTickets`) với cơ chế nén ảnh, gộp timestamp hai chiều (Đã xong)
+  - [x] Tối ưu Trải nghiệm & Độ tin cậy Đồng bộ Đám mây: Tự động sắp xếp Chuyến đi mới nhất lên đầu trong menu Quick Snap, kích hoạt Auto-sync (`svAndSync`), bảo vệ tràn ô 49,000 ký tự trên Google Sheets và tương thích trường dữ liệu (Đã xong)
 
 ---
 

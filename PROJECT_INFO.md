@@ -2,7 +2,7 @@
 
 > **Tên ứng dụng:** VCS PlantLog Pro  
 > **Khẩu hiệu:** Field Visit & Plant Report Progressive Web App  
-> **Phiên bản hiện tại:** v4.8 (Cập nhật ngày 25/09/2026)  
+> **Phiên bản hiện tại:** v4.13 (Cập nhật ngày 02/11/2026)  
 > **Thư mục dự án:** `d:\AI Lean\Plantlog-pro-main\`  
 > **Giấy phép:** MIT License  
 
@@ -41,7 +41,7 @@
 
 ## 3. 📊 CẤU TRÚC DỮ LIỆU GOOGLE SHEETS (DATABASE SCHEMA)
 
-Cơ sở dữ liệu Google Sheets mang tên **`PlantLog Pro Database`** bao gồm 14 sheet tab với các cột trường thông tin chuẩn hóa:
+Cơ sở dữ liệu Google Sheets mang tên **`PlantLog Pro Database`** bao gồm 17 sheet tab với các cột trường thông tin chuẩn hóa:
 
 | Tên Sheet Tab | Mô tả dữ liệu | Danh sách các cột (Columns) |
 |---|---|---|
@@ -59,6 +59,9 @@ Cơ sở dữ liệu Google Sheets mang tên **`PlantLog Pro Database`** bao g�
 | **`Machines`** | Danh mục thiết bị / máy móc | `Name` |
 | **`Plans`** | Danh mục kế hoạch / dự án | `Name` |
 | **`SyncLog`** | Nhật ký lịch sử các phiên đồng bộ | `Timestamp`, `Action`, `Entity`, `EntityID`, `Status`, `Details` |
+| **`QuickSnap`** | Sổ tay ghi chú & ảnh nhãn mác Nameplate | `ID`, `Category`, `Title`, `Notes`, `TripID`, `TripPlant`, `Photo`, `CreatedAt`, `UpdatedAt` |
+| **`SiteSafety`** | Giấy phép an toàn EHS & 4 điểm cô lập LOTO | `TripID`, `Plant`, `PermitNo`, `ValidUntil`, `PermitTypes`, `PadlockID`, `ElectricalIsolated`, `PneumaticIsolated`, `DangerTagHung`, `ZeroEnergyVerified`, `CCRPhone`, `EHSPhone`, `MedicalPhone`, `Photo`, `UpdatedAt` |
+| **`ServiceTickets`** | Nhật ký dịch vụ & Chấm công xác nhận hàng ngày | `ID`, `TripID`, `Plant`, `Date`, `NormalHours`, `OT15Hours`, `OT20Hours`, `StandbyHours`, `TravelHours`, `TotalHours`, `Summary`, `SupervisorName`, `SupervisorSig`, `CreatedAt`, `UpdatedAt` |
 
 ---
 
@@ -107,6 +110,18 @@ Cơ sở dữ liệu Google Sheets mang tên **`PlantLog Pro Database`** bao g�
 * Tự động gửi thông báo nhắc nhở qua Telegram và tạo sự kiện trên Google Calendar.
 * Lịch xem trực quan toàn bộ các ngày đi công tác và ngày nghỉ phép theo từng tháng.
 
+### 4.6. Bộ Năng Lực Nghiệp Vụ Kỹ Sư Hiện Trường (Field Capabilities - v4.13)
+* **Hộp công cụ Kỹ thuật Cơ - Điện - Đo lường (Toolbox - 100% Offline):**
+  * Chuyển đổi Áp suất đa đơn vị (`bar`, `psi`, `kPa`, `MPa`, `kg/cm²`).
+  * Chuyển đổi Nhiệt độ (`°C`, `°F`, `K`) & Lưu lượng (`m³/h`, `L/min`, `GPM`).
+  * Máy tính dòng động cơ 3 pha (FLA Calculator) có nút chọn linh hoạt `kW` / `HP` (1 HP = 0.7457 kW), đưa điện áp Line Voltage lên hàng riêng, bố trí Hệ số công suất Power Factor và Hiệu suất Efficiency theo hàng riêng biệt rõ ràng.
+  * Tính toán thang đo tín hiệu dòng 4-20mA (Instrumentation Scaler) sang % và giá trị đo thực tế theo dải Zero/Span.
+* **Sổ tay ghi chú nhanh & Chụp ảnh Nameplate (Quick Field Scratchpad):** Chụp nén ảnh tức thì tại Client (< 120KB), nhập Voice-to-Text, gắn thẻ chip phân loại và chuyển đổi 1 chạm sang Task hoặc gắn vào Chuyến đi.
+* **An toàn Hiện trường EHS & 4 Bước LOTO:** Quản lý số giấy phép công tác Work Permit, checklist 4 điểm cô lập nguồn năng lượng (Điện, Khí nén, Thẻ cảnh báo, Thử Zero energy), lưu mã ổ khóa Padlock, chụp ảnh hiện trường LOTO và nút gọi khẩn cấp 1 chạm CCR / EHS / Y tế.
+* **Nhật ký Dịch vụ & Chấm công Hàng ngày (Daily Service Tickets):** Phân chia 5 nhóm giờ công tác (Normal, OT 1.5x, OT 2.0x, Standby, Travel), tích hợp Canvas ký điện tử xác nhận hàng ngày của Giám sát khách hàng, tự động tổng hợp số giờ On-site đưa vào Báo cáo kỹ thuật.
+* **Tình trạng Bàn giao Máy & Spare Parts BOM:** Đèn giao thông nghiệm thu 3 mức độ (Ready 🟢 / Conditional 🟡 / Stop 🔴) kèm danh mục vật tư khuyến nghị thay thế (Part No, tên, số lượng, cấp độ ưu tiên) in trực tiếp ra tệp PDF bàn giao.
+* **Hồ sơ Thiết bị & Dòng thời gian Bảo trì (Asset Passport & Timeline):** Quản lý lý lịch máy móc thiết bị và tự động quét lịch sử sửa chữa, bảo dưỡng của từng máy qua các năm từ Trips, Tasks và Reports.
+
 ---
 
 ## 5. 🌐 HỆ THỐNG TÍCH HỢP TỰ ĐỘNG HÓA
@@ -129,7 +144,7 @@ Cơ sở dữ liệu Google Sheets mang tên **`PlantLog Pro Database`** bao g�
 3. Chạy hàm `setupSheets()` một lần:
    * Google sẽ yêu cầu cấp quyền truy cập (Drive, Spreadsheets, URL Fetch).
    * Bấm *Review Permissions* ➔ *Advanced* ➔ *Go to PlantLog (unsafe)* ➔ *Allow*.
-   * Hệ thống sẽ tự động tạo bảng tính `PlantLog Pro Database` trên Google Drive với đầy đủ 14 sheet tab chuẩn hóa.
+   * Hệ thống sẽ tự động tạo bảng tính `PlantLog Pro Database` trên Google Drive với đầy đủ 17 sheet tab chuẩn hóa.
 4. Bấm **Deploy (Triển khai)** ➔ **New deployment (Triển khai mới)**:
    * Loại: **Web app**.
    * Execute as: **Me** (Tôi).

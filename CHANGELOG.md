@@ -23,7 +23,7 @@
 - **Bộ chuyển đổi Nhiệt độ & Lưu lượng:** Tính toán chuyển đổi giữa `°C`, `°F`, `Kelvin` và lưu lượng chất lỏng/khí `m³/h`, `L/min`, `GPM`.
 - **Máy tính Dòng điện Động cơ 3 pha (3-Phase Motor FLA Calculator):**
   - **Tùy chọn đơn vị công suất kW / HP:** Bổ sung nút chuyển đổi tức thời giữa Kilowatt (`kW`) và Mã lực (`HP` - $1\text{ HP} \approx 0.7457\text{ kW}$), tự động quy đổi giá trị đầu vào mà không cần kỹ sư tính tay.
-  - **Tối ưu bố cục giao diện công nghiệp:** Đưa Điện áp pha (`Line Voltage - V`) lên hàng riêng biệt nổi bật, di chuyển Hệ số công suất (`Power Factor - cos φ`) xuống hàng dưới bố trí song song cân đối với Hiệu suất động cơ (`Efficiency - η`).
+  - **Tối ưu bố cục giao diện công nghiệp:** Bố trí tuần tự các hàng: Hàng 1 (Motor Power với nút chuyển đổi kW/HP), Hàng 2 (Line Voltage), Hàng 3 (Power Factor - cos φ), Hàng 4 (Efficiency - η nằm ngay dưới dòng Power Factor) giúp nhập liệu trực quan, rõ ràng trên điện thoại.
   - **Tính toán toàn diện:** Tính chính xác dòng đầy tải (Full Load Amps) dựa trên công suất (kW/HP), điện áp (V), hệ số công suất ($\cos\varphi$) và hiệu suất động cơ ($\eta$); tự động đưa ra khuyến nghị dải cài đặt Rơ-le nhiệt bảo vệ (Overload Relay), Cỡ Aptomat MCCB và tiết diện dây đồng tối thiểu.
 - **Bộ tính toán Thang đo Tín hiệu Đo lường 4-20mA (Instrumentation Scaler):** Chuyển đổi 2 chiều giữa dòng điện điều khiển $4 - 20\text{ mA}$, Tỉ lệ phần trăm $0 - 100\%$ và Giá trị đo thực tế (Process Variable: Bar, °C, RPM, m³/h...) theo dải hiệu chuẩn Zero (LRV) và Span (URV).
 
@@ -55,6 +55,17 @@
   - **`ServiceTickets`**: Bảng chấm công tổng hợp theo ngày công tác phục vụ kế toán, nghiệm thu và thanh toán dịch vụ (ID, TripID, Plant, Date, Normal Hours, OT 1.5x, OT 2.0x, Standby Hours, Travel Hours, Total On-site Hours, Summary, Supervisor Name, Supervisor Signature, Timestamps).
 - **Cập nhật Backend Google Apps Script (`PlantLog_GoogleAppsScript.gs` & `PlantLog_GoogleAppsScript_Pro.gs`):** Khai báo bảng định danh `SN` và cột `COLS` chuẩn hóa; tích hợp tạo bảng tự động qua `setupSheets()`, hỗ trợ xuất dữ liệu qua `doGet` (`getAll`) và lưu dữ liệu toàn diện qua `doPost` (`syncAll`).
 - **Đồng bộ 2 chiều chống xung đột tại Client (`sync.js`):** Tự động nén ảnh chứng từ/ảnh LOTO/chữ ký trước khi đẩy lên cloud, hỗ trợ giải thuật so khớp thời gian `mergeCollectionByTimestamp` đảm bảo dữ liệu ghi offline không bị ghi đè.
+
+#### 🔧 8. Tinh Chỉnh Sắp Xếp Chuyến Đi Mới Nhất & Hoàn Thiện Đồng Bộ Đám Mây Đa Bảng (Cloud Sync Reliability):
+- **Sắp xếp Chuyến đi mới nhất lên trên cùng (Trip Sorting in Quick Snap):**
+  - Trong modal Chụp nhanh (`openQuickScratchModal`) và modal Gán chuyến đi (`openAttachScratchTripModal`), danh sách chuyến đi trong menu chọn (`scratch-trip-select`) và bộ chọn chuyến đi được tự động sắp xếp theo thứ tự ngày giảm dần (`b.date - a.date`), đưa các chuyến đi mới nhất/hiện tại lên ngay đầu danh sách giúp kỹ sư chọn nhanh mà không cần cuộn tìm.
+- **Kích hoạt Đồng bộ tự động (`svAndSync`):**
+  - Tích hợp `svAndSync` ngay khi Lưu/Xóa Ghi chú Quick Snap, Lưu/Xóa Bảng chấm công Service Ticket và Lưu Hồ sơ An toàn LOTO. Mọi thay đổi hiện trường lập tức được đồng bộ lên Google Sheets trong nền mà không cần chờ người dùng nhấn nút thủ công.
+- **Tương thích ánh xạ thuộc tính hai chiều (Dual Property Mappings):**
+  - Chuẩn hóa đồng bộ hai chiều trong `sync.js` giữa các trường `summary` / `workSummary`, `supervisorSig` / `signature`, `notes` / `text` đảm bảo dữ liệu ghi chú, tóm tắt công việc và chữ ký giám sát được truyền tải đầy đủ 100% lên các sheet `QuickSnap` và `ServiceTickets`.
+- **Cơ chế chống treo luồng & bảo vệ tràn ô bảng tính (Google Sheets Cell Overflow Guard):**
+  - Bổ sung cơ chế Timeout an toàn (2.5 giây) và kiểm tra chuỗi rỗng trong `compressPhoto()` của client, chống nguy cơ treo vĩnh viễn tiến trình đồng bộ khi gặp ảnh/chữ ký lỗi.
+  - Thêm cơ chế tự động giới hạn độ dài chuỗi tối đa 49,000 ký tự trong hàm `writeSheet()` của `PlantLog_GoogleAppsScript.gs` và `PlantLog_GoogleAppsScript_Pro.gs`, ngăn chặn triệt để ngoại lệ vượt giới hạn 50,000 ký tự của Google Sheets (`Cells cannot contain more than 50,000 characters`) khi lưu ảnh và chữ ký số.
 
 ---
 

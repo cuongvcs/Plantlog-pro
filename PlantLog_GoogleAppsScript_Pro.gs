@@ -119,8 +119,9 @@ function writeSheet(ss,name,hdrs,rows){
       const c=row[i];
       if(c===null||c===undefined)return'';
       if(c instanceof Date)return cellStr(c);
-      if(typeof c==='object')return JSON.stringify(c);
-      return c;
+      let val=(typeof c==='object')?JSON.stringify(c):c;
+      if(typeof val==='string'&&val.length>49000)val=val.substring(0,49000);
+      return val;
     })
   );
   sh.getRange(2,1,safe.length,hdrs.length).setValues(safe);

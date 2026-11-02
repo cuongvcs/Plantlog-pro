@@ -318,9 +318,10 @@ const flaHpRounded = +flaHp.toFixed(1);
 assert.strictEqual(flaHpRounded, 14.8);
 console.log(`  ✓ 10 HP motor calculation verified: ${hpVal} HP = ${convertedKw.toFixed(3)} kW -> ${flaHpRounded} A`);
 
-// 9. Test Google Sheets Sync Schema & Payload for QuickSnap, Safety & Tickets
+// 9. Test Google Sheets Sync Schema & Multi-sheet Support
 console.log('\n🔍 Test 9: Testing Google Sheets Sync Schema & Multi-sheet Support...');
 const gasCode = fs.readFileSync(path.join(__dirname, 'PlantLog_GoogleAppsScript.gs'), 'utf8');
+const gasProCode = fs.readFileSync(path.join(__dirname, 'PlantLog_GoogleAppsScript_Pro.gs'), 'utf8');
 assert.ok(gasCode.includes("QUICK_SNAP:'QuickSnap'"));
 assert.ok(gasCode.includes("SITE_SAFETY:'SiteSafety'"));
 assert.ok(gasCode.includes("SERVICE_TICKETS:'ServiceTickets'"));
@@ -330,6 +331,8 @@ assert.ok(gasCode.includes("service_tickets:"));
 assert.ok(gasCode.includes("['QuickSnap',COLS.quicksnap]"));
 assert.ok(gasCode.includes("['SiteSafety',COLS.site_safety]"));
 assert.ok(gasCode.includes("['ServiceTickets',COLS.service_tickets]"));
+assert.ok(gasCode.includes("49000"));
+assert.ok(gasProCode.includes("49000"));
 
 const syncModuleCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'sync.js'), 'utf8');
 assert.ok(syncModuleCode.includes("buildQuickSnap"));
@@ -338,9 +341,26 @@ assert.ok(syncModuleCode.includes("buildServiceTickets"));
 assert.ok(syncModuleCode.includes("quickSnap:enrichedQuickSnap"));
 assert.ok(syncModuleCode.includes("siteSafety:enrichedSiteSafety"));
 assert.ok(syncModuleCode.includes("serviceTickets:enrichedServiceTickets"));
+assert.ok(syncModuleCode.includes("summary: s(tk.summary || tk.workSummary)"));
+assert.ok(syncModuleCode.includes("supervisorSig || tk.signature"));
+assert.ok(syncModuleCode.includes("sc.notes || sc.text"));
 assert.ok(syncModuleCode.includes("d.quicksnap"));
 assert.ok(syncModuleCode.includes("d.safety"));
 assert.ok(syncModuleCode.includes("d.tickets"));
-console.log('  ✓ Google Apps Script backend & Client sync.js schema and data handlers verified!');
+
+// Test QuickSnap Trip Sorting & Auto-Sync
+const fieldtoolsCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'fieldtools.js'), 'utf8');
+assert.ok(fieldtoolsCode.includes("(b.date || '').localeCompare(a.date || '')"), "QuickSnap trips must be sorted newest first");
+assert.ok(fieldtoolsCode.includes("svAndSync('quick_scratch')"));
+assert.ok(fieldtoolsCode.includes("svAndSync('scratch_delete')"));
+assert.ok(fieldtoolsCode.includes("svAndSync('scratch_assign')"));
+
+const tripsCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'trips.js'), 'utf8');
+assert.ok(tripsCode.includes("svAndSync('service_ticket')"));
+assert.ok(tripsCode.includes("svAndSync('service_ticket_delete')"));
+assert.ok(tripsCode.includes("svAndSync('trip_safety')"));
+
+console.log('  ✓ Google Apps Script backend, cell overflow guard & Client sync.js schema and data handlers verified!');
+console.log('  ✓ QuickSnap trip sorting (newest first) & auto-sync hooks (svAndSync) verified!');
 
 console.log('\n🎉 ALL 9 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');

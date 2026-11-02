@@ -991,8 +991,12 @@ function saveServiceTicket() {
       tk.standbyHours = standbyHours;
       tk.travelHours = travelHours;
       tk.workSummary = workSummary;
+      tk.summary = workSummary;
       tk.supervisorName = supervisorName;
-      if (sig) tk.signature = sig;
+      if (sig) {
+        tk.signature = sig;
+        tk.supervisorSig = sig;
+      }
       tk.updatedAt = new Date().toISOString();
     }
   } else {
@@ -1005,9 +1009,12 @@ function saveServiceTicket() {
       standbyHours,
       travelHours,
       workSummary,
+      summary: workSummary,
       supervisorName,
       signature: sig || '',
-      createdAt: new Date().toISOString()
+      supervisorSig: sig || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     tr.timesheets.push(newTk);
   }
@@ -1017,6 +1024,7 @@ function saveServiceTicket() {
   renderTripTimesheets(curTrip);
   triggerHaptic('success');
   showToast('Service ticket saved ✓');
+  if (typeof svAndSync === 'function') svAndSync('service_ticket');
 }
 
 async function deleteServiceTicket(ticketId) {
@@ -1036,6 +1044,7 @@ async function deleteServiceTicket(ticketId) {
   renderTripTimesheets(curTrip);
   triggerHaptic('light');
   showToast('Service ticket deleted');
+  if (typeof svAndSync === 'function') svAndSync('service_ticket_delete');
 }
 
 // ═════════════════════════════════════════════════════
@@ -1284,6 +1293,7 @@ function saveTripSafety() {
   renderTripSafety(curTrip);
   triggerHaptic('success');
   showToast('Site Safety & LOTO updated ✓');
+  if (typeof svAndSync === 'function') svAndSync('trip_safety');
 }
 
 
