@@ -31,11 +31,11 @@
 - **Ưu tiên văn bản & ghi chú nhanh (Text-First Memo Experience):** Thiết kế lại giao diện Quick Snap theo đúng hành vi thực tế của kỹ sư (chủ yếu ghi chép thông số và lưu ý dạng chữ, ảnh là tùy chọn phụ):
   - Ô nhập nội dung ghi chú (`scratch-text`) được đặt ở vị trí trung tâm, mở rộng không gian thoải mái (`min-height: 115px`, cỡ chữ 14px), tự động focus con trỏ chuột/bàn phím ngay khi mở modal.
   - Tích hợp nút nhập bằng giọng nói tiếng Việt tự động dịch sang tiếng Anh (`🎙️ Voice VI ➔ EN`) đặt cạnh tiêu đề ghi chú.
-  - Nhóm thẻ phân loại (`scratch-cat-chips`) đưa `📝 Ghi chú / Note` lên vị trí đầu tiên và kích hoạt mặc định (`active`), cùng các thẻ `⚠️ Sự cố`, `📊 Thông số`, `⚡ Đấu nối`, `🏷️ Nhãn mác`.
+  - Nhóm thẻ phân loại (`scratch-cat-chips`) chuẩn hóa Tiếng Anh đồng bộ: `📝 Note / Memo` (mặc định), `⚠️ Defect`, `📊 Reading`, `⚡ Wiring`, `🏷️ Nameplate`.
   - Cơ chế tự sinh Tiêu đề thông minh: Nếu kỹ sư không nhập tiêu đề, ứng dụng tự động trích xuất câu đầu tiên của nội dung ghi chú làm tiêu đề, không cần gõ lặp lại.
-  - Tối ưu khu vực chụp ảnh: Thu gọn thành thanh đính kèm phụ thanh lịch (`📷 Ảnh đính kèm (không bắt buộc)`), loại bỏ các nút camera cồng kềnh chiếm diện tích, chỉ bung ảnh xem trước khi người dùng thực sự chọn chụp ảnh.
+  - Tối ưu khu vực chụp ảnh: Thu gọn thành thanh đính kèm phụ thanh lịch (`📷 Photo attachment (optional)`), loại bỏ các nút camera cồng kềnh chiếm diện tích, chỉ bung ảnh xem trước khi người dùng thực sự chọn chụp ảnh.
 - **Tự động nén ảnh giữ độ nét văn bản:** Khi có ảnh chụp, nén ảnh trực tiếp tại Client (`max 1280px`, chất lượng `0.72`) giúp văn bản tem mác rõ nét và dung lượng cực nhẹ.
-- **Tích hợp Chuyển đổi 1 chạm sang Task / Gán Trip:** Kỹ sư có thể chuyển ngay ghi chú thành Công việc (Task) hoặc gán vào Chuyến đi đang công tác.
+- **Tích hợp Chuyển đổi 1 chạm sang Task / Gán Trip (Chuẩn hóa Tiếng Anh):** Các nút thao tác chuẩn tiếng Anh `📋 Convert to Task`, `🏭 Assign Trip`, `✕ Delete`, `Cancel`, `💾 Save Note`.
 
 #### 🔴 5. [IMP-23] An Toàn Hiện Trường EHS, Giấy Phép Công Tác & 4 Bước LOTO (Site Safety Checklist):
 - **Quản lý Giấy phép công tác (Work Permit):** Lưu số giấy phép, thời hạn hiệu lực và lựa chọn các loại giấy phép rủi ro cao (Làm việc trên cao, Không gian hạn chế, Hàn cắt sinh nhiệt, Đào đất, Nâng hạ, Hóa chất).

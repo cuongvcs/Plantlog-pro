@@ -340,7 +340,7 @@ function openQuickScratchModal(prefillCategory = 'general') {
 
   // Populate trips dropdown with newest trips on top
   if (tripSelect) {
-    let opts = '<option value="">-- Không gắn chuyến đi (Tự do) --</option>';
+    let opts = '<option value="">-- No Linked Trip (Unassigned) --</option>';
     const sortedTrips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     sortedTrips.forEach(tr => {
       const sel = (curTrip && tr.id === curTrip) ? ' selected' : '';
@@ -371,7 +371,7 @@ async function handleScratchPhotoUpload(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
   try {
-    showToast('Đang nén ảnh...');
+    showToast('Compressing photo...');
     const compressed = await compressImageFile(file, 1280, 0.72);
     _scratchPhotoBase64 = compressed;
     const preview = document.getElementById('scratch-photo-preview');
@@ -384,10 +384,10 @@ async function handleScratchPhotoUpload(event) {
     if (wrap) wrap.style.display = 'block';
     if (clearBtn) clearBtn.style.display = 'inline-flex';
     triggerHaptic('light');
-    showToast('Đã đính kèm ảnh ✓');
+    showToast('Photo attached ✓');
   } catch (err) {
     console.error('Scratch photo error:', err);
-    showToast('Lỗi tải ảnh');
+    showToast('Failed to load image');
   }
 }
 
@@ -413,7 +413,7 @@ function saveQuickScratch() {
   const tripId = (document.getElementById('scratch-trip-select') || {}).value || null;
 
   if (!title && !text && !_scratchPhotoBase64) {
-    showToast('Vui lòng nhập nội dung ghi chú');
+    showToast('Please enter note content');
     return;
   }
 
@@ -423,13 +423,13 @@ function saveQuickScratch() {
       title = firstLine.length > 38 ? firstLine.substring(0, 35) + '…' : firstLine;
     } else {
       const catLabels = {
-        general: 'Ghi chú nhanh',
-        defect: 'Sự cố hiện trường',
-        measurement: 'Thông số đo',
-        wiring: 'Đấu nối / Tủ điện',
-        nameplate: 'Thông số nhãn mác'
+        general: 'Quick Note',
+        defect: 'Field Defect Issue',
+        measurement: 'Measurement Note',
+        wiring: 'Wiring / Terminal',
+        nameplate: 'Nameplate Snap'
       };
-      title = `${catLabels[_scratchSelectedCategory] || 'Ghi chú'} - ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      title = `${catLabels[_scratchSelectedCategory] || 'Field Memo'} - ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
   }
 
@@ -449,7 +449,7 @@ function saveQuickScratch() {
   sv();
   closeModal('modal-quick-scratch');
   triggerHaptic('success');
-  showToast('Đã lưu ghi chú ✓');
+  showToast('Quick note saved ✓');
   if (typeof svAndSync === 'function') svAndSync('quick_scratch');
 
   // Refresh lists if open
@@ -475,16 +475,16 @@ function renderScratchpadList() {
   if (emptyEl) emptyEl.style.display = 'none';
 
   const catIcons = {
-    general: '📝 Ghi chú',
-    defect: '⚠️ Sự cố',
-    measurement: '📊 Thông số',
-    wiring: '⚡ Đấu nối',
-    nameplate: '🏷️ Nhãn mác'
+    general: '📝 Note',
+    defect: '⚠️ Defect',
+    measurement: '📊 Reading',
+    wiring: '⚡ Wiring',
+    nameplate: '🏷️ Nameplate'
   };
 
   container.innerHTML = items.map(sp => {
     const trip = sp.tripId ? (S.trips || []).find(t => t.id === sp.tripId) : null;
-    const tripLabel = trip ? `🏭 ${trip.plant}` : 'Tự do';
+    const tripLabel = trip ? `🏭 ${trip.plant}` : 'Unassigned';
     const dateStr = new Date(sp.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     return `
@@ -492,7 +492,7 @@ function renderScratchpadList() {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">
-              <span class="scratch-badge-cat cat-${sp.category}">${catIcons[sp.category] || '📝 Ghi chú'}</span>
+              <span class="scratch-badge-cat cat-${sp.category}">${catIcons[sp.category] || '📝 Note'}</span>
               <span style="font-size:11px;color:var(--n500);">${dateStr}</span>
               ${sp.tripId ? `<span style="font-size:11px;color:var(--brand);font-weight:600;">${tripLabel}</span>` : ''}
             </div>
@@ -505,14 +505,14 @@ function renderScratchpadList() {
           ` : ''}
         </div>
         <div class="scratch-card-actions">
-          <button class="scratch-act-btn" onclick="convertScratchToTask('${sp.id}')" title="Chuyển thành Task">
-            📋 Tạo Task
+          <button class="scratch-act-btn" onclick="convertScratchToTask('${sp.id}')" title="Convert to formal Task">
+            📋 Convert to Task
           </button>
-          <button class="scratch-act-btn" onclick="openAttachScratchTripModal('${sp.id}')" title="Gán vào Chuyến đi">
-            🏭 Gán Trip
+          <button class="scratch-act-btn" onclick="openAttachScratchTripModal('${sp.id}')" title="Assign to Trip">
+            🏭 Assign Trip
           </button>
-          <button class="scratch-act-btn scratch-act-del" onclick="deleteScratchItem('${sp.id}')" title="Xóa">
-            ✕ Xóa
+          <button class="scratch-act-btn scratch-act-del" onclick="deleteScratchItem('${sp.id}')" title="Delete">
+            ✕ Delete
           </button>
         </div>
       </div>
@@ -526,10 +526,10 @@ function openScratchpadManagerModal() {
 }
 
 async function deleteScratchItem(id) {
-  const ok = await appConfirm('Bạn có chắc muốn xóa ghi chú này?', {
-    title: 'Xóa Ghi Chú',
+  const ok = await appConfirm('Delete this scratchpad note?', {
+    title: 'Delete Quick Note',
     danger: true,
-    confirmText: 'Xóa',
+    confirmText: 'Delete',
     icon: '🗑️'
   });
   if (!ok) return;
@@ -538,7 +538,7 @@ async function deleteScratchItem(id) {
   sv();
   triggerHaptic('light');
   renderScratchpadList();
-  showToast('Đã xóa ghi chú');
+  showToast('Note deleted');
   if (typeof svAndSync === 'function') svAndSync('scratch_delete');
 }
 
@@ -556,7 +556,7 @@ function convertScratchToTask(id) {
     const tripEl = document.getElementById('ntk-trip');
 
     if (titleEl) titleEl.value = sp.title;
-    if (descEl) descEl.value = (sp.text ? sp.text + '\n\n' : '') + `[Chuyển từ Ghi chú nhanh (${sp.category})]`;
+    if (descEl) descEl.value = (sp.text ? sp.text + '\n\n' : '') + `[Imported from Field Scratchpad (${sp.category})]`;
     if (tripEl && sp.tripId) tripEl.value = sp.tripId;
 
     if (sp.photo) {
@@ -572,14 +572,14 @@ async function openAttachScratchTripModal(id) {
 
   const trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   if (!trips.length) {
-    showToast('Chưa có chuyến đi nào. Hãy tạo chuyến đi trước.');
+    showToast('No trips found. Create a trip first.');
     return;
   }
 
   const tripListStr = trips.map((t, idx) => `${idx + 1}. ${t.plant} (${fmtDate(t.date)})`).join('\n');
-  const res = await appPrompt(`Chọn số thứ tự Chuyến đi cần gắn:\n\n${tripListStr}`, {
-    title: 'Gán Chuyến Đi Cho Ghi Chú',
-    placeholder: 'Nhập số (ví dụ: 1)'
+  const res = await appPrompt(`Select Trip number to attach:\n\n${tripListStr}`, {
+    title: 'Assign Note to Trip',
+    placeholder: 'Enter trip number (e.g. 1)'
   });
 
   if (res) {
@@ -589,10 +589,10 @@ async function openAttachScratchTripModal(id) {
       sp.updatedAt = new Date().toISOString();
       sv();
       renderScratchpadList();
-      showToast(`Đã gắn vào ${trips[idx].plant} ✓`);
+      showToast(`Assigned to ${trips[idx].plant} ✓`);
       if (typeof svAndSync === 'function') svAndSync('scratch_assign');
     } else {
-      showToast('Số thứ tự không hợp lệ');
+      showToast('Invalid trip number');
     }
   }
 }
