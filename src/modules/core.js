@@ -108,6 +108,8 @@ let S={
   trips:[],reports:{},tasks:[],leaveData:{},
   machines:[],plans:[],bills:[],
   inspections:[],
+  assets:[],      // [{id, tag, name, customer, model, serial, spec, location, notes, createdAt}] (IMP-24)
+  scratchpad:[],  // [{id, title, text, photo, category, tripId, createdAt}] (IMP-22)
   library:[],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
   defaultTeam:[],lang:'en',
   theme:'auto', // 'auto' | 'light' | 'dark' (IMP-13)
@@ -191,6 +193,8 @@ function ld(){
     const d=localStorage.getItem('plpro1');
     if(d)S={...S,...JSON.parse(d)};
   }catch(e){}
+  if(!S.assets) S.assets = [];
+  if(!S.scratchpad) S.scratchpad = [];
   applyTheme();
 }
 function t(k){return T[S.lang][k]||T.en[k]||k;}
@@ -596,6 +600,8 @@ function init(){
   safeRun(checkNotifPrompt, 'checkNotifPrompt');
   safeRun(updateGSStatus,   'updateGSStatus');
   safeRun(updateNetworkStatus, 'updateNetworkStatus');
+  safeRun(ensureAssetsInitialized, 'ensureAssetsInitialized');
+  safeRun(initScratchpadStore, 'initScratchpadStore');
 
   // Auth MUST run last — it controls app visibility
   // Do NOT hide app before this — a crash would leave it blank
@@ -666,6 +672,8 @@ function showScreen(n){
   if(n==='library')renderLibrary();
   if(n==='reminders')renderRemindersScreen();
   if(n==='inspection')renderInspectionScreen();
+  if(n==='toolbox') { if(typeof switchToolboxTab==='function') switchToolboxTab(curToolboxTab||'pressure'); }
+  if(n==='assets') { if(typeof renderAssetList==='function') renderAssetList(); }
   if(n==='settings'&&hasPIN()&&!_settingsUnlocked){
     _pendingScreen='settings';
     openModal('modal-pin');

@@ -908,3 +908,174 @@ input, textarea, select, button { font-family: var(--font); }
 }
 .sig-btn-danger { color: var(--red); }
 
+/* ═══════════════════════════════════════════════════════
+   FIELD SERVICE EXPANSION STYLES (IMP-19 to IMP-24)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── IMP-19: Timesheets & Service Tickets ──────────── */
+.ts-summary-banner {
+  display: flex; gap: 6px; background: var(--n100); border-radius: var(--rs);
+  padding: 8px; margin-top: 6px; border: 1px solid var(--n150);
+}
+.ts-sum-col { flex: 1; text-align: center; }
+.ts-sum-lbl { font-size: 10px; font-weight: 700; color: var(--n500); text-transform: uppercase; }
+.ts-sum-val { font-size: 14px; font-weight: 800; color: var(--n800); font-family: var(--font-hd); margin-top: 1px; }
+.ts-sum-total { background: var(--brand-light); border-radius: 4px; padding: 2px 4px; }
+.ts-ticket-card {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
+  padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--sh);
+}
+.ts-badge-norm { background: var(--n150); color: var(--n700); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.ts-badge-ot15 { background: var(--al); color: var(--ad); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.ts-badge-ot20 { background: var(--rl); color: var(--rd); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.ts-badge-stby { background: var(--bl); color: var(--bd); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.ts-btn-edit, .ts-btn-del {
+  padding: 4px 8px; border-radius: 6px; border: 1px solid var(--n200);
+  background: var(--surface); cursor: pointer; font-size: 12px;
+}
+
+/* ── IMP-23: Site Safety, Permits & LOTO ──────────── */
+.badge-permit {
+  background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D;
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px;
+}
+.loto-status-box {
+  background: var(--n50); border: 1px solid var(--n200); border-radius: var(--rs);
+  padding: 10px; margin-top: 6px;
+}
+.loto-check-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;
+}
+.loto-check-item {
+  font-size: 11px; color: var(--n600); display: flex; align-items: center; gap: 4px;
+  padding: 4px 6px; background: var(--surface); border-radius: 4px; border: 1px solid var(--n150);
+}
+.loto-check-item.checked {
+  color: var(--brand-dark); font-weight: 700; border-color: rgba(15,123,62,0.3); background: var(--brand-light);
+}
+.btn-emergency-call {
+  display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px;
+  border-radius: 20px; font-size: 11px; font-weight: 700; background: var(--brand-light);
+  color: var(--brand-dark); border: 1px solid rgba(15,123,62,0.3); text-decoration: none;
+}
+.btn-emergency-call:active { transform: scale(0.96); }
+
+/* ── IMP-20: Machine Readiness & Spare Parts ──────── */
+.readiness-selector {
+  display: flex; flex-direction: column; gap: 6px; margin-top: 6px;
+}
+.readiness-opt {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: var(--rs); border: 2px solid var(--n200); background: var(--surface);
+  cursor: pointer; text-align: left; transition: all var(--dur-fast);
+}
+.readiness-opt.opt-ready.active { border-color: var(--green); background: var(--gl); }
+.readiness-opt.opt-conditional.active { border-color: var(--amber); background: var(--al); }
+.readiness-opt.opt-stop.active { border-color: var(--red); background: var(--rl); }
+.spare-part-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 8px 10px; border-radius: var(--rs); background: var(--n50);
+  border: 1px solid var(--n200); margin-bottom: 6px;
+}
+.badge-prio { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.badge-prio-imm { background: var(--rl); color: var(--rd); }
+.badge-prio-next { background: var(--al); color: var(--ad); }
+.badge-prio-opt { background: var(--n150); color: var(--n700); }
+
+/* ── IMP-21: Engineering Toolbox ──────────────────── */
+.toolbox-tabs {
+  display: flex; gap: 4px; background: var(--n100); border-radius: var(--rs);
+  padding: 4px; margin-bottom: 12px; overflow-x: auto;
+}
+.toolbox-tab {
+  flex: 1; padding: 8px 6px; border-radius: var(--rs); border: none;
+  background: transparent; font-size: 11px; font-weight: 700; color: var(--n600);
+  cursor: pointer; white-space: nowrap; text-align: center; font-family: var(--font);
+  transition: all var(--dur-fast);
+}
+.toolbox-tab.active { background: var(--surface); color: var(--brand); box-shadow: var(--sh); }
+.calc-input-group {
+  display: flex; align-items: center; border: 1.5px solid var(--n200);
+  border-radius: var(--rs); background: var(--surface); overflow: hidden; margin-bottom: 8px;
+}
+.calc-input-group:focus-within { border-color: var(--brand); }
+.calc-input {
+  flex: 1; border: none; outline: none; padding: 10px 12px; font-size: 14px;
+  font-weight: 700; color: var(--n800); background: transparent; font-family: var(--mono);
+}
+.calc-unit-addon {
+  padding: 0 12px; font-size: 12px; font-weight: 700; color: var(--n500);
+  background: var(--n100); height: 100%; display: flex; align-items: center;
+  justify-content: center; min-width: 65px;
+}
+.calc-result-box {
+  background: var(--brand-light); border: 1.5px solid rgba(15,123,62,0.25);
+  border-radius: var(--rs); padding: 14px; text-align: center; margin-top: 10px;
+}
+
+/* ── IMP-22: Quick Scratchpad ─────────────────────── */
+.scratch-cat-chips {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px;
+}
+.scratch-cat-chip {
+  padding: 5px 10px; border-radius: 16px; border: 1px solid var(--n200);
+  background: var(--surface); font-size: 11px; font-weight: 600; color: var(--n600);
+  cursor: pointer; white-space: nowrap; transition: all var(--dur-fast);
+}
+.scratch-cat-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.scratch-card {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
+  padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--sh);
+}
+.scratch-badge-cat {
+  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  background: var(--n100); color: var(--n700);
+}
+.scratch-badge-cat.cat-defect { background: var(--rl); color: var(--rd); }
+.scratch-badge-cat.cat-nameplate { background: #EEF2FF; color: #4338CA; }
+.scratch-badge-cat.cat-wiring { background: var(--al); color: var(--ad); }
+.scratch-badge-cat.cat-measurement { background: var(--bl); color: var(--bd); }
+.scratch-card-actions {
+  display: flex; gap: 6px; margin-top: 8px; border-top: 1px solid var(--n150);
+  padding-top: 6px; flex-wrap: wrap;
+}
+.scratch-act-btn {
+  padding: 4px 8px; border-radius: 4px; border: 1px solid var(--n200);
+  background: var(--surface); font-size: 11px; font-weight: 600; color: var(--n700); cursor: pointer;
+}
+.scratch-act-btn.scratch-act-del { color: var(--red); border-color: rgba(220,38,38,0.3); }
+
+/* ── IMP-24: Equipment / Asset Registry ───────────── */
+.asset-card {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--r);
+  padding: 12px 14px; margin-bottom: 10px; box-shadow: var(--sh);
+}
+.badge-asset-tag {
+  background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE;
+  font-family: var(--mono); font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 4px;
+}
+.asset-specs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 11px;
+  color: var(--n700); background: var(--n50); padding: 8px 10px; border-radius: var(--rs); margin-top: 6px;
+}
+.asset-card-actions { display: flex; gap: 6px; margin-top: 10px; }
+.asset-act-btn {
+  padding: 6px 10px; border-radius: var(--rs); border: 1px solid var(--n200);
+  background: var(--surface); font-size: 11px; font-weight: 600; color: var(--n700); cursor: pointer;
+}
+.asset-act-btn.asset-act-primary {
+  flex: 1; background: var(--brand-light); color: var(--brand-dark); border-color: var(--brand); font-weight: 700;
+}
+.asset-act-btn.asset-act-del { color: var(--red); border-color: rgba(220,38,38,0.3); }
+.asset-timeline-node {
+  display: flex; gap: 10px; margin-bottom: 12px; position: relative; padding-left: 2px;
+}
+.asset-tl-icon {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--n100);
+  display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;
+}
+.asset-tl-content {
+  flex: 1; background: var(--n50); border: 1px solid var(--n200); border-radius: var(--rs); padding: 8px 10px;
+}
+
+

@@ -39,6 +39,7 @@ Plantlog-pro-main/
 │   │   ├── reminders.js                # Quản lý các lịch nhắc định kỳ (Ngày/Tuần/Tháng/Năm)
 │   │   ├── calendar.js                 # Tích hợp và đồng bộ lịch trình với Google Calendar
 │   │   ├── inspection.js               # Logic kiểm tra thông số kỹ thuật & checklists
+│   │   ├── fieldtools.js               # Hộp công cụ Kỹ thuật Cơ-Điện, Scratchpad ghi chú & Hồ sơ Thiết bị
 │   │   └── library.js                  # Thư viện checklist theo ngành công nghiệp (Dầu khí, Điện, ...)
 │   │
 │   ├── js/                             # CÁC FILE SCRIPT BIẾN THỂ / TÁCH LẺ THEO COMPONENT

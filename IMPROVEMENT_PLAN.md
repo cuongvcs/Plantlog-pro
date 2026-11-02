@@ -43,6 +43,12 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 | **IMP-16** | **Thanh tiến độ % hoàn thành trên Trip Card & Widget Tổng chi phí** | 🟡 **P3** | **Khuyến nghị** | ✅ Hoàn tất (v4.11) | 0.25 ngày |
 | **IMP-17** | **Lối tắt Lịch & Kế hoạch (Calendar & Leave Planner Quick Access)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.12) | 0.25 ngày |
 | **IMP-18** | **Khôi phục Chữ ký Báo cáo & Quản lý Chữ ký Cá nhân (Signature Engine)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.12) | 0.5 ngày |
+| **IMP-19** | **Nhật ký & Bảng chấm công hiện trường (Daily Service Ticket & Supervisor Timesheet)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
+| **IMP-20** | **Tình trạng nghiệm thu máy (Machine Readiness) & Danh mục Spare Parts** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
+| **IMP-21** | **Hộp công cụ Kỹ thuật Cơ - Điện - Đo lường (Field Engineering Toolbox)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
+| **IMP-22** | **Sổ tay ghi chú nhanh & Chụp Nameplate (Quick Scratchpad & Snapper)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
+| **IMP-23** | **An toàn EHS, Giấy phép công tác & 4 bước LOTO (Site Safety Checklist)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
+| **IMP-24** | **Hồ sơ lý lịch thiết bị & Dòng thời gian bảo trì (Asset Passport & Timeline)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 
 ---
 
@@ -263,6 +269,81 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 
 ---
 
+### 🔴 IMP-19: Nhật ký & Bảng chấm công hiện trường (Daily Service Ticket & Supervisor Timesheet)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao / Rất cần thiết)**
+* **Tính cần thiết:** Tối quan trọng cho kỹ sư đi service nhiều ngày (Multi-day Field Service).
+* **Chi tiết cải tiến:**
+  1. **Bảng phân bổ thời gian chi tiết:** Chia rõ số giờ: Giờ hành chính (Normal Hours), Làm thêm ngoài giờ (OT 1.5x), Làm đêm/Chủ nhật (OT 2.0x), Chờ đợi hiện trường (Standby/Idle) và Thời gian di chuyển (Travel Hours).
+  2. **Chữ ký xác nhận hàng ngày của Giám sát Nhà máy:** Tích hợp Canvas vẽ chữ ký xác nhận trực tiếp bằng ngón tay/bút cảm ứng kèm tên người giám sát phía khách hàng cho từng ngày công tác.
+  3. **Tự động tổng hợp Timesheet:** Tổng hợp toàn bộ số giờ làm việc thực tế, OT và Standby hiển thị trên thẻ tóm tắt và đồng bộ vào Báo cáo kỹ thuật cuối chuyến đi.
+
+---
+
+### 🔴 IMP-20: Tình trạng Bàn giao Máy (Machine Readiness Status) & Danh mục Spare Parts BOM
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao / Rất cần thiết)**
+* **Tính cần thiết:** Tiêu chuẩn bàn giao kỹ thuật hiện trường chống tranh chấp trách nhiệm vận hành.
+* **Chi tiết cải tiến:**
+  1. **Tình trạng nghiệm thu 3 cấp độ (Traffic Light):**
+     * 🟢 **Ready for Normal Operation:** Thiết bị an toàn, sẵn sàng chạy tải 100%.
+     * 🟡 **Conditional / Monitored Operation:** Cho phép chạy có điều kiện kèm cảnh báo giám sát thông số.
+     * 🔴 **Stop / Out of Service (Hazard):** Nghiêm cấm chạy, nguy cơ sự cố hoặc mất an toàn.
+  2. **Ghi chú giới hạn vận hành:** Kỹ sư ghi rõ điều kiện tải, giới hạn nhiệt độ, áp suất hoặc vòng tua.
+  3. **Khuyến nghị vật tư thay thế (Recommended Spare Parts BOM):** Cho phép lập danh sách mã phụ tùng (Part No), tên mô tả, số lượng và mức độ ưu tiên (🔴 Khẩn cấp - Critical, 🟡 Bảo trì tiếp theo - Next PM, ⚪ Dự phòng - Optional) ngay trong báo cáo và tự động in ra bảng biểu trong tệp PDF xuất ra cho khách hàng.
+
+---
+
+### 🟠 IMP-21: Hộp công cụ Kỹ thuật Cơ - Điện - Đo lường (Field Engineering Toolbox)
+* **Mức độ ưu tiên:** 🟠 **P2 (Cần thiết)**
+* **Tính cần thiết:** Hỗ trợ tính toán tra cứu nhanh 100% offline ngay dưới gầm máy hay trong phòng điều khiển.
+* **Chi tiết cải tiến:**
+  1. **Bộ chuyển đổi đơn vị Áp suất:** Tính toán 2 chiều tức thì giữa `bar`, `psi`, `kPa`, `MPa` và `kg/cm²`.
+  2. **Bộ chuyển đổi Nhiệt độ & Lưu lượng:** Tính toán giữa `°C`, `°F`, `Kelvin` và lưu lượng `m³/h`, `L/min`, `GPM`.
+  3. **Máy tính Dòng định mức Motor 3 pha (FLA Calculator):**
+     * Công thức: $I = \frac{P \times 1000}{\sqrt{3} \times V \times \cos\varphi \times \eta}$.
+     * Tự động đưa ra dòng định mức (FLA), khuyến nghị dải cài đặt Rơ-le nhiệt (Thermal Overload 1.05 - 1.15x), Cỡ Aptomat MCCB/MCB (1.5 - 2.5x) và tiết diện dây cáp đồng tối thiểu.
+  4. **Bộ chia tỉ lệ tín hiệu Đo lường 4-20mA (Instrumentation Scaler):**
+     * Tính toán nhanh 2 chiều giữa Dòng mA (4-20mA), Tỉ lệ % (0-100%) và Giá trị vật lý thực tế (Engineering Value: Bar, °C, RPM...) theo dải đo cài đặt (LRV - URV).
+
+---
+
+### 🟠 IMP-22: Sổ tay ghi chú nhanh & Chụp ảnh Nameplate (Quick Field Scratchpad & Snapper)
+* **Mức độ ưu tiên:** 🟠 **P2 (Cần thiết)**
+* **Tính cần thiết:** Bắt trọn thông tin máy móc nhãn mác (Nameplate) ngay tại hiện trường trong vài giây.
+* **Chi tiết cải tiến:**
+  1. **Chụp và nén ảnh Nameplate tức thời:** Nén ảnh tại chỗ (max 1000px, 0.72 quality) giữ chữ trên nhãn cực nét mà dung lượng cực nhẹ.
+  2. **Phân loại thẻ thông minh (Category Chips):** Nameplate nhãn máy, Thông số cài đặt (Parameter), Báo động lỗi (Alarm), Ý tưởng ghi chú (Idea).
+  3. **Tích hợp Voice-to-Text:** Nhập nhanh ghi chú hiện trường bằng giọng nói.
+  4. **Chuyển đổi 1 chạm sang Task / Gắn vào Chuyến đi:** Chuyển ngay các ghi chú hiện trường thành Công việc (Task) cần làm hoặc liên kết vào Chuyến đi hiện tại.
+
+---
+
+### 🔴 IMP-23: An toàn Hiện trường EHS, Giấy phép Công tác & 4 Bước LOTO (Site Safety Checklist)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao / Rất cần thiết)**
+* **Tính cần thiết:** Tuân thủ an toàn lao động công nghiệp và bảo vệ kỹ sư tại nhà máy.
+* **Chi tiết cải tiến:**
+  1. **Giấy phép công tác (Work Permits):** Lưu số Permit, ngày hết hạn và đánh dấu các loại rủi ro cao (Làm việc trên cao, Không gian kín, Hàn cắt sinh nhiệt, Đào đất, Nâng hạ, Hóa chất độc hại).
+  2. **Kiểm tra 4 điểm cô lập năng lượng (LOTO 4-Point Verification):**
+     * [1] Cô lập nguồn điện (Electrical Power Isolated).
+     * [2] Xả áp khí nén/thủy lực (Pneumatic/Hydraulic Depressurized).
+     * [3] Treo thẻ cảnh báo (Danger Tags Hung).
+     * [4] Kiểm tra thử năng lượng bằng 0 (Zero-Energy Verified & Tried).
+  3. **Mã khóa an toàn & Ảnh bằng chứng LOTO:** Lưu số thẻ khóa Padlock ID và chụp ảnh hiện trường cụm van/aptomat đã khóa thẻ.
+  4. **Quay số khẩn cấp 1 chạm (Emergency Call):** Nút gọi trực tiếp tới Phòng điều khiển trung tâm (CCR), Ban an toàn EHS và Trạm y tế nhà máy.
+
+---
+
+### 🟠 IMP-24: Quản lý Hồ sơ Lý lịch Thiết bị & Dòng thời gian Bảo trì (Asset Passport & Timeline)
+* **Mức độ ưu tiên:** 🟠 **P2 (Cần thiết)**
+* **Tính cần thiết:** Số hóa toàn bộ hồ sơ máy móc và tra cứu lịch sử sửa chữa của từng máy qua các năm.
+* **Chi tiết cải tiến:**
+  1. **Hồ sơ lý lịch máy móc (Machine Passport):** Lưu trữ Tag Number, Tên thiết bị, Khách hàng, Model, Serial No, Thông số kỹ thuật và Vị trí lắp đặt. Tự động chuyển đổi dữ liệu từ danh mục `S.machines` cũ để tương thích 100%.
+  2. **Quét dòng thời gian lịch sử dịch vụ (Maintenance History Timeline):**
+     * Tự động quét toàn bộ Chuyến đi (`S.trips`), Phiếu chấm công hàng ngày (`timesheets`), Nhật ký công việc (`S.tasks`) và Báo cáo (`S.reports`) để trích xuất toàn bộ các mốc bảo dưỡng, sửa chữa và thay thế liên quan đến thiết bị.
+     * Hiển thị dòng thời gian trực quan theo thứ tự thời gian giúp kỹ sư biết rõ máy đã từng bị lỗi gì và ai đã sửa trước đó.
+  3. **Gắn thẻ thiết bị nhanh:** Tự động tạo danh mục thẻ để chọn nhanh khi tạo Chuyến đi, Công việc hoặc Sổ tay ghi chú.
+
+---
+
 ## 3. 📅 LỘ TRÌNH TRIỂN KHAI THEO GIAI ĐOẠN (ROADMAP)
 
 ```mermaid
@@ -311,6 +392,13 @@ gantt
   - [x] Lối tắt truy cập nhanh Lịch & Kế hoạch (Calendar & Leave Planner) từ Trang chủ (thẻ Leave days + nút Calendar Topbar) và màn hình Tasks (Đã xong - IMP-17)
   - [x] Khắc phục triệt để lỗi không nạp được chữ ký khi mở lại báo cáo qua cơ chế khôi phục tại Bước Sign-off (`gotoStep(5)`) (Đã xong - IMP-18)
   - [x] Tích hợp Quản lý Chữ ký Cá nhân trong Profile (Settings), hỗ trợ tải ảnh chữ ký, lưu chữ ký mặc định và dùng chữ ký cá nhân (Đã xong - IMP-18)
+- [x] **Giai đoạn 6: Năng lực Kỹ sư Hiện trường & Dịch vụ Kỹ thuật Chuyên nghiệp (v4.13)**
+  - [x] Nhật ký Dịch vụ & Bảng chấm công hiện trường với chữ ký giám sát nhà máy hàng ngày và phân tách giờ thường / OT 1.5x / OT 2.0x / Standby (Đã xong - IMP-19)
+  - [x] Đèn giao thông tình trạng bàn giao máy (Machine Readiness Traffic Light) & Danh mục vật tư phụ tùng thay thế khuyến nghị (Spare Parts BOM) in trực tiếp ra PDF (Đã xong - IMP-20)
+  - [x] Hộp công cụ Kỹ thuật Cơ - Điện - Đo lường Offline: chuyển đổi Áp suất, Nhiệt độ, Lưu lượng, Dòng động cơ 3 pha FLA và chia thang đo tín hiệu 4-20mA (Đã xong - IMP-21)
+  - [x] Sổ tay ghi chú nhanh & Chụp ảnh Nameplate máy hiện trường: nén ảnh siêu nhẹ, Voice-to-Text và chuyển đổi 1 chạm sang Task / Trip (Đã xong - IMP-22)
+  - [x] An toàn Hiện trường EHS, Giấy phép công tác & Kiểm tra 4 điểm cô lập năng lượng LOTO kèm ảnh hiện trường và gọi khẩn cấp 1 chạm (Đã xong - IMP-23)
+  - [x] Quản lý Hồ sơ Lý lịch Thiết bị (Asset Passport) & Quét dòng thời gian lịch sử dịch vụ/bảo trì tự động từ Trips, Tasks, Reports (Đã xong - IMP-24)
 
 ---
 

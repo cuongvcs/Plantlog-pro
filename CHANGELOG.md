@@ -1,5 +1,52 @@
 # 📝 Nhật ký cập nhật (Changelog) — PlantLog Pro
 
+## [v4.13] - 02/11/2026
+
+### 🚀 Bộ Năng Lực Nghiệp Vụ Kỹ Sư Hiện Trường Chuyên Nghiệp (IMP-19 ➔ IMP-24)
+
+#### 🔴 1. [IMP-19] Nhật Ký Dịch Vụ & Bảng Chấm Công Hiện Trường (Daily Service Ticket & Supervisor Timesheet):
+- **Phân bổ chi tiết giờ công tác:** Hỗ trợ chấm công thực tế hàng ngày cho các đợt công tác dài ngày (Multi-day Field Trips), chia thành 5 nhóm: Giờ hành chính (Normal Hours), Làm thêm ngoài giờ (OT 1.5x), Làm ca đêm / Chủ nhật (OT 2.0x), Giờ chờ đợi hiện trường do sự cố máy/nhà máy dừng (Standby Hours) và Thời gian di chuyển (Travel Hours).
+- **Chữ ký điện tử Giám sát Nhà máy hàng ngày:** Tích hợp Canvas ký trực tiếp trên màn hình di động cho Giám sát viên phía khách hàng (Plant Supervisor) xác nhận công việc từng ngày, có cơ chế High-DPI chống nhòe và nút Xóa ký lại.
+- **Thẻ tổng hợp On-site Timesheet:** Tự động tính toán tổng số giờ On-site (Normal + OT + Standby) và Travel Hours, hiển thị trực quan dạng bảng tổng kết trong Chi tiết chuyến đi và nhúng vào Báo cáo kỹ thuật.
+
+#### 🔴 2. [IMP-20] Tình Trạng Nghiệm Thu Bàn Giao Máy (Machine Readiness Status) & Danh Mục Phụ Tùng Khuyến Nghị (Spare Parts BOM):
+- **Tình trạng nghiệm thu 3 cấp độ (Traffic Light System):**
+  - 🟢 **Ready for Normal Operation:** Thiết bị hoàn toàn sẵn sàng vận hành bình thường.
+  - 🟡 **Conditional / Monitored Operation:** Cho phép chạy có điều kiện (kèm ghi chú hạn mức nhiệt độ, áp suất, độ rung hoặc dải tải tối đa).
+  - 🔴 **Stop / Out of Service (Hazard):** Nghiêm cấm chạy máy, phát hiện nguy cơ sự cố hoặc nguy hiểm an toàn.
+- **Danh mục vật tư khuyến nghị (Recommended Spare Parts BOM):** Cho phép kỹ sư lập bảng vật tư cần thay thế/dự phòng gồm: Mã phụ tùng (Part No), Tên quy cách mô tả, Số lượng và Cấp độ ưu tiên (🔴 Critical - Khẩn cấp, 🟡 Next PM - Đợt bảo trì tới, ⚪ Optional - Dự phòng).
+- **Tích hợp PDF Bàn giao:** Khung tình trạng máy với màu sắc nổi bật và Bảng danh mục phụ tùng khuyến nghị được xuất tự động vào trang ký nghiệm thu của tệp PDF Báo cáo kỹ thuật.
+
+#### 🟠 3. [IMP-21] Hộp Công Cụ Kỹ Thuật Hiện Trường (Field Engineering Toolbox - 100% Offline):
+- **Màn hình Hộp công cụ mới (`screen-toolbox`):** Truy cập nhanh từ Trang chủ hoặc Cài đặt, hoạt động 100% không cần kết nối mạng.
+- **Bộ chuyển đổi Áp suất đa đơn vị:** Tính toán chuyển đổi tức thì 2 chiều giữa `bar`, `psi`, `kPa`, `MPa` và `kg/cm²`.
+- **Bộ chuyển đổi Nhiệt độ & Lưu lượng:** Tính toán chuyển đổi giữa `°C`, `°F`, `Kelvin` và lưu lượng chất lỏng/khí `m³/h`, `L/min`, `GPM`.
+- **Máy tính Dòng điện Động cơ 3 pha (3-Phase Motor FLA Calculator):** Tính chính xác dòng đầy tải (Full Load Amps) dựa trên công suất (kW), điện áp (V), hệ số công suất ($\cos\varphi$) và hiệu suất động cơ ($\eta$); tự động đưa ra khuyến nghị dải cài đặt Rơ-le nhiệt bảo vệ (Overload Relay), Cỡ Aptomat MCCB và tiết diện dây đồng tối thiểu.
+- **Bộ tính toán Thang đo Tín hiệu Đo lường 4-20mA (Instrumentation Scaler):** Chuyển đổi 2 chiều giữa dòng điện điều khiển $4 - 20\text{ mA}$, Tỉ lệ phần trăm $0 - 100\%$ và Giá trị đo thực tế (Process Variable: Bar, °C, RPM, m³/h...) theo dải hiệu chuẩn Zero (LRV) và Span (URV).
+
+#### 🟠 4. [IMP-22] Sổ Tay Ghi Chú Nhanh & Chụp Ảnh Nhãn Mác (Quick Field Scratchpad & Nameplate Snapper):
+- **Nút chụp nhanh "⚡ Quick Snap" trên Trang chủ:** Bật tức thì camera chụp ảnh nhãn mác máy (Nameplate), van, cảm biến hoặc tủ điện.
+- **Tự động nén ảnh giữ độ nét văn bản:** Nén ảnh trực tiếp tại Client (`max 1000px`, chất lượng `0.72`) giúp các ký tự thông số trên tem nhãn sắc nét rõ ràng mà dung lượng file cực nhỏ (< 120KB).
+- **Phân loại thẻ thông minh (Category Chips):** Phân loại theo Nameplate, Thông số (Param), Báo động (Alarm), Ý tưởng (Idea).
+- **Tích hợp Voice-to-Text & Chuyển đổi 1 chạm sang Task / Trip:** Kỹ sư có thể đọc ghi chú bằng giọng nói, lưu lại và chuyển ngay thành Công việc (Task) cần làm hoặc gắn vào Chuyến đi đang thực hiện.
+
+#### 🔴 5. [IMP-23] An Toàn Hiện Trường EHS, Giấy Phép Công Tác & 4 Bước LOTO (Site Safety Checklist):
+- **Quản lý Giấy phép công tác (Work Permit):** Lưu số giấy phép, thời hạn hiệu lực và lựa chọn các loại giấy phép rủi ro cao (Làm việc trên cao, Không gian hạn chế, Hàn cắt sinh nhiệt, Đào đất, Nâng hạ, Hóa chất).
+- **Quy trình 4 điểm cô lập năng lượng (LOTO 4-Point Verification Checklist):**
+  - [1] Cô lập nguồn điện (Electrical Power Isolated).
+  - [2] Xả áp khí nén/thủy lực (Pneumatic/Hydraulic Depressurized).
+  - [3] Treo thẻ cảnh báo cấm đóng điện (Danger Tags Hung).
+  - [4] Thử nghiệm năng lượng bằng không (Zero-Energy Verified & Tried).
+- **Mã ổ khóa & Ảnh hiện trường LOTO:** Ghi nhận mã ổ khóa an toàn (Padlock IDs) và chụp ảnh hiện trường điểm khóa thẻ để làm bằng chứng tuân thủ an toàn EHS.
+- **Cuộc gọi khẩn cấp 1 chạm (Emergency Call):** Nút quay số trực tiếp đến Phòng Điều Khiển Trung Tâm (CCR), Ban An Toàn EHS và Trạm Y Tế nhà máy ngay khi có sự cố.
+
+#### 🟠 6. [IMP-24] Hồ Sơ Lý Lịch Thiết Bị & Dòng Thời Gian Bảo Trì (Asset Passport & Service Timeline):
+- **Màn hình Hồ sơ Thiết bị mới (`screen-assets`):** Quản lý toàn bộ danh mục tài sản máy móc thiết bị của các nhà máy/khách hàng (Tag No, Tên thiết bị, Hãng/Model, Số Serial, Thông số kỹ thuật, Vị trí). Tự động kế thừa và chuyển đổi từ `S.machines` cũ để bảo toàn dữ liệu.
+- **Bộ quét Dòng thời gian Lịch sử Bảo trì (Maintenance Timeline Scanner):** Tự động liên kết và trích xuất toàn bộ dữ liệu lịch sử từ các Chuyến đi (`trips`), Phiếu chấm công (`timesheets`), Nhật ký công việc (`tasks`) và Báo cáo (`reports`) có chứa Tag thiết bị.
+- **Sổ tay bảo dưỡng trực quan:** Kỹ sư có thể xem toàn bộ các lần bảo dưỡng, thay thế phụ tùng và xử lý sự cố của thiết bị trong quá khứ theo thứ tự thời gian.
+
+---
+
 ## [v4.12] - 02/11/2026
 
 ### 🚀 Tối Ưu Lối Tắt Truy Cập Lịch Kế Hoạch (IMP-17) & Nâng Cấp Toàn Diện Cơ Chế Chữ Ký Nghiệm Thu (IMP-18)

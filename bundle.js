@@ -20,6 +20,7 @@ const MODULE_ORDER = [
   'tasks.js',
   'report.js',
   'inspection.js',
+  'fieldtools.js',
   'library.js',
   'telegram.js',
   'calendar.js',

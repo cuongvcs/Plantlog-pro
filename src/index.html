@@ -930,6 +930,177 @@ input, textarea, select, button { font-family: var(--font); }
 }
 .sig-btn-danger { color: var(--red); }
 
+/* ═══════════════════════════════════════════════════════
+   FIELD SERVICE EXPANSION STYLES (IMP-19 to IMP-24)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── IMP-19: Timesheets & Service Tickets ──────────── */
+.ts-summary-banner {
+  display: flex; gap: 6px; background: var(--n100); border-radius: var(--rs);
+  padding: 8px; margin-top: 6px; border: 1px solid var(--n150);
+}
+.ts-sum-col { flex: 1; text-align: center; }
+.ts-sum-lbl { font-size: 10px; font-weight: 700; color: var(--n500); text-transform: uppercase; }
+.ts-sum-val { font-size: 14px; font-weight: 800; color: var(--n800); font-family: var(--font-hd); margin-top: 1px; }
+.ts-sum-total { background: var(--brand-light); border-radius: 4px; padding: 2px 4px; }
+.ts-ticket-card {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
+  padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--sh);
+}
+.ts-badge-norm { background: var(--n150); color: var(--n700); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.ts-badge-ot15 { background: var(--al); color: var(--ad); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.ts-badge-ot20 { background: var(--rl); color: var(--rd); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.ts-badge-stby { background: var(--bl); color: var(--bd); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.ts-btn-edit, .ts-btn-del {
+  padding: 4px 8px; border-radius: 6px; border: 1px solid var(--n200);
+  background: var(--surface); cursor: pointer; font-size: 12px;
+}
+
+/* ── IMP-23: Site Safety, Permits & LOTO ──────────── */
+.badge-permit {
+  background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D;
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px;
+}
+.loto-status-box {
+  background: var(--n50); border: 1px solid var(--n200); border-radius: var(--rs);
+  padding: 10px; margin-top: 6px;
+}
+.loto-check-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;
+}
+.loto-check-item {
+  font-size: 11px; color: var(--n600); display: flex; align-items: center; gap: 4px;
+  padding: 4px 6px; background: var(--surface); border-radius: 4px; border: 1px solid var(--n150);
+}
+.loto-check-item.checked {
+  color: var(--brand-dark); font-weight: 700; border-color: rgba(15,123,62,0.3); background: var(--brand-light);
+}
+.btn-emergency-call {
+  display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px;
+  border-radius: 20px; font-size: 11px; font-weight: 700; background: var(--brand-light);
+  color: var(--brand-dark); border: 1px solid rgba(15,123,62,0.3); text-decoration: none;
+}
+.btn-emergency-call:active { transform: scale(0.96); }
+
+/* ── IMP-20: Machine Readiness & Spare Parts ──────── */
+.readiness-selector {
+  display: flex; flex-direction: column; gap: 6px; margin-top: 6px;
+}
+.readiness-opt {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: var(--rs); border: 2px solid var(--n200); background: var(--surface);
+  cursor: pointer; text-align: left; transition: all var(--dur-fast);
+}
+.readiness-opt.opt-ready.active { border-color: var(--green); background: var(--gl); }
+.readiness-opt.opt-conditional.active { border-color: var(--amber); background: var(--al); }
+.readiness-opt.opt-stop.active { border-color: var(--red); background: var(--rl); }
+.spare-part-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 8px 10px; border-radius: var(--rs); background: var(--n50);
+  border: 1px solid var(--n200); margin-bottom: 6px;
+}
+.badge-prio { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.badge-prio-imm { background: var(--rl); color: var(--rd); }
+.badge-prio-next { background: var(--al); color: var(--ad); }
+.badge-prio-opt { background: var(--n150); color: var(--n700); }
+
+/* ── IMP-21: Engineering Toolbox ──────────────────── */
+.toolbox-tabs {
+  display: flex; gap: 4px; background: var(--n100); border-radius: var(--rs);
+  padding: 4px; margin-bottom: 12px; overflow-x: auto;
+}
+.toolbox-tab {
+  flex: 1; padding: 8px 6px; border-radius: var(--rs); border: none;
+  background: transparent; font-size: 11px; font-weight: 700; color: var(--n600);
+  cursor: pointer; white-space: nowrap; text-align: center; font-family: var(--font);
+  transition: all var(--dur-fast);
+}
+.toolbox-tab.active { background: var(--surface); color: var(--brand); box-shadow: var(--sh); }
+.calc-input-group {
+  display: flex; align-items: center; border: 1.5px solid var(--n200);
+  border-radius: var(--rs); background: var(--surface); overflow: hidden; margin-bottom: 8px;
+}
+.calc-input-group:focus-within { border-color: var(--brand); }
+.calc-input {
+  flex: 1; border: none; outline: none; padding: 10px 12px; font-size: 14px;
+  font-weight: 700; color: var(--n800); background: transparent; font-family: var(--mono);
+}
+.calc-unit-addon {
+  padding: 0 12px; font-size: 12px; font-weight: 700; color: var(--n500);
+  background: var(--n100); height: 100%; display: flex; align-items: center;
+  justify-content: center; min-width: 65px;
+}
+.calc-result-box {
+  background: var(--brand-light); border: 1.5px solid rgba(15,123,62,0.25);
+  border-radius: var(--rs); padding: 14px; text-align: center; margin-top: 10px;
+}
+
+/* ── IMP-22: Quick Scratchpad ─────────────────────── */
+.scratch-cat-chips {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px;
+}
+.scratch-cat-chip {
+  padding: 5px 10px; border-radius: 16px; border: 1px solid var(--n200);
+  background: var(--surface); font-size: 11px; font-weight: 600; color: var(--n600);
+  cursor: pointer; white-space: nowrap; transition: all var(--dur-fast);
+}
+.scratch-cat-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.scratch-card {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
+  padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--sh);
+}
+.scratch-badge-cat {
+  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  background: var(--n100); color: var(--n700);
+}
+.scratch-badge-cat.cat-defect { background: var(--rl); color: var(--rd); }
+.scratch-badge-cat.cat-nameplate { background: #EEF2FF; color: #4338CA; }
+.scratch-badge-cat.cat-wiring { background: var(--al); color: var(--ad); }
+.scratch-badge-cat.cat-measurement { background: var(--bl); color: var(--bd); }
+.scratch-card-actions {
+  display: flex; gap: 6px; margin-top: 8px; border-top: 1px solid var(--n150);
+  padding-top: 6px; flex-wrap: wrap;
+}
+.scratch-act-btn {
+  padding: 4px 8px; border-radius: 4px; border: 1px solid var(--n200);
+  background: var(--surface); font-size: 11px; font-weight: 600; color: var(--n700); cursor: pointer;
+}
+.scratch-act-btn.scratch-act-del { color: var(--red); border-color: rgba(220,38,38,0.3); }
+
+/* ── IMP-24: Equipment / Asset Registry ───────────── */
+.asset-card {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--r);
+  padding: 12px 14px; margin-bottom: 10px; box-shadow: var(--sh);
+}
+.badge-asset-tag {
+  background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE;
+  font-family: var(--mono); font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 4px;
+}
+.asset-specs-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 11px;
+  color: var(--n700); background: var(--n50); padding: 8px 10px; border-radius: var(--rs); margin-top: 6px;
+}
+.asset-card-actions { display: flex; gap: 6px; margin-top: 10px; }
+.asset-act-btn {
+  padding: 6px 10px; border-radius: var(--rs); border: 1px solid var(--n200);
+  background: var(--surface); font-size: 11px; font-weight: 600; color: var(--n700); cursor: pointer;
+}
+.asset-act-btn.asset-act-primary {
+  flex: 1; background: var(--brand-light); color: var(--brand-dark); border-color: var(--brand); font-weight: 700;
+}
+.asset-act-btn.asset-act-del { color: var(--red); border-color: rgba(220,38,38,0.3); }
+.asset-timeline-node {
+  display: flex; gap: 10px; margin-bottom: 12px; position: relative; padding-left: 2px;
+}
+.asset-tl-icon {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--n100);
+  display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;
+}
+.asset-tl-content {
+  flex: 1; background: var(--n50); border: 1px solid var(--n200); border-radius: var(--rs); padding: 8px 10px;
+}
+
+
 </style>
 </head>
 <body>
@@ -994,6 +1165,18 @@ input, textarea, select, button { font-family: var(--font); }
       <div class="sb2 clickable" onclick="showScreen('trips')" title="View all trips"><div class="sn" id="stat-trips">0</div><div class="sl" data-t="tripsMonth">Trips</div></div>
       <div class="sb2 clickable" onclick="showScreen('tasks')" title="View today's tasks"><div class="sn" id="stat-tasks" style="color:var(--amber);">0</div><div class="sl" data-t="pendingTasks">Tasks today</div></div>
       <div class="sb2 clickable" onclick="showScreen('leave')" title="Open Leave & Calendar Planner"><div class="sn" id="stat-leave" style="color:var(--blue);">0</div><div class="sl" data-t="leaveDays">Leave days</div></div>
+    </div>
+    <!-- Field Tools Quick Row (IMP-21, IMP-22, IMP-24) -->
+    <div style="display:flex;gap:8px;margin-top:10px;margin-bottom:6px;">
+      <button type="button" onclick="openToolboxScreen()" class="btn btn-sm btn-o" style="flex:1;padding:8px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);background:var(--surface);" title="Engineering Toolbox & Unit Converters">
+        <span>🧮</span> Toolbox
+      </button>
+      <button type="button" onclick="openQuickScratchModal()" class="btn btn-sm btn-p" style="flex:1;padding:8px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);" title="Quick Field Scratchpad & Nameplate Camera">
+        <span>⚡</span> Quick Snap
+      </button>
+      <button type="button" onclick="openAssetsScreen()" class="btn btn-sm btn-o" style="flex:1;padding:8px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);background:var(--surface);" title="Equipment & Machine Passport Registry">
+        <span>🏭</span> Assets
+      </button>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px;">
       <div class="sec" style="margin:0;">Today's Tasks</div>
@@ -1119,6 +1302,13 @@ input, textarea, select, button { font-family: var(--font); }
 
     <!-- Bills section in trip detail -->
     <div id="trip-bills-section" style="margin-top:4px;"></div>
+
+    <!-- Site Safety, Permits & LOTO (IMP-23) -->
+    <div id="trip-safety-section" style="margin-top:4px;"></div>
+
+    <!-- Daily Timesheets & Service Tickets (IMP-19) -->
+    <div id="trip-timesheets-section" style="margin-top:4px;"></div>
+
     <!-- Trip status change -->
     <div style="display:flex;gap:4px;margin-bottom:8px;background:var(--n100);border-radius:var(--r-sm);padding:4px;" id="trip-status-toggle"></div>
     <!-- Inspection counts -->
@@ -1746,6 +1936,53 @@ input, textarea, select, button { font-family: var(--font); }
         </div>
         <div class="fg"><label class="fl" data-t="remarks">Remarks</label><textarea class="fta" id="signoff-remarks" style="min-height:50px;" placeholder="..."></textarea></div>
       </div>
+
+      <!-- MACHINE HANDOVER & READINESS STATUS (IMP-20) -->
+      <div class="card" style="padding:14px;">
+        <label class="fl" style="margin-bottom:8px;">🚦 Machine Handover &amp; Readiness Status</label>
+        <div class="readiness-selector">
+          <button type="button" class="readiness-opt opt-ready active" id="readiness-btn-ready" onclick="setReadinessStatus('ready')">
+            <span style="font-size:18px;">🟢</span>
+            <div>
+              <div style="font-weight:700;font-size:12px;">Ready for Operation</div>
+              <div style="font-size:10px;color:var(--n500);">Safe to run normal production (100% capacity)</div>
+            </div>
+          </button>
+          <button type="button" class="readiness-opt opt-conditional" id="readiness-btn-conditional" onclick="setReadinessStatus('conditional')">
+            <span style="font-size:18px;">🟡</span>
+            <div>
+              <div style="font-weight:700;font-size:12px;">Conditional / Monitored Operation</div>
+              <div style="font-size:10px;color:var(--n500);">Permitted to run under observation (vibration/temp)</div>
+            </div>
+          </button>
+          <button type="button" class="readiness-opt opt-stop" id="readiness-btn-stop" onclick="setReadinessStatus('stop')">
+            <span style="font-size:18px;">🔴</span>
+            <div>
+              <div style="font-weight:700;font-size:12px;">Stop / Out of Service</div>
+              <div style="font-size:10px;color:var(--n500);">Do not operate — critical hazard or mechanical fault</div>
+            </div>
+          </button>
+        </div>
+        <div class="fg" style="margin-top:10px;margin-bottom:0;">
+          <label class="fl" style="font-size:11px;">Condition Notes / Operating Limits (Optional)</label>
+          <input type="text" class="fi" id="readiness-notes" placeholder="e.g. Run below 80% load, monitor bearing temperature every 2 hours" oninput="saveReadinessNotes()">
+        </div>
+      </div>
+
+      <!-- RECOMMENDED SPARE PARTS BOM (IMP-20) -->
+      <div class="card" style="padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <label class="fl" style="margin-bottom:2px;">🔩 Recommended Spare Parts (BOM)</label>
+            <div style="font-size:11px;color:var(--n500);">Parts recommended for client to order / replace</div>
+          </div>
+          <button type="button" class="btn btn-sm btn-p" onclick="openAddSparePartModal()" style="padding:4px 10px;font-size:11px;">
+            ＋ Add Part
+          </button>
+        </div>
+        <div id="report-spare-parts-list"></div>
+      </div>
+
       <div class="card">
         <label class="fl" data-t="engineerSig">Signature</label>
         <div id="sig-name-date" style="font-size:12px;color:var(--n500);margin-bottom:8px;"></div>
@@ -2105,6 +2342,24 @@ input, textarea, select, button { font-family: var(--font); }
         <div style="color:var(--g400);">›</div>
       </div>
     </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">Field Utilities &amp; Engineering</div>
+      <div class="si" onclick="showScreen('toolbox')">
+        <div class="sic" style="background:var(--gl);color:var(--gd);">🧮</div>
+        <div class="sin"><div class="sil">Engineering Toolbox</div><div class="sis">Pressure, Temp, Flow, 3-Phase FLA, 4-20mA scaler</div></div>
+        <div style="color:var(--g400);">›</div>
+      </div>
+      <div class="si" onclick="showScreen('assets')">
+        <div class="sic" style="background:#EEF2FF;color:#4338CA;">🏭</div>
+        <div class="sin"><div class="sil">Equipment &amp; Asset Passports</div><div class="sis">Machine registry, tags, specs &amp; service timelines</div></div>
+        <div style="color:var(--g400);">›</div>
+      </div>
+      <div class="si" onclick="openScratchpadManagerModal()" style="border-bottom:none;">
+        <div class="sic" style="background:var(--al);color:#92400E;">📝</div>
+        <div class="sin"><div class="sil">Field Scratchpad Notes</div><div class="sis">Manage quick notes, nameplates &amp; photos</div></div>
+        <div style="color:var(--g400);">›</div>
+      </div>
+    </div>
     <div class="card">
       <div class="si" onclick="exportDataBackupJSON()">
         <div class="sic" style="background:#E0F2FE;color:#0369A1;">💾</div>
@@ -2131,6 +2386,246 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="nb" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
     <button class="nb" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
     <button class="nb active" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
+  </div>
+</div>
+
+<!-- ═══════════════ ENGINEERING TOOLBOX (IMP-21) ═══════════════ -->
+<div id="screen-toolbox" class="screen">
+  <div class="topbar">
+    <button class="tb-back" onclick="showScreen(window._prevScreen||'home')">←</button>
+    <div>
+      <div class="tb-title">🧮 Engineering Toolbox</div>
+      <div class="tb-sub">Offline Unit Converters &amp; Field Calc</div>
+    </div>
+  </div>
+  <div class="sb">
+    <!-- Tab Selector -->
+    <div class="toolbox-tabs">
+      <button type="button" class="toolbox-tab active" id="tb-tab-pressure" onclick="switchToolboxTab('pressure')">📊 Pressure</button>
+      <button type="button" class="toolbox-tab" id="tb-tab-tempflow" onclick="switchToolboxTab('tempflow')">🌡️ Temp &amp; Flow</button>
+      <button type="button" class="toolbox-tab" id="tb-tab-electrical" onclick="switchToolboxTab('electrical')">⚡ 3-Phase Motor</button>
+      <button type="button" class="toolbox-tab" id="tb-tab-signal" onclick="switchToolboxTab('signal')">🎛️ 4-20mA</button>
+    </div>
+
+    <!-- PANE 1: PRESSURE CONVERTER -->
+    <div id="tb-pane-pressure">
+      <div class="card" style="padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:700;color:var(--n800);">Pressure Converter</div>
+          <button type="button" onclick="clearPressureInputs()" style="font-size:11px;color:var(--g500);background:none;border:none;cursor:pointer;">Clear</button>
+        </div>
+
+        <label class="fl">Bar</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="press-bar" class="calc-input" placeholder="0.0" oninput="onPressureInput('bar')">
+          <div class="calc-unit-addon">bar</div>
+        </div>
+
+        <label class="fl">PSI (Pounds per Square Inch)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="press-psi" class="calc-input" placeholder="0.0" oninput="onPressureInput('psi')">
+          <div class="calc-unit-addon">psi</div>
+        </div>
+
+        <label class="fl">Kilopascal (kPa)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="press-kpa" class="calc-input" placeholder="0.0" oninput="onPressureInput('kpa')">
+          <div class="calc-unit-addon">kPa</div>
+        </div>
+
+        <label class="fl">Megapascal (MPa)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="press-mpa" class="calc-input" placeholder="0.0" oninput="onPressureInput('mpa')">
+          <div class="calc-unit-addon">MPa</div>
+        </div>
+
+        <label class="fl">kg/cm² (Technical Atmosphere at)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="press-kgcm2" class="calc-input" placeholder="0.0" oninput="onPressureInput('kgcm2')">
+          <div class="calc-unit-addon">kg/cm²</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 2: TEMPERATURE & FLOW -->
+    <div id="tb-pane-tempflow" style="display:none;">
+      <!-- Temperature Card -->
+      <div class="card" style="padding:14px;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:700;color:var(--n800);margin-bottom:10px;">Temperature Converter</div>
+        <label class="fl">Celsius (°C)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="temp-c" class="calc-input" placeholder="0.0" oninput="onTempInput('c')">
+          <div class="calc-unit-addon">°C</div>
+        </div>
+        <label class="fl">Fahrenheit (°F)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="temp-f" class="calc-input" placeholder="32.0" oninput="onTempInput('f')">
+          <div class="calc-unit-addon">°F</div>
+        </div>
+        <label class="fl">Kelvin (K)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="temp-k" class="calc-input" placeholder="273.15" oninput="onTempInput('k')">
+          <div class="calc-unit-addon">K</div>
+        </div>
+      </div>
+
+      <!-- Flow Rate Card -->
+      <div class="card" style="padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--n800);margin-bottom:10px;">Volumetric Flow Rate</div>
+        <label class="fl">Cubic Meters per Hour (m³/h)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="flow-m3h" class="calc-input" placeholder="0.0" oninput="onFlowInput('m3h')">
+          <div class="calc-unit-addon">m³/h</div>
+        </div>
+        <label class="fl">Liters per Minute (L/min)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="flow-lmin" class="calc-input" placeholder="0.0" oninput="onFlowInput('lmin')">
+          <div class="calc-unit-addon">L/min</div>
+        </div>
+        <label class="fl">US Gallons per Minute (GPM)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="flow-gpm" class="calc-input" placeholder="0.0" oninput="onFlowInput('gpm')">
+          <div class="calc-unit-addon">GPM</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 3: 3-PHASE ELECTRICAL -->
+    <div id="tb-pane-electrical" style="display:none;">
+      <div class="card" style="padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--n800);margin-bottom:10px;">3-Phase Motor Full Load Current (FLA)</div>
+
+        <label class="fl">Motor Power (kW)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="motor-kw" class="calc-input" placeholder="e.g. 37" oninput="calc3PhaseMotor()">
+          <div class="calc-unit-addon">kW</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <label class="fl">Line Voltage (V)</label>
+            <div class="calc-input-group">
+              <input type="number" step="any" id="motor-volt" class="calc-input" value="380" oninput="calc3PhaseMotor()">
+              <div class="calc-unit-addon">V</div>
+            </div>
+          </div>
+          <div>
+            <label class="fl">Power Factor (cos φ)</label>
+            <div class="calc-input-group">
+              <input type="number" step="any" id="motor-pf" class="calc-input" value="0.85" oninput="calc3PhaseMotor()">
+              <div class="calc-unit-addon">PF</div>
+            </div>
+          </div>
+        </div>
+
+        <label class="fl">Efficiency (η)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="motor-eff" class="calc-input" value="0.90" oninput="calc3PhaseMotor()">
+          <div class="calc-unit-addon">eff</div>
+        </div>
+
+        <!-- Result Box -->
+        <div class="calc-result-box">
+          <div style="font-size:11px;font-weight:700;color:var(--brand-dark);text-transform:uppercase;letter-spacing:0.06em;">Rated Full Load Current (FLA)</div>
+          <div style="font-size:28px;font-weight:800;color:var(--brand);font-family:var(--font-hd);margin:4px 0;" id="motor-result-fla">—</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;text-align:center;border-top:1px dashed rgba(15,123,62,0.3);padding-top:8px;">
+            <div>
+              <div style="font-size:10px;color:var(--n500);">Overload Relay</div>
+              <div style="font-size:12px;font-weight:700;color:var(--n800);" id="motor-result-overload">—</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--n500);">MCCB Rating</div>
+              <div style="font-size:12px;font-weight:700;color:var(--n800);" id="motor-result-cb">—</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--n500);">Est. Cable</div>
+              <div style="font-size:12px;font-weight:700;color:var(--n800);" id="motor-result-cable">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 4: 4-20mA PROCESS SIGNAL -->
+    <div id="tb-pane-signal" style="display:none;">
+      <div class="card" style="padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--n800);margin-bottom:10px;">4-20mA Instrumentation Scaler</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div>
+            <label class="fl">Process Min (0%)</label>
+            <input type="number" step="any" id="sig-min" class="fi" value="0" oninput="onSignalInput('ma')">
+          </div>
+          <div>
+            <label class="fl">Process Max (100%)</label>
+            <input type="number" step="any" id="sig-max" class="fi" value="100" oninput="onSignalInput('ma')">
+          </div>
+        </div>
+
+        <label class="fl">Current Loop (mA)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="sig-ma" class="calc-input" placeholder="4.00 to 20.00" oninput="onSignalInput('ma')">
+          <div class="calc-unit-addon">mA</div>
+        </div>
+
+        <label class="fl">Percentage (%)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="sig-pct" class="calc-input" placeholder="0 to 100" oninput="onSignalInput('pct')">
+          <div class="calc-unit-addon">%</div>
+        </div>
+
+        <label class="fl">Engineering Process Value (PV)</label>
+        <div class="calc-input-group">
+          <input type="number" step="any" id="sig-pv" class="calc-input" placeholder="Engineering Unit" oninput="onSignalInput('pv')">
+          <div class="calc-unit-addon">PV</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bnav">
+    <button class="nb" data-screen="home" onclick="showScreen('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span data-t="home">Home</span></button>
+    <button class="nb" data-screen="trips" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
+    <button class="nb" data-screen="tasks" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
+    <button class="nb" data-screen="bills" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
+    <button class="nb" data-screen="settings" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
+  </div>
+</div>
+
+<!-- ═══════════════ ASSET PASSPORT & EQUIPMENT (IMP-24) ═══════════════ -->
+<div id="screen-assets" class="screen">
+  <div class="topbar">
+    <button class="tb-back" onclick="showScreen(window._prevScreen||'home')">←</button>
+    <div style="flex:1;">
+      <div class="tb-title">🏭 Equipment &amp; Assets</div>
+      <div class="tb-sub">Total <span id="asset-total-count">0</span> machines registered</div>
+    </div>
+    <button class="tb-action" onclick="openAddAssetModal()">＋</button>
+  </div>
+
+  <div style="background:#fff;padding:8px 12px;border-bottom:1px solid var(--g200);flex-shrink:0;">
+    <div style="position:relative;">
+      <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;color:var(--g400);">🔍</span>
+      <input id="asset-search-input" class="fi" placeholder="Search Tag, name, model, plant…"
+        style="padding-left:32px;height:36px;font-size:13px;" oninput="renderAssetList(this.value)">
+    </div>
+  </div>
+
+  <div class="sb">
+    <div id="asset-empty-state" class="empty" style="display:none;">
+      <div class="ei">🏭</div>
+      <div class="et">No equipment found</div>
+      <div class="es">Tap ＋ to register a machine passport with tag and specs</div>
+    </div>
+    <div id="asset-list-container"></div>
+  </div>
+
+  <div class="bnav">
+    <button class="nb" data-screen="home" onclick="showScreen('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span data-t="home">Home</span></button>
+    <button class="nb" data-screen="trips" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
+    <button class="nb" data-screen="tasks" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
+    <button class="nb" data-screen="bills" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
+    <button class="nb" data-screen="settings" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
   </div>
 </div>
 
@@ -2867,6 +3362,319 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 </div>
 
+<!-- MODAL: DAILY SERVICE TICKET (IMP-19) -->
+<div id="modal-service-ticket" class="mo"><div class="modal">
+  <div class="mh"></div>
+  <div class="mt" id="ticket-modal-title">New Daily Service Ticket</div>
+  <div class="fg">
+    <label class="fl">Work Date *</label>
+    <input type="date" class="fi" id="tkt-date">
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+    <div>
+      <label class="fl">Normal Hours</label>
+      <input type="number" step="0.5" class="fi" id="tkt-norm" value="8">
+    </div>
+    <div>
+      <label class="fl">Overtime 1.5x</label>
+      <input type="number" step="0.5" class="fi" id="tkt-ot15" value="0">
+    </div>
+    <div>
+      <label class="fl">OT 2.0x (Night/Sun)</label>
+      <input type="number" step="0.5" class="fi" id="tkt-ot20" value="0">
+    </div>
+    <div>
+      <label class="fl">Standby / Idle</label>
+      <input type="number" step="0.5" class="fi" id="tkt-stby" value="0">
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">Travel Hours</label>
+    <input type="number" step="0.5" class="fi" id="tkt-travel" value="0">
+  </div>
+  <div class="fg">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <label class="fl" style="margin-bottom:0;">Work Performed in Shift</label>
+      <button type="button" onclick="startVoiceToEnglish('tkt-summary')" style="padding:2px 8px;border-radius:12px;background:#EBF7F0;border:1px solid #00843D;color:#00843D;font-size:10px;font-weight:600;cursor:pointer;">
+        🎙️ Voice VI ➔ EN
+      </button>
+    </div>
+    <textarea class="fta" id="tkt-summary" placeholder="Summary of maintenance, tests, or parts replaced during this shift..." style="min-height:65px;"></textarea>
+  </div>
+  <div class="fg">
+    <label class="fl">Customer Supervisor Name *</label>
+    <input type="text" class="fi" id="tkt-supervisor" placeholder="Supervisor / Maintenance Lead Name">
+  </div>
+  <div class="fg" style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <label class="fl" style="margin-bottom:0;">Supervisor Daily Signature</label>
+      <button type="button" onclick="clearTicketSig()" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;font-weight:600;">Clear</button>
+    </div>
+    <canvas id="ticketSigCanvas" width="340" height="110" style="width:100%;height:110px;border:1.5px solid var(--n200);border-radius:var(--rs);background:#fafafa;touch-action:none;cursor:crosshair;display:block;"></canvas>
+    <div style="font-size:10px;color:var(--n500);margin-top:4px;">Ask plant supervisor to sign directly with finger/stylus</div>
+  </div>
+  <div class="brow">
+    <button type="button" class="btn btn-o" onclick="closeModal('modal-service-ticket')">Cancel</button>
+    <button type="button" class="btn btn-p" style="flex:1;" onclick="saveServiceTicket()">Save Ticket</button>
+  </div>
+</div></div>
+
+<!-- MODAL: SITE SAFETY & LOTO (IMP-23) -->
+<div id="modal-trip-safety" class="mo"><div class="modal">
+  <div class="mh"></div>
+  <div class="mt">Site Safety, Permits &amp; LOTO</div>
+
+  <div class="frow">
+    <div class="fg" style="flex:1;">
+      <label class="fl">Work Permit No.</label>
+      <input type="text" class="fi" id="safe-permit-no" placeholder="e.g. WP-2026-981">
+    </div>
+    <div class="fg" style="flex:1;">
+      <label class="fl">Valid Until</label>
+      <input type="date" class="fi" id="safe-valid-until">
+    </div>
+  </div>
+
+  <div class="fg">
+    <label class="fl">High-Risk Permit Types Required</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-top:4px;">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="safe-ptype-height"> Work at Height</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="safe-ptype-confined"> Confined Space</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="safe-ptype-hotwork"> Hot Work</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="safe-ptype-electrical"> Electrical Isolation</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;grid-column:span 2;"><input type="checkbox" id="safe-ptype-chemical"> Chemical / High Pressure</label>
+    </div>
+  </div>
+
+  <div style="background:var(--n50);border:1px solid var(--n200);border-radius:var(--rs);padding:10px;margin-bottom:12px;">
+    <div style="font-size:12px;font-weight:700;color:var(--n800);margin-bottom:6px;">🔒 LOTO (Lockout / Tagout) Verification</div>
+    <div class="fg" style="margin-bottom:8px;">
+      <label class="fl">LOTO Padlock ID / Key Tag</label>
+      <input type="text" class="fi" id="safe-padlock-id" placeholder="e.g. LOTO-RED-14">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="safe-loto-elec"> Breaker Locked</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="safe-loto-pneu"> Valve/Pipe Locked</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="safe-loto-tag"> Danger Tag Hung</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="safe-loto-zero"> Zero Energy Tested</label>
+    </div>
+    <div style="margin-top:8px;">
+      <label class="fl">Padlock Photo Proof</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button type="button" class="btn btn-sm btn-o" onclick="document.getElementById('safe-loto-file').click()">📷 Take/Upload Photo</button>
+        <button type="button" class="btn btn-sm btn-o" onclick="clearLotoPhoto()" style="color:var(--red);">Clear</button>
+        <input type="file" id="safe-loto-file" accept="image/*" capture="environment" style="display:none;" onchange="handleLotoPhotoUpload(event)">
+      </div>
+      <img id="safe-loto-photo-prev" style="display:none;height:55px;margin-top:6px;border-radius:4px;border:1px solid var(--n200);">
+    </div>
+  </div>
+
+  <div style="background:var(--brand-light);border:1px solid rgba(15,123,62,0.2);border-radius:var(--rs);padding:10px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:700;color:var(--brand-dark);margin-bottom:6px;text-transform:uppercase;">Plant Emergency Contacts</div>
+    <div class="fg" style="margin-bottom:6px;">
+      <label class="fl" style="font-size:11px;">Control Room (CCR/DCS) Phone</label>
+      <input type="tel" class="fi" id="safe-phone-ccr" placeholder="Phone or extension">
+    </div>
+    <div class="fg" style="margin-bottom:6px;">
+      <label class="fl" style="font-size:11px;">Plant Safety (EHS) Lead Phone</label>
+      <input type="tel" class="fi" id="safe-phone-ehs" placeholder="Phone number">
+    </div>
+    <div class="fg" style="margin-bottom:0;">
+      <label class="fl" style="font-size:11px;">Plant Medical / First Aid</label>
+      <input type="tel" class="fi" id="safe-phone-med" placeholder="e.g. 115 or Internal Medical">
+    </div>
+  </div>
+
+  <div class="brow">
+    <button type="button" class="btn btn-o" onclick="closeModal('modal-trip-safety')">Cancel</button>
+    <button type="button" class="btn btn-p" style="flex:1;" onclick="saveTripSafety()">Save Safety Info</button>
+  </div>
+</div></div>
+
+<!-- MODAL: QUICK FIELD SCRATCHPAD (IMP-22) -->
+<div id="modal-quick-scratch" class="mo"><div class="modal">
+  <div class="mh"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div class="mt" style="margin-bottom:0;">⚡ Field Quick Snap &amp; Note</div>
+    <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-quick-scratch');openScratchpadManagerModal();" style="font-size:11px;">
+      📂 View All Notes
+    </button>
+  </div>
+
+  <div class="scratch-cat-chips">
+    <button type="button" class="scratch-cat-chip active" data-cat="nameplate" onclick="selectScratchCategory('nameplate')">🏷️ Nameplate</button>
+    <button type="button" class="scratch-cat-chip" data-cat="defect" onclick="selectScratchCategory('defect')">⚠️ Defect/Issue</button>
+    <button type="button" class="scratch-cat-chip" data-cat="wiring" onclick="selectScratchCategory('wiring')">⚡ Wiring</button>
+    <button type="button" class="scratch-cat-chip" data-cat="measurement" onclick="selectScratchCategory('measurement')">📊 Reading</button>
+    <button type="button" class="scratch-cat-chip" data-cat="general" onclick="selectScratchCategory('general')">📝 Note</button>
+  </div>
+
+  <div class="fg">
+    <label class="fl">Title (Optional)</label>
+    <input type="text" class="fi" id="scratch-title" placeholder="e.g. Feed pump motor serial plate">
+  </div>
+
+  <div class="fg">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <label class="fl" style="margin-bottom:0;">Quick Memo / Parameters</label>
+      <button type="button" onclick="startVoiceToEnglish('scratch-text')" style="padding:2px 8px;border-radius:12px;background:#EBF7F0;border:1px solid #00843D;color:#00843D;font-size:10px;font-weight:600;cursor:pointer;">
+        🎙️ Voice VI ➔ EN
+      </button>
+    </div>
+    <textarea class="fta" id="scratch-text" placeholder="Type or speak note... (e.g. 55kW 400V 98A, bearing 6312)" style="min-height:70px;"></textarea>
+  </div>
+
+  <div class="fg">
+    <label class="fl">Nameplate / Field Photo</label>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button type="button" class="btn btn-sm btn-p" onclick="document.getElementById('scratch-file-input').click()" style="display:flex;align-items:center;gap:4px;">
+        📸 Camera / Upload
+      </button>
+      <button type="button" class="btn btn-sm btn-o" onclick="clearScratchPhoto()" style="color:var(--red);">Clear Photo</button>
+      <input type="file" id="scratch-file-input" accept="image/*" capture="environment" style="display:none;" onchange="handleScratchPhotoUpload(event)">
+    </div>
+    <img id="scratch-photo-preview" style="display:none;width:100%;max-height:160px;object-fit:contain;margin-top:8px;border-radius:var(--rs);border:1px solid var(--n200);background:#000;">
+  </div>
+
+  <div class="fg">
+    <label class="fl">Link to Trip (Optional)</label>
+    <select class="fsel" id="scratch-trip-select"></select>
+  </div>
+
+  <div class="brow">
+    <button type="button" class="btn btn-o" onclick="closeModal('modal-quick-scratch')">Cancel</button>
+    <button type="button" class="btn btn-p" style="flex:1;" onclick="saveQuickScratch()">💾 Save Note</button>
+  </div>
+</div></div>
+
+<!-- MODAL: SCRATCHPAD MANAGER (IMP-22) -->
+<div id="modal-scratchpad-manager" class="mo"><div class="modal" style="max-height:85vh;display:flex;flex-direction:column;">
+  <div class="mh"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div>
+      <div class="mt" style="margin-bottom:0;">📝 Field Notes &amp; Scratchpad</div>
+      <div style="font-size:11px;color:var(--n500);"><span id="scratchpad-count-badge">0</span> notes saved</div>
+    </div>
+    <button type="button" class="btn btn-sm btn-p" onclick="closeModal('modal-scratchpad-manager');openQuickScratchModal();">＋ New</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding-right:2px;">
+    <div id="scratchpad-empty-state" class="empty" style="display:none;">
+      <div class="ei">⚡</div>
+      <div class="et">No notes saved</div>
+      <div class="es">Take quick field photos and memos with Quick Snap</div>
+    </div>
+    <div id="scratchpad-list-items"></div>
+  </div>
+  <div class="brow" style="margin-top:10px;">
+    <button type="button" class="btn btn-o btn-full" onclick="closeModal('modal-scratchpad-manager')">Close</button>
+  </div>
+</div></div>
+
+<!-- MODAL: ADD/EDIT ASSET PASSPORT (IMP-24) -->
+<div id="modal-add-asset" class="mo"><div class="modal">
+  <div class="mh"></div>
+  <div class="mt" id="asset-modal-title">New Equipment Passport</div>
+  <div class="frow">
+    <div class="fg" style="flex:1;">
+      <label class="fl">Equipment Tag / KKS *</label>
+      <input type="text" class="fi" id="ast-tag" placeholder="e.g. P-101A" style="font-family:var(--mono);font-weight:700;text-transform:uppercase;">
+    </div>
+    <div class="fg" style="flex:2;">
+      <label class="fl">Machine Name *</label>
+      <input type="text" class="fi" id="ast-name" placeholder="e.g. Feed Water Pump">
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">Customer / Plant</label>
+    <input type="text" class="fi" id="ast-customer" placeholder="e.g. Heineken Vietnam">
+  </div>
+  <div class="frow">
+    <div class="fg" style="flex:1;">
+      <label class="fl">Model / Type</label>
+      <input type="text" class="fi" id="ast-model" placeholder="e.g. KSB Multitec 50">
+    </div>
+    <div class="fg" style="flex:1;">
+      <label class="fl">Serial Number</label>
+      <input type="text" class="fi" id="ast-serial" placeholder="Serial No.">
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">Technical Specifications</label>
+    <input type="text" class="fi" id="ast-spec" placeholder="e.g. 55 kW, 2950 RPM, 65 m3/h, 16 bar">
+  </div>
+  <div class="fg">
+    <label class="fl">Plant Location / Area</label>
+    <input type="text" class="fi" id="ast-location" placeholder="e.g. Boiler House - Ground Floor">
+  </div>
+  <div class="fg">
+    <label class="fl">Maintenance Notes / Specs</label>
+    <textarea class="fta" id="ast-notes" placeholder="e.g. Mech seal SiC/SiC/Viton 35mm, DE bearing 6308-C3" style="min-height:50px;"></textarea>
+  </div>
+  <div class="brow">
+    <button type="button" class="btn btn-o" onclick="closeModal('modal-add-asset')">Cancel</button>
+    <button type="button" class="btn btn-p" style="flex:1;" onclick="saveAsset()">Save Equipment</button>
+  </div>
+</div></div>
+
+<!-- MODAL: ASSET SERVICE HISTORY TIMELINE (IMP-24) -->
+<div id="modal-asset-history" class="mo"><div class="modal" style="max-height:85vh;display:flex;flex-direction:column;">
+  <div class="mh"></div>
+  <div id="asset-hist-header" style="border-bottom:1px solid var(--n200);padding-bottom:8px;margin-bottom:12px;"></div>
+  <div style="flex:1;overflow-y:auto;padding-right:2px;">
+    <div id="asset-hist-empty" class="empty" style="display:none;">
+      <div class="ei">📜</div>
+      <div class="et">No service history found</div>
+      <div class="es">Past trips, tasks, readings and issues for this asset will appear here</div>
+    </div>
+    <div id="asset-hist-timeline"></div>
+  </div>
+  <div class="brow" style="margin-top:10px;">
+    <button type="button" class="btn btn-o btn-full" onclick="closeModal('modal-asset-history')">Close</button>
+  </div>
+</div></div>
+
+<!-- MODAL: ADD RECOMMENDED SPARE PART (IMP-20) -->
+<div id="modal-add-spare-part" class="mo"><div class="modal">
+  <div class="mh"></div>
+  <div class="mt">Add Recommended Spare Part</div>
+  <div class="frow">
+    <div class="fg" style="flex:1;">
+      <label class="fl">Part Number</label>
+      <input type="text" class="fi" id="sp-partno" placeholder="e.g. 6205-2RS1" style="font-family:var(--mono);text-transform:uppercase;">
+    </div>
+    <div class="fg" style="flex:1;">
+      <label class="fl">Priority *</label>
+      <select class="fsel" id="sp-prio">
+        <option value="immediate">🔴 Replace Immediate</option>
+        <option value="next_pm" selected>🟡 Next PM / Service</option>
+        <option value="optional">⚪ Optional Spare</option>
+      </select>
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">Part Description *</label>
+    <input type="text" class="fi" id="sp-desc" placeholder="e.g. Deep groove ball bearing SKF">
+  </div>
+  <div class="frow">
+    <div class="fg" style="flex:1;">
+      <label class="fl">Quantity</label>
+      <input type="number" step="1" class="fi" id="sp-qty" value="1">
+    </div>
+    <div class="fg" style="flex:1;">
+      <label class="fl">Unit</label>
+      <input type="text" class="fi" id="sp-unit" value="pcs">
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">Reason / Condition Notes</label>
+    <input type="text" class="fi" id="sp-notes" placeholder="e.g. Drive-end bearing showing flaking and vibration">
+  </div>
+  <div class="brow">
+    <button type="button" class="btn btn-o" onclick="closeModal('modal-add-spare-part')">Cancel</button>
+    <button type="button" class="btn btn-p" style="flex:1;" onclick="saveReportSparePart()">Add Part</button>
+  </div>
+</div></div>
+
 <div id="toast" class="toast"></div>
 </div>
 
@@ -2991,6 +3799,8 @@ let S={
   trips:[],reports:{},tasks:[],leaveData:{},
   machines:[],plans:[],bills:[],
   inspections:[],
+  assets:[],      // [{id, tag, name, customer, model, serial, spec, location, notes, createdAt}] (IMP-24)
+  scratchpad:[],  // [{id, title, text, photo, category, tripId, createdAt}] (IMP-22)
   library:[],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
   defaultTeam:[],lang:'en',
   theme:'auto', // 'auto' | 'light' | 'dark' (IMP-13)
@@ -3074,6 +3884,8 @@ function ld(){
     const d=localStorage.getItem('plpro1');
     if(d)S={...S,...JSON.parse(d)};
   }catch(e){}
+  if(!S.assets) S.assets = [];
+  if(!S.scratchpad) S.scratchpad = [];
   applyTheme();
 }
 function t(k){return T[S.lang][k]||T.en[k]||k;}
@@ -3479,6 +4291,8 @@ function init(){
   safeRun(checkNotifPrompt, 'checkNotifPrompt');
   safeRun(updateGSStatus,   'updateGSStatus');
   safeRun(updateNetworkStatus, 'updateNetworkStatus');
+  safeRun(ensureAssetsInitialized, 'ensureAssetsInitialized');
+  safeRun(initScratchpadStore, 'initScratchpadStore');
 
   // Auth MUST run last — it controls app visibility
   // Do NOT hide app before this — a crash would leave it blank
@@ -3549,6 +4363,8 @@ function showScreen(n){
   if(n==='library')renderLibrary();
   if(n==='reminders')renderRemindersScreen();
   if(n==='inspection')renderInspectionScreen();
+  if(n==='toolbox') { if(typeof switchToolboxTab==='function') switchToolboxTab(curToolboxTab||'pressure'); }
+  if(n==='assets') { if(typeof renderAssetList==='function') renderAssetList(); }
   if(n==='settings'&&hasPIN()&&!_settingsUnlocked){
     _pendingScreen='settings';
     openModal('modal-pin');
@@ -4736,6 +5552,8 @@ function openTripDetail(id){
   if(noteEl)noteEl.value=tr.notes||'';
   renderTripStatusToggle(tr);
   renderTripInspCounts();
+  if(typeof renderTripTimesheets==='function') renderTripTimesheets(id);
+  if(typeof renderTripSafety==='function') renderTripSafety(id);
   if(typeof renderTripSavedReports==='function') renderTripSavedReports();
   showScreen('trip-detail');
 }
@@ -5231,6 +6049,586 @@ function renderDash(){
       <div class="cs">${fmtDate(tr.date)}</div>
     </div>`;
   }).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noReports')}</div>`;
+}
+
+// ═════════════════════════════════════════════════════
+// DAILY SERVICE TICKETS & TIMESHEET (IMP-19)
+// ═════════════════════════════════════════════════════
+let editingTicketId = null;
+let ticketSigCanvas, ticketSigCtx, isTicketDrawing = false;
+let _tempTicketSigDataUrl = '';
+
+function renderTripTimesheets(tripId) {
+  const tr = S.trips.find(t => t.id === tripId);
+  const container = document.getElementById('trip-timesheets-section');
+  if (!container || !tr) return;
+
+  tr.timesheets = tr.timesheets || [];
+  const tickets = tr.timesheets;
+
+  // Totals
+  let totalNormal = 0, totalOt15 = 0, totalOt20 = 0, totalStandby = 0;
+  tickets.forEach(tk => {
+    totalNormal += (parseFloat(tk.normalHours) || 0);
+    totalOt15 += (parseFloat(tk.ot15Hours) || 0);
+    totalOt20 += (parseFloat(tk.ot20Hours) || 0);
+    totalStandby += (parseFloat(tk.standbyHours) || 0);
+  });
+  const totalAll = totalNormal + totalOt15 + totalOt20 + totalStandby;
+
+  container.innerHTML = `
+    <div class="card" style="padding:14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:14px;">⏱️</span>
+          <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.08em;text-transform:uppercase;">
+            Daily Timesheets & Tickets (${tickets.length})
+          </div>
+        </div>
+        <button onclick="openServiceTicketModal()" class="btn btn-sm btn-p" style="padding:4px 10px;font-size:11px;">
+          ＋ Add Ticket
+        </button>
+      </div>
+
+      <!-- Hours summary bar -->
+      <div class="ts-summary-banner">
+        <div class="ts-sum-col">
+          <div class="ts-sum-lbl">Normal</div>
+          <div class="ts-sum-val">${totalNormal}h</div>
+        </div>
+        <div class="ts-sum-col">
+          <div class="ts-sum-lbl">OT 1.5x</div>
+          <div class="ts-sum-val" style="color:var(--am);">${totalOt15}h</div>
+        </div>
+        <div class="ts-sum-col">
+          <div class="ts-sum-lbl">OT 2.0x</div>
+          <div class="ts-sum-val" style="color:var(--red);">${totalOt20}h</div>
+        </div>
+        <div class="ts-sum-col">
+          <div class="ts-sum-lbl">Standby</div>
+          <div class="ts-sum-val" style="color:var(--blue);">${totalStandby}h</div>
+        </div>
+        <div class="ts-sum-col ts-sum-total">
+          <div class="ts-sum-lbl">Total</div>
+          <div class="ts-sum-val" style="color:var(--brand);">${totalAll}h</div>
+        </div>
+      </div>
+
+      <!-- Tickets list -->
+      <div id="trip-tickets-list" style="margin-top:10px;">
+        ${!tickets.length ? `
+          <div style="text-align:center;padding:12px;font-size:12px;color:var(--n400);background:var(--n50);border-radius:var(--rs);">
+            No daily tickets recorded yet. Tap <b>＋ Add Ticket</b> to log hours and get daily customer sign-off.
+          </div>
+        ` : tickets.map((tk) => {
+          const hasSig = !!tk.signature;
+          return `
+            <div class="ts-ticket-card">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+                <div>
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                    <span style="font-size:12px;font-weight:700;color:var(--n800);">📅 ${fmtDate(tk.date)}</span>
+                    <span class="ts-badge-norm">${tk.normalHours || 0}h Norm</span>
+                    ${parseFloat(tk.ot15Hours) > 0 ? `<span class="ts-badge-ot15">+${tk.ot15Hours}h OT 1.5x</span>` : ''}
+                    ${parseFloat(tk.ot20Hours) > 0 ? `<span class="ts-badge-ot20">+${tk.ot20Hours}h OT 2.0x</span>` : ''}
+                    ${parseFloat(tk.standbyHours) > 0 ? `<span class="ts-badge-stby">${tk.standbyHours}h Standby</span>` : ''}
+                  </div>
+                </div>
+                <div style="display:flex;gap:4px;">
+                  <button class="ts-btn-edit" onclick="openServiceTicketModal('${tk.id}')" title="Edit ticket">✍️</button>
+                  <button class="ts-btn-del" onclick="deleteServiceTicket('${tk.id}')" title="Delete">🗑️</button>
+                </div>
+              </div>
+
+              ${tk.workSummary ? `
+                <div style="font-size:12px;color:var(--n700);line-height:1.4;margin-bottom:6px;background:var(--n50);padding:6px 8px;border-radius:4px;">
+                  ${tk.workSummary}
+                </div>
+              ` : ''}
+
+              <!-- Customer Sign-off status -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;border-top:1px dashed var(--n200);padding-top:6px;">
+                <div style="font-size:11px;color:var(--n500);">
+                  Supervisor: <b>${tk.supervisorName || 'Customer Supervisor'}</b>
+                </div>
+                ${hasSig ? `
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:10px;font-weight:700;color:var(--green);">✓ SIGNED</span>
+                    <img src="${tk.signature}" style="height:26px;max-width:70px;object-fit:contain;border:1px solid var(--n200);border-radius:3px;background:#fff;">
+                  </div>
+                ` : `
+                  <span style="font-size:10px;font-weight:700;color:var(--amber);">⚠️ Pending Signature</span>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function openServiceTicketModal(ticketId = null) {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+
+  editingTicketId = ticketId;
+  const modalTitle = document.getElementById('ticket-modal-title');
+  const dateInput = document.getElementById('tkt-date');
+  const normInput = document.getElementById('tkt-norm');
+  const ot15Input = document.getElementById('tkt-ot15');
+  const ot20Input = document.getElementById('tkt-ot20');
+  const stbyInput = document.getElementById('tkt-stby');
+  const travelInput = document.getElementById('tkt-travel');
+  const summaryInput = document.getElementById('tkt-summary');
+  const superInput = document.getElementById('tkt-supervisor');
+
+  _tempTicketSigDataUrl = '';
+
+  if (ticketId) {
+    tr.timesheets = tr.timesheets || [];
+    const tk = tr.timesheets.find(t => t.id === ticketId);
+    if (tk) {
+      if (modalTitle) modalTitle.textContent = 'Edit Service Ticket';
+      if (dateInput) dateInput.value = tk.date || '';
+      if (normInput) normInput.value = tk.normalHours !== undefined ? tk.normalHours : 8;
+      if (ot15Input) ot15Input.value = tk.ot15Hours || 0;
+      if (ot20Input) ot20Input.value = tk.ot20Hours || 0;
+      if (stbyInput) stbyInput.value = tk.standbyHours || 0;
+      if (travelInput) travelInput.value = tk.travelHours || 0;
+      if (summaryInput) summaryInput.value = tk.workSummary || '';
+      if (superInput) superInput.value = tk.supervisorName || '';
+      _tempTicketSigDataUrl = tk.signature || '';
+    }
+  } else {
+    if (modalTitle) modalTitle.textContent = 'New Daily Service Ticket';
+    if (dateInput) dateInput.value = todayStr();
+    if (normInput) normInput.value = 8;
+    if (ot15Input) ot15Input.value = 0;
+    if (ot20Input) ot20Input.value = 0;
+    if (stbyInput) stbyInput.value = 0;
+    if (travelInput) travelInput.value = 0;
+    if (summaryInput) summaryInput.value = '';
+    if (superInput) superInput.value = tr.contact || '';
+  }
+
+  openModal('modal-service-ticket');
+  // Delay canvas init until modal is rendered
+  setTimeout(() => {
+    initTicketSigCanvas();
+  }, 150);
+}
+
+function initTicketSigCanvas() {
+  ticketSigCanvas = document.getElementById('ticketSigCanvas');
+  if (!ticketSigCanvas) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const rect = ticketSigCanvas.getBoundingClientRect();
+  const cssW = rect.width || 340;
+  const cssH = 110;
+
+  ticketSigCanvas.width = Math.round(cssW * dpr);
+  ticketSigCanvas.height = Math.round(cssH * dpr);
+  ticketSigCanvas.style.width = cssW + 'px';
+  ticketSigCanvas.style.height = cssH + 'px';
+
+  ticketSigCtx = ticketSigCanvas.getContext('2d');
+  ticketSigCtx.scale(dpr, dpr);
+  ticketSigCtx.strokeStyle = '#0F172A';
+  ticketSigCtx.lineWidth = 2.2;
+  ticketSigCtx.lineCap = 'round';
+  ticketSigCtx.lineJoin = 'round';
+
+  ticketSigCtx.fillStyle = '#fafafa';
+  ticketSigCtx.fillRect(0, 0, cssW, cssH);
+
+  if (_tempTicketSigDataUrl) {
+    const img = new Image();
+    img.onload = () => {
+      ticketSigCtx.drawImage(img, 0, 0, cssW, cssH);
+    };
+    img.src = _tempTicketSigDataUrl;
+  }
+
+  const getPos = e => {
+    const r = ticketSigCanvas.getBoundingClientRect();
+    const cx = (e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX);
+    const cy = (e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY);
+    return { x: cx - r.left, y: cy - r.top };
+  };
+
+  const startDraw = e => {
+    isTicketDrawing = true;
+    const p = getPos(e);
+    ticketSigCtx.beginPath();
+    ticketSigCtx.moveTo(p.x, p.y);
+    if (e.cancelable && e.type.startsWith('touch')) e.preventDefault();
+  };
+
+  const moveDraw = e => {
+    if (!isTicketDrawing) return;
+    const p = getPos(e);
+    ticketSigCtx.lineTo(p.x, p.y);
+    ticketSigCtx.stroke();
+    if (e.cancelable && e.type.startsWith('touch')) e.preventDefault();
+  };
+
+  const endDraw = () => {
+    if (isTicketDrawing) {
+      isTicketDrawing = false;
+      try {
+        _tempTicketSigDataUrl = ticketSigCanvas.toDataURL('image/png');
+      } catch(e) {}
+    }
+  };
+
+  ticketSigCanvas.onmousedown = startDraw;
+  ticketSigCanvas.onmousemove = moveDraw;
+  ticketSigCanvas.onmouseup = endDraw;
+  ticketSigCanvas.ontouchstart = startDraw;
+  ticketSigCanvas.ontouchmove = moveDraw;
+  ticketSigCanvas.ontouchend = endDraw;
+}
+
+function clearTicketSig() {
+  if (!ticketSigCanvas || !ticketSigCtx) return;
+  const rect = ticketSigCanvas.getBoundingClientRect();
+  const cssW = rect.width || 340;
+  const cssH = 110;
+  ticketSigCtx.fillStyle = '#fafafa';
+  ticketSigCtx.fillRect(0, 0, cssW, cssH);
+  _tempTicketSigDataUrl = '';
+  triggerHaptic('light');
+}
+
+function saveServiceTicket() {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+
+  const date = (document.getElementById('tkt-date') || {}).value || todayStr();
+  const normalHours = parseFloat((document.getElementById('tkt-norm') || {}).value) || 0;
+  const ot15Hours = parseFloat((document.getElementById('tkt-ot15') || {}).value) || 0;
+  const ot20Hours = parseFloat((document.getElementById('tkt-ot20') || {}).value) || 0;
+  const standbyHours = parseFloat((document.getElementById('tkt-stby') || {}).value) || 0;
+  const travelHours = parseFloat((document.getElementById('tkt-travel') || {}).value) || 0;
+  const workSummary = (document.getElementById('tkt-summary') || {}).value.trim();
+  const supervisorName = (document.getElementById('tkt-supervisor') || {}).value.trim();
+
+  // Capture canvas dataURL
+  let sig = _tempTicketSigDataUrl;
+  if (!sig && ticketSigCanvas) {
+    try {
+      const data = ticketSigCanvas.toDataURL('image/png');
+      if (data.length > 1000) sig = data;
+    } catch(e) {}
+  }
+
+  tr.timesheets = tr.timesheets || [];
+
+  if (editingTicketId) {
+    const tk = tr.timesheets.find(t => t.id === editingTicketId);
+    if (tk) {
+      tk.date = date;
+      tk.normalHours = normalHours;
+      tk.ot15Hours = ot15Hours;
+      tk.ot20Hours = ot20Hours;
+      tk.standbyHours = standbyHours;
+      tk.travelHours = travelHours;
+      tk.workSummary = workSummary;
+      tk.supervisorName = supervisorName;
+      if (sig) tk.signature = sig;
+      tk.updatedAt = new Date().toISOString();
+    }
+  } else {
+    const newTk = {
+      id: 'tkt_' + Date.now(),
+      date,
+      normalHours,
+      ot15Hours,
+      ot20Hours,
+      standbyHours,
+      travelHours,
+      workSummary,
+      supervisorName,
+      signature: sig || '',
+      createdAt: new Date().toISOString()
+    };
+    tr.timesheets.push(newTk);
+  }
+
+  sv();
+  closeModal('modal-service-ticket');
+  renderTripTimesheets(curTrip);
+  triggerHaptic('success');
+  showToast('Service ticket saved ✓');
+}
+
+async function deleteServiceTicket(ticketId) {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+
+  const ok = await appConfirm('Delete this daily service ticket?', {
+    title: 'Delete Service Ticket',
+    danger: true,
+    confirmText: 'Delete',
+    icon: '🗑️'
+  });
+  if (!ok) return;
+
+  tr.timesheets = (tr.timesheets || []).filter(t => t.id !== ticketId);
+  sv();
+  renderTripTimesheets(curTrip);
+  triggerHaptic('light');
+  showToast('Service ticket deleted');
+}
+
+// ═════════════════════════════════════════════════════
+// SITE SAFETY, EHS & LOTO CHECKLIST (IMP-23)
+// ═════════════════════════════════════════════════════
+let _tempLotoPhoto = '';
+
+function renderTripSafety(tripId) {
+  const tr = S.trips.find(t => t.id === tripId);
+  const container = document.getElementById('trip-safety-section');
+  if (!container || !tr) return;
+
+  tr.safety = tr.safety || {};
+  const s = tr.safety;
+  const loto = s.loto || {};
+  const contacts = s.emergencyContacts || {};
+  const permitTypes = s.permitTypes || [];
+
+  const permitLabels = {
+    height: 'Work at Height',
+    confined: 'Confined Space',
+    hotwork: 'Hot Work',
+    electrical: 'Electrical Isolation',
+    chemical: 'Chemical / Pressure'
+  };
+
+  container.innerHTML = `
+    <div class="card" style="padding:14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:14px;">🦺</span>
+          <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.08em;text-transform:uppercase;">
+            Site Safety, Work Permits & LOTO
+          </div>
+        </div>
+        <button onclick="openTripSafetyModal()" class="btn btn-sm btn-o" style="padding:4px 10px;font-size:11px;">
+          ✏️ Edit Safety
+        </button>
+      </div>
+
+      <!-- Work Permit info -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px;">
+        <div style="font-size:12px;color:var(--n700);">
+          Permit No: <b>${s.permitNo || '—'}</b>
+        </div>
+        ${s.validUntil ? `<div style="font-size:11px;color:var(--n500);">Valid until: <b>${fmtDate(s.validUntil)}</b></div>` : ''}
+      </div>
+
+      ${permitTypes.length ? `
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+          ${permitTypes.map(p => `<span class="badge-permit">${permitLabels[p] || p}</span>`).join('')}
+        </div>
+      ` : `
+        <div style="font-size:11px;color:var(--n400);margin-bottom:6px;">No specific high-risk permits declared.</div>
+      `}
+
+      <!-- LOTO Checklist summary -->
+      <div class="loto-status-box">
+        <div style="font-size:11px;font-weight:700;color:var(--n700);margin-bottom:4px;display:flex;justify-content:space-between;">
+          <span>🔒 LOTO Status (Padlock: ${loto.padlockId || 'N/A'})</span>
+          ${loto.zeroEnergyVerified ? `<span style="color:var(--green);font-size:10px;font-weight:700;">✓ ZERO ENERGY VERIFIED</span>` : `<span style="color:var(--amber);font-size:10px;font-weight:700;">⚠️ Unverified</span>`}
+        </div>
+        <div class="loto-check-grid">
+          <div class="loto-check-item ${loto.electricalIsolated ? 'checked' : ''}">
+            ${loto.electricalIsolated ? '✅' : '⚪'} Electrical Locked
+          </div>
+          <div class="loto-check-item ${loto.pneumaticIsolated ? 'checked' : ''}">
+            ${loto.pneumaticIsolated ? '✅' : '⚪'} Pneumatic/Valve Locked
+          </div>
+          <div class="loto-check-item ${loto.dangerTagHung ? 'checked' : ''}">
+            ${loto.dangerTagHung ? '✅' : '⚪'} Danger Tag Hung
+          </div>
+          <div class="loto-check-item ${loto.zeroEnergyVerified ? 'checked' : ''}">
+            ${loto.zeroEnergyVerified ? '✅' : '⚪'} Zero Energy Checked
+          </div>
+        </div>
+        ${loto.photo ? `
+          <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
+            <img src="${loto.photo}" onclick="previewImage('${loto.photo}')"
+              style="height:40px;width:40px;object-fit:cover;border-radius:4px;border:1px solid var(--n200);cursor:pointer;">
+            <span style="font-size:11px;color:var(--n500);">LOTO Padlock Photo Proof Attached ✓</span>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Emergency Hotline buttons -->
+      <div style="margin-top:10px;">
+        <div style="font-size:10px;font-weight:700;color:var(--n500);letter-spacing:0.06em;margin-bottom:4px;text-transform:uppercase;">
+          Plant Emergency Hotlines
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${contacts.ccrPhone ? `
+            <a href="tel:${contacts.ccrPhone}" class="btn-emergency-call" title="Call DCS/Control Room">
+              📞 CCR: ${contacts.ccrPhone}
+            </a>
+          ` : ''}
+          ${contacts.ehsPhone ? `
+            <a href="tel:${contacts.ehsPhone}" class="btn-emergency-call" title="Call Plant Safety Lead">
+              🦺 EHS: ${contacts.ehsPhone}
+            </a>
+          ` : ''}
+          ${contacts.medicalPhone ? `
+            <a href="tel:${contacts.medicalPhone}" class="btn-emergency-call" style="background:#FEE2E2;color:#991B1B;border-color:#FCA5A5;" title="Call Plant Medical">
+              🚑 Med: ${contacts.medicalPhone}
+            </a>
+          ` : ''}
+          ${!contacts.ccrPhone && !contacts.ehsPhone && !contacts.medicalPhone ? `
+            <span style="font-size:11px;color:var(--n400);font-style:italic;">No emergency phone numbers configured.</span>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openTripSafetyModal() {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+
+  tr.safety = tr.safety || {};
+  const s = tr.safety;
+  const loto = s.loto || {};
+  const contacts = s.emergencyContacts || {};
+  const permitTypes = s.permitTypes || [];
+
+  const pno = document.getElementById('safe-permit-no');
+  const validEl = document.getElementById('safe-valid-until');
+  const padEl = document.getElementById('safe-padlock-id');
+  const ccrEl = document.getElementById('safe-phone-ccr');
+  const ehsEl = document.getElementById('safe-phone-ehs');
+  const medEl = document.getElementById('safe-phone-med');
+
+  if (pno) pno.value = s.permitNo || '';
+  if (validEl) validEl.value = s.validUntil || tr.dateEnd || tr.date || '';
+  if (padEl) padEl.value = loto.padlockId || '';
+  if (ccrEl) ccrEl.value = contacts.ccrPhone || '';
+  if (ehsEl) ehsEl.value = contacts.ehsPhone || '';
+  if (medEl) medEl.value = contacts.medicalPhone || '';
+
+  // Checkboxes
+  ['height', 'confined', 'hotwork', 'electrical', 'chemical'].forEach(p => {
+    const cb = document.getElementById('safe-ptype-' + p);
+    if (cb) cb.checked = permitTypes.includes(p);
+  });
+
+  const cbElec = document.getElementById('safe-loto-elec');
+  const cbPneu = document.getElementById('safe-loto-pneu');
+  const cbTag = document.getElementById('safe-loto-tag');
+  const cbZero = document.getElementById('safe-loto-zero');
+
+  if (cbElec) cbElec.checked = !!loto.electricalIsolated;
+  if (cbPneu) cbPneu.checked = !!loto.pneumaticIsolated;
+  if (cbTag) cbTag.checked = !!loto.dangerTagHung;
+  if (cbZero) cbZero.checked = !!loto.zeroEnergyVerified;
+
+  _tempLotoPhoto = loto.photo || '';
+  const photoPrev = document.getElementById('safe-loto-photo-prev');
+  if (photoPrev) {
+    if (_tempLotoPhoto) {
+      photoPrev.src = _tempLotoPhoto;
+      photoPrev.style.display = 'block';
+    } else {
+      photoPrev.src = '';
+      photoPrev.style.display = 'none';
+    }
+  }
+
+  openModal('modal-trip-safety');
+}
+
+async function handleLotoPhotoUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    showToast('Compressing LOTO photo...');
+    const compressed = await compressImageFile(file, 1280, 0.72);
+    _tempLotoPhoto = compressed;
+    const photoPrev = document.getElementById('safe-loto-photo-prev');
+    if (photoPrev) {
+      photoPrev.src = compressed;
+      photoPrev.style.display = 'block';
+    }
+    triggerHaptic('light');
+    showToast('LOTO photo loaded ✓');
+  } catch(err) {
+    console.error('LOTO photo error:', err);
+    showToast('Failed to load image');
+  }
+}
+
+function clearLotoPhoto() {
+  _tempLotoPhoto = '';
+  const photoPrev = document.getElementById('safe-loto-photo-prev');
+  if (photoPrev) {
+    photoPrev.src = '';
+    photoPrev.style.display = 'none';
+  }
+  const input = document.getElementById('safe-loto-file');
+  if (input) input.value = '';
+}
+
+function saveTripSafety() {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+
+  const permitNo = (document.getElementById('safe-permit-no') || {}).value.trim();
+  const validUntil = (document.getElementById('safe-valid-until') || {}).value;
+  const padlockId = (document.getElementById('safe-padlock-id') || {}).value.trim();
+  const ccrPhone = (document.getElementById('safe-phone-ccr') || {}).value.trim();
+  const ehsPhone = (document.getElementById('safe-phone-ehs') || {}).value.trim();
+  const medicalPhone = (document.getElementById('safe-phone-med') || {}).value.trim();
+
+  const permitTypes = [];
+  ['height', 'confined', 'hotwork', 'electrical', 'chemical'].forEach(p => {
+    const cb = document.getElementById('safe-ptype-' + p);
+    if (cb && cb.checked) permitTypes.push(p);
+  });
+
+  const electricalIsolated = !!(document.getElementById('safe-loto-elec') || {}).checked;
+  const pneumaticIsolated = !!(document.getElementById('safe-loto-pneu') || {}).checked;
+  const dangerTagHung = !!(document.getElementById('safe-loto-tag') || {}).checked;
+  const zeroEnergyVerified = !!(document.getElementById('safe-loto-zero') || {}).checked;
+
+  tr.safety = {
+    permitNo,
+    validUntil,
+    permitTypes,
+    loto: {
+      padlockId,
+      electricalIsolated,
+      pneumaticIsolated,
+      dangerTagHung,
+      zeroEnergyVerified,
+      photo: _tempLotoPhoto || ''
+    },
+    emergencyContacts: {
+      ccrPhone,
+      ehsPhone,
+      medicalPhone
+    },
+    updatedAt: new Date().toISOString()
+  };
+
+  sv();
+  closeModal('modal-trip-safety');
+  renderTripSafety(curTrip);
+  triggerHaptic('success');
+  showToast('Site Safety & LOTO updated ✓');
 }
 
 // ====== tasks.js ======
@@ -6522,10 +7920,12 @@ function gotoStep(n){
     if(n===3) renderTeam();
     if(n===4) renderReportTaskPicker();
     if(n===5){
-      // Step 5 = Sign-off: render signature & update date
+      // Step 5 = Sign-off & Handover: render readiness, spare parts, signature & update date
       try{
         updateSigDate();
         initSig();
+        if(typeof renderReportReadiness==='function') renderReportReadiness();
+        if(typeof renderReportSpareParts==='function') renderReportSpareParts();
         if(curReport && curReport.signature && curReport.signature.length > 100){
           renderReportSignature(curReport.signature);
         }
@@ -7003,6 +8403,7 @@ function saveSignoff(){
     result:  signoffRes||'Completed',
     remarks: remEl?remEl.value:''
   };
+  if(typeof saveReadinessNotes==='function') saveReadinessNotes();
   try{
     if(sigCanvas&&sigCtx) curReport.signature=sigCanvas.toDataURL();
   }catch(e){ curReport.signature=''; }
@@ -7030,6 +8431,126 @@ function checkAndExport(){
     return;
   }
   showScreen('export');
+}
+
+// ═══════ MACHINE HANDOVER & SPARE PARTS (IMP-20) ═══════
+function renderReportReadiness() {
+  if (!curReport) return;
+  curReport.readiness = curReport.readiness || { status: 'ready', notes: '' };
+
+  const st = curReport.readiness.status || 'ready';
+  ['ready', 'conditional', 'stop'].forEach(k => {
+    const btn = document.getElementById('readiness-btn-' + k);
+    if (btn) btn.classList.toggle('active', k === st);
+  });
+
+  const notesEl = document.getElementById('readiness-notes');
+  if (notesEl) notesEl.value = curReport.readiness.notes || '';
+}
+
+function setReadinessStatus(status) {
+  if (!curReport) return;
+  curReport.readiness = curReport.readiness || { status: 'ready', notes: '' };
+  curReport.readiness.status = status;
+
+  ['ready', 'conditional', 'stop'].forEach(k => {
+    const btn = document.getElementById('readiness-btn-' + k);
+    if (btn) btn.classList.toggle('active', k === status);
+  });
+
+  sv();
+  triggerHaptic('light');
+}
+
+function saveReadinessNotes() {
+  if (!curReport) return;
+  curReport.readiness = curReport.readiness || { status: 'ready', notes: '' };
+  const notesEl = document.getElementById('readiness-notes');
+  if (notesEl) curReport.readiness.notes = notesEl.value.trim();
+  sv();
+}
+
+function renderReportSpareParts() {
+  if (!curReport) return;
+  curReport.spareParts = curReport.spareParts || [];
+  const listEl = document.getElementById('report-spare-parts-list');
+  if (!listEl) return;
+
+  if (!curReport.spareParts.length) {
+    listEl.innerHTML = `
+      <div style="font-size:12px;color:var(--n400);padding:8px 0;text-align:center;background:var(--n50);border-radius:var(--rs);">
+        No spare parts recommended yet. Tap <b>＋ Add Part</b> to add part numbers for the client.
+      </div>
+    `;
+    return;
+  }
+
+  const prioBadges = {
+    immediate: '<span class="badge-prio badge-prio-imm">🔴 Replace Immediate</span>',
+    next_pm: '<span class="badge-prio badge-prio-next">🟡 Next PM</span>',
+    optional: '<span class="badge-prio badge-prio-opt">⚪ Optional Spare</span>'
+  };
+
+  listEl.innerHTML = curReport.spareParts.map((sp, idx) => `
+    <div class="spare-part-row">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
+          ${sp.partNo ? `<span style="font-family:var(--mono);font-weight:700;font-size:12px;color:var(--n800);">${sp.partNo}</span>` : ''}
+          ${prioBadges[sp.priority] || ''}
+          <span style="font-size:11px;font-weight:700;color:var(--brand);">${sp.qty || 1} ${sp.unit || 'pcs'}</span>
+        </div>
+        <div style="font-size:12px;color:var(--n700);">${sp.desc}</div>
+        ${sp.notes ? `<div style="font-size:11px;color:var(--n500);margin-top:2px;font-style:italic;">💬 ${sp.notes}</div>` : ''}
+      </div>
+      <button class="db" onclick="deleteReportSparePart(${idx})" title="Remove" style="margin-left:8px;">✕</button>
+    </div>
+  `).join('');
+}
+
+function openAddSparePartModal() {
+  ['sp-partno', 'sp-desc', 'sp-qty', 'sp-unit', 'sp-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = (id === 'sp-qty' ? '1' : id === 'sp-unit' ? 'pcs' : '');
+  });
+  const prioEl = document.getElementById('sp-prio');
+  if (prioEl) prioEl.value = 'next_pm';
+  openModal('modal-add-spare-part');
+}
+
+function saveReportSparePart() {
+  if (!curReport) return;
+  curReport.spareParts = curReport.spareParts || [];
+
+  const partNo = (document.getElementById('sp-partno') || {}).value.trim();
+  const desc = (document.getElementById('sp-desc') || {}).value.trim();
+  const qty = parseFloat((document.getElementById('sp-qty') || {}).value) || 1;
+  const unit = (document.getElementById('sp-unit') || {}).value.trim() || 'pcs';
+  const priority = (document.getElementById('sp-prio') || {}).value || 'next_pm';
+  const notes = (document.getElementById('sp-notes') || {}).value.trim();
+
+  if (!desc) {
+    showToast('Part description is required');
+    return;
+  }
+
+  curReport.spareParts.push({
+    id: 'part_' + Date.now(),
+    partNo, desc, qty, unit, priority, notes
+  });
+
+  sv();
+  closeModal('modal-add-spare-part');
+  renderReportSpareParts();
+  triggerHaptic('success');
+  showToast('Spare part added ✓');
+}
+
+function deleteReportSparePart(idx) {
+  if (!curReport || !curReport.spareParts) return;
+  curReport.spareParts.splice(idx, 1);
+  sv();
+  renderReportSpareParts();
+  triggerHaptic('light');
 }
 
 // ═══════ SIGNATURE ═══════
@@ -7320,6 +8841,65 @@ function buildPDFPreview(){
       return out;
     })()}</div>
 
+    ${(()=>{
+      const readiness = r.readiness || { status: 'ready', notes: '' };
+      const readinessCfg = {
+        ready: { icon: '🟢', label: 'Ready for Normal Operation', color: 'var(--green)', bg: 'var(--gl)' },
+        conditional: { icon: '🟡', label: 'Conditional / Monitored Operation', color: 'var(--amber)', bg: 'var(--al)' },
+        stop: { icon: '🔴', label: 'Stop / Out of Service (Hazard)', color: 'var(--red)', bg: 'var(--rl)' }
+      }[readiness.status || 'ready'] || { icon: '🟢', label: 'Ready for Normal Operation', color: 'var(--green)', bg: 'var(--gl)' };
+
+      return `
+        <div class="ps">
+          <div class="pst">Machine Handover & Readiness</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--rs);background:${readinessCfg.bg};border:1.5px solid ${readinessCfg.color};">
+            <span style="font-size:20px;">${readinessCfg.icon}</span>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--n900);">${readinessCfg.label}</div>
+              ${readiness.notes ? `<div style="font-size:11px;color:var(--n700);margin-top:2px;">${readiness.notes}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    })()}
+
+    ${(r.spareParts && r.spareParts.length) ? `
+      <div class="ps">
+        <div class="pst">Recommended Spare Parts (${r.spareParts.length})</div>
+        ${r.spareParts.map(sp => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--g100);font-size:12px;">
+            <div>
+              <b>${sp.partNo ? sp.partNo + ' · ' : ''}${sp.desc}</b>
+              ${sp.notes ? `<div style="font-size:10px;color:var(--n500);">${sp.notes}</div>` : ''}
+            </div>
+            <div style="text-align:right;">
+              <span style="font-weight:700;">${sp.qty} ${sp.unit||'pcs'}</span>
+              <span class="badge ${sp.priority==='immediate'?'br':sp.priority==='next_pm'?'ba':'bb'}" style="font-size:9px;margin-left:4px;">
+                ${sp.priority==='immediate'?'REPLACE NOW':sp.priority==='next_pm'?'NEXT PM':'OPTIONAL'}
+              </span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    ${(trip.timesheets && trip.timesheets.length) ? `
+      <div class="ps">
+        <div class="pst">Daily Service Tickets (${trip.timesheets.length})</div>
+        ${trip.timesheets.map(tk => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--g100);font-size:11px;">
+            <div>
+              <b>${fmtDate(tk.date)}</b>: ${tk.workSummary ? tk.workSummary.slice(0, 45) + '…' : 'Daily service'}
+              <span style="color:var(--n500);">(${tk.supervisorName || 'Supervisor'})</span>
+            </div>
+            <div style="font-family:var(--mono);font-weight:700;color:var(--brand);">
+              ${tk.normalHours || 0}h N ${parseFloat(tk.ot15Hours)>0 ? `+${tk.ot15Hours}h OT` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
     <div class="ps" style="border:none;"><div class="pst">Sign-off</div>
       ${pr('Result',r.signoff.result||'—')}
       ${r.signoff.summary?`<div style="font-size:12px;color:var(--g700);margin-top:6px;">${r.signoff.summary}</div>`:''}
@@ -7415,6 +8995,84 @@ function exportPDF(){
   let pdfLeaveMins=0, pdfLeaveCount=0;
   if(rptTaskIds.length){sec(`TASKS IN REPORT (${rptTaskIds.length})`);const rptTasks=rptTaskIds.map(id=>S.tasks.find(t=>t.id===id)).filter(Boolean).sort((a,b)=>(b.dateStart||b.date||'').localeCompare(a.dateStart||a.date||'')||a.title.localeCompare(b.title));rptTasks.forEach(tk=>{const cat=tk.category||'work';let mins=0;if(tk.autoDuration){const d=calcDurationFromTimes(tk.dateStart||tk.date,tk.dateEnd||tk.dateStart||tk.date,tk.timeStart,tk.timeEnd);if(d)mins=d.totalMins;}else if(tk.hours||tk.minutes){mins=(parseInt(tk.hours)||0)*60+(parseInt(tk.minutes)||0);}else{const d=calcDurationFromTimes(tk.dateStart||tk.date,tk.dateEnd||tk.dateStart||tk.date,tk.timeStart,tk.timeEnd);if(d)mins=d.totalMins;}if(mins>0){if(cat==='travel'){pdfTravelMins+=mins;pdfTravelCount++;}else if(cat==='leave'){pdfLeaveMins+=mins;pdfLeaveCount++;}else{pdfWorkMins+=mins;pdfWorkCount++;}}});const byDate={};rptTasks.forEach(tk=>{const d=tk.dateStart||tk.date||'';if(!byDate[d])byDate[d]=[];byDate[d].push(tk);});Object.entries(byDate).forEach(([dk,dayTasks])=>{if(dk){doc.setFillColor(228,240,232);doc.rect(mg,y-3,W-mg*2,7,'F');doc.setTextColor(0,100,50);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(fmtDate(dk),mg+3,y+1);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=8;chk();}dayTasks.forEach(tk=>{const timeStr=tk.timeStart?(tk.timeEnd?`${tk.timeStart}–${tk.timeEnd}`:tk.timeStart):'';const dur=calcDuration(tk);const titleLine='• '+tk.title+(timeStr?' ('+timeStr+')':'')+(dur?' '+dur:'')+(tk.status==='done'?' — Done':'');doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);const tl=doc.splitTextToSize(titleLine,W-mg*2-4);doc.text(tl,mg+2,y);y+=tl.length*5;const meta=[tk.machine?'Machine: '+tk.machine:'',tk.plan?'Plan: '+tk.plan:'',tk.priority&&tk.priority!=='medium'?'Priority: '+tk.priority:''].filter(Boolean).join('  ·  ');if(meta){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(meta,mg+6,y);y+=4;}if(tk.desc){doc.setFontSize(8);doc.setTextColor(100,100,100);const dl=doc.splitTextToSize('Desc: '+tk.desc,W-mg*2-8);doc.text(dl,mg+6,y);y+=dl.length*4+1;}if(tk.checklist&&tk.checklist.length){const done=tk.checklist.filter(c=>c.done).length;doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text(`Checklist: ${done}/${tk.checklist.length} items`,mg+6,y);y+=4;}const note=(r.reportTaskNotes||{})[tk.id];if(note){doc.setFontSize(8);doc.setTextColor(80,80,80);const nl=doc.splitTextToSize('Notes: '+note,W-mg*2-8);doc.text(nl,mg+6,y);y+=nl.length*4+1;}y+=3;chk();});});ln();}
   const fmtPdfMins=m=>{const h=Math.floor(m/60),mins=m%60;return m>0?(h>0&&mins>0?`${h}h ${mins}m`:h>0?`${h}h`:`${mins}m`):'—';};
+  // ── Machine Readiness Handover Box (IMP-20) ──
+  const readiness = r.readiness || { status: 'ready', notes: '' };
+  const rdStatus = readiness.status || 'ready';
+  const rdLabel = rdStatus === 'stop' ? 'STOP / OUT OF SERVICE — DO NOT OPERATE' : rdStatus === 'conditional' ? 'CONDITIONAL / MONITORED OPERATION' : 'READY FOR NORMAL OPERATION';
+  const rdColor = rdStatus === 'stop' ? [220, 38, 38] : rdStatus === 'conditional' ? [217, 119, 6] : [15, 110, 86];
+  const rdBg = rdStatus === 'stop' ? [254, 226, 226] : rdStatus === 'conditional' ? [254, 243, 199] : [236, 253, 245];
+
+  chk();
+  sec('MACHINE HANDOVER & READINESS');
+  doc.setFillColor(...rdBg);
+  doc.rect(mg, y - 3, W - mg * 2, readiness.notes ? 16 : 10, 'F');
+  doc.setDrawColor(...rdColor);
+  doc.rect(mg, y - 3, W - mg * 2, readiness.notes ? 16 : 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...rdColor);
+  doc.text(rdLabel, mg + 4, y + 3);
+  if (readiness.notes) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(50, 50, 50);
+    const notesLine = doc.splitTextToSize('Operating Limits / Notes: ' + readiness.notes, W - mg * 2 - 8);
+    doc.text(notesLine, mg + 4, y + 9);
+    y += 18;
+  } else {
+    y += 12;
+  }
+  chk();
+
+  // ── Spare parts table (IMP-20) ──
+  if (r.spareParts && r.spareParts.length) {
+    sec(`RECOMMENDED SPARE PARTS (${r.spareParts.length})`);
+    r.spareParts.forEach(sp => {
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(33, 37, 41);
+      const pno = sp.partNo ? `[${sp.partNo}] ` : '';
+      doc.text('• ' + pno + sp.desc, mg + 2, y);
+      const prioStr = sp.priority === 'immediate' ? 'REPLACE NOW' : sp.priority === 'next_pm' ? 'NEXT PM' : 'OPTIONAL';
+      const prioCol = sp.priority === 'immediate' ? [220, 38, 38] : sp.priority === 'next_pm' ? [217, 119, 6] : [100, 100, 100];
+      rtxt(`${sp.qty} ${sp.unit||'pcs'}  ·  ${prioStr}`, y, prioCol);
+      y += 4.5;
+      if (sp.notes) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(110, 110, 110);
+        doc.text('Note: ' + sp.notes, mg + 6, y);
+        y += 4;
+      }
+      chk();
+    });
+    ln();
+  }
+
+  // ── Daily Service Tickets table (IMP-19) ──
+  if (trip.timesheets && trip.timesheets.length) {
+    sec(`DAILY SERVICE TICKETS (${trip.timesheets.length})`);
+    trip.timesheets.forEach(tk => {
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(33, 37, 41);
+      doc.text(`• ${fmtDate(tk.date)}`, mg + 2, y);
+      doc.setFont('helvetica', 'normal');
+      const hrs = `${tk.normalHours||0}h Norm${parseFloat(tk.ot15Hours)>0?` +${tk.ot15Hours}h OT`:''}${parseFloat(tk.standbyHours)>0?` +${tk.standbyHours}h Stby`:''}`;
+      rtxt(hrs + (tk.signature ? ' (Signed ✓)' : ''), y, [15, 110, 86]);
+      y += 4.5;
+      if (tk.workSummary) {
+        doc.setFontSize(7.5);
+        doc.setTextColor(90, 90, 90);
+        const sl = doc.splitTextToSize(tk.workSummary, W - mg * 2 - 8);
+        doc.text(sl, mg + 6, y);
+        y += sl.length * 3.8 + 1;
+      }
+      chk();
+    });
+    ln();
+  }
+
   sec('SIGN-OFF');kv2('Result',r.signoff&&r.signoff.result||'Completed');if(r.signoff&&r.signoff.summary)kv2('Summary',r.signoff.summary);if(r.signoff&&r.signoff.remarks)kv2('Remarks',r.signoff.remarks);if(pdfWorkCount>0)kv2('Total Work Hours',`${fmtPdfMins(pdfWorkMins)} (${pdfWorkCount} task${pdfWorkCount>1?'s':''})`);if(pdfTravelCount>0)kv2('Total Travel Hours',`${fmtPdfMins(pdfTravelMins)} (${pdfTravelCount} task${pdfTravelCount>1?'s':''})`);if(pdfLeaveCount>0)kv2('Total Leave Hours',`${fmtPdfMins(pdfLeaveMins)} (${pdfLeaveCount} task${pdfLeaveCount>1?'s':''})`);y+=4;
   if(y>240){doc.addPage();y=20;pageNum++;addPN();}
   doc.setDrawColor(200,200,200);doc.rect(mg,y,W-mg*2,34);doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text('Signature:',mg+4,y+7);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text(p.name||'Engineer',mg+4,y+29);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(100,100,100);rtxt(new Date().toLocaleDateString('en-GB'),y+29);
@@ -8326,6 +9984,923 @@ function applyInspectionPicker(){
 
   // Navigate to report screen properly
   openReportDirect(0);
+}
+
+// ====== fieldtools.js ======
+// =====================================================
+// PlantLog — fieldtools.js
+// Field Engineering Toolbox (IMP-21), Quick Field Scratchpad (IMP-22),
+// and Asset Passport & Equipment Service History (IMP-24)
+// =====================================================
+
+// ═════════════════════════════════════════════════════
+// 1. FIELD ENGINEERING TOOLBOX (IMP-21)
+// Offline Unit Converters & Real-time Field Calculators
+// ═════════════════════════════════════════════════════
+
+let curToolboxTab = 'pressure';
+
+function openToolboxScreen() {
+  showScreen('toolbox');
+  switchToolboxTab(curToolboxTab || 'pressure');
+}
+
+function switchToolboxTab(tab) {
+  curToolboxTab = tab;
+  ['pressure', 'tempflow', 'electrical', 'signal'].forEach(t => {
+    const btn = document.getElementById('tb-tab-' + t);
+    const pane = document.getElementById('tb-pane-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
+    if (pane) pane.style.display = (t === tab) ? '' : 'none';
+  });
+  triggerHaptic('light');
+}
+
+// ── Pressure Converter ─────────────────────────────
+let _isConvertingPressure = false;
+function onPressureInput(source) {
+  if (_isConvertingPressure) return;
+  _isConvertingPressure = true;
+  try {
+    const el = document.getElementById('press-' + source);
+    if (!el) return;
+    const rawVal = parseFloat(el.value);
+    if (isNaN(rawVal)) {
+      ['bar', 'psi', 'kpa', 'mpa', 'kgcm2'].forEach(k => {
+        if (k !== source) {
+          const target = document.getElementById('press-' + k);
+          if (target) target.value = '';
+        }
+      });
+      return;
+    }
+
+    // Convert source to bar
+    let bar = 0;
+    if (source === 'bar') bar = rawVal;
+    else if (source === 'psi') bar = rawVal / 14.50377377;
+    else if (source === 'kpa') bar = rawVal / 100;
+    else if (source === 'mpa') bar = rawVal * 10;
+    else if (source === 'kgcm2') bar = rawVal / 1.0197162;
+
+    const roundSmart = (n, dec = 3) => {
+      if (Math.abs(n) < 0.0001 && n !== 0) return n.toExponential(3);
+      return parseFloat(n.toFixed(dec)).toString();
+    };
+
+    if (source !== 'bar') {
+      const e = document.getElementById('press-bar');
+      if (e) e.value = roundSmart(bar, 3);
+    }
+    if (source !== 'psi') {
+      const e = document.getElementById('press-psi');
+      if (e) e.value = roundSmart(bar * 14.50377377, 2);
+    }
+    if (source !== 'kpa') {
+      const e = document.getElementById('press-kpa');
+      if (e) e.value = roundSmart(bar * 100, 1);
+    }
+    if (source !== 'mpa') {
+      const e = document.getElementById('press-mpa');
+      if (e) e.value = roundSmart(bar * 0.1, 4);
+    }
+    if (source !== 'kgcm2') {
+      const e = document.getElementById('press-kgcm2');
+      if (e) e.value = roundSmart(bar * 1.0197162, 3);
+    }
+  } finally {
+    _isConvertingPressure = false;
+  }
+}
+
+function clearPressureInputs() {
+  ['bar', 'psi', 'kpa', 'mpa', 'kgcm2'].forEach(k => {
+    const target = document.getElementById('press-' + k);
+    if (target) target.value = '';
+  });
+}
+
+// ── Temperature & Flow Converter ───────────────────
+let _isConvertingTemp = false;
+function onTempInput(source) {
+  if (_isConvertingTemp) return;
+  _isConvertingTemp = true;
+  try {
+    const el = document.getElementById('temp-' + source);
+    if (!el) return;
+    const rawVal = parseFloat(el.value);
+    if (isNaN(rawVal)) {
+      ['c', 'f', 'k'].forEach(k => {
+        if (k !== source) {
+          const target = document.getElementById('temp-' + k);
+          if (target) target.value = '';
+        }
+      });
+      return;
+    }
+
+    let degC = 0;
+    if (source === 'c') degC = rawVal;
+    else if (source === 'f') degC = (rawVal - 32) * (5 / 9);
+    else if (source === 'k') degC = rawVal - 273.15;
+
+    const round = (n, dec = 2) => parseFloat(n.toFixed(dec)).toString();
+    if (source !== 'c') {
+      const e = document.getElementById('temp-c');
+      if (e) e.value = round(degC, 2);
+    }
+    if (source !== 'f') {
+      const e = document.getElementById('temp-f');
+      if (e) e.value = round((degC * 9 / 5) + 32, 2);
+    }
+    if (source !== 'k') {
+      const e = document.getElementById('temp-k');
+      if (e) e.value = round(degC + 273.15, 2);
+    }
+  } finally {
+    _isConvertingTemp = false;
+  }
+}
+
+let _isConvertingFlow = false;
+function onFlowInput(source) {
+  if (_isConvertingFlow) return;
+  _isConvertingFlow = true;
+  try {
+    const el = document.getElementById('flow-' + source);
+    if (!el) return;
+    const rawVal = parseFloat(el.value);
+    if (isNaN(rawVal)) {
+      ['m3h', 'lmin', 'gpm'].forEach(k => {
+        if (k !== source) {
+          const target = document.getElementById('flow-' + k);
+          if (target) target.value = '';
+        }
+      });
+      return;
+    }
+
+    let m3h = 0;
+    if (source === 'm3h') m3h = rawVal;
+    else if (source === 'lmin') m3h = rawVal * 0.06;
+    else if (source === 'gpm') m3h = rawVal * 0.2271247;
+
+    const round = (n, dec = 2) => parseFloat(n.toFixed(dec)).toString();
+    if (source !== 'm3h') {
+      const e = document.getElementById('flow-m3h');
+      if (e) e.value = round(m3h, 2);
+    }
+    if (source !== 'lmin') {
+      const e = document.getElementById('flow-lmin');
+      if (e) e.value = round(m3h / 0.06, 1);
+    }
+    if (source !== 'gpm') {
+      const e = document.getElementById('flow-gpm');
+      if (e) e.value = round(m3h / 0.2271247, 2);
+    }
+  } finally {
+    _isConvertingFlow = false;
+  }
+}
+
+// ── 3-Phase Electrical Calculator ──────────────────
+function calc3PhaseMotor() {
+  const kw = parseFloat((document.getElementById('motor-kw') || {}).value) || 0;
+  const volt = parseFloat((document.getElementById('motor-volt') || {}).value) || 380;
+  const pf = parseFloat((document.getElementById('motor-pf') || {}).value) || 0.85;
+  const eff = parseFloat((document.getElementById('motor-eff') || {}).value) || 0.90;
+
+  const resEl = document.getElementById('motor-result-fla');
+  const olEl = document.getElementById('motor-result-overload');
+  const cbEl = document.getElementById('motor-result-cb');
+  const cableEl = document.getElementById('motor-result-cable');
+
+  if (kw <= 0 || volt <= 0 || pf <= 0 || eff <= 0) {
+    if (resEl) resEl.textContent = '—';
+    if (olEl) olEl.textContent = '—';
+    if (cbEl) cbEl.textContent = '—';
+    if (cableEl) cableEl.textContent = '—';
+    return;
+  }
+
+  // I = (P * 1000) / (sqrt(3) * V * pf * eff)
+  const fla = (kw * 1000) / (Math.sqrt(3) * volt * pf * eff);
+  const flaRound = fla.toFixed(1);
+  const olMin = (fla * 1.05).toFixed(1);
+  const olMax = (fla * 1.15).toFixed(1);
+  const cbRating = Math.ceil(fla * 1.5 / 5) * 5; // Standard step CB approx
+
+  // Cable copper approximation ~ 4.5A per mm2 for general tray installation
+  let cableSize = '2.5 mm²';
+  if (fla > 90) cableSize = '50 mm²';
+  else if (fla > 65) cableSize = '35 mm²';
+  else if (fla > 45) cableSize = '25 mm²';
+  else if (fla > 30) cableSize = '16 mm²';
+  else if (fla > 22) cableSize = '10 mm²';
+  else if (fla > 15) cableSize = '6 mm²';
+  else if (fla > 10) cableSize = '4 mm²';
+
+  if (resEl) resEl.textContent = `${flaRound} A`;
+  if (olEl) olEl.textContent = `${olMin} A – ${olMax} A`;
+  if (cbEl) cbEl.textContent = `~${cbRating} A`;
+  if (cableEl) cableEl.textContent = `${cableSize} (Cu)`;
+}
+
+// ── 4-20mA Signal Converter ────────────────────────
+let _isConvertingSignal = false;
+function onSignalInput(source) {
+  if (_isConvertingSignal) return;
+  _isConvertingSignal = true;
+  try {
+    const minVal = parseFloat((document.getElementById('sig-min') || {}).value) || 0;
+    const maxVal = parseFloat((document.getElementById('sig-max') || {}).value) || 100;
+    const span = maxVal - minVal;
+
+    const round = (n, dec = 2) => parseFloat(n.toFixed(dec)).toString();
+
+    if (source === 'ma') {
+      const ma = parseFloat((document.getElementById('sig-ma') || {}).value);
+      if (isNaN(ma)) {
+        document.getElementById('sig-pct').value = '';
+        document.getElementById('sig-pv').value = '';
+        return;
+      }
+      const pct = ((ma - 4) / 16) * 100;
+      const pv = minVal + (pct / 100) * span;
+      document.getElementById('sig-pct').value = round(pct, 1);
+      document.getElementById('sig-pv').value = round(pv, 2);
+    } else if (source === 'pct') {
+      const pct = parseFloat((document.getElementById('sig-pct') || {}).value);
+      if (isNaN(pct)) {
+        document.getElementById('sig-ma').value = '';
+        document.getElementById('sig-pv').value = '';
+        return;
+      }
+      const ma = 4 + (pct / 100) * 16;
+      const pv = minVal + (pct / 100) * span;
+      document.getElementById('sig-ma').value = round(ma, 2);
+      document.getElementById('sig-pv').value = round(pv, 2);
+    } else if (source === 'pv') {
+      const pv = parseFloat((document.getElementById('sig-pv') || {}).value);
+      if (isNaN(pv) || span === 0) {
+        document.getElementById('sig-ma').value = '';
+        document.getElementById('sig-pct').value = '';
+        return;
+      }
+      const pct = ((pv - minVal) / span) * 100;
+      const ma = 4 + (pct / 100) * 16;
+      document.getElementById('sig-ma').value = round(ma, 2);
+      document.getElementById('sig-pct').value = round(pct, 1);
+    }
+  } finally {
+    _isConvertingSignal = false;
+  }
+}
+
+// ═════════════════════════════════════════════════════
+// 2. QUICK FIELD SCRATCHPAD & NAMEPLATE SNAPPER (IMP-22)
+// Instant field notes, photo scanner, and 1-click converters
+// ═════════════════════════════════════════════════════
+
+let _scratchPhotoBase64 = '';
+let _scratchSelectedCategory = 'nameplate';
+
+function initScratchpadStore() {
+  if (!S.scratchpad) S.scratchpad = [];
+}
+
+function openQuickScratchModal(prefillCategory = 'nameplate') {
+  initScratchpadStore();
+  _scratchPhotoBase64 = '';
+  _scratchSelectedCategory = prefillCategory || 'nameplate';
+
+  const titleEl = document.getElementById('scratch-title');
+  const textEl = document.getElementById('scratch-text');
+  const photoPreview = document.getElementById('scratch-photo-preview');
+  const tripSelect = document.getElementById('scratch-trip-select');
+
+  if (titleEl) titleEl.value = '';
+  if (textEl) textEl.value = '';
+  if (photoPreview) {
+    photoPreview.src = '';
+    photoPreview.style.display = 'none';
+  }
+
+  // Populate trips dropdown
+  if (tripSelect) {
+    let opts = '<option value="">-- No Linked Trip (Unassigned) --</option>';
+    (S.trips || []).forEach(tr => {
+      const sel = (curTrip && tr.id === curTrip) ? ' selected' : '';
+      opts += `<option value="${tr.id}"${sel}>🏭 ${tr.plant} (${fmtDate(tr.date)})</option>`;
+    });
+    tripSelect.innerHTML = opts;
+  }
+
+  // Highlight category chip
+  selectScratchCategory(_scratchSelectedCategory);
+  openModal('modal-quick-scratch');
+}
+
+function selectScratchCategory(cat) {
+  _scratchSelectedCategory = cat;
+  const chips = document.querySelectorAll('.scratch-cat-chip');
+  chips.forEach(c => {
+    c.classList.toggle('active', c.getAttribute('data-cat') === cat);
+  });
+}
+
+async function handleScratchPhotoUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    showToast('Compressing photo...');
+    const compressed = await compressImageFile(file, 1280, 0.72);
+    _scratchPhotoBase64 = compressed;
+    const preview = document.getElementById('scratch-photo-preview');
+    if (preview) {
+      preview.src = compressed;
+      preview.style.display = 'block';
+    }
+    triggerHaptic('light');
+    showToast('Photo captured ✓');
+  } catch (err) {
+    console.error('Scratch photo error:', err);
+    showToast('Failed to load image');
+  }
+}
+
+function clearScratchPhoto() {
+  _scratchPhotoBase64 = '';
+  const preview = document.getElementById('scratch-photo-preview');
+  if (preview) {
+    preview.src = '';
+    preview.style.display = 'none';
+  }
+  const input = document.getElementById('scratch-file-input');
+  if (input) input.value = '';
+}
+
+function saveQuickScratch() {
+  initScratchpadStore();
+  const text = (document.getElementById('scratch-text') || {}).value.trim();
+  let title = (document.getElementById('scratch-title') || {}).value.trim();
+  const tripId = (document.getElementById('scratch-trip-select') || {}).value || null;
+
+  if (!title && !text && !_scratchPhotoBase64) {
+    showToast('Please enter text or take a photo');
+    return;
+  }
+
+  if (!title) {
+    // Generate automatic title based on category & time
+    const catLabels = {
+      nameplate: 'Nameplate Snap',
+      defect: 'Field Defect Issue',
+      wiring: 'Wiring / Terminal',
+      measurement: 'Measurement Note',
+      general: 'Quick Note'
+    };
+    title = `${catLabels[_scratchSelectedCategory] || 'Field Memo'} - ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+  }
+
+  const item = {
+    id: 'sp_' + Date.now(),
+    title: title,
+    text: text,
+    photo: _scratchPhotoBase64,
+    category: _scratchSelectedCategory,
+    tripId: tripId,
+    createdAt: new Date().toISOString()
+  };
+
+  S.scratchpad.unshift(item);
+  sv();
+  closeModal('modal-quick-scratch');
+  triggerHaptic('success');
+  showToast('Quick note saved ✓');
+
+  // Refresh lists if open
+  renderScratchpadList();
+  renderDash();
+}
+
+function renderScratchpadList() {
+  initScratchpadStore();
+  const container = document.getElementById('scratchpad-list-items');
+  const countEl = document.getElementById('scratchpad-count-badge');
+  const emptyEl = document.getElementById('scratchpad-empty-state');
+  if (!container) return;
+
+  const items = S.scratchpad || [];
+  if (countEl) countEl.textContent = items.length;
+
+  if (!items.length) {
+    container.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  const catIcons = {
+    nameplate: '🏷️ Nameplate',
+    defect: '⚠️ Defect',
+    wiring: '⚡ Wiring',
+    measurement: '📊 Reading',
+    general: '📝 Memo'
+  };
+
+  container.innerHTML = items.map(sp => {
+    const trip = sp.tripId ? (S.trips || []).find(t => t.id === sp.tripId) : null;
+    const tripLabel = trip ? `🏭 ${trip.plant}` : 'Unassigned';
+    const dateStr = new Date(sp.createdAt).toLocaleDateString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+
+    return `
+      <div class="scratch-card" id="scratch-item-${sp.id}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">
+              <span class="scratch-badge-cat cat-${sp.category}">${catIcons[sp.category] || '📝 Note'}</span>
+              <span style="font-size:11px;color:var(--n500);">${dateStr}</span>
+              ${sp.tripId ? `<span style="font-size:11px;color:var(--brand);font-weight:600;">${tripLabel}</span>` : ''}
+            </div>
+            <div style="font-size:13px;font-weight:700;color:var(--n800);margin-bottom:4px;">${sp.title}</div>
+            ${sp.text ? `<div style="font-size:12px;color:var(--n600);line-height:1.4;white-space:pre-wrap;margin-bottom:6px;">${sp.text}</div>` : ''}
+          </div>
+          ${sp.photo ? `
+            <img src="${sp.photo}" onclick="previewImage('${sp.photo}')"
+              style="width:58px;height:58px;object-fit:cover;border-radius:var(--rs);border:1px solid var(--n200);cursor:pointer;flex-shrink:0;">
+          ` : ''}
+        </div>
+        <div class="scratch-card-actions">
+          <button class="scratch-act-btn" onclick="convertScratchToTask('${sp.id}')" title="Convert to formal Task">
+            📋 Convert to Task
+          </button>
+          <button class="scratch-act-btn" onclick="openAttachScratchTripModal('${sp.id}')" title="Assign to Trip">
+            🏭 Assign Trip
+          </button>
+          <button class="scratch-act-btn scratch-act-del" onclick="deleteScratchItem('${sp.id}')" title="Delete">
+            ✕ Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openScratchpadManagerModal() {
+  renderScratchpadList();
+  openModal('modal-scratchpad-manager');
+}
+
+async function deleteScratchItem(id) {
+  const ok = await appConfirm('Delete this scratchpad note?', {
+    title: 'Delete Quick Note',
+    danger: true,
+    confirmText: 'Delete',
+    icon: '🗑️'
+  });
+  if (!ok) return;
+
+  S.scratchpad = (S.scratchpad || []).filter(s => s.id !== id);
+  sv();
+  triggerHaptic('light');
+  renderScratchpadList();
+  showToast('Note deleted');
+}
+
+function convertScratchToTask(id) {
+  const sp = (S.scratchpad || []).find(s => s.id === id);
+  if (!sp) return;
+
+  closeModal('modal-scratchpad-manager');
+  // Open task modal with prefilled data
+  openNewTaskModal(todayStr(), 'work');
+
+  setTimeout(() => {
+    const titleEl = document.getElementById('ntk-title');
+    const descEl = document.getElementById('ntk-desc');
+    const tripEl = document.getElementById('ntk-trip');
+
+    if (titleEl) titleEl.value = sp.title;
+    if (descEl) descEl.value = (sp.text ? sp.text + '\n\n' : '') + `[Imported from Field Scratchpad (${sp.category})]`;
+    if (tripEl && sp.tripId) tripEl.value = sp.tripId;
+
+    if (sp.photo) {
+      tmpPhotos = [sp.photo];
+      renderPhotoStrip();
+    }
+  }, 200);
+}
+
+async function openAttachScratchTripModal(id) {
+  const sp = (S.scratchpad || []).find(s => s.id === id);
+  if (!sp) return;
+
+  const trips = S.trips || [];
+  if (!trips.length) {
+    showToast('No trips found. Create a trip first.');
+    return;
+  }
+
+  const tripListStr = trips.map((t, idx) => `${idx + 1}. ${t.plant} (${fmtDate(t.date)})`).join('\n');
+  const res = await appPrompt(`Select Trip number to attach:\n\n${tripListStr}`, {
+    title: 'Assign to Trip',
+    placeholder: 'Enter trip number (e.g. 1)'
+  });
+
+  if (res) {
+    const idx = parseInt(res) - 1;
+    if (idx >= 0 && idx < trips.length) {
+      sp.tripId = trips[idx].id;
+      sv();
+      renderScratchpadList();
+      showToast(`Assigned to ${trips[idx].plant} ✓`);
+    } else {
+      showToast('Invalid trip number');
+    }
+  }
+}
+
+// ═════════════════════════════════════════════════════
+// 3. ASSET PASSPORT & EQUIPMENT SERVICE HISTORY (IMP-24)
+// Equipment registry, machine tags, specs & timeline audit
+// ═════════════════════════════════════════════════════
+
+let editingAssetId = null;
+
+function ensureAssetsInitialized() {
+  if (!S.assets) S.assets = [];
+
+  // Backward compatibility migration from S.machines string array
+  if (Array.isArray(S.machines) && S.machines.length) {
+    S.machines.forEach(m => {
+      const name = (typeof m === 'string') ? m : (m && m.name ? m.name : '');
+      if (name && !S.assets.some(a => (a.name || '').toLowerCase() === name.toLowerCase() || (a.tag || '').toLowerCase() === name.toLowerCase())) {
+        S.assets.push({
+          id: 'ast_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          tag: name.toUpperCase().replace(/[^A-Z0-9]/g, '-').slice(0, 12) || 'TAG-01',
+          name: name,
+          customer: '',
+          model: '',
+          serial: '',
+          spec: '',
+          location: '',
+          notes: 'Auto-migrated from machine list',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+    });
+  }
+}
+
+function openAssetsScreen() {
+  ensureAssetsInitialized();
+  showScreen('assets');
+  renderAssetList();
+}
+
+function renderAssetList(query = '') {
+  ensureAssetsInitialized();
+  const listEl = document.getElementById('asset-list-container');
+  const countEl = document.getElementById('asset-total-count');
+  const emptyEl = document.getElementById('asset-empty-state');
+  if (!listEl) return;
+
+  const q = (query || (document.getElementById('asset-search-input') || {}).value || '').toLowerCase().trim();
+
+  let assets = S.assets || [];
+  if (countEl) countEl.textContent = assets.length;
+
+  if (q) {
+    assets = assets.filter(a =>
+      (a.tag || '').toLowerCase().includes(q) ||
+      (a.name || '').toLowerCase().includes(q) ||
+      (a.customer || '').toLowerCase().includes(q) ||
+      (a.model || '').toLowerCase().includes(q) ||
+      (a.serial || '').toLowerCase().includes(q) ||
+      (a.location || '').toLowerCase().includes(q)
+    );
+  }
+
+  if (!assets.length) {
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  listEl.innerHTML = assets.map(a => {
+    // Quick scan service count for this asset
+    const historyCount = getAssetHistory(a).length;
+
+    return `
+      <div class="asset-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+              <span class="badge-asset-tag">${a.tag || 'NO-TAG'}</span>
+              ${a.customer ? `<span style="font-size:11px;color:var(--n500);font-weight:600;">🏭 ${a.customer}</span>` : ''}
+            </div>
+            <div style="font-size:14px;font-weight:700;color:var(--n800);">${a.name}</div>
+          </div>
+          <span class="badge ${historyCount > 0 ? 'bg' : 'ba'}" style="font-size:10px;">
+            ${historyCount} visit${historyCount !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        <div class="asset-specs-grid">
+          ${a.model ? `<div><span style="color:var(--n500);">Model:</span> <b>${a.model}</b></div>` : ''}
+          ${a.serial ? `<div><span style="color:var(--n500);">S/N:</span> <b>${a.serial}</b></div>` : ''}
+          ${a.location ? `<div><span style="color:var(--n500);">Loc:</span> <b>${a.location}</b></div>` : ''}
+          ${a.spec ? `<div style="grid-column:span 2;"><span style="color:var(--n500);">Spec:</span> <b>${a.spec}</b></div>` : ''}
+        </div>
+
+        ${a.notes ? `<div style="font-size:11px;color:var(--n600);background:var(--n50);padding:5px 8px;border-radius:4px;margin-top:6px;font-style:italic;">💬 ${a.notes}</div>` : ''}
+
+        <div class="asset-card-actions">
+          <button class="asset-act-btn asset-act-primary" onclick="openAssetHistoryModal('${a.id}')">
+            📜 Service History (${historyCount})
+          </button>
+          <button class="asset-act-btn" onclick="openEditAssetModal('${a.id}')">
+            ✏️ Edit
+          </button>
+          <button class="asset-act-btn asset-act-del" onclick="deleteAsset('${a.id}')">
+            🗑️
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openAddAssetModal(assetId = null) {
+  ensureAssetsInitialized();
+  editingAssetId = assetId;
+
+  const modalTitle = document.getElementById('asset-modal-title');
+  const tagInput = document.getElementById('ast-tag');
+  const nameInput = document.getElementById('ast-name');
+  const custInput = document.getElementById('ast-customer');
+  const modelInput = document.getElementById('ast-model');
+  const serialInput = document.getElementById('ast-serial');
+  const specInput = document.getElementById('ast-spec');
+  const locInput = document.getElementById('ast-location');
+  const notesInput = document.getElementById('ast-notes');
+
+  if (assetId) {
+    const a = S.assets.find(item => item.id === assetId);
+    if (!a) return;
+    if (modalTitle) modalTitle.textContent = 'Edit Equipment Passport';
+    if (tagInput) tagInput.value = a.tag || '';
+    if (nameInput) nameInput.value = a.name || '';
+    if (custInput) custInput.value = a.customer || '';
+    if (modelInput) modelInput.value = a.model || '';
+    if (serialInput) serialInput.value = a.serial || '';
+    if (specInput) specInput.value = a.spec || '';
+    if (locInput) locInput.value = a.location || '';
+    if (notesInput) notesInput.value = a.notes || '';
+  } else {
+    if (modalTitle) modalTitle.textContent = 'New Equipment Passport';
+    [tagInput, nameInput, custInput, modelInput, serialInput, specInput, locInput, notesInput].forEach(el => {
+      if (el) el.value = '';
+    });
+  }
+
+  openModal('modal-add-asset');
+}
+
+function openEditAssetModal(id) {
+  openAddAssetModal(id);
+}
+
+function saveAsset() {
+  ensureAssetsInitialized();
+  const tag = (document.getElementById('ast-tag') || {}).value.trim();
+  const name = (document.getElementById('ast-name') || {}).value.trim();
+  const customer = (document.getElementById('ast-customer') || {}).value.trim();
+  const model = (document.getElementById('ast-model') || {}).value.trim();
+  const serial = (document.getElementById('ast-serial') || {}).value.trim();
+  const spec = (document.getElementById('ast-spec') || {}).value.trim();
+  const location = (document.getElementById('ast-location') || {}).value.trim();
+  const notes = (document.getElementById('ast-notes') || {}).value.trim();
+
+  if (!tag || !name) {
+    showToast('Equipment Tag and Name are required');
+    return;
+  }
+
+  if (editingAssetId) {
+    const a = S.assets.find(item => item.id === editingAssetId);
+    if (a) {
+      a.tag = tag;
+      a.name = name;
+      a.customer = customer;
+      a.model = model;
+      a.serial = serial;
+      a.spec = spec;
+      a.location = location;
+      a.notes = notes;
+      a.updatedAt = new Date().toISOString();
+    }
+    showToast('Equipment updated ✓');
+  } else {
+    const newAsset = {
+      id: 'ast_' + Date.now(),
+      tag, name, customer, model, serial, spec, location, notes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    S.assets.unshift(newAsset);
+    // Also sync to S.machines for legacy backwards compatibility
+    if (!S.machines.includes(name)) S.machines.push(name);
+    showToast('Equipment registered ✓');
+  }
+
+  sv();
+  closeModal('modal-add-asset');
+  renderAssetList();
+  triggerHaptic('success');
+}
+
+async function deleteAsset(id) {
+  const ok = await appConfirm('Delete this equipment passport? Historical reports will be preserved.', {
+    title: 'Delete Equipment',
+    danger: true,
+    confirmText: 'Delete',
+    icon: '🗑️'
+  });
+  if (!ok) return;
+
+  S.assets = (S.assets || []).filter(a => a.id !== id);
+  sv();
+  renderAssetList();
+  showToast('Equipment deleted');
+}
+
+/**
+ * Scan all historical records (Trips, Tasks, Reports, Readings, Issues) matching this Asset
+ */
+function getAssetHistory(asset) {
+  if (!asset) return [];
+  const tagL = (asset.tag || '').toLowerCase();
+  const nameL = (asset.name || '').toLowerCase();
+  const events = [];
+
+  // 1. Scan Tasks
+  (S.tasks || []).forEach(tk => {
+    const tkMachine = (tk.machine || '').toLowerCase();
+    const tkTitle = (tk.title || '').toLowerCase();
+    const tkDesc = (tk.desc || '').toLowerCase();
+
+    const matches = (tagL && tkMachine.includes(tagL)) ||
+                    (nameL && tkMachine.includes(nameL)) ||
+                    (tagL && (tkTitle.includes(tagL) || tkDesc.includes(tagL)));
+
+    if (matches) {
+      const trip = tk.tripId ? (S.trips || []).find(t => t.id === tk.tripId) : null;
+      events.push({
+        type: 'task',
+        date: tk.dateStart || tk.date || '',
+        title: tk.title,
+        detail: tk.desc || '',
+        status: tk.status,
+        tripName: trip ? trip.plant : '',
+        meta: `Status: ${tk.status} · Duration: ${calcDuration(tk) || '—'}`
+      });
+    }
+  });
+
+  // 2. Scan Reports (Readings, Issues, Readiness)
+  Object.entries(S.reports || {}).forEach(([tripId, rep]) => {
+    const trip = (S.trips || []).find(t => t.id === tripId);
+    const tripDate = trip ? trip.date : '';
+    const tripName = trip ? trip.plant : 'Report';
+
+    // Readings matching asset tag or name
+    (rep.readings || []).forEach(rd => {
+      const rdTag = (rd.tag || '').toLowerCase();
+      const rdName = (rd.name || '').toLowerCase();
+      if ((tagL && rdTag.includes(tagL)) || (nameL && rdName.includes(nameL))) {
+        events.push({
+          type: 'reading',
+          date: tripDate,
+          title: `Reading: ${rd.name} = ${rd.value} ${rd.unit}`,
+          detail: rd.notes || '',
+          tripName: tripName,
+          meta: `Status: ${rd.status === 'bad' ? '⚠️ Out of spec' : '✓ In spec'}`
+        });
+      }
+    });
+
+    // Issues matching asset
+    (rep.issues || []).forEach(is => {
+      const isTitle = (is.title || '').toLowerCase();
+      const isDesc = (is.description || '').toLowerCase();
+      if ((tagL && (isTitle.includes(tagL) || isDesc.includes(tagL))) ||
+          (nameL && (isTitle.includes(nameL) || isDesc.includes(nameL)))) {
+        events.push({
+          type: 'issue',
+          date: tripDate,
+          title: `Issue: ${is.title}`,
+          detail: is.description || '',
+          tripName: tripName,
+          meta: `Severity: ${is.severity} · Status: ${is.istatus || 'pending'}`
+        });
+      }
+    });
+
+    // Spare parts recommended for this machine
+    (rep.spareParts || []).forEach(sp => {
+      const spNotes = (sp.notes || '').toLowerCase();
+      const spDesc = (sp.desc || '').toLowerCase();
+      if ((tagL && (spNotes.includes(tagL) || spDesc.includes(tagL))) ||
+          (nameL && (spNotes.includes(nameL) || spDesc.includes(nameL)))) {
+        events.push({
+          type: 'sparepart',
+          date: tripDate,
+          title: `Part: ${sp.partNo || ''} - ${sp.desc} (${sp.qty} ${sp.unit||'pcs'})`,
+          detail: sp.notes || '',
+          tripName: tripName,
+          meta: `Priority: ${sp.priority}`
+        });
+      }
+    });
+  });
+
+  // Sort descending by date
+  events.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  return events;
+}
+
+function openAssetHistoryModal(assetId) {
+  ensureAssetsInitialized();
+  const asset = S.assets.find(a => a.id === assetId);
+  if (!asset) return;
+
+  const headerEl = document.getElementById('asset-hist-header');
+  const timelineEl = document.getElementById('asset-hist-timeline');
+  const emptyEl = document.getElementById('asset-hist-empty');
+
+  if (headerEl) {
+    headerEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+        <span class="badge-asset-tag">${asset.tag}</span>
+        <span style="font-size:12px;font-weight:700;color:var(--n800);">${asset.name}</span>
+      </div>
+      <div style="font-size:11px;color:var(--n500);">${asset.customer || 'Factory Asset'}${asset.model ? ' · ' + asset.model : ''}</div>
+    `;
+  }
+
+  const events = getAssetHistory(asset);
+
+  if (!events.length) {
+    if (timelineEl) timelineEl.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+  } else {
+    if (emptyEl) emptyEl.style.display = 'none';
+    const typeIcons = {
+      task: '🔧',
+      reading: '📊',
+      issue: '⚠️',
+      sparepart: '🔩'
+    };
+    if (timelineEl) {
+      timelineEl.innerHTML = events.map(ev => `
+        <div class="asset-timeline-node">
+          <div class="asset-tl-icon">${typeIcons[ev.type] || '📌'}</div>
+          <div class="asset-tl-content">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
+              <div style="font-size:12px;font-weight:700;color:var(--n800);">${ev.title}</div>
+              <div style="font-size:10px;color:var(--n500);white-space:nowrap;">${fmtDate(ev.date)}</div>
+            </div>
+            ${ev.tripName ? `<div style="font-size:10px;color:var(--brand);font-weight:600;">🏭 ${ev.tripName}</div>` : ''}
+            ${ev.detail ? `<div style="font-size:11px;color:var(--n600);margin-top:2px;line-height:1.4;">${ev.detail}</div>` : ''}
+            <div style="font-size:10px;color:var(--n500);margin-top:3px;">${ev.meta}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  openModal('modal-asset-history');
+}
+
+/**
+ * Returns HTML string of `<option>` elements for Machine / Equipment dropdowns
+ */
+function getAssetSelectOptions(selectedVal = '') {
+  ensureAssetsInitialized();
+  const assets = S.assets || [];
+  let html = '<option value="">-- Select Equipment / Asset --</option>';
+
+  assets.forEach(a => {
+    const label = `[${a.tag}] ${a.name}`;
+    const isSel = (selectedVal === label || selectedVal === a.tag || selectedVal === a.name) ? ' selected' : '';
+    html += `<option value="${label}"${isSel}>${label}</option>`;
+  });
+
+  return html;
 }
 
 // ====== library.js ======

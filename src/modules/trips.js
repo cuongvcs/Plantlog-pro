@@ -207,6 +207,8 @@ function openTripDetail(id){
   if(noteEl)noteEl.value=tr.notes||'';
   renderTripStatusToggle(tr);
   renderTripInspCounts();
+  if(typeof renderTripTimesheets==='function') renderTripTimesheets(id);
+  if(typeof renderTripSafety==='function') renderTripSafety(id);
   if(typeof renderTripSavedReports==='function') renderTripSavedReports();
   showScreen('trip-detail');
 }
@@ -703,4 +705,585 @@ function renderDash(){
     </div>`;
   }).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noReports')}</div>`;
 }
+
+// ═════════════════════════════════════════════════════
+// DAILY SERVICE TICKETS & TIMESHEET (IMP-19)
+// ═════════════════════════════════════════════════════
+let editingTicketId = null;
+let ticketSigCanvas, ticketSigCtx, isTicketDrawing = false;
+let _tempTicketSigDataUrl = '';
+
+function renderTripTimesheets(tripId) {
+  const tr = S.trips.find(t => t.id === tripId);
+  const container = document.getElementById('trip-timesheets-section');
+  if (!container || !tr) return;
+
+  tr.timesheets = tr.timesheets || [];
+  const tickets = tr.timesheets;
+
+  // Totals
+  let totalNormal = 0, totalOt15 = 0, totalOt20 = 0, totalStandby = 0;
+  tickets.forEach(tk => {
+    totalNormal += (parseFloat(tk.normalHours) || 0);
+    totalOt15 += (parseFloat(tk.ot15Hours) || 0);
+    totalOt20 += (parseFloat(tk.ot20Hours) || 0);
+    totalStandby += (parseFloat(tk.standbyHours) || 0);
+  });
+  const totalAll = totalNormal + totalOt15 + totalOt20 + totalStandby;
+
+  container.innerHTML = `
+    <div class="card" style="padding:14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:14px;">⏱️</span>
+          <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.08em;text-transform:uppercase;">
+            Daily Timesheets & Tickets (${tickets.length})
+          </div>
+        </div>
+        <button onclick="openServiceTicketModal()" class="btn btn-sm btn-p" style="padding:4px 10px;font-size:11px;">
+          ＋ Add Ticket
+        </button>
+      </div>
+
+      <!-- Hours summary bar -->
+      <div class="ts-summary-banner">
+        <div class="ts-sum-col">
+          <div class="ts-sum-lbl">Normal</div>
+          <div class="ts-sum-val">${totalNormal}h</div>
+        </div>
+        <div class="ts-sum-col">
+          <div class="ts-sum-lbl">OT 1.5x</div>
+          <div class="ts-sum-val" style="color:var(--am);">${totalOt15}h</div>
+        </div>
+        <div class="ts-sum-col">
+          <div class="ts-sum-lbl">OT 2.0x</div>
+          <div class="ts-sum-val" style="color:var(--red);">${totalOt20}h</div>
+        </div>
+        <div class="ts-sum-col">
+          <div class="ts-sum-lbl">Standby</div>
+          <div class="ts-sum-val" style="color:var(--blue);">${totalStandby}h</div>
+        </div>
+        <div class="ts-sum-col ts-sum-total">
+          <div class="ts-sum-lbl">Total</div>
+          <div class="ts-sum-val" style="color:var(--brand);">${totalAll}h</div>
+        </div>
+      </div>
+
+      <!-- Tickets list -->
+      <div id="trip-tickets-list" style="margin-top:10px;">
+        ${!tickets.length ? `
+          <div style="text-align:center;padding:12px;font-size:12px;color:var(--n400);background:var(--n50);border-radius:var(--rs);">
+            No daily tickets recorded yet. Tap <b>＋ Add Ticket</b> to log hours and get daily customer sign-off.
+          </div>
+        ` : tickets.map((tk) => {
+          const hasSig = !!tk.signature;
+          return `
+            <div class="ts-ticket-card">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+                <div>
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                    <span style="font-size:12px;font-weight:700;color:var(--n800);">📅 ${fmtDate(tk.date)}</span>
+                    <span class="ts-badge-norm">${tk.normalHours || 0}h Norm</span>
+                    ${parseFloat(tk.ot15Hours) > 0 ? `<span class="ts-badge-ot15">+${tk.ot15Hours}h OT 1.5x</span>` : ''}
+                    ${parseFloat(tk.ot20Hours) > 0 ? `<span class="ts-badge-ot20">+${tk.ot20Hours}h OT 2.0x</span>` : ''}
+                    ${parseFloat(tk.standbyHours) > 0 ? `<span class="ts-badge-stby">${tk.standbyHours}h Standby</span>` : ''}
+                  </div>
+                </div>
+                <div style="display:flex;gap:4px;">
+                  <button class="ts-btn-edit" onclick="openServiceTicketModal('${tk.id}')" title="Edit ticket">✍️</button>
+                  <button class="ts-btn-del" onclick="deleteServiceTicket('${tk.id}')" title="Delete">🗑️</button>
+                </div>
+              </div>
+
+              ${tk.workSummary ? `
+                <div style="font-size:12px;color:var(--n700);line-height:1.4;margin-bottom:6px;background:var(--n50);padding:6px 8px;border-radius:4px;">
+                  ${tk.workSummary}
+                </div>
+              ` : ''}
+
+              <!-- Customer Sign-off status -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;border-top:1px dashed var(--n200);padding-top:6px;">
+                <div style="font-size:11px;color:var(--n500);">
+                  Supervisor: <b>${tk.supervisorName || 'Customer Supervisor'}</b>
+                </div>
+                ${hasSig ? `
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:10px;font-weight:700;color:var(--green);">✓ SIGNED</span>
+                    <img src="${tk.signature}" style="height:26px;max-width:70px;object-fit:contain;border:1px solid var(--n200);border-radius:3px;background:#fff;">
+                  </div>
+                ` : `
+                  <span style="font-size:10px;font-weight:700;color:var(--amber);">⚠️ Pending Signature</span>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function openServiceTicketModal(ticketId = null) {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+
+  editingTicketId = ticketId;
+  const modalTitle = document.getElementById('ticket-modal-title');
+  const dateInput = document.getElementById('tkt-date');
+  const normInput = document.getElementById('tkt-norm');
+  const ot15Input = document.getElementById('tkt-ot15');
+  const ot20Input = document.getElementById('tkt-ot20');
+  const stbyInput = document.getElementById('tkt-stby');
+  const travelInput = document.getElementById('tkt-travel');
+  const summaryInput = document.getElementById('tkt-summary');
+  const superInput = document.getElementById('tkt-supervisor');
+
+  _tempTicketSigDataUrl = '';
+
+  if (ticketId) {
+    tr.timesheets = tr.timesheets || [];
+    const tk = tr.timesheets.find(t => t.id === ticketId);
+    if (tk) {
+      if (modalTitle) modalTitle.textContent = 'Edit Service Ticket';
+      if (dateInput) dateInput.value = tk.date || '';
+      if (normInput) normInput.value = tk.normalHours !== undefined ? tk.normalHours : 8;
+      if (ot15Input) ot15Input.value = tk.ot15Hours || 0;
+      if (ot20Input) ot20Input.value = tk.ot20Hours || 0;
+      if (stbyInput) stbyInput.value = tk.standbyHours || 0;
+      if (travelInput) travelInput.value = tk.travelHours || 0;
+      if (summaryInput) summaryInput.value = tk.workSummary || '';
+      if (superInput) superInput.value = tk.supervisorName || '';
+      _tempTicketSigDataUrl = tk.signature || '';
+    }
+  } else {
+    if (modalTitle) modalTitle.textContent = 'New Daily Service Ticket';
+    if (dateInput) dateInput.value = todayStr();
+    if (normInput) normInput.value = 8;
+    if (ot15Input) ot15Input.value = 0;
+    if (ot20Input) ot20Input.value = 0;
+    if (stbyInput) stbyInput.value = 0;
+    if (travelInput) travelInput.value = 0;
+    if (summaryInput) summaryInput.value = '';
+    if (superInput) superInput.value = tr.contact || '';
+  }
+
+  openModal('modal-service-ticket');
+  // Delay canvas init until modal is rendered
+  setTimeout(() => {
+    initTicketSigCanvas();
+  }, 150);
+}
+
+function initTicketSigCanvas() {
+  ticketSigCanvas = document.getElementById('ticketSigCanvas');
+  if (!ticketSigCanvas) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const rect = ticketSigCanvas.getBoundingClientRect();
+  const cssW = rect.width || 340;
+  const cssH = 110;
+
+  ticketSigCanvas.width = Math.round(cssW * dpr);
+  ticketSigCanvas.height = Math.round(cssH * dpr);
+  ticketSigCanvas.style.width = cssW + 'px';
+  ticketSigCanvas.style.height = cssH + 'px';
+
+  ticketSigCtx = ticketSigCanvas.getContext('2d');
+  ticketSigCtx.scale(dpr, dpr);
+  ticketSigCtx.strokeStyle = '#0F172A';
+  ticketSigCtx.lineWidth = 2.2;
+  ticketSigCtx.lineCap = 'round';
+  ticketSigCtx.lineJoin = 'round';
+
+  ticketSigCtx.fillStyle = '#fafafa';
+  ticketSigCtx.fillRect(0, 0, cssW, cssH);
+
+  if (_tempTicketSigDataUrl) {
+    const img = new Image();
+    img.onload = () => {
+      ticketSigCtx.drawImage(img, 0, 0, cssW, cssH);
+    };
+    img.src = _tempTicketSigDataUrl;
+  }
+
+  const getPos = e => {
+    const r = ticketSigCanvas.getBoundingClientRect();
+    const cx = (e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX);
+    const cy = (e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY);
+    return { x: cx - r.left, y: cy - r.top };
+  };
+
+  const startDraw = e => {
+    isTicketDrawing = true;
+    const p = getPos(e);
+    ticketSigCtx.beginPath();
+    ticketSigCtx.moveTo(p.x, p.y);
+    if (e.cancelable && e.type.startsWith('touch')) e.preventDefault();
+  };
+
+  const moveDraw = e => {
+    if (!isTicketDrawing) return;
+    const p = getPos(e);
+    ticketSigCtx.lineTo(p.x, p.y);
+    ticketSigCtx.stroke();
+    if (e.cancelable && e.type.startsWith('touch')) e.preventDefault();
+  };
+
+  const endDraw = () => {
+    if (isTicketDrawing) {
+      isTicketDrawing = false;
+      try {
+        _tempTicketSigDataUrl = ticketSigCanvas.toDataURL('image/png');
+      } catch(e) {}
+    }
+  };
+
+  ticketSigCanvas.onmousedown = startDraw;
+  ticketSigCanvas.onmousemove = moveDraw;
+  ticketSigCanvas.onmouseup = endDraw;
+  ticketSigCanvas.ontouchstart = startDraw;
+  ticketSigCanvas.ontouchmove = moveDraw;
+  ticketSigCanvas.ontouchend = endDraw;
+}
+
+function clearTicketSig() {
+  if (!ticketSigCanvas || !ticketSigCtx) return;
+  const rect = ticketSigCanvas.getBoundingClientRect();
+  const cssW = rect.width || 340;
+  const cssH = 110;
+  ticketSigCtx.fillStyle = '#fafafa';
+  ticketSigCtx.fillRect(0, 0, cssW, cssH);
+  _tempTicketSigDataUrl = '';
+  triggerHaptic('light');
+}
+
+function saveServiceTicket() {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+
+  const date = (document.getElementById('tkt-date') || {}).value || todayStr();
+  const normalHours = parseFloat((document.getElementById('tkt-norm') || {}).value) || 0;
+  const ot15Hours = parseFloat((document.getElementById('tkt-ot15') || {}).value) || 0;
+  const ot20Hours = parseFloat((document.getElementById('tkt-ot20') || {}).value) || 0;
+  const standbyHours = parseFloat((document.getElementById('tkt-stby') || {}).value) || 0;
+  const travelHours = parseFloat((document.getElementById('tkt-travel') || {}).value) || 0;
+  const workSummary = (document.getElementById('tkt-summary') || {}).value.trim();
+  const supervisorName = (document.getElementById('tkt-supervisor') || {}).value.trim();
+
+  // Capture canvas dataURL
+  let sig = _tempTicketSigDataUrl;
+  if (!sig && ticketSigCanvas) {
+    try {
+      const data = ticketSigCanvas.toDataURL('image/png');
+      if (data.length > 1000) sig = data;
+    } catch(e) {}
+  }
+
+  tr.timesheets = tr.timesheets || [];
+
+  if (editingTicketId) {
+    const tk = tr.timesheets.find(t => t.id === editingTicketId);
+    if (tk) {
+      tk.date = date;
+      tk.normalHours = normalHours;
+      tk.ot15Hours = ot15Hours;
+      tk.ot20Hours = ot20Hours;
+      tk.standbyHours = standbyHours;
+      tk.travelHours = travelHours;
+      tk.workSummary = workSummary;
+      tk.supervisorName = supervisorName;
+      if (sig) tk.signature = sig;
+      tk.updatedAt = new Date().toISOString();
+    }
+  } else {
+    const newTk = {
+      id: 'tkt_' + Date.now(),
+      date,
+      normalHours,
+      ot15Hours,
+      ot20Hours,
+      standbyHours,
+      travelHours,
+      workSummary,
+      supervisorName,
+      signature: sig || '',
+      createdAt: new Date().toISOString()
+    };
+    tr.timesheets.push(newTk);
+  }
+
+  sv();
+  closeModal('modal-service-ticket');
+  renderTripTimesheets(curTrip);
+  triggerHaptic('success');
+  showToast('Service ticket saved ✓');
+}
+
+async function deleteServiceTicket(ticketId) {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+
+  const ok = await appConfirm('Delete this daily service ticket?', {
+    title: 'Delete Service Ticket',
+    danger: true,
+    confirmText: 'Delete',
+    icon: '🗑️'
+  });
+  if (!ok) return;
+
+  tr.timesheets = (tr.timesheets || []).filter(t => t.id !== ticketId);
+  sv();
+  renderTripTimesheets(curTrip);
+  triggerHaptic('light');
+  showToast('Service ticket deleted');
+}
+
+// ═════════════════════════════════════════════════════
+// SITE SAFETY, EHS & LOTO CHECKLIST (IMP-23)
+// ═════════════════════════════════════════════════════
+let _tempLotoPhoto = '';
+
+function renderTripSafety(tripId) {
+  const tr = S.trips.find(t => t.id === tripId);
+  const container = document.getElementById('trip-safety-section');
+  if (!container || !tr) return;
+
+  tr.safety = tr.safety || {};
+  const s = tr.safety;
+  const loto = s.loto || {};
+  const contacts = s.emergencyContacts || {};
+  const permitTypes = s.permitTypes || [];
+
+  const permitLabels = {
+    height: 'Work at Height',
+    confined: 'Confined Space',
+    hotwork: 'Hot Work',
+    electrical: 'Electrical Isolation',
+    chemical: 'Chemical / Pressure'
+  };
+
+  container.innerHTML = `
+    <div class="card" style="padding:14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:14px;">🦺</span>
+          <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.08em;text-transform:uppercase;">
+            Site Safety, Work Permits & LOTO
+          </div>
+        </div>
+        <button onclick="openTripSafetyModal()" class="btn btn-sm btn-o" style="padding:4px 10px;font-size:11px;">
+          ✏️ Edit Safety
+        </button>
+      </div>
+
+      <!-- Work Permit info -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px;">
+        <div style="font-size:12px;color:var(--n700);">
+          Permit No: <b>${s.permitNo || '—'}</b>
+        </div>
+        ${s.validUntil ? `<div style="font-size:11px;color:var(--n500);">Valid until: <b>${fmtDate(s.validUntil)}</b></div>` : ''}
+      </div>
+
+      ${permitTypes.length ? `
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+          ${permitTypes.map(p => `<span class="badge-permit">${permitLabels[p] || p}</span>`).join('')}
+        </div>
+      ` : `
+        <div style="font-size:11px;color:var(--n400);margin-bottom:6px;">No specific high-risk permits declared.</div>
+      `}
+
+      <!-- LOTO Checklist summary -->
+      <div class="loto-status-box">
+        <div style="font-size:11px;font-weight:700;color:var(--n700);margin-bottom:4px;display:flex;justify-content:space-between;">
+          <span>🔒 LOTO Status (Padlock: ${loto.padlockId || 'N/A'})</span>
+          ${loto.zeroEnergyVerified ? `<span style="color:var(--green);font-size:10px;font-weight:700;">✓ ZERO ENERGY VERIFIED</span>` : `<span style="color:var(--amber);font-size:10px;font-weight:700;">⚠️ Unverified</span>`}
+        </div>
+        <div class="loto-check-grid">
+          <div class="loto-check-item ${loto.electricalIsolated ? 'checked' : ''}">
+            ${loto.electricalIsolated ? '✅' : '⚪'} Electrical Locked
+          </div>
+          <div class="loto-check-item ${loto.pneumaticIsolated ? 'checked' : ''}">
+            ${loto.pneumaticIsolated ? '✅' : '⚪'} Pneumatic/Valve Locked
+          </div>
+          <div class="loto-check-item ${loto.dangerTagHung ? 'checked' : ''}">
+            ${loto.dangerTagHung ? '✅' : '⚪'} Danger Tag Hung
+          </div>
+          <div class="loto-check-item ${loto.zeroEnergyVerified ? 'checked' : ''}">
+            ${loto.zeroEnergyVerified ? '✅' : '⚪'} Zero Energy Checked
+          </div>
+        </div>
+        ${loto.photo ? `
+          <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
+            <img src="${loto.photo}" onclick="previewImage('${loto.photo}')"
+              style="height:40px;width:40px;object-fit:cover;border-radius:4px;border:1px solid var(--n200);cursor:pointer;">
+            <span style="font-size:11px;color:var(--n500);">LOTO Padlock Photo Proof Attached ✓</span>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Emergency Hotline buttons -->
+      <div style="margin-top:10px;">
+        <div style="font-size:10px;font-weight:700;color:var(--n500);letter-spacing:0.06em;margin-bottom:4px;text-transform:uppercase;">
+          Plant Emergency Hotlines
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${contacts.ccrPhone ? `
+            <a href="tel:${contacts.ccrPhone}" class="btn-emergency-call" title="Call DCS/Control Room">
+              📞 CCR: ${contacts.ccrPhone}
+            </a>
+          ` : ''}
+          ${contacts.ehsPhone ? `
+            <a href="tel:${contacts.ehsPhone}" class="btn-emergency-call" title="Call Plant Safety Lead">
+              🦺 EHS: ${contacts.ehsPhone}
+            </a>
+          ` : ''}
+          ${contacts.medicalPhone ? `
+            <a href="tel:${contacts.medicalPhone}" class="btn-emergency-call" style="background:#FEE2E2;color:#991B1B;border-color:#FCA5A5;" title="Call Plant Medical">
+              🚑 Med: ${contacts.medicalPhone}
+            </a>
+          ` : ''}
+          ${!contacts.ccrPhone && !contacts.ehsPhone && !contacts.medicalPhone ? `
+            <span style="font-size:11px;color:var(--n400);font-style:italic;">No emergency phone numbers configured.</span>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openTripSafetyModal() {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+
+  tr.safety = tr.safety || {};
+  const s = tr.safety;
+  const loto = s.loto || {};
+  const contacts = s.emergencyContacts || {};
+  const permitTypes = s.permitTypes || [];
+
+  const pno = document.getElementById('safe-permit-no');
+  const validEl = document.getElementById('safe-valid-until');
+  const padEl = document.getElementById('safe-padlock-id');
+  const ccrEl = document.getElementById('safe-phone-ccr');
+  const ehsEl = document.getElementById('safe-phone-ehs');
+  const medEl = document.getElementById('safe-phone-med');
+
+  if (pno) pno.value = s.permitNo || '';
+  if (validEl) validEl.value = s.validUntil || tr.dateEnd || tr.date || '';
+  if (padEl) padEl.value = loto.padlockId || '';
+  if (ccrEl) ccrEl.value = contacts.ccrPhone || '';
+  if (ehsEl) ehsEl.value = contacts.ehsPhone || '';
+  if (medEl) medEl.value = contacts.medicalPhone || '';
+
+  // Checkboxes
+  ['height', 'confined', 'hotwork', 'electrical', 'chemical'].forEach(p => {
+    const cb = document.getElementById('safe-ptype-' + p);
+    if (cb) cb.checked = permitTypes.includes(p);
+  });
+
+  const cbElec = document.getElementById('safe-loto-elec');
+  const cbPneu = document.getElementById('safe-loto-pneu');
+  const cbTag = document.getElementById('safe-loto-tag');
+  const cbZero = document.getElementById('safe-loto-zero');
+
+  if (cbElec) cbElec.checked = !!loto.electricalIsolated;
+  if (cbPneu) cbPneu.checked = !!loto.pneumaticIsolated;
+  if (cbTag) cbTag.checked = !!loto.dangerTagHung;
+  if (cbZero) cbZero.checked = !!loto.zeroEnergyVerified;
+
+  _tempLotoPhoto = loto.photo || '';
+  const photoPrev = document.getElementById('safe-loto-photo-prev');
+  if (photoPrev) {
+    if (_tempLotoPhoto) {
+      photoPrev.src = _tempLotoPhoto;
+      photoPrev.style.display = 'block';
+    } else {
+      photoPrev.src = '';
+      photoPrev.style.display = 'none';
+    }
+  }
+
+  openModal('modal-trip-safety');
+}
+
+async function handleLotoPhotoUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    showToast('Compressing LOTO photo...');
+    const compressed = await compressImageFile(file, 1280, 0.72);
+    _tempLotoPhoto = compressed;
+    const photoPrev = document.getElementById('safe-loto-photo-prev');
+    if (photoPrev) {
+      photoPrev.src = compressed;
+      photoPrev.style.display = 'block';
+    }
+    triggerHaptic('light');
+    showToast('LOTO photo loaded ✓');
+  } catch(err) {
+    console.error('LOTO photo error:', err);
+    showToast('Failed to load image');
+  }
+}
+
+function clearLotoPhoto() {
+  _tempLotoPhoto = '';
+  const photoPrev = document.getElementById('safe-loto-photo-prev');
+  if (photoPrev) {
+    photoPrev.src = '';
+    photoPrev.style.display = 'none';
+  }
+  const input = document.getElementById('safe-loto-file');
+  if (input) input.value = '';
+}
+
+function saveTripSafety() {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+
+  const permitNo = (document.getElementById('safe-permit-no') || {}).value.trim();
+  const validUntil = (document.getElementById('safe-valid-until') || {}).value;
+  const padlockId = (document.getElementById('safe-padlock-id') || {}).value.trim();
+  const ccrPhone = (document.getElementById('safe-phone-ccr') || {}).value.trim();
+  const ehsPhone = (document.getElementById('safe-phone-ehs') || {}).value.trim();
+  const medicalPhone = (document.getElementById('safe-phone-med') || {}).value.trim();
+
+  const permitTypes = [];
+  ['height', 'confined', 'hotwork', 'electrical', 'chemical'].forEach(p => {
+    const cb = document.getElementById('safe-ptype-' + p);
+    if (cb && cb.checked) permitTypes.push(p);
+  });
+
+  const electricalIsolated = !!(document.getElementById('safe-loto-elec') || {}).checked;
+  const pneumaticIsolated = !!(document.getElementById('safe-loto-pneu') || {}).checked;
+  const dangerTagHung = !!(document.getElementById('safe-loto-tag') || {}).checked;
+  const zeroEnergyVerified = !!(document.getElementById('safe-loto-zero') || {}).checked;
+
+  tr.safety = {
+    permitNo,
+    validUntil,
+    permitTypes,
+    loto: {
+      padlockId,
+      electricalIsolated,
+      pneumaticIsolated,
+      dangerTagHung,
+      zeroEnergyVerified,
+      photo: _tempLotoPhoto || ''
+    },
+    emergencyContacts: {
+      ccrPhone,
+      ehsPhone,
+      medicalPhone
+    },
+    updatedAt: new Date().toISOString()
+  };
+
+  sv();
+  closeModal('modal-trip-safety');
+  renderTripSafety(curTrip);
+  triggerHaptic('success');
+  showToast('Site Safety & LOTO updated ✓');
+}
+
 

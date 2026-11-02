@@ -24,10 +24,12 @@ function gotoStep(n){
     if(n===3) renderTeam();
     if(n===4) renderReportTaskPicker();
     if(n===5){
-      // Step 5 = Sign-off: render signature & update date
+      // Step 5 = Sign-off & Handover: render readiness, spare parts, signature & update date
       try{
         updateSigDate();
         initSig();
+        if(typeof renderReportReadiness==='function') renderReportReadiness();
+        if(typeof renderReportSpareParts==='function') renderReportSpareParts();
         if(curReport && curReport.signature && curReport.signature.length > 100){
           renderReportSignature(curReport.signature);
         }
@@ -505,6 +507,7 @@ function saveSignoff(){
     result:  signoffRes||'Completed',
     remarks: remEl?remEl.value:''
   };
+  if(typeof saveReadinessNotes==='function') saveReadinessNotes();
   try{
     if(sigCanvas&&sigCtx) curReport.signature=sigCanvas.toDataURL();
   }catch(e){ curReport.signature=''; }
@@ -532,6 +535,126 @@ function checkAndExport(){
     return;
   }
   showScreen('export');
+}
+
+// ═══════ MACHINE HANDOVER & SPARE PARTS (IMP-20) ═══════
+function renderReportReadiness() {
+  if (!curReport) return;
+  curReport.readiness = curReport.readiness || { status: 'ready', notes: '' };
+
+  const st = curReport.readiness.status || 'ready';
+  ['ready', 'conditional', 'stop'].forEach(k => {
+    const btn = document.getElementById('readiness-btn-' + k);
+    if (btn) btn.classList.toggle('active', k === st);
+  });
+
+  const notesEl = document.getElementById('readiness-notes');
+  if (notesEl) notesEl.value = curReport.readiness.notes || '';
+}
+
+function setReadinessStatus(status) {
+  if (!curReport) return;
+  curReport.readiness = curReport.readiness || { status: 'ready', notes: '' };
+  curReport.readiness.status = status;
+
+  ['ready', 'conditional', 'stop'].forEach(k => {
+    const btn = document.getElementById('readiness-btn-' + k);
+    if (btn) btn.classList.toggle('active', k === status);
+  });
+
+  sv();
+  triggerHaptic('light');
+}
+
+function saveReadinessNotes() {
+  if (!curReport) return;
+  curReport.readiness = curReport.readiness || { status: 'ready', notes: '' };
+  const notesEl = document.getElementById('readiness-notes');
+  if (notesEl) curReport.readiness.notes = notesEl.value.trim();
+  sv();
+}
+
+function renderReportSpareParts() {
+  if (!curReport) return;
+  curReport.spareParts = curReport.spareParts || [];
+  const listEl = document.getElementById('report-spare-parts-list');
+  if (!listEl) return;
+
+  if (!curReport.spareParts.length) {
+    listEl.innerHTML = `
+      <div style="font-size:12px;color:var(--n400);padding:8px 0;text-align:center;background:var(--n50);border-radius:var(--rs);">
+        No spare parts recommended yet. Tap <b>＋ Add Part</b> to add part numbers for the client.
+      </div>
+    `;
+    return;
+  }
+
+  const prioBadges = {
+    immediate: '<span class="badge-prio badge-prio-imm">🔴 Replace Immediate</span>',
+    next_pm: '<span class="badge-prio badge-prio-next">🟡 Next PM</span>',
+    optional: '<span class="badge-prio badge-prio-opt">⚪ Optional Spare</span>'
+  };
+
+  listEl.innerHTML = curReport.spareParts.map((sp, idx) => `
+    <div class="spare-part-row">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
+          ${sp.partNo ? `<span style="font-family:var(--mono);font-weight:700;font-size:12px;color:var(--n800);">${sp.partNo}</span>` : ''}
+          ${prioBadges[sp.priority] || ''}
+          <span style="font-size:11px;font-weight:700;color:var(--brand);">${sp.qty || 1} ${sp.unit || 'pcs'}</span>
+        </div>
+        <div style="font-size:12px;color:var(--n700);">${sp.desc}</div>
+        ${sp.notes ? `<div style="font-size:11px;color:var(--n500);margin-top:2px;font-style:italic;">💬 ${sp.notes}</div>` : ''}
+      </div>
+      <button class="db" onclick="deleteReportSparePart(${idx})" title="Remove" style="margin-left:8px;">✕</button>
+    </div>
+  `).join('');
+}
+
+function openAddSparePartModal() {
+  ['sp-partno', 'sp-desc', 'sp-qty', 'sp-unit', 'sp-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = (id === 'sp-qty' ? '1' : id === 'sp-unit' ? 'pcs' : '');
+  });
+  const prioEl = document.getElementById('sp-prio');
+  if (prioEl) prioEl.value = 'next_pm';
+  openModal('modal-add-spare-part');
+}
+
+function saveReportSparePart() {
+  if (!curReport) return;
+  curReport.spareParts = curReport.spareParts || [];
+
+  const partNo = (document.getElementById('sp-partno') || {}).value.trim();
+  const desc = (document.getElementById('sp-desc') || {}).value.trim();
+  const qty = parseFloat((document.getElementById('sp-qty') || {}).value) || 1;
+  const unit = (document.getElementById('sp-unit') || {}).value.trim() || 'pcs';
+  const priority = (document.getElementById('sp-prio') || {}).value || 'next_pm';
+  const notes = (document.getElementById('sp-notes') || {}).value.trim();
+
+  if (!desc) {
+    showToast('Part description is required');
+    return;
+  }
+
+  curReport.spareParts.push({
+    id: 'part_' + Date.now(),
+    partNo, desc, qty, unit, priority, notes
+  });
+
+  sv();
+  closeModal('modal-add-spare-part');
+  renderReportSpareParts();
+  triggerHaptic('success');
+  showToast('Spare part added ✓');
+}
+
+function deleteReportSparePart(idx) {
+  if (!curReport || !curReport.spareParts) return;
+  curReport.spareParts.splice(idx, 1);
+  sv();
+  renderReportSpareParts();
+  triggerHaptic('light');
 }
 
 // ═══════ SIGNATURE ═══════
@@ -822,6 +945,65 @@ function buildPDFPreview(){
       return out;
     })()}</div>
 
+    ${(()=>{
+      const readiness = r.readiness || { status: 'ready', notes: '' };
+      const readinessCfg = {
+        ready: { icon: '🟢', label: 'Ready for Normal Operation', color: 'var(--green)', bg: 'var(--gl)' },
+        conditional: { icon: '🟡', label: 'Conditional / Monitored Operation', color: 'var(--amber)', bg: 'var(--al)' },
+        stop: { icon: '🔴', label: 'Stop / Out of Service (Hazard)', color: 'var(--red)', bg: 'var(--rl)' }
+      }[readiness.status || 'ready'] || { icon: '🟢', label: 'Ready for Normal Operation', color: 'var(--green)', bg: 'var(--gl)' };
+
+      return `
+        <div class="ps">
+          <div class="pst">Machine Handover & Readiness</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--rs);background:${readinessCfg.bg};border:1.5px solid ${readinessCfg.color};">
+            <span style="font-size:20px;">${readinessCfg.icon}</span>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--n900);">${readinessCfg.label}</div>
+              ${readiness.notes ? `<div style="font-size:11px;color:var(--n700);margin-top:2px;">${readiness.notes}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    })()}
+
+    ${(r.spareParts && r.spareParts.length) ? `
+      <div class="ps">
+        <div class="pst">Recommended Spare Parts (${r.spareParts.length})</div>
+        ${r.spareParts.map(sp => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--g100);font-size:12px;">
+            <div>
+              <b>${sp.partNo ? sp.partNo + ' · ' : ''}${sp.desc}</b>
+              ${sp.notes ? `<div style="font-size:10px;color:var(--n500);">${sp.notes}</div>` : ''}
+            </div>
+            <div style="text-align:right;">
+              <span style="font-weight:700;">${sp.qty} ${sp.unit||'pcs'}</span>
+              <span class="badge ${sp.priority==='immediate'?'br':sp.priority==='next_pm'?'ba':'bb'}" style="font-size:9px;margin-left:4px;">
+                ${sp.priority==='immediate'?'REPLACE NOW':sp.priority==='next_pm'?'NEXT PM':'OPTIONAL'}
+              </span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    ${(trip.timesheets && trip.timesheets.length) ? `
+      <div class="ps">
+        <div class="pst">Daily Service Tickets (${trip.timesheets.length})</div>
+        ${trip.timesheets.map(tk => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--g100);font-size:11px;">
+            <div>
+              <b>${fmtDate(tk.date)}</b>: ${tk.workSummary ? tk.workSummary.slice(0, 45) + '…' : 'Daily service'}
+              <span style="color:var(--n500);">(${tk.supervisorName || 'Supervisor'})</span>
+            </div>
+            <div style="font-family:var(--mono);font-weight:700;color:var(--brand);">
+              ${tk.normalHours || 0}h N ${parseFloat(tk.ot15Hours)>0 ? `+${tk.ot15Hours}h OT` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
     <div class="ps" style="border:none;"><div class="pst">Sign-off</div>
       ${pr('Result',r.signoff.result||'—')}
       ${r.signoff.summary?`<div style="font-size:12px;color:var(--g700);margin-top:6px;">${r.signoff.summary}</div>`:''}
@@ -917,6 +1099,84 @@ function exportPDF(){
   let pdfLeaveMins=0, pdfLeaveCount=0;
   if(rptTaskIds.length){sec(`TASKS IN REPORT (${rptTaskIds.length})`);const rptTasks=rptTaskIds.map(id=>S.tasks.find(t=>t.id===id)).filter(Boolean).sort((a,b)=>(b.dateStart||b.date||'').localeCompare(a.dateStart||a.date||'')||a.title.localeCompare(b.title));rptTasks.forEach(tk=>{const cat=tk.category||'work';let mins=0;if(tk.autoDuration){const d=calcDurationFromTimes(tk.dateStart||tk.date,tk.dateEnd||tk.dateStart||tk.date,tk.timeStart,tk.timeEnd);if(d)mins=d.totalMins;}else if(tk.hours||tk.minutes){mins=(parseInt(tk.hours)||0)*60+(parseInt(tk.minutes)||0);}else{const d=calcDurationFromTimes(tk.dateStart||tk.date,tk.dateEnd||tk.dateStart||tk.date,tk.timeStart,tk.timeEnd);if(d)mins=d.totalMins;}if(mins>0){if(cat==='travel'){pdfTravelMins+=mins;pdfTravelCount++;}else if(cat==='leave'){pdfLeaveMins+=mins;pdfLeaveCount++;}else{pdfWorkMins+=mins;pdfWorkCount++;}}});const byDate={};rptTasks.forEach(tk=>{const d=tk.dateStart||tk.date||'';if(!byDate[d])byDate[d]=[];byDate[d].push(tk);});Object.entries(byDate).forEach(([dk,dayTasks])=>{if(dk){doc.setFillColor(228,240,232);doc.rect(mg,y-3,W-mg*2,7,'F');doc.setTextColor(0,100,50);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(fmtDate(dk),mg+3,y+1);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=8;chk();}dayTasks.forEach(tk=>{const timeStr=tk.timeStart?(tk.timeEnd?`${tk.timeStart}–${tk.timeEnd}`:tk.timeStart):'';const dur=calcDuration(tk);const titleLine='• '+tk.title+(timeStr?' ('+timeStr+')':'')+(dur?' '+dur:'')+(tk.status==='done'?' — Done':'');doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);const tl=doc.splitTextToSize(titleLine,W-mg*2-4);doc.text(tl,mg+2,y);y+=tl.length*5;const meta=[tk.machine?'Machine: '+tk.machine:'',tk.plan?'Plan: '+tk.plan:'',tk.priority&&tk.priority!=='medium'?'Priority: '+tk.priority:''].filter(Boolean).join('  ·  ');if(meta){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(meta,mg+6,y);y+=4;}if(tk.desc){doc.setFontSize(8);doc.setTextColor(100,100,100);const dl=doc.splitTextToSize('Desc: '+tk.desc,W-mg*2-8);doc.text(dl,mg+6,y);y+=dl.length*4+1;}if(tk.checklist&&tk.checklist.length){const done=tk.checklist.filter(c=>c.done).length;doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text(`Checklist: ${done}/${tk.checklist.length} items`,mg+6,y);y+=4;}const note=(r.reportTaskNotes||{})[tk.id];if(note){doc.setFontSize(8);doc.setTextColor(80,80,80);const nl=doc.splitTextToSize('Notes: '+note,W-mg*2-8);doc.text(nl,mg+6,y);y+=nl.length*4+1;}y+=3;chk();});});ln();}
   const fmtPdfMins=m=>{const h=Math.floor(m/60),mins=m%60;return m>0?(h>0&&mins>0?`${h}h ${mins}m`:h>0?`${h}h`:`${mins}m`):'—';};
+  // ── Machine Readiness Handover Box (IMP-20) ──
+  const readiness = r.readiness || { status: 'ready', notes: '' };
+  const rdStatus = readiness.status || 'ready';
+  const rdLabel = rdStatus === 'stop' ? 'STOP / OUT OF SERVICE — DO NOT OPERATE' : rdStatus === 'conditional' ? 'CONDITIONAL / MONITORED OPERATION' : 'READY FOR NORMAL OPERATION';
+  const rdColor = rdStatus === 'stop' ? [220, 38, 38] : rdStatus === 'conditional' ? [217, 119, 6] : [15, 110, 86];
+  const rdBg = rdStatus === 'stop' ? [254, 226, 226] : rdStatus === 'conditional' ? [254, 243, 199] : [236, 253, 245];
+
+  chk();
+  sec('MACHINE HANDOVER & READINESS');
+  doc.setFillColor(...rdBg);
+  doc.rect(mg, y - 3, W - mg * 2, readiness.notes ? 16 : 10, 'F');
+  doc.setDrawColor(...rdColor);
+  doc.rect(mg, y - 3, W - mg * 2, readiness.notes ? 16 : 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...rdColor);
+  doc.text(rdLabel, mg + 4, y + 3);
+  if (readiness.notes) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(50, 50, 50);
+    const notesLine = doc.splitTextToSize('Operating Limits / Notes: ' + readiness.notes, W - mg * 2 - 8);
+    doc.text(notesLine, mg + 4, y + 9);
+    y += 18;
+  } else {
+    y += 12;
+  }
+  chk();
+
+  // ── Spare parts table (IMP-20) ──
+  if (r.spareParts && r.spareParts.length) {
+    sec(`RECOMMENDED SPARE PARTS (${r.spareParts.length})`);
+    r.spareParts.forEach(sp => {
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(33, 37, 41);
+      const pno = sp.partNo ? `[${sp.partNo}] ` : '';
+      doc.text('• ' + pno + sp.desc, mg + 2, y);
+      const prioStr = sp.priority === 'immediate' ? 'REPLACE NOW' : sp.priority === 'next_pm' ? 'NEXT PM' : 'OPTIONAL';
+      const prioCol = sp.priority === 'immediate' ? [220, 38, 38] : sp.priority === 'next_pm' ? [217, 119, 6] : [100, 100, 100];
+      rtxt(`${sp.qty} ${sp.unit||'pcs'}  ·  ${prioStr}`, y, prioCol);
+      y += 4.5;
+      if (sp.notes) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(110, 110, 110);
+        doc.text('Note: ' + sp.notes, mg + 6, y);
+        y += 4;
+      }
+      chk();
+    });
+    ln();
+  }
+
+  // ── Daily Service Tickets table (IMP-19) ──
+  if (trip.timesheets && trip.timesheets.length) {
+    sec(`DAILY SERVICE TICKETS (${trip.timesheets.length})`);
+    trip.timesheets.forEach(tk => {
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(33, 37, 41);
+      doc.text(`• ${fmtDate(tk.date)}`, mg + 2, y);
+      doc.setFont('helvetica', 'normal');
+      const hrs = `${tk.normalHours||0}h Norm${parseFloat(tk.ot15Hours)>0?` +${tk.ot15Hours}h OT`:''}${parseFloat(tk.standbyHours)>0?` +${tk.standbyHours}h Stby`:''}`;
+      rtxt(hrs + (tk.signature ? ' (Signed ✓)' : ''), y, [15, 110, 86]);
+      y += 4.5;
+      if (tk.workSummary) {
+        doc.setFontSize(7.5);
+        doc.setTextColor(90, 90, 90);
+        const sl = doc.splitTextToSize(tk.workSummary, W - mg * 2 - 8);
+        doc.text(sl, mg + 6, y);
+        y += sl.length * 3.8 + 1;
+      }
+      chk();
+    });
+    ln();
+  }
+
   sec('SIGN-OFF');kv2('Result',r.signoff&&r.signoff.result||'Completed');if(r.signoff&&r.signoff.summary)kv2('Summary',r.signoff.summary);if(r.signoff&&r.signoff.remarks)kv2('Remarks',r.signoff.remarks);if(pdfWorkCount>0)kv2('Total Work Hours',`${fmtPdfMins(pdfWorkMins)} (${pdfWorkCount} task${pdfWorkCount>1?'s':''})`);if(pdfTravelCount>0)kv2('Total Travel Hours',`${fmtPdfMins(pdfTravelMins)} (${pdfTravelCount} task${pdfTravelCount>1?'s':''})`);if(pdfLeaveCount>0)kv2('Total Leave Hours',`${fmtPdfMins(pdfLeaveMins)} (${pdfLeaveCount} task${pdfLeaveCount>1?'s':''})`);y+=4;
   if(y>240){doc.addPage();y=20;pageNum++;addPN();}
   doc.setDrawColor(200,200,200);doc.rect(mg,y,W-mg*2,34);doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text('Signature:',mg+4,y+7);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text(p.name||'Engineer',mg+4,y+29);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(100,100,100);rtxt(new Date().toLocaleDateString('en-GB'),y+29);
