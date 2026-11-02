@@ -9,7 +9,7 @@
   - Nhấp **Trips** ➔ Mở ngay màn hình Chuyến đi (`screen-trips`).
   - Nhấp **Tasks today** ➔ Mở ngay màn hình Công việc hôm nay (`screen-tasks`).
   - Nhấp **Leave days** ➔ Mở thẳng màn hình Lịch kế hoạch công tác & Nghỉ phép (`screen-leave`), loại bỏ hoàn toàn việc phải vào Settings cuộn trang.
-- **Nút Lịch 1 chạm trên Header Trang chủ (`.tb-btn-cal`):** Bổ sung nút `📅 Calendar` ngay trên thanh Topbar của Home cạnh cụm huy hiệu mạng và avatar, giúp kỹ sư kiểm tra lịch trình công tác ngay khi vừa mở ứng dụng.
+- **Tối ưu vị trí nút Lịch (Di chuyển từ Home sang Trips & giữ ở Tasks):** Để đảm bảo dòng lời chào kỹ sư trên Trang chủ (`Good afternoon, Van Cuong Ngo`) luôn có không gian hiển thị rộng rãi, không bị che khuất hay co nghẽn trên các màn hình di động hẹp, nút Lịch `📅` đã được chuyển sang thanh Topbar của màn hình **Trips (`screen-trips`)** (ngay cạnh nút `＋ Add Trip`) và giữ vững ở màn hình **Tasks (`screen-tasks`)** (cạnh nút `＋ Add Task`). Tại Trang chủ, kỹ sư vẫn có thể mở Lịch tức thì với 1 chạm vào ô thống kê `Leave days`.
 - **Lối tắt trên thanh công cụ Tasks:** Bổ sung icon `📅` cạnh nút `＋ Add Task` trên Topbar màn hình Tasks (`screen-tasks`), giúp kỹ sư dễ dàng chuyển đổi qua lại giữa danh mục công việc và Lịch tháng.
 - **Điều hướng quay lại thông minh (`window._prevScreen`):** Nút quay lại `←` trên màn hình `screen-leave` tự động ghi nhớ ngữ cảnh màn hình trước đó, đưa người dùng quay lại đúng màn hình Home, Tasks hoặc Settings mà họ vừa xuất phát.
 

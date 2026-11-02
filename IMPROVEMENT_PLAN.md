@@ -243,7 +243,7 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 * **Tính cần thiết:** Rất cần thiết. Tránh việc kỹ sư phải vào tận Settings để xem lịch công tác và kế hoạch ngày nghỉ.
 * **Chi tiết cải tiến:**
   1. **Clickable Stat Cards:** Cả 3 thẻ thống kê trên Dashboard Trang chủ (`Trips`, `Tasks today`, `Leave days`) có thể bấm trực tiếp (`onclick`), trong đó thẻ `Leave days` chuyển ngay sang `screen-leave`.
-  2. **Nút Lịch trên Header Home:** Bổ sung nút `📅 Calendar` ngay trên thanh Topbar của Trang chủ cạnh huy hiệu mạng.
+  2. **Nút Lịch trên Header Trips & Tasks:** Bổ sung nút `📅` ngay trên thanh Topbar của màn hình Trips và Tasks cạnh nút `＋`, tránh làm chật thanh tiêu đề Trang chủ giúp dòng lời chào kỹ sư luôn hiển thị trọn vẹn, thoáng đẹp.
   3. **Lối tắt trên màn hình Tasks:** Thêm nút `📅` trên Topbar màn hình Tasks cạnh nút `+ Add Task` để kỹ sư chuyển nhanh sang xem lịch.
   4. **Điều hướng quay lại thông minh:** Nút `←` trên `screen-leave` tự động ghi nhớ màn hình trước đó (`window._prevScreen`) để quay về đúng nơi xuất phát.
 

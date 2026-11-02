@@ -968,14 +968,11 @@ input, textarea, select, button { font-family: var(--font); }
 <!-- ═══════════════ HOME ═══════════════ -->
 <div id="screen-home" class="screen active">
   <div class="topbar" style="padding-top:16px;">
-    <div style="flex:1;">
-      <div id="greeting" style="font-size:15px;font-weight:600;">Good morning</div>
+    <div style="flex:1;min-width:0;">
+      <div id="greeting" style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Good morning</div>
       <div id="today-date" style="font-size:11px;opacity:0.78;margin-top:1px;"></div>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <button type="button" class="tb-btn-cal" onclick="showScreen('leave')" title="Leave / Calendar Planner">
-        <span>📅</span><span data-t="calendar">Calendar</span>
-      </button>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
       <div id="net-status-badge" style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;background:rgba(255,255,255,0.18);font-size:11px;font-weight:600;color:#fff;">
         <span id="net-dot" style="width:7px;height:7px;border-radius:50%;background:#4ADE80;"></span>
         <span id="net-text">Online</span>
@@ -1042,7 +1039,10 @@ input, textarea, select, button { font-family: var(--font); }
 <div id="screen-trips" class="screen">
   <div class="topbar">
     <div class="tb-title" data-t="myTrips">My Trips</div>
-    <button class="tb-action" onclick="openNewTripModal()">＋</button>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button class="tb-action" onclick="showScreen('leave')" title="Leave / Calendar Planner" style="font-size:16px;">📅</button>
+      <button class="tb-action" onclick="openNewTripModal()">＋</button>
+    </div>
   </div>
   <!-- Search + filter bar (fixed, outside scroll) -->
   <div style="background:#fff;flex-shrink:0;border-bottom:1px solid var(--g200);padding:8px 12px 0;">
