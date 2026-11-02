@@ -1162,7 +1162,7 @@ function exportPartsPDF(){
   const parts = _collectAllParts();
   if(!parts.length){ showToast('No parts data found'); return; }
 
-  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
   const W=297, mg=12;
   const p = S.profile;
   let y = 20;

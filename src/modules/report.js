@@ -720,17 +720,27 @@ function saveSignatureAsDefault(){
   triggerHaptic('success');
 }
 
-function handleSignatureFileUpload(e){
+async function handleSignatureFileUpload(e){
   const file = e.target.files && e.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt){
-    const b64 = evt.target.result;
+  try {
+    let b64 = '';
+    if (typeof compressImageFile === 'function') {
+      try { b64 = await compressImageFile(file, 600, 0.85); } catch(err){}
+    }
+    if (!b64) {
+      b64 = await new Promise(res => {
+        const reader = new FileReader();
+        reader.onload = ev => res(ev.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
     renderReportSignature(b64);
     showToast('Signature imported ✓');
     triggerHaptic('success');
-  };
-  reader.readAsDataURL(file);
+  } catch(err) {
+    showToast('Failed to import signature');
+  }
   e.target.value = '';
 }
 
@@ -1016,7 +1026,60 @@ function pr(l,v){
   }
   return `<div class="pr"><span>${l}</span><span>${v}</span></div>`;
 }
-function exportPDF(){
+// ═══════ PDF SIGNATURE OPTIMIZATION ═══════
+function getOptimizedSignatureForPdf(sigDataUrl) {
+  if (!sigDataUrl || typeof sigDataUrl !== 'string' || sigDataUrl.length < 50) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const timer = setTimeout(() => resolve(sigDataUrl), 2000);
+      img.onload = () => {
+        clearTimeout(timer);
+        try {
+          // Signature box in PDF A4 is 65mm x 25mm.
+          // 520px x 200px provides ultra-sharp 235 DPI for printing.
+          const maxW = 520;
+          const maxH = 200;
+          const origW = img.naturalWidth || img.width || 380;
+          const origH = img.naturalHeight || img.height || 120;
+          const scale = Math.min(maxW / origW, maxH / origH, 1.2);
+          const targetW = Math.max(Math.round(origW * scale), 60);
+          const targetH = Math.max(Math.round(origH * scale), 20);
+
+          const canvas = document.createElement('canvas');
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(sigDataUrl);
+
+          // Fill clean pure white background matching PDF page.
+          // Eliminates massive uncompressed RGBA /SMask buffers that cause >2MB PDF sizes.
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, targetW, targetH);
+          ctx.drawImage(img, 0, 0, targetW, targetH);
+
+          // Compressed JPEG (quality 0.85): ~15KB vs uncompressed 2MB PNG
+          const jpegData = canvas.toDataURL('image/jpeg', 0.85);
+          resolve(jpegData);
+        } catch (err) {
+          resolve(sigDataUrl);
+        }
+      };
+      img.onerror = () => {
+        clearTimeout(timer);
+        resolve(sigDataUrl);
+      };
+      img.src = sigDataUrl;
+    } catch (e) {
+      resolve(sigDataUrl);
+    }
+  });
+}
+
+async function exportPDF(){
   if(typeof window.jspdf==='undefined'){
     // Try loading jsPDF dynamically if CDN missed
     showToast('Loading PDF library…');
@@ -1034,7 +1097,7 @@ function exportPDF(){
   }
 
   // IMP-07: Visual loading feedback & RAM protection
-  if(typeof showToast === 'function') showToast('⏳ Đang kết xuất tệp PDF...');
+  if(typeof showToast === 'function') showToast('⏳ Generating PDF report…');
   const expBtn = document.activeElement;
   let origText = '';
   if(expBtn && expBtn.tagName === 'BUTTON') {
@@ -1047,7 +1110,7 @@ function exportPDF(){
   const{jsPDF}=window.jspdf;
   const trip=S.trips.find(tr=>tr.id===curTrip);const r=curReport;const p=S.profile;
   if(!trip||!r)return;
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
   const W=210,mg=16;let y=20,pageNum=1;
   const R=W-mg;
   const reportTitle=(document.getElementById('report-name-input')&&document.getElementById('report-name-input').value.trim())||`Plant Visit Report — ${trip.plant}`;
@@ -1180,7 +1243,18 @@ function exportPDF(){
   sec('SIGN-OFF');kv2('Result',r.signoff&&r.signoff.result||'Completed');if(r.signoff&&r.signoff.summary)kv2('Summary',r.signoff.summary);if(r.signoff&&r.signoff.remarks)kv2('Remarks',r.signoff.remarks);if(pdfWorkCount>0)kv2('Total Work Hours',`${fmtPdfMins(pdfWorkMins)} (${pdfWorkCount} task${pdfWorkCount>1?'s':''})`);if(pdfTravelCount>0)kv2('Total Travel Hours',`${fmtPdfMins(pdfTravelMins)} (${pdfTravelCount} task${pdfTravelCount>1?'s':''})`);if(pdfLeaveCount>0)kv2('Total Leave Hours',`${fmtPdfMins(pdfLeaveMins)} (${pdfLeaveCount} task${pdfLeaveCount>1?'s':''})`);y+=4;
   if(y>240){doc.addPage();y=20;pageNum++;addPN();}
   doc.setDrawColor(200,200,200);doc.rect(mg,y,W-mg*2,34);doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text('Signature:',mg+4,y+7);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text(p.name||'Engineer',mg+4,y+29);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(100,100,100);rtxt(new Date().toLocaleDateString('en-GB'),y+29);
-  if(r.signature&&r.signature.length>100){try{doc.addImage(r.signature,'PNG',mg+40,y+4,65,25);}catch(e){}}
+  if(r.signature && r.signature.length > 50){
+    try{
+      const optSig = await getOptimizedSignatureForPdf(r.signature);
+      if(optSig && optSig.startsWith('data:image/jpeg')){
+        doc.addImage(optSig, 'JPEG', mg+40, y+4, 65, 25, undefined, 'FAST');
+      } else if(optSig){
+        doc.addImage(optSig, 'PNG', mg+40, y+4, 65, 25, undefined, 'FAST');
+      }
+    }catch(e){
+      console.warn('PDF signature embed error:', e);
+    }
+  }
   addPN();
   const safePlant=(trip.plant||'Report').replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,30);
   const fileName=`PlantLog_${safePlant}_${(trip.date||'').replace(/-/g,'')}.pdf`;
@@ -1220,11 +1294,14 @@ async function savePdfToDrive(doc, fileName, type, overrideTripId){
     const gsUrl = getGSUrl ? getGSUrl() : (S.gsUrl||'');
     if(!gsUrl) return;
 
-    // Convert PDF to base64
+    // Convert PDF to base64 with fast chunking
     const pdfBlob = doc.output('arraybuffer');
     const uint8 = new Uint8Array(pdfBlob);
     let binary = '';
-    uint8.forEach(b => binary += String.fromCharCode(b));
+    const chunk = 8192;
+    for (let i = 0; i < uint8.length; i += chunk) {
+      binary += String.fromCharCode.apply(null, uint8.subarray(i, i + chunk));
+    }
     const base64 = btoa(binary);
 
     const tripId = overrideTripId || curTrip;
@@ -1339,7 +1416,7 @@ function markCompleted(){
 // TRAVEL AUTHORIZATION (TA) PDF
 // Generates a landscape table matching the company TA form
 // ═══════════════════════════════════════════════════════════
-function generateTAPdf(tripId){
+async function generateTAPdf(tripId){
   if(typeof window.jspdf==='undefined'){
     showToast('Loading PDF library…');
     if(!document._jspdfLoading){
@@ -1367,7 +1444,7 @@ function generateTAPdf(tripId){
   const ampm  = t   => { const h=parseInt((t||'').split(':')[0]); return isNaN(h)?'':(h<12?'AM':'PM'); };
   const spFlt = n   => (n||'').replace(/^([A-Za-z]+)(\d+)$/,'$1 $2');
 
-  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
   const PW=297, PH=210, ML=10, MR=10;
   const TW = PW-ML-MR;
 
@@ -1567,11 +1644,14 @@ function generateTAPdf(tripId){
   const sigTotalH = DH*2;
   const rc = colDefs[reqIdx];
   try{
-    if(typeof STORED_SIG_B64!=='undefined'&&STORED_SIG_B64){
-      doc.addImage(STORED_SIG_B64,'PNG',
-        rc.x+1, dataStartY+1,
-        rc.w*0.75, sigTotalH*0.65
-      );
+    const sigSrc = (S.profile && S.profile.signature) ? S.profile.signature : (typeof STORED_SIG_B64!=='undefined' ? STORED_SIG_B64 : '');
+    if(sigSrc){
+      const optSig = await getOptimizedSignatureForPdf(sigSrc);
+      if(optSig && optSig.startsWith('data:image/jpeg')){
+        doc.addImage(optSig, 'JPEG', rc.x+1, dataStartY+1, rc.w*0.75, sigTotalH*0.65, undefined, 'FAST');
+      } else if(optSig){
+        doc.addImage(optSig, 'PNG', rc.x+1, dataStartY+1, rc.w*0.75, sigTotalH*0.65, undefined, 'FAST');
+      }
     }
   }catch(e){}
   if(reqDate){

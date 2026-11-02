@@ -445,7 +445,7 @@ function exportBillsPDF() {
   if(tripFilter!=='all')bills=bills.filter(b=>b.tripId===tripFilter);
   bills.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   if(!bills.length){showToast('No bills to export');return;}
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
   const W=210,mg=16;let y=20,pageNum=1;const R=W-mg;
   const rtxt=(str,yy,col)=>{if(col)doc.setTextColor(...col);const tw=doc.getTextWidth(String(str));doc.text(String(str),R-tw,yy);if(col)doc.setTextColor(33,37,41);};
   const chk=()=>{if(y>265){doc.addPage();y=20;pageNum++;addPN();}};

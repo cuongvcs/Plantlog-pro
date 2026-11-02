@@ -873,19 +873,30 @@ function clearProfileSignature(){
   triggerHaptic('light');
 }
 
-function handleProfileSignatureUpload(e){
+async function handleProfileSignatureUpload(e){
   const file = e.target.files && e.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt){
+  try {
+    let b64 = '';
+    if (typeof compressImageFile === 'function') {
+      try { b64 = await compressImageFile(file, 600, 0.85); } catch(err){}
+    }
+    if (!b64) {
+      b64 = await new Promise(res => {
+        const reader = new FileReader();
+        reader.onload = ev => res(ev.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
     if(!S.profile) S.profile = {};
-    S.profile.signature = evt.target.result;
+    S.profile.signature = b64;
     sv();
     updateProfileDisplay();
     showToast('Default signature updated ✓');
     triggerHaptic('success');
-  };
-  reader.readAsDataURL(file);
+  } catch(err) {
+    showToast('Failed to update signature');
+  }
   e.target.value = '';
 }
 
