@@ -27,11 +27,15 @@
   - **Tính toán toàn diện:** Tính chính xác dòng đầy tải (Full Load Amps) dựa trên công suất (kW/HP), điện áp (V), hệ số công suất ($\cos\varphi$) và hiệu suất động cơ ($\eta$); tự động đưa ra khuyến nghị dải cài đặt Rơ-le nhiệt bảo vệ (Overload Relay), Cỡ Aptomat MCCB và tiết diện dây đồng tối thiểu.
 - **Bộ tính toán Thang đo Tín hiệu Đo lường 4-20mA (Instrumentation Scaler):** Chuyển đổi 2 chiều giữa dòng điện điều khiển $4 - 20\text{ mA}$, Tỉ lệ phần trăm $0 - 100\%$ và Giá trị đo thực tế (Process Variable: Bar, °C, RPM, m³/h...) theo dải hiệu chuẩn Zero (LRV) và Span (URV).
 
-#### 🟠 4. [IMP-22] Sổ Tay Ghi Chú Nhanh & Chụp Ảnh Nhãn Mác (Quick Field Scratchpad & Nameplate Snapper):
-- **Nút chụp nhanh "⚡ Quick Snap" trên Trang chủ:** Bật tức thì camera chụp ảnh nhãn mác máy (Nameplate), van, cảm biến hoặc tủ điện.
-- **Tự động nén ảnh giữ độ nét văn bản:** Nén ảnh trực tiếp tại Client (`max 1000px`, chất lượng `0.72`) giúp các ký tự thông số trên tem nhãn sắc nét rõ ràng mà dung lượng file cực nhỏ (< 120KB).
-- **Phân loại thẻ thông minh (Category Chips):** Phân loại theo Nameplate, Thông số (Param), Báo động (Alarm), Ý tưởng (Idea).
-- **Tích hợp Voice-to-Text & Chuyển đổi 1 chạm sang Task / Trip:** Kỹ sư có thể đọc ghi chú bằng giọng nói, lưu lại và chuyển ngay thành Công việc (Task) cần làm hoặc gắn vào Chuyến đi đang thực hiện.
+#### 🟠 4. [IMP-22] Sổ Tay Ghi Chú Nhanh Hiện Trường (Text-First Quick Field Notes & Scratchpad):
+- **Ưu tiên văn bản & ghi chú nhanh (Text-First Memo Experience):** Thiết kế lại giao diện Quick Snap theo đúng hành vi thực tế của kỹ sư (chủ yếu ghi chép thông số và lưu ý dạng chữ, ảnh là tùy chọn phụ):
+  - Ô nhập nội dung ghi chú (`scratch-text`) được đặt ở vị trí trung tâm, mở rộng không gian thoải mái (`min-height: 115px`, cỡ chữ 14px), tự động focus con trỏ chuột/bàn phím ngay khi mở modal.
+  - Tích hợp nút nhập bằng giọng nói tiếng Việt tự động dịch sang tiếng Anh (`🎙️ Voice VI ➔ EN`) đặt cạnh tiêu đề ghi chú.
+  - Nhóm thẻ phân loại (`scratch-cat-chips`) đưa `📝 Ghi chú / Note` lên vị trí đầu tiên và kích hoạt mặc định (`active`), cùng các thẻ `⚠️ Sự cố`, `📊 Thông số`, `⚡ Đấu nối`, `🏷️ Nhãn mác`.
+  - Cơ chế tự sinh Tiêu đề thông minh: Nếu kỹ sư không nhập tiêu đề, ứng dụng tự động trích xuất câu đầu tiên của nội dung ghi chú làm tiêu đề, không cần gõ lặp lại.
+  - Tối ưu khu vực chụp ảnh: Thu gọn thành thanh đính kèm phụ thanh lịch (`📷 Ảnh đính kèm (không bắt buộc)`), loại bỏ các nút camera cồng kềnh chiếm diện tích, chỉ bung ảnh xem trước khi người dùng thực sự chọn chụp ảnh.
+- **Tự động nén ảnh giữ độ nét văn bản:** Khi có ảnh chụp, nén ảnh trực tiếp tại Client (`max 1280px`, chất lượng `0.72`) giúp văn bản tem mác rõ nét và dung lượng cực nhẹ.
+- **Tích hợp Chuyển đổi 1 chạm sang Task / Gán Trip:** Kỹ sư có thể chuyển ngay ghi chú thành Công việc (Task) hoặc gán vào Chuyến đi đang công tác.
 
 #### 🔴 5. [IMP-23] An Toàn Hiện Trường EHS, Giấy Phép Công Tác & 4 Bước LOTO (Site Safety Checklist):
 - **Quản lý Giấy phép công tác (Work Permit):** Lưu số giấy phép, thời hạn hiệu lực và lựa chọn các loại giấy phép rủi ro cao (Làm việc trên cao, Không gian hạn chế, Hàn cắt sinh nhiệt, Đào đất, Nâng hạ, Hóa chất).

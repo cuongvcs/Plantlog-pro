@@ -398,7 +398,7 @@ gantt
   - [x] Nhật ký Dịch vụ & Bảng chấm công hiện trường với chữ ký giám sát nhà máy hàng ngày và phân tách giờ thường / OT 1.5x / OT 2.0x / Standby (Đã xong - IMP-19)
   - [x] Đèn giao thông tình trạng bàn giao máy (Machine Readiness Traffic Light) & Danh mục vật tư phụ tùng thay thế khuyến nghị (Spare Parts BOM) in trực tiếp ra PDF (Đã xong - IMP-20)
   - [x] Hộp công cụ Kỹ thuật Cơ - Điện - Đo lường Offline: chuyển đổi Áp suất, Nhiệt độ, Lưu lượng, Dòng động cơ 3 pha FLA và chia thang đo tín hiệu 4-20mA (Đã xong - IMP-21)
-  - [x] Sổ tay ghi chú nhanh & Chụp ảnh Nameplate máy hiện trường: nén ảnh siêu nhẹ, Voice-to-Text và chuyển đổi 1 chạm sang Task / Trip (Đã xong - IMP-22)
+  - [x] Sổ tay ghi chú nhanh hiện trường (Text-First Memo & Scratchpad): Tối ưu trọng tâm văn bản, tự động focus, tự sinh tiêu đề thông minh, Voice-to-Text và thu gọn ảnh đính kèm dạng tùy chọn phụ (Đã xong - IMP-22)
   - [x] An toàn Hiện trường EHS, Giấy phép công tác & Kiểm tra 4 điểm cô lập năng lượng LOTO kèm ảnh hiện trường và gọi khẩn cấp 1 chạm (Đã xong - IMP-23)
   - [x] Quản lý Hồ sơ Lý lịch Thiết bị (Asset Passport) & Quét dòng thời gian lịch sử dịch vụ/bảo trì tự động từ Trips, Tasks, Reports (Đã xong - IMP-24)
   - [x] Đồng bộ Đa bảng Google Sheets: Tạo mới 3 Sheet chuyên dụng (`QuickSnap`, `SiteSafety`, `ServiceTickets`) với cơ chế nén ảnh, gộp timestamp hai chiều (Đã xong)

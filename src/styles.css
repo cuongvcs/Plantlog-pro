@@ -1043,6 +1043,10 @@ input, textarea, select, button { font-family: var(--font); }
 .scratch-badge-cat.cat-nameplate { background: #EEF2FF; color: #4338CA; }
 .scratch-badge-cat.cat-wiring { background: var(--al); color: var(--ad); }
 .scratch-badge-cat.cat-measurement { background: var(--bl); color: var(--bd); }
+.scratch-badge-cat.cat-general { background: #E0F2FE; color: #0369A1; }
+
+[data-theme="dark"] .scratch-badge-cat.cat-general { background: rgba(3,105,161,0.25); color: #38BDF8; }
+[data-theme="dark"] .scratch-badge-cat.cat-nameplate { background: rgba(99,102,241,0.25); color: #A5B4FC; }
 .scratch-card-actions {
   display: flex; gap: 6px; margin-top: 8px; border-top: 1px solid var(--n150);
   padding-top: 6px; flex-wrap: wrap;
