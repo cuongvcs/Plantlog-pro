@@ -232,6 +232,106 @@ async function syncToSheets(){
   };
   const enrichedBills=await buildBills();
 
+  // IMP-22: Build QuickSnap (Scratchpad) payload
+  const buildQuickSnap = async () => {
+    const result = [];
+    for (const sc of (S.scratchpad || [])) {
+      const tr = (S.trips || []).find(t => t.id === sc.tripId);
+      let photoStr = s(sc.photo);
+      if (photoStr.startsWith('data:image')) {
+        photoStr = await compressPhoto(photoStr);
+      }
+      result.push({
+        id: s(sc.id),
+        category: s(sc.category) || 'nameplate',
+        title: s(sc.title),
+        notes: s(sc.notes),
+        tripId: s(sc.tripId),
+        tripPlant: tr ? s(tr.plant) : '',
+        photo: photoStr,
+        createdAt: s(sc.createdAt),
+        updatedAt: s(sc.updatedAt || sc.createdAt)
+      });
+    }
+    return result;
+  };
+  const enrichedQuickSnap = await buildQuickSnap();
+
+  // IMP-23: Build Site Safety & LOTO payload from trips
+  const buildSiteSafety = async () => {
+    const result = [];
+    for (const tr of (S.trips || [])) {
+      if (tr.safety) {
+        const sf = tr.safety;
+        const loto = sf.loto || {};
+        const em = sf.emergencyContacts || {};
+        let lotoPhoto = s(loto.photo);
+        if (lotoPhoto.startsWith('data:image')) {
+          lotoPhoto = await compressPhoto(lotoPhoto);
+        }
+        result.push({
+          tripId: s(tr.id),
+          plant: s(tr.plant),
+          permitNo: s(sf.permitNo),
+          validUntil: s(sf.validUntil),
+          permitTypes: Array.isArray(sf.permitTypes) ? sf.permitTypes.join(', ') : s(sf.permitTypes),
+          padlockId: s(loto.padlockId),
+          electricalIsolated: !!loto.electricalIsolated,
+          pneumaticIsolated: !!loto.pneumaticIsolated,
+          dangerTagHung: !!loto.dangerTagHung,
+          zeroEnergyVerified: !!loto.zeroEnergyVerified,
+          ccrPhone: s(em.ccrPhone),
+          ehsPhone: s(em.ehsPhone),
+          medicalPhone: s(em.medicalPhone),
+          photo: lotoPhoto,
+          updatedAt: s(sf.updatedAt || tr.updatedAt || tr.createdAt)
+        });
+      }
+    }
+    return result;
+  };
+  const enrichedSiteSafety = await buildSiteSafety();
+
+  // IMP-19: Build Daily Service Tickets (Timesheets) payload from trips
+  const buildServiceTickets = async () => {
+    const result = [];
+    for (const tr of (S.trips || [])) {
+      if (Array.isArray(tr.timesheets)) {
+        for (const tk of tr.timesheets) {
+          const norm = parseFloat(tk.normalHours) || 0;
+          const ot15 = parseFloat(tk.ot15Hours) || 0;
+          const ot20 = parseFloat(tk.ot20Hours) || 0;
+          const stby = parseFloat(tk.standbyHours) || 0;
+          const trv = parseFloat(tk.travelHours) || 0;
+          const total = norm + ot15 + ot20 + stby;
+          let sigStr = s(tk.supervisorSig);
+          if (sigStr.startsWith('data:image')) {
+            sigStr = await compressPhoto(sigStr);
+          }
+          result.push({
+            id: s(tk.id),
+            tripId: s(tr.id),
+            plant: s(tr.plant),
+            date: s(tk.date),
+            normalHours: norm,
+            ot15Hours: ot15,
+            ot20Hours: ot20,
+            standbyHours: stby,
+            travelHours: trv,
+            totalHours: total,
+            summary: s(tk.summary),
+            supervisorName: s(tk.supervisorName),
+            supervisorSig: sigStr,
+            createdAt: s(tk.createdAt),
+            updatedAt: s(tk.updatedAt || tk.createdAt)
+          });
+        }
+      }
+    }
+    return result;
+  };
+  const enrichedServiceTickets = await buildServiceTickets();
+
   const reports={};
   Object.entries(S.reports||{}).forEach(([id,rep])=>{
     if(!rep)return;
@@ -250,7 +350,10 @@ async function syncToSheets(){
     leaveData:S.leaveData||{}, reports,
     machines:S.machines||[], plans:S.plans||[],
     bills:enrichedBills,
-    reminders:(S.reminders||[])
+    reminders:(S.reminders||[]),
+    quickSnap:enrichedQuickSnap,
+    siteSafety:enrichedSiteSafety,
+    serviceTickets:enrichedServiceTickets
   };
 
   try{
@@ -259,7 +362,7 @@ async function syncToSheets(){
     if(data&&data.ok){
       const res=data.result||{};
       S.lastSync=new Date().toISOString();sv();updateGSStatus();
-      showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.leave||0} leave · ${res.bills||0} bills`,'ok');
+      showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills · ${res.quicksnap||0} snaps · ${res.tickets||0} tickets`,'ok');
       showToast('Synced to Google Sheets ✓');
     } else {
       showGSResult('❌ Sync error: '+((data&&data.error)||'Unknown'),'error');
@@ -561,10 +664,97 @@ async function loadFromSheets(silent){
         });
         S.bills = mergeCollectionByTimestamp(existingBills, remoteBills, 'id');
       }
+
+      // IMP-22: Load QuickSnap (Scratchpad)
+      if(d.quicksnap && d.quicksnap.length){
+        const existingScratch = S.scratchpad || [];
+        const remoteScratch = d.quicksnap.map(q => ({
+          id: ss(q.ID),
+          category: ss(q.Category) || 'nameplate',
+          title: ss(q.Title),
+          notes: ss(q.Notes),
+          tripId: ss(q.TripID),
+          photo: ss(q.Photo),
+          createdAt: ss(q.CreatedAt),
+          updatedAt: ss(q.UpdatedAt || q.CreatedAt)
+        }));
+        S.scratchpad = mergeCollectionByTimestamp(existingScratch, remoteScratch, 'id');
+      }
+
+      // IMP-23: Load Site Safety & LOTO and attach to trips
+      if(d.safety && d.safety.length){
+        d.safety.forEach(sf => {
+          const tr = (S.trips || []).find(t => t.id === ss(sf.TripID));
+          if(tr){
+            const remoteUpdated = new Date(ss(sf.UpdatedAt) || 0).getTime();
+            const localUpdated = new Date((tr.safety && tr.safety.updatedAt) || 0).getTime();
+            if(!tr.safety || remoteUpdated >= localUpdated){
+              const types = ss(sf.PermitTypes).split(',').map(x => x.trim()).filter(Boolean);
+              tr.safety = {
+                permitNo: ss(sf.PermitNo),
+                validUntil: safeDate(sf.ValidUntil),
+                permitTypes: types,
+                loto: {
+                  padlockId: ss(sf.PadlockID),
+                  electricalIsolated: ss(sf.ElectricalIsolated) === 'YES' || ss(sf.ElectricalIsolated) === 'true',
+                  pneumaticIsolated: ss(sf.PneumaticIsolated) === 'YES' || ss(sf.PneumaticIsolated) === 'true',
+                  dangerTagHung: ss(sf.DangerTagHung) === 'YES' || ss(sf.DangerTagHung) === 'true',
+                  zeroEnergyVerified: ss(sf.ZeroEnergyVerified) === 'YES' || ss(sf.ZeroEnergyVerified) === 'true',
+                  photo: ss(sf.Photo) || (tr.safety && tr.safety.loto && tr.safety.loto.photo) || ''
+                },
+                emergencyContacts: {
+                  ccrPhone: ss(sf.CCRPhone),
+                  ehsPhone: ss(sf.EHSPhone),
+                  medicalPhone: ss(sf.MedicalPhone)
+                },
+                updatedAt: ss(sf.UpdatedAt) || new Date().toISOString()
+              };
+            }
+          }
+        });
+      }
+
+      // IMP-19: Load Daily Service Tickets and attach to trips
+      if(d.tickets && d.tickets.length){
+        const ticketsByTrip = {};
+        d.tickets.forEach(tk => {
+          const tid = ss(tk.TripID);
+          if(!tid) return;
+          if(!ticketsByTrip[tid]) ticketsByTrip[tid] = [];
+          ticketsByTrip[tid].push({
+            id: ss(tk.ID),
+            date: safeDate(tk.Date),
+            normalHours: safeNum(tk.NormalHours),
+            ot15Hours: safeNum(tk.OT15Hours),
+            ot20Hours: safeNum(tk.OT20Hours),
+            standbyHours: safeNum(tk.StandbyHours),
+            travelHours: safeNum(tk.TravelHours),
+            summary: ss(tk.Summary),
+            supervisorName: ss(tk.SupervisorName),
+            supervisorSig: ss(tk.SupervisorSig),
+            createdAt: ss(tk.CreatedAt),
+            updatedAt: ss(tk.UpdatedAt || tk.CreatedAt)
+          });
+        });
+
+        (S.trips || []).forEach(tr => {
+          if(ticketsByTrip[tr.id]){
+            const existingTickets = tr.timesheets || [];
+            tr.timesheets = mergeCollectionByTimestamp(existingTickets, ticketsByTrip[tr.id], 'id');
+          }
+        });
+      }
+
       sv();
       try{ if(typeof autoStartTodayItems==='function') autoStartTodayItems(); }catch(e){}
       renderDash();renderTripList();renderTasks();renderCalendar();
       if(typeof renderTripSavedReports==='function') renderTripSavedReports();
+      if(typeof renderTripTimesheets==='function' && typeof curTrip!=='undefined' && curTrip) {
+        renderTripTimesheets(curTrip);
+      }
+      if(typeof renderTripSafety==='function' && typeof curTrip!=='undefined' && curTrip) {
+        renderTripSafety(curTrip);
+      }
       showGSResult('✅ Data loaded from Google Sheets successfully!','ok');
       showToast('Loaded from Google Sheets ✓');
     } else {

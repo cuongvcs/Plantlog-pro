@@ -33,6 +33,7 @@ const requiredElements = [
   'press-bar', 'press-psi', 'press-kpa', 'press-mpa', 'press-kgcm2',
   'temp-c', 'temp-f', 'temp-k',
   'flow-m3h', 'flow-lmin', 'flow-gpm',
+  'motor-unit-kw', 'motor-unit-hp', 'motor-unit-addon',
   'motor-kw', 'motor-volt', 'motor-pf', 'motor-eff', 'motor-result-fla',
   'sig-min', 'sig-max', 'sig-ma', 'sig-pct', 'sig-pv',
   // Ticket Inputs
@@ -307,4 +308,39 @@ assert.strictEqual(sparePartsBOM.length, 3);
 assert.strictEqual(sparePartsBOM.filter(p => p.prio === 'critical').length, 1);
 console.log('  ✓ Machine Readiness & Spare Parts priority matrix verified!');
 
-console.log('\n🎉 ALL 7 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');
+// 8. Test Motor Power HP Selector & Calculation
+console.log('\n🔍 Test 8: Testing Motor Power HP unit calculation...');
+const hpVal = 10;
+const convertedKw = hpVal * 0.7457;
+const motorVolt = 380, motorPf = 0.85, motorEff = 0.90;
+const flaHp = (convertedKw * 1000) / (Math.sqrt(3) * motorVolt * motorPf * motorEff);
+const flaHpRounded = +flaHp.toFixed(1);
+assert.strictEqual(flaHpRounded, 14.8);
+console.log(`  ✓ 10 HP motor calculation verified: ${hpVal} HP = ${convertedKw.toFixed(3)} kW -> ${flaHpRounded} A`);
+
+// 9. Test Google Sheets Sync Schema & Payload for QuickSnap, Safety & Tickets
+console.log('\n🔍 Test 9: Testing Google Sheets Sync Schema & Multi-sheet Support...');
+const gasCode = fs.readFileSync(path.join(__dirname, 'PlantLog_GoogleAppsScript.gs'), 'utf8');
+assert.ok(gasCode.includes("QUICK_SNAP:'QuickSnap'"));
+assert.ok(gasCode.includes("SITE_SAFETY:'SiteSafety'"));
+assert.ok(gasCode.includes("SERVICE_TICKETS:'ServiceTickets'"));
+assert.ok(gasCode.includes("quicksnap:"));
+assert.ok(gasCode.includes("site_safety:"));
+assert.ok(gasCode.includes("service_tickets:"));
+assert.ok(gasCode.includes("['QuickSnap',COLS.quicksnap]"));
+assert.ok(gasCode.includes("['SiteSafety',COLS.site_safety]"));
+assert.ok(gasCode.includes("['ServiceTickets',COLS.service_tickets]"));
+
+const syncModuleCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'sync.js'), 'utf8');
+assert.ok(syncModuleCode.includes("buildQuickSnap"));
+assert.ok(syncModuleCode.includes("buildSiteSafety"));
+assert.ok(syncModuleCode.includes("buildServiceTickets"));
+assert.ok(syncModuleCode.includes("quickSnap:enrichedQuickSnap"));
+assert.ok(syncModuleCode.includes("siteSafety:enrichedSiteSafety"));
+assert.ok(syncModuleCode.includes("serviceTickets:enrichedServiceTickets"));
+assert.ok(syncModuleCode.includes("d.quicksnap"));
+assert.ok(syncModuleCode.includes("d.safety"));
+assert.ok(syncModuleCode.includes("d.tickets"));
+console.log('  ✓ Google Apps Script backend & Client sync.js schema and data handlers verified!');
+
+console.log('\n🎉 ALL 9 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');

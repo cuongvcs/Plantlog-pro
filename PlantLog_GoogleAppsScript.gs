@@ -20,23 +20,27 @@
 
 const SN={TRIPS:'Trips',TASKS:'Tasks',LEAVE:'Leave',REPORTS:'Reports',
   CHECKLIST:'Checklist',READINGS:'Readings',ISSUES:'Issues',TEAM:'Team',
-  BILLS:'Bills',MACHINES:'Machines',PLANS:'Plans',LOG:'SyncLog',REMINDERS:'Reminders',FLIGHT_TA:'Flight_TA_Schedule'};
+  BILLS:'Bills',MACHINES:'Machines',PLANS:'Plans',LOG:'SyncLog',REMINDERS:'Reminders',FLIGHT_TA:'Flight_TA_Schedule',
+  QUICK_SNAP:'QuickSnap',SITE_SAFETY:'SiteSafety',SERVICE_TICKETS:'ServiceTickets'};
 
 const COLS={
-  trips:     ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','TA','SavedReports','CreatedAt'],
-  flight_ta: ['TripID','TACode','Plant','Location','Date','DateEnd','Purpose','OutboundDepart','OutboundArrive','ReturnDepart','ReturnArrive'],
-  tasks:     ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','PartsJson','FlightJson','FilesJson','AutoDuration','DurationMins','CreatedAt','UpdatedAt'],
-  leave:     ['Date','Type','Note'],
-  reports:   ['TripID','SignoffSummary','SignoffResult','SignoffRemarks','SignedAt'],
-  reminders: ['ID','Title','Freq','Weekday','Monthday','YearMonth','YearDay','Time','Note','NotifyTele','NotifyCalendar','Status','CreatedAt'],
-  checklist: ['TripID','ItemID','Name','Result','Note'],
-  readings:  ['TripID','Type','Name','Tag','Value','Unit','Status','Condition','Notes'],
-  issues:    ['TripID','Title','Description','Severity','IssueStatus','Action','PhotoCount'],
-  team:      ['TripID','Name','Role','Organization','SignoffRequired'],
-  bills:     ['ID','TripID','Date','BillNumber','Detail','Amount','Currency','VndAmount','Category','PaymentMethod','Notes','PhotoCount','PhotosJson','CreatedAt'],
-  machines:  ['Name'],
-  plans:     ['Name'],
-  log:       ['Timestamp','Action','Entity','EntityID','Status','Details']
+  trips:           ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','TA','SavedReports','CreatedAt'],
+  flight_ta:       ['TripID','TACode','Plant','Location','Date','DateEnd','Purpose','OutboundDepart','OutboundArrive','ReturnDepart','ReturnArrive'],
+  tasks:           ['ID','Title','Description','Category','DateStart','TimeStart','DateEnd','TimeEnd','Hours','Minutes','Priority','Period','Machine','Plan','TripID','Status','Checklist','ChecklistJson','PartsJson','FlightJson','FilesJson','AutoDuration','DurationMins','CreatedAt','UpdatedAt'],
+  leave:           ['Date','Type','Note'],
+  reports:         ['TripID','SignoffSummary','SignoffResult','SignoffRemarks','SignedAt'],
+  reminders:       ['ID','Title','Freq','Weekday','Monthday','YearMonth','YearDay','Time','Note','NotifyTele','NotifyCalendar','Status','CreatedAt'],
+  checklist:       ['TripID','ItemID','Name','Result','Note'],
+  readings:        ['TripID','Type','Name','Tag','Value','Unit','Status','Condition','Notes'],
+  issues:          ['TripID','Title','Description','Severity','IssueStatus','Action','PhotoCount'],
+  team:            ['TripID','Name','Role','Organization','SignoffRequired'],
+  bills:           ['ID','TripID','Date','BillNumber','Detail','Amount','Currency','VndAmount','Category','PaymentMethod','Notes','PhotoCount','PhotosJson','CreatedAt'],
+  machines:        ['Name'],
+  plans:           ['Name'],
+  log:             ['Timestamp','Action','Entity','EntityID','Status','Details'],
+  quicksnap:       ['ID','Category','Title','Notes','TripID','TripPlant','Photo','CreatedAt','UpdatedAt'],
+  site_safety:     ['TripID','Plant','PermitNo','ValidUntil','PermitTypes','PadlockID','ElectricalIsolated','PneumaticIsolated','DangerTagHung','ZeroEnergyVerified','CCRPhone','EHSPhone','MedicalPhone','Photo','UpdatedAt'],
+  service_tickets: ['ID','TripID','Plant','Date','NormalHours','OT15Hours','OT20Hours','StandbyHours','TravelHours','TotalHours','Summary','SupervisorName','SupervisorSig','CreatedAt','UpdatedAt']
 };
 
 function db_(){
@@ -137,6 +141,9 @@ function doGet(e){
     if(act==='getAll'||act==='getLeave')   d.leave=readSheet(s,SN.LEAVE,COLS.leave);
     if(act==='getAll'||act==='getBills')   d.bills=readSheet(s,SN.BILLS,COLS.bills);
     if(act==='getAll'||act==='getReports') d.reports=readSheet(s,SN.REPORTS,COLS.reports);
+    if(act==='getAll'||act==='getQuickSnap')      d.quicksnap=readSheet(s,SN.QUICK_SNAP,COLS.quicksnap);
+    if(act==='getAll'||act==='getSiteSafety')     d.safety=readSheet(s,SN.SITE_SAFETY,COLS.site_safety);
+    if(act==='getAll'||act==='getServiceTickets') d.tickets=readSheet(s,SN.SERVICE_TICKETS,COLS.service_tickets);
     return json_({ok:true,data:d});
   }catch(x){return json_({ok:false,error:x.message});}
 }
@@ -253,6 +260,33 @@ function syncAll(p){
     r.reports=rp.length;
   }
 
+  // QuickSnap (Scratchpad)
+  if(p.quickSnap&&p.quickSnap.length){
+    writeSheet(s,SN.QUICK_SNAP,COLS.quicksnap,p.quickSnap.map(q=>[
+      q.id,q.category,q.title,q.notes,q.tripId,q.tripPlant||'',q.photo||'',q.createdAt,q.updatedAt
+    ]));r.quicksnap=p.quickSnap.length;
+  }
+
+  // Site Safety & LOTO
+  if(p.siteSafety&&p.siteSafety.length){
+    writeSheet(s,SN.SITE_SAFETY,COLS.site_safety,p.siteSafety.map(sf=>[
+      sf.tripId,sf.plant||'',sf.permitNo,sf.validUntil,sf.permitTypes,
+      sf.padlockId,sf.electricalIsolated?'YES':'NO',sf.pneumaticIsolated?'YES':'NO',
+      sf.dangerTagHung?'YES':'NO',sf.zeroEnergyVerified?'YES':'NO',
+      sf.ccrPhone,sf.ehsPhone,sf.medicalPhone,sf.photo||'',sf.updatedAt
+    ]));r.safety=p.siteSafety.length;
+  }
+
+  // Daily Service Tickets
+  if(p.serviceTickets&&p.serviceTickets.length){
+    writeSheet(s,SN.SERVICE_TICKETS,COLS.service_tickets,p.serviceTickets.map(tk=>[
+      tk.id,tk.tripId,tk.plant||'',tk.date,
+      tk.normalHours||0,tk.ot15Hours||0,tk.ot20Hours||0,tk.standbyHours||0,tk.travelHours||0,
+      tk.totalHours||0,tk.summary,tk.supervisorName,tk.supervisorSig||'',
+      tk.createdAt,tk.updatedAt
+    ]));r.tickets=p.serviceTickets.length;
+  }
+
   try{s.getSheets().forEach(sh=>{if(sh.getLastColumn()>0)sh.autoResizeColumns(1,sh.getLastColumn());});}catch(x){}
   log_('SYNC_ALL','All','',JSON.stringify(r));
   return r;
@@ -262,7 +296,8 @@ function setupSheets(){
   const s=db_();
   [['Trips',COLS.trips],['Flight_TA_Schedule',COLS.flight_ta],['Tasks',COLS.tasks],['Leave',COLS.leave],['Reports',COLS.reports],['Reminders',COLS.reminders],
    ['Checklist',COLS.checklist],['Readings',COLS.readings],['Issues',COLS.issues],['Team',COLS.team],
-   ['Bills',COLS.bills],['Machines',COLS.machines],['Plans',COLS.plans],['SyncLog',COLS.log]
+   ['Bills',COLS.bills],['Machines',COLS.machines],['Plans',COLS.plans],['SyncLog',COLS.log],
+   ['QuickSnap',COLS.quicksnap],['SiteSafety',COLS.site_safety],['ServiceTickets',COLS.service_tickets]
   ].forEach(([n,h])=>ensureSheet(s,n,h));
   try{const d=s.getSheetByName('Sheet1');if(d&&s.getSheets().length>1)s.deleteSheet(d);}catch(x){}
   const url=s.getUrl();

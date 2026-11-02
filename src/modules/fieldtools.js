@@ -176,8 +176,37 @@ function onFlowInput(source) {
 }
 
 // ── 3-Phase Electrical Calculator ──────────────────
+let _motorPowerUnit = 'kw';
+
+function setMotorPowerUnit(unit) {
+  if (_motorPowerUnit === unit) return;
+  const oldUnit = _motorPowerUnit;
+  _motorPowerUnit = unit;
+
+  const btnKw = document.getElementById('motor-unit-kw');
+  const btnHp = document.getElementById('motor-unit-hp');
+  if (btnKw) btnKw.classList.toggle('active', unit === 'kw');
+  if (btnHp) btnHp.classList.toggle('active', unit === 'hp');
+
+  const addon = document.getElementById('motor-unit-addon');
+  if (addon) addon.textContent = unit === 'kw' ? 'kW' : 'HP';
+
+  const input = document.getElementById('motor-kw');
+  if (input && input.value) {
+    const val = parseFloat(input.value);
+    if (!isNaN(val) && val > 0) {
+      if (unit === 'hp' && oldUnit === 'kw') {
+        input.value = +(val / 0.7457).toFixed(2);
+      } else if (unit === 'kw' && oldUnit === 'hp') {
+        input.value = +(val * 0.7457).toFixed(2);
+      }
+    }
+  }
+  calc3PhaseMotor();
+}
+
 function calc3PhaseMotor() {
-  const kw = parseFloat((document.getElementById('motor-kw') || {}).value) || 0;
+  const pVal = parseFloat((document.getElementById('motor-kw') || {}).value) || 0;
   const volt = parseFloat((document.getElementById('motor-volt') || {}).value) || 380;
   const pf = parseFloat((document.getElementById('motor-pf') || {}).value) || 0.85;
   const eff = parseFloat((document.getElementById('motor-eff') || {}).value) || 0.90;
@@ -187,13 +216,16 @@ function calc3PhaseMotor() {
   const cbEl = document.getElementById('motor-result-cb');
   const cableEl = document.getElementById('motor-result-cable');
 
-  if (kw <= 0 || volt <= 0 || pf <= 0 || eff <= 0) {
+  if (pVal <= 0 || volt <= 0 || pf <= 0 || eff <= 0) {
     if (resEl) resEl.textContent = '—';
     if (olEl) olEl.textContent = '—';
     if (cbEl) cbEl.textContent = '—';
     if (cableEl) cableEl.textContent = '—';
     return;
   }
+
+  // Convert HP to kW if selected (1 HP = 0.7457 kW = 745.7 W)
+  const kw = (_motorPowerUnit === 'hp') ? (pVal * 0.7457) : pVal;
 
   // I = (P * 1000) / (sqrt(3) * V * pf * eff)
   const fla = (kw * 1000) / (Math.sqrt(3) * volt * pf * eff);

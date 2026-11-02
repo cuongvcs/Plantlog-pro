@@ -21,7 +21,10 @@
 - **Màn hình Hộp công cụ mới (`screen-toolbox`):** Truy cập nhanh từ Trang chủ hoặc Cài đặt, hoạt động 100% không cần kết nối mạng.
 - **Bộ chuyển đổi Áp suất đa đơn vị:** Tính toán chuyển đổi tức thì 2 chiều giữa `bar`, `psi`, `kPa`, `MPa` và `kg/cm²`.
 - **Bộ chuyển đổi Nhiệt độ & Lưu lượng:** Tính toán chuyển đổi giữa `°C`, `°F`, `Kelvin` và lưu lượng chất lỏng/khí `m³/h`, `L/min`, `GPM`.
-- **Máy tính Dòng điện Động cơ 3 pha (3-Phase Motor FLA Calculator):** Tính chính xác dòng đầy tải (Full Load Amps) dựa trên công suất (kW), điện áp (V), hệ số công suất ($\cos\varphi$) và hiệu suất động cơ ($\eta$); tự động đưa ra khuyến nghị dải cài đặt Rơ-le nhiệt bảo vệ (Overload Relay), Cỡ Aptomat MCCB và tiết diện dây đồng tối thiểu.
+- **Máy tính Dòng điện Động cơ 3 pha (3-Phase Motor FLA Calculator):**
+  - **Tùy chọn đơn vị công suất kW / HP:** Bổ sung nút chuyển đổi tức thời giữa Kilowatt (`kW`) và Mã lực (`HP` - $1\text{ HP} \approx 0.7457\text{ kW}$), tự động quy đổi giá trị đầu vào mà không cần kỹ sư tính tay.
+  - **Tối ưu bố cục giao diện công nghiệp:** Đưa Điện áp pha (`Line Voltage - V`) lên hàng riêng biệt nổi bật, di chuyển Hệ số công suất (`Power Factor - cos φ`) xuống hàng dưới bố trí song song cân đối với Hiệu suất động cơ (`Efficiency - η`).
+  - **Tính toán toàn diện:** Tính chính xác dòng đầy tải (Full Load Amps) dựa trên công suất (kW/HP), điện áp (V), hệ số công suất ($\cos\varphi$) và hiệu suất động cơ ($\eta$); tự động đưa ra khuyến nghị dải cài đặt Rơ-le nhiệt bảo vệ (Overload Relay), Cỡ Aptomat MCCB và tiết diện dây đồng tối thiểu.
 - **Bộ tính toán Thang đo Tín hiệu Đo lường 4-20mA (Instrumentation Scaler):** Chuyển đổi 2 chiều giữa dòng điện điều khiển $4 - 20\text{ mA}$, Tỉ lệ phần trăm $0 - 100\%$ và Giá trị đo thực tế (Process Variable: Bar, °C, RPM, m³/h...) theo dải hiệu chuẩn Zero (LRV) và Span (URV).
 
 #### 🟠 4. [IMP-22] Sổ Tay Ghi Chú Nhanh & Chụp Ảnh Nhãn Mác (Quick Field Scratchpad & Nameplate Snapper):
@@ -44,6 +47,14 @@
 - **Màn hình Hồ sơ Thiết bị mới (`screen-assets`):** Quản lý toàn bộ danh mục tài sản máy móc thiết bị của các nhà máy/khách hàng (Tag No, Tên thiết bị, Hãng/Model, Số Serial, Thông số kỹ thuật, Vị trí). Tự động kế thừa và chuyển đổi từ `S.machines` cũ để bảo toàn dữ liệu.
 - **Bộ quét Dòng thời gian Lịch sử Bảo trì (Maintenance Timeline Scanner):** Tự động liên kết và trích xuất toàn bộ dữ liệu lịch sử từ các Chuyến đi (`trips`), Phiếu chấm công (`timesheets`), Nhật ký công việc (`tasks`) và Báo cáo (`reports`) có chứa Tag thiết bị.
 - **Sổ tay bảo dưỡng trực quan:** Kỹ sư có thể xem toàn bộ các lần bảo dưỡng, thay thế phụ tùng và xử lý sự cố của thiết bị trong quá khứ theo thứ tự thời gian.
+
+#### 🟢 7. Đồng Bộ Đa Bảng Dữ Liệu Hiện Trường Lên Google Sheets (Multi-Sheet Google Cloud Sync):
+- **Tạo mới 3 Sheet chuyên dụng trong Google Spreadsheet:**
+  - **`QuickSnap`**: Lưu trữ toàn bộ ghi chú nhanh hiện trường (ID, Category, Title, Notes, TripID, Plant, Photo thumbnail, Timestamps).
+  - **`SiteSafety`**: Quản lý tập trung hồ sơ an toàn lao động, giấy phép công tác và biên bản 4 điểm cô lập LOTO (TripID, Plant, PermitNo, ValidUntil, PermitTypes, PadlockID, Electrical/Pneumatic Isolated, Danger Tag, Zero-Energy, CCR/EHS/Medical Phones, Photo, UpdatedAt).
+  - **`ServiceTickets`**: Bảng chấm công tổng hợp theo ngày công tác phục vụ kế toán, nghiệm thu và thanh toán dịch vụ (ID, TripID, Plant, Date, Normal Hours, OT 1.5x, OT 2.0x, Standby Hours, Travel Hours, Total On-site Hours, Summary, Supervisor Name, Supervisor Signature, Timestamps).
+- **Cập nhật Backend Google Apps Script (`PlantLog_GoogleAppsScript.gs` & `PlantLog_GoogleAppsScript_Pro.gs`):** Khai báo bảng định danh `SN` và cột `COLS` chuẩn hóa; tích hợp tạo bảng tự động qua `setupSheets()`, hỗ trợ xuất dữ liệu qua `doGet` (`getAll`) và lưu dữ liệu toàn diện qua `doPost` (`syncAll`).
+- **Đồng bộ 2 chiều chống xung đột tại Client (`sync.js`):** Tự động nén ảnh chứng từ/ảnh LOTO/chữ ký trước khi đẩy lên cloud, hỗ trợ giải thuật so khớp thời gian `mergeCollectionByTimestamp` đảm bảo dữ liệu ghi offline không bị ghi đè.
 
 ---
 

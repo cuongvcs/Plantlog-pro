@@ -299,7 +299,9 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
   1. **Bộ chuyển đổi đơn vị Áp suất:** Tính toán 2 chiều tức thì giữa `bar`, `psi`, `kPa`, `MPa` và `kg/cm²`.
   2. **Bộ chuyển đổi Nhiệt độ & Lưu lượng:** Tính toán giữa `°C`, `°F`, `Kelvin` và lưu lượng `m³/h`, `L/min`, `GPM`.
   3. **Máy tính Dòng định mức Motor 3 pha (FLA Calculator):**
-     * Công thức: $I = \frac{P \times 1000}{\sqrt{3} \times V \times \cos\varphi \times \eta}$.
+     * **Tùy chọn đơn vị công suất kW / HP:** Hỗ trợ chuyển đổi tức thì giữa Kilowatt (`kW`) và Mã lực (`HP` - $1\text{ HP} \approx 0.7457\text{ kW}$), tự động quy đổi thông số đầu vào.
+     * **Tối ưu bố cục công nghiệp:** Đưa Điện áp pha (`Line Voltage - V`) lên hàng riêng biệt phía trên, đưa Hệ số công suất (`Power Factor - cos φ`) xuống hàng dưới song song với Hiệu suất động cơ (`Efficiency - η`).
+     * Công thức: $I = \frac{P_{\text{kW}} \times 1000}{\sqrt{3} \times V \times \cos\varphi \times \eta}$.
      * Tự động đưa ra dòng định mức (FLA), khuyến nghị dải cài đặt Rơ-le nhiệt (Thermal Overload 1.05 - 1.15x), Cỡ Aptomat MCCB/MCB (1.5 - 2.5x) và tiết diện dây cáp đồng tối thiểu.
   4. **Bộ chia tỉ lệ tín hiệu Đo lường 4-20mA (Instrumentation Scaler):**
      * Tính toán nhanh 2 chiều giữa Dòng mA (4-20mA), Tỉ lệ % (0-100%) và Giá trị vật lý thực tế (Engineering Value: Bar, °C, RPM...) theo dải đo cài đặt (LRV - URV).
