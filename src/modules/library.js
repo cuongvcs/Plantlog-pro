@@ -383,14 +383,8 @@ function openReportDirect(step){
   // Signature
   try{
     updateSigDate();
-    if(!sigCanvas||!sigCanvas.getContext) initSig();
-    if(sigCtx){
-      sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
-      if(curReport.signature&&curReport.signature.length>100){
-        const img=new Image();
-        img.onload=()=>{ try{sigCtx.drawImage(img,0,0,sigCanvas.width,sigCanvas.height);}catch(e){} };
-        img.src=curReport.signature;
-      }
+    if(step === 5 && curReport.signature && curReport.signature.length > 100){
+      renderReportSignature(curReport.signature);
     }
   }catch(e){console.warn('sig init:',e);}
 }

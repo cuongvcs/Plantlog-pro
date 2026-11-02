@@ -1,5 +1,33 @@
 # 📝 Nhật ký cập nhật (Changelog) — PlantLog Pro
 
+## [v4.12] - 02/11/2026
+
+### 🚀 Tối Ưu Lối Tắt Truy Cập Lịch Kế Hoạch (IMP-17) & Nâng Cấp Toàn Diện Cơ Chế Chữ Ký Nghiệm Thu (IMP-18)
+
+#### 🔴 1. [IMP-17] Lối Tắt Truy Cập Nhanh Lịch & Kế Hoạch (Calendar & Leave Planner Quick Access):
+- **Clickable Dashboard Stat Cards:** Cả 3 thẻ thống kê trên Trang chủ (`Trips`, `Tasks today`, `Leave days`) được chuyển đổi thành các nút tương tác trực tiếp (`.clickable` có hiệu ứng nhấp `scale(0.96)`):
+  - Nhấp **Trips** ➔ Mở ngay màn hình Chuyến đi (`screen-trips`).
+  - Nhấp **Tasks today** ➔ Mở ngay màn hình Công việc hôm nay (`screen-tasks`).
+  - Nhấp **Leave days** ➔ Mở thẳng màn hình Lịch kế hoạch công tác & Nghỉ phép (`screen-leave`), loại bỏ hoàn toàn việc phải vào Settings cuộn trang.
+- **Nút Lịch 1 chạm trên Header Trang chủ (`.tb-btn-cal`):** Bổ sung nút `📅 Calendar` ngay trên thanh Topbar của Home cạnh cụm huy hiệu mạng và avatar, giúp kỹ sư kiểm tra lịch trình công tác ngay khi vừa mở ứng dụng.
+- **Lối tắt trên thanh công cụ Tasks:** Bổ sung icon `📅` cạnh nút `＋ Add Task` trên Topbar màn hình Tasks (`screen-tasks`), giúp kỹ sư dễ dàng chuyển đổi qua lại giữa danh mục công việc và Lịch tháng.
+- **Điều hướng quay lại thông minh (`window._prevScreen`):** Nút quay lại `←` trên màn hình `screen-leave` tự động ghi nhớ ngữ cảnh màn hình trước đó, đưa người dùng quay lại đúng màn hình Home, Tasks hoặc Settings mà họ vừa xuất phát.
+
+#### 🔴 2. [IMP-18] Khắc Phục Triệt Để Hiển Thị Chữ Ký Báo Cáo & Quản Lý Chữ Ký Cá Nhân (Signature Engine):
+- **Khắc phục lỗi mất chữ ký khi Open Report:**
+  - Viết lại hàm `renderReportSignature(sigDataUrl)` và kích hoạt tự động trong `gotoStep(5)` ngay khi Bước 6 (Sign-off) hiển thị thực tế trên DOM với kích thước thật, xóa bỏ hoàn toàn hiện tượng vẽ vào Canvas ẩn (`display: none`) gây mất chữ ký.
+  - Khắc phục triệt để lỗi tỷ lệ điểm ảnh Retina High-DPI (`dpr`): Tự động tính toán kích thước vẽ theo hệ tọa độ CSS (`cssW`, `cssH`), ngăn chặn hoàn toàn hiện tượng chữ ký bị phóng to 4x – 9x văng ra ngoài khung nhìn của Canvas.
+- **Quản lý Chữ ký Cá nhân trong Hồ sơ (Settings ➔ Profile):**
+  - Bổ sung trường `S.profile.signature` lưu bền vững trong `localStorage`.
+  - Tích hợp khung xem trước chữ ký (thumbnail preview) trong màn hình Cài đặt cùng nút `📁 Upload` ảnh chữ ký và nút `✕ Clear`.
+- **Cơ chế Nạp & Tải chữ ký đa năng tại Bước Sign-off:**
+  - Nút **"✍️ Dùng chữ ký của tôi" (`useMySig`)**: Tự động ưu tiên lấy chữ ký cá nhân đã lưu trong Profile của kỹ sư để điền vào Canvas và tự động cập nhật ngay vào `curReport.signature` + `sv()`.
+  - Nút **"💾 Lưu mặc định" (`saveDefaultSig`)**: Cho phép lưu chữ ký vừa vẽ trực tiếp trên màn hình làm chữ ký mặc định trong Profile để tái sử dụng mãi mãi.
+  - Nút **"📁 Tải ảnh" (`uploadSig`)**: Hỗ trợ nạp tệp ảnh chữ ký (PNG/JPG) trực tiếp từ máy ảnh hoặc thư viện ảnh trên điện thoại.
+  - Tự động bắt sự kiện `mouseup` và `touchend` để lưu tức thì nét vẽ vào `curReport.signature`, đảm bảo file PDF nghiệm thu luôn có chữ ký 100%.
+
+---
+
 ## [v4.11] - 01/11/2026
 
 ### 🎨 Triển Khai Toàn Diện Giai Đoạn 4: Hoàn Thiện Trải Nghiệm Người Dùng (UI/UX) & Tương Tác Hiện Trường (IMP-10 ➔ IMP-16)

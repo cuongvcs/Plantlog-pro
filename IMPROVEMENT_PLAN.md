@@ -41,6 +41,8 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 | **IMP-14** | **Chuẩn hóa Touch Targets (≥ 44px) & Rung phản hồi (Haptic Feedback)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.11) | 0.25 ngày |
 | **IMP-15** | **Nâng cấp Canvas Chữ ký số Sắc Nét Retina (High-DPI Scaling)** | 🟡 **P3** | **Khuyến nghị** | ✅ Hoàn tất (v4.11) | 0.25 ngày |
 | **IMP-16** | **Thanh tiến độ % hoàn thành trên Trip Card & Widget Tổng chi phí** | 🟡 **P3** | **Khuyến nghị** | ✅ Hoàn tất (v4.11) | 0.25 ngày |
+| **IMP-17** | **Lối tắt Lịch & Kế hoạch (Calendar & Leave Planner Quick Access)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.12) | 0.25 ngày |
+| **IMP-18** | **Khôi phục Chữ ký Báo cáo & Quản lý Chữ ký Cá nhân (Signature Engine)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.12) | 0.5 ngày |
 
 ---
 
@@ -236,6 +238,31 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 
 ---
 
+### 🔴 IMP-17: Lối tắt Lịch & Kế hoạch (Calendar & Leave Planner Quick Access)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao)**
+* **Tính cần thiết:** Rất cần thiết. Tránh việc kỹ sư phải vào tận Settings để xem lịch công tác và kế hoạch ngày nghỉ.
+* **Chi tiết cải tiến:**
+  1. **Clickable Stat Cards:** Cả 3 thẻ thống kê trên Dashboard Trang chủ (`Trips`, `Tasks today`, `Leave days`) có thể bấm trực tiếp (`onclick`), trong đó thẻ `Leave days` chuyển ngay sang `screen-leave`.
+  2. **Nút Lịch trên Header Home:** Bổ sung nút `📅 Calendar` ngay trên thanh Topbar của Trang chủ cạnh huy hiệu mạng.
+  3. **Lối tắt trên màn hình Tasks:** Thêm nút `📅` trên Topbar màn hình Tasks cạnh nút `+ Add Task` để kỹ sư chuyển nhanh sang xem lịch.
+  4. **Điều hướng quay lại thông minh:** Nút `←` trên `screen-leave` tự động ghi nhớ màn hình trước đó (`window._prevScreen`) để quay về đúng nơi xuất phát.
+
+---
+
+### 🔴 IMP-18: Khôi phục Chữ Ký Báo Cáo & Quản Lý Chữ Ký Cá Nhân (Signature Engine)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao)**
+* **Tính cần thiết:** Rất cần thiết. Khắc phục triệt để lỗi không nạp được chữ ký khi mở lại báo cáo và nâng cao năng suất nghiệm thu.
+* **Chi tiết cải tiến:**
+  1. **Khôi phục chữ ký khi xem bước Sign-off (`gotoStep(5)`):** Xây dựng hàm `renderReportSignature()` tự động nạp `curReport.signature` lên Canvas khi Bước 6 thực sự hiển thị trên DOM.
+  2. **Chuẩn hóa Retina High-DPI:** Tính toán tọa độ và kích thước ảnh vẽ theo hệ tọa độ CSS, khắc phục hoàn toàn lỗi chữ ký bị phóng to 4x - 9x văng ra ngoài khung nhìn do `scale(dpr, dpr)`.
+  3. **Lưu chữ ký cá nhân mặc định (`S.profile.signature`):** Kỹ sư có thể tải ảnh chữ ký lên trong mục Cài đặt (Settings ➔ Profile) hoặc bấm "💾 Lưu mặc định" (`saveSignatureAsDefault`) ngay tại màn hình ký.
+  4. **Nạp & Tải chữ ký đa năng:**
+     * Nút **"✍️ Dùng chữ ký của tôi"** ưu tiên lấy chữ ký cá nhân từ Profile và tự động lưu vào State.
+     * Nút **"📁 Tải ảnh"** (`handleSignatureFileUpload`) cho phép chọn tệp ảnh chữ ký từ máy ảnh/thư viện điện thoại.
+     * Tự động lưu chuỗi Base64 chữ ký vào `curReport.signature` ngay khi nhả tay/bút vẽ (`mouseup`, `touchend`).
+
+---
+
 ## 3. 📅 LỘ TRÌNH TRIỂN KHAI THEO GIAI ĐOẠN (ROADMAP)
 
 ```mermaid
@@ -280,6 +307,10 @@ gantt
   - [x] Chuẩn hóa kích thước vùng bấm Touch Target ≥ 44px và rung phản hồi Haptic Feedback qua Web Vibration API (Đã xong - IMP-14)
   - [x] Tối ưu hóa Canvas chữ ký số hỗ trợ màn hình Retina High-DPI siêu nét (Đã xong - IMP-15)
   - [x] Bổ sung thanh tiến độ công việc % trên Trip Card và Widget tổng chi phí trên Trip Detail (Đã xong - IMP-16)
+- [x] **Giai đoạn 5: Tối ưu Điều hướng Lịch & Cơ chế Chữ ký Nghiệm thu (v4.12)**
+  - [x] Lối tắt truy cập nhanh Lịch & Kế hoạch (Calendar & Leave Planner) từ Trang chủ (thẻ Leave days + nút Calendar Topbar) và màn hình Tasks (Đã xong - IMP-17)
+  - [x] Khắc phục triệt để lỗi không nạp được chữ ký khi mở lại báo cáo qua cơ chế khôi phục tại Bước Sign-off (`gotoStep(5)`) (Đã xong - IMP-18)
+  - [x] Tích hợp Quản lý Chữ ký Cá nhân trong Profile (Settings), hỗ trợ tải ảnh chữ ký, lưu chữ ký mặc định và dùng chữ ký cá nhân (Đã xong - IMP-18)
 
 ---
 

@@ -867,3 +867,44 @@ input, textarea, select, button { font-family: var(--font); }
   display: flex; align-items: center; justify-content: space-between;
   border: 1px solid var(--n150);
 }
+
+/* ═══════ CALENDAR QUICK ACCESS & STAT CARDS (IMP-17) ═══════ */
+.sb2[onclick], .sb2.clickable {
+  cursor: pointer;
+  transition: transform var(--dur-fast), background var(--dur-fast), box-shadow var(--dur-fast);
+  user-select: none;
+}
+.sb2[onclick]:active, .sb2.clickable:active {
+  transform: scale(0.96);
+  background: var(--surface-hover, rgba(0,0,0,0.04));
+}
+.tb-btn-cal {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 9px; border-radius: 12px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.25);
+  font-size: 11px; font-weight: 600; color: #fff;
+  cursor: pointer; font-family: var(--font);
+  transition: all var(--dur-fast);
+}
+.tb-btn-cal:hover { background: rgba(255,255,255,0.28); }
+.tb-btn-cal:active { transform: scale(0.95); background: rgba(255,255,255,0.35); }
+
+/* ═══════ SIGNATURE CONTROLS (IMP-18) ═══════ */
+.sig-actions {
+  display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+}
+.sig-btn {
+  padding: 8px 12px; border-radius: var(--rs);
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--n200); background: #fff;
+  color: var(--n700); transition: all var(--dur-fast);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.sig-btn:active { transform: scale(0.96); }
+.sig-btn-primary {
+  flex: 1; min-width: 140px; border-color: var(--brand);
+  background: var(--brand-light); color: var(--brand-dark); font-weight: 700;
+}
+.sig-btn-danger { color: var(--red); }
+

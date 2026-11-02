@@ -21,6 +21,7 @@ const T={
     teamSignoffs:'TEAM & SIGN-OFFS',addTeamMember:'Add member',nextSignoff:'Next: Sign-off →',
     workSummary:'Work summary',result:'Result',remarks:'Remarks',
     engineerSig:'Signature',signHint:'Sign above with finger or stylus',clearSig:'Clear',
+    useMySig:'Use my signature',uploadSig:'Upload',saveDefaultSig:'Set Default',sigSavedDefault:'Saved as default signature ✓',calendar:'Calendar',
     exportPdf:'Export PDF',exportPdfReport:'Export Report',downloadPdf:'Download PDF',
     emailPdf:'Email Report',markCompleted:'Mark completed',
     leavePlanner:'Leave Planner',workTrip:'Work trip',holiday:'Holiday',tripDays:'Trip days',clearDay:'Clear day',
@@ -62,6 +63,7 @@ const T={
     teamSignoffs:'NHÓM & KÝ DUYỆT',addTeamMember:'Thêm thành viên',nextSignoff:'Tiếp: Ký duyệt →',
     workSummary:'Tóm tắt công việc',result:'Kết quả',remarks:'Ghi chú',
     engineerSig:'Chữ ký',signHint:'Ký bằng ngón tay hoặc bút cảm ứng',clearSig:'Xóa',
+    useMySig:'Dùng chữ ký của tôi',uploadSig:'Tải ảnh',saveDefaultSig:'Lưu mặc định',sigSavedDefault:'Đã lưu làm chữ ký mặc định ✓',calendar:'Lịch',
     exportPdf:'Xuất PDF',exportPdfReport:'Xuất báo cáo',downloadPdf:'Tải PDF',
     emailPdf:'Gửi qua email',markCompleted:'Đánh dấu hoàn thành',
     leavePlanner:'Kế hoạch nghỉ phép',workTrip:'Công tác',holiday:'Ngày lễ',tripDays:'Ngày công tác',clearDay:'Xóa ngày',
@@ -102,7 +104,7 @@ const IND={
 
 // ═══════ STATE ═══════
 let S={
-  profile:{name:'',title:'',company:'',empid:''},
+  profile:{name:'',title:'',company:'',empid:'',signature:''},
   trips:[],reports:{},tasks:[],leaveData:{},
   machines:[],plans:[],bills:[],
   inspections:[],
@@ -647,6 +649,10 @@ function showScreen(n){
   }
   // Reset settings unlock when navigating away
   if (n !== 'settings') _settingsUnlocked = false;
+  if (window._currentScreen && window._currentScreen !== n) {
+    window._prevScreen = window._currentScreen;
+  }
+  window._currentScreen = n;
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const target = document.getElementById('screen-'+n);
   if(target) target.classList.add('active');
@@ -831,10 +837,48 @@ function saveProfile(){
 function updateProfileDisplay(){
   const n=S.profile.name||'PL';
   const ini=n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  document.getElementById('home-av').textContent=ini;
-  document.getElementById('settings-av').textContent=ini;
-  document.getElementById('s-name-d').textContent=S.profile.name||'Set your name';
-  document.getElementById('s-title-d').textContent=[S.profile.title,S.profile.company].filter(Boolean).join(' · ')||'Add title & company';
+  const homeAv = document.getElementById('home-av');
+  const setAv = document.getElementById('settings-av');
+  if(homeAv) homeAv.textContent=ini;
+  if(setAv) setAv.textContent=ini;
+  const snd = document.getElementById('s-name-d');
+  const std = document.getElementById('s-title-d');
+  if(snd) snd.textContent=S.profile.name||'Set your name';
+  if(std) std.textContent=[S.profile.title,S.profile.company].filter(Boolean).join(' · ')||'Add title & company';
+
+  const sigPrev = document.getElementById('profile-sig-preview');
+  if(sigPrev){
+    if(S.profile && S.profile.signature){
+      sigPrev.innerHTML = `<img src="${S.profile.signature}" style="max-width:100%;max-height:100%;object-fit:contain;display:block;">`;
+    } else {
+      sigPrev.innerHTML = `<span style="font-size:11px;color:var(--n400);">No signature</span>`;
+    }
+  }
+}
+
+function clearProfileSignature(){
+  if(!S.profile) S.profile = {};
+  S.profile.signature = '';
+  sv();
+  updateProfileDisplay();
+  showToast('Default signature cleared');
+  triggerHaptic('light');
+}
+
+function handleProfileSignatureUpload(e){
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    if(!S.profile) S.profile = {};
+    S.profile.signature = evt.target.result;
+    sv();
+    updateProfileDisplay();
+    showToast('Default signature updated ✓');
+    triggerHaptic('success');
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
 }
 
 // ═══════ INDUSTRY TEMPLATES (FIXED) ═══════
@@ -970,7 +1014,7 @@ async function clearAllData(){
     icon: '⚠️'
   });
   if(!ok) return;
-  S={profile:{name:'',title:'',company:'',empid:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],inspections:[],library:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang,theme:S.theme||'auto'};
+  S={profile:{name:'',title:'',company:'',empid:'',signature:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],inspections:[],library:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang,theme:S.theme||'auto'};
   sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();showToast('All data cleared');
 }
 
