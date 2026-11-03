@@ -750,20 +750,23 @@ function initSig(){
   sigCtx=sigCanvas.getContext('2d');
   if(!sigCtx){ console.warn('Cannot get 2d context'); return; }
 
-  // IMP-15: Retina High-DPI Canvas scaling for crisp signatures
+  // IMP-15 & IMP-26: Retina High-DPI Canvas scaling & Balanced Box Proportion
   const dpr = window.devicePixelRatio || 1;
   const rect = sigCanvas.getBoundingClientRect();
-  const width = (rect.width && rect.width > 50) ? rect.width : 380;
-  const height = (rect.height && rect.height > 30) ? rect.height : 120;
+  const width = Math.floor((rect.width && rect.width > 50) ? rect.width : 340);
+  const height = 110;
   const targetW = Math.round(width * dpr);
   const targetH = Math.round(height * dpr);
 
   if (sigCanvas.width !== targetW || sigCanvas.height !== targetH) {
     sigCanvas.width = targetW;
     sigCanvas.height = targetH;
-    sigCanvas.style.width = width + 'px';
-    sigCanvas.style.height = height + 'px';
   }
+  sigCanvas.style.width = '100%';
+  sigCanvas.style.height = height + 'px';
+  sigCanvas.style.boxSizing = 'border-box';
+  sigCanvas.style.maxWidth = '100%';
+
   sigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   sigCtx.strokeStyle='#1E3A5F';
   sigCtx.lineWidth=2.2;
@@ -1039,13 +1042,13 @@ function getOptimizedSignatureForPdf(sigDataUrl) {
       img.onload = () => {
         clearTimeout(timer);
         try {
-          // Signature box in PDF A4 is 65mm x 25mm.
-          // 520px x 200px provides ultra-sharp 235 DPI for printing.
-          const maxW = 520;
-          const maxH = 200;
-          const origW = img.naturalWidth || img.width || 380;
-          const origH = img.naturalHeight || img.height || 120;
-          const scale = Math.min(maxW / origW, maxH / origH, 1.2);
+          // Signature box in PDF A4 is 50mm x 17mm (~2.94:1).
+          // 440px x 150px provides ultra-sharp 225 DPI for printing.
+          const maxW = 440;
+          const maxH = 150;
+          const origW = img.naturalWidth || img.width || 360;
+          const origH = img.naturalHeight || img.height || 110;
+          const scale = Math.min(maxW / origW, maxH / origH, 1.0);
           const targetW = Math.max(Math.round(origW * scale), 60);
           const targetH = Math.max(Math.round(origH * scale), 20);
 
@@ -1242,14 +1245,31 @@ async function exportPDF(){
 
   sec('SIGN-OFF');kv2('Result',r.signoff&&r.signoff.result||'Completed');if(r.signoff&&r.signoff.summary)kv2('Summary',r.signoff.summary);if(r.signoff&&r.signoff.remarks)kv2('Remarks',r.signoff.remarks);if(pdfWorkCount>0)kv2('Total Work Hours',`${fmtPdfMins(pdfWorkMins)} (${pdfWorkCount} task${pdfWorkCount>1?'s':''})`);if(pdfTravelCount>0)kv2('Total Travel Hours',`${fmtPdfMins(pdfTravelMins)} (${pdfTravelCount} task${pdfTravelCount>1?'s':''})`);if(pdfLeaveCount>0)kv2('Total Leave Hours',`${fmtPdfMins(pdfLeaveMins)} (${pdfLeaveCount} task${pdfLeaveCount>1?'s':''})`);y+=4;
   if(y>240){doc.addPage();y=20;pageNum++;addPN();}
-  doc.setDrawColor(200,200,200);doc.rect(mg,y,W-mg*2,34);doc.setFontSize(8);doc.setTextColor(100,100,100);doc.text('Signature:',mg+4,y+7);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text(p.name||'Engineer',mg+4,y+29);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(100,100,100);rtxt(new Date().toLocaleDateString('en-GB'),y+29);
+  doc.setDrawColor(200,200,200);
+  doc.rect(mg,y,W-mg*2,32);
+  doc.setFontSize(8);
+  doc.setTextColor(100,100,100);
+  doc.text('Signature:',mg+4,y+6.5);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(33,37,41);
+  doc.text(p.name||'Engineer',mg+4,y+27);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8);
+  doc.setTextColor(100,100,100);
+  rtxt(new Date().toLocaleDateString('en-GB'),y+27);
   if(r.signature && r.signature.length > 50){
     try{
       const optSig = await getOptimizedSignatureForPdf(r.signature);
-      if(optSig && optSig.startsWith('data:image/jpeg')){
-        doc.addImage(optSig, 'JPEG', mg+40, y+4, 65, 25, undefined, 'FAST');
-      } else if(optSig){
-        doc.addImage(optSig, 'PNG', mg+40, y+4, 65, 25, undefined, 'FAST');
+      if(optSig){
+        const sigW = 50;
+        const sigH = 17;
+        const sigX = mg + 55;
+        const sigY = y + 4;
+        doc.setDrawColor(220,220,220);
+        doc.setLineWidth(0.3);
+        doc.line(sigX, y + 21.5, sigX + sigW, y + 21.5);
+        const imgFmt = optSig.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG';
+        doc.addImage(optSig, imgFmt, sigX, sigY, sigW, sigH, undefined, 'FAST');
       }
     }catch(e){
       console.warn('PDF signature embed error:', e);

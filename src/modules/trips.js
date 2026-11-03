@@ -882,13 +882,15 @@ function initTicketSigCanvas() {
 
   const dpr = window.devicePixelRatio || 1;
   const rect = ticketSigCanvas.getBoundingClientRect();
-  const cssW = rect.width || 340;
-  const cssH = 110;
+  const cssW = Math.floor((rect.width && rect.width > 50) ? rect.width : 340);
+  const cssH = 100;
 
   ticketSigCanvas.width = Math.round(cssW * dpr);
   ticketSigCanvas.height = Math.round(cssH * dpr);
-  ticketSigCanvas.style.width = cssW + 'px';
+  ticketSigCanvas.style.width = '100%';
   ticketSigCanvas.style.height = cssH + 'px';
+  ticketSigCanvas.style.boxSizing = 'border-box';
+  ticketSigCanvas.style.maxWidth = '100%';
 
   ticketSigCtx = ticketSigCanvas.getContext('2d');
   ticketSigCtx.scale(dpr, dpr);
@@ -951,8 +953,8 @@ function initTicketSigCanvas() {
 function clearTicketSig() {
   if (!ticketSigCanvas || !ticketSigCtx) return;
   const rect = ticketSigCanvas.getBoundingClientRect();
-  const cssW = rect.width || 340;
-  const cssH = 110;
+  const cssW = Math.floor((rect.width && rect.width > 50) ? rect.width : 340);
+  const cssH = 100;
   ticketSigCtx.fillStyle = '#fafafa';
   ticketSigCtx.fillRect(0, 0, cssW, cssH);
   _tempTicketSigDataUrl = '';

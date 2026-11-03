@@ -50,6 +50,7 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 | **IMP-23** | **An toàn EHS, Giấy phép công tác & 4 bước LOTO (Site Safety Checklist)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 | **IMP-24** | **Hồ sơ lý lịch thiết bị & Dòng thời gian bảo trì (Asset Passport & Timeline)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 | **IMP-25** | **Khắc phục lỗi hồi sinh bản ghi & Bảo đảm đồng bộ xóa (Tombstone & Cloud Delete Sync)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
+| **IMP-26** | **Tinh chỉnh cân đối khung chữ ký nằm gọn trong khung ngoài (Signature Frame Proportions)** | 🟢 **P3** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.25 ngày |
 
 ---
 
@@ -405,6 +406,7 @@ gantt
   - [x] Đồng bộ Đa bảng Google Sheets: Tạo mới 3 Sheet chuyên dụng (`QuickSnap`, `SiteSafety`, `ServiceTickets`) với cơ chế nén ảnh, gộp timestamp hai chiều (Đã xong)
   - [x] Tối ưu Trải nghiệm & Độ tin cậy Đồng bộ Đám mây: Tự động sắp xếp Chuyến đi mới nhất lên đầu trong menu Quick Snap, kích hoạt Auto-sync (`svAndSync`), bảo vệ tràn ô 49,000 ký tự trên Google Sheets và tương thích trường dữ liệu (Đã xong)
   - [x] Khắc phục triệt để lỗi hồi sinh bản ghi đã xóa & bảo đảm đồng bộ xóa lên Google Sheets (Tombstone Deletion & Cloud Delete Sync với `Array.isArray` guard và Fast Delete Debounce) (Đã xong - IMP-25)
+  - [x] Tinh chỉnh cân đối khung chữ ký nằm gọn gàng 100% trong khung ngoài trên cả giao diện ứng dụng (box-sizing: border-box) và tệp PDF xuất bản (50mm x 17mm) (Đã xong - IMP-26)
 
 ---
 

@@ -400,4 +400,25 @@ assert.strictEqual(testResult[0].id, 'keep-2', 'Only active record keep-2 should
 console.log('  ✓ Empty array clearing in Google Apps Script verified!');
 console.log('  ✓ Tombstone deletion & zombie record prevention (mergeCollectionByTimestamp) verified!');
 
-console.log('\n🎉 ALL 10 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');
+// 11. Test Signature Frame Proportions & Box-Sizing Alignment (IMP-26)
+console.log('\n🔍 Test 11: Testing Signature Frame Proportions & Box-Sizing Alignment (IMP-26)...');
+const cssContent = fs.readFileSync(path.join(__dirname, 'src', 'styles.css'), 'utf8');
+assert.ok(cssContent.includes('#sigCanvas, #ticketSigCanvas'), 'CSS must define combined signature canvas rule');
+assert.ok(cssContent.includes('box-sizing: border-box;'), 'Signature canvas must use box-sizing: border-box');
+
+const reportCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'report.js'), 'utf8');
+assert.ok(reportCode.includes("sigCanvas.style.boxSizing = 'border-box'"), 'initSig must apply border-box');
+assert.ok(reportCode.includes("sigCanvas.style.width = '100%'"), 'initSig must use 100% width to stay inside card');
+assert.ok(reportCode.includes("const sigW = 50"), 'exportPDF must use balanced 50mm signature width');
+assert.ok(reportCode.includes("const sigH = 17"), 'exportPDF must use balanced 17mm signature height');
+assert.ok(reportCode.includes("doc.rect(mg,y,W-mg*2,32)"), 'exportPDF outer box must have 32mm height');
+assert.ok(reportCode.includes("maxW = 440"), 'getOptimizedSignatureForPdf must scale to 440px width');
+
+const tripsCodeMod = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'trips.js'), 'utf8');
+assert.ok(tripsCodeMod.includes("ticketSigCanvas.style.boxSizing = 'border-box'"), 'initTicketSigCanvas must apply border-box');
+assert.ok(tripsCodeMod.includes("ticketSigCanvas.style.width = '100%'"), 'initTicketSigCanvas must use 100% width');
+
+console.log('  ✓ UI signature canvases box-sizing and width constrained inside card container!');
+console.log('  ✓ PDF signature balanced dimensions (50x17mm) neatly positioned inside outer box!');
+
+console.log('\n🎉 ALL 11 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');

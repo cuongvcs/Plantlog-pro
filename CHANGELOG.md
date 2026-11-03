@@ -85,6 +85,16 @@
   - Hiển thị rõ số lượng ghi chú đã đồng bộ trong Toast và Panel cài đặt: `✅ Synced! ... 0 snaps ...` giúp người dùng biết chắc chắn dữ liệu trên Sheet đã được xóa về 0.
   - Tự động phát hiện nếu Web App Google Apps Script của người dùng đang chạy phiên bản cũ chưa hỗ trợ QuickSnap để cảnh báo người dùng cập nhật phiên bản mới trên Google Sheets.
 
+#### 🖋️ 10. [IMP-26] Tinh Chỉnh Cân Đối Khung Chữ Ký Nằm Gọn Gàng Trong Khung Bên Ngoài (Signature Frame Proportions):
+- **Tối ưu Khung Chữ ký trên Giao diện Ứng dụng (UI Canvas Box-Sizing):**
+  - Khắc phục triệt để lỗi khung chữ ký (`#sigCanvas` và `#ticketSigCanvas`) bị phình to và tràn ra ngoài lề khung card (`.card`) trên màn hình điện thoại do mặc định trình duyệt dùng `box-sizing: content-box`.
+  - Cập nhật chuẩn `box-sizing: border-box; width: 100%; max-width: 100%; height: 110px;` trong CSS và JS.
+  - Trong `initSig()` và `initTicketSigCanvas()`, cố định `style.width = '100%'` và `style.boxSizing = 'border-box'` thay vì gán giá trị pixel tuyệt đối từ `rect.width`, đảm bảo khung chữ ký luôn nằm lọt lòng 100% gọn gàng và cân xứng tuyệt đối bên trong khung card chứa bên ngoài.
+- **Tối ưu Khung Chữ ký trên Báo cáo PDF Xuất bản (PDF Signature Alignment & Proportions):**
+  - Tinh chỉnh tỷ lệ vùng chữ ký từ `65mm x 25mm` (chiếm tới 74% chiều cao khung ngoài gây cảm giác quá khổ và chèn vào dòng tên kỹ sư) thành kích thước chuẩn vàng công nghiệp **`50mm x 17mm`** (tỷ lệ $\approx 2.94:1$).
+  - Bố trí chữ ký nằm cân đối tại tọa độ `(mg + 55, y + 4)`, để lại khoảng đệm thoáng đãng phía trên ($4\text{ mm}$), phía dưới ($5.5\text{ mm}$ tới dòng tên Kỹ sư & Ngày tháng) và hai bên lề.
+  - Bổ sung đường kẻ chỉ dẫn chữ ký thanh lịch (`doc.line`) tại đáy vùng ký, giúp bố cục nghiệm thu PDF chuyên nghiệp, hài hòa và không bao giờ chạm hay vượt ra ngoài khung viền chữ nhật bao quanh (`doc.rect`).
+
 ---
 
 ## [v4.12] - 02/11/2026
