@@ -501,6 +501,7 @@ input, textarea, select, button { font-family: var(--font); }
   align-items:flex-end; justify-content:center;
 }
 .mo.open { display:flex; animation:fadeIn 200ms ease both; }
+#modal-quick-scratch { z-index: 120; }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 .modal {
   background:var(--surface);

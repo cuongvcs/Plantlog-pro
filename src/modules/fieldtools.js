@@ -309,6 +309,7 @@ function onSignalInput(source) {
 let _scratchPhotoBase64 = '';
 let _scratchSelectedCategory = 'general';
 let _editingScratchId = null;
+let _scratchEditSource = null;
 
 function initScratchpadStore() {
   if (!S.scratchpad) S.scratchpad = [];
@@ -317,6 +318,7 @@ function initScratchpadStore() {
 function openQuickScratchModal(prefillCategory = 'general') {
   initScratchpadStore();
   _editingScratchId = null;
+  _scratchEditSource = null;
   _scratchPhotoBase64 = '';
   _scratchSelectedCategory = prefillCategory || 'general';
 
@@ -358,6 +360,7 @@ function openQuickScratchModal(prefillCategory = 'general') {
 
   // Highlight category chip
   selectScratchCategory(_scratchSelectedCategory);
+  closeModal('modal-scratchpad-manager');
   openModal('modal-quick-scratch');
 
   // Auto focus text input for instant typing
@@ -369,15 +372,16 @@ function openQuickScratchModal(prefillCategory = 'general') {
 /**
  * IMP-28: Open modal pre-filled to edit an existing Quick Note / Snap
  */
-function openEditScratchModal(id) {
+function openEditScratchModal(id, source = 'manager') {
   initScratchpadStore();
-  const sp = (S.scratchpad || []).find(s => s.id === id);
+  const sp = (S.scratchpad || []).find(s => String(s.id) === String(id));
   if (!sp) {
     showToast('Note not found');
     return;
   }
 
-  _editingScratchId = id;
+  _editingScratchId = sp.id;
+  _scratchEditSource = source;
   _scratchPhotoBase64 = sp.photo || '';
   _scratchSelectedCategory = sp.category || 'general';
 
@@ -422,7 +426,7 @@ function openEditScratchModal(id) {
     let opts = '<option value="">-- No Linked Trip (Unassigned) --</option>';
     const sortedTrips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     sortedTrips.forEach(tr => {
-      const sel = (sp.tripId && tr.id === sp.tripId) ? ' selected' : '';
+      const sel = (sp.tripId && String(tr.id) === String(sp.tripId)) ? ' selected' : '';
       opts += `<option value="${tr.id}"${sel}>🏭 ${tr.plant} (${fmtDate(tr.date)})</option>`;
     });
     tripSelect.innerHTML = opts;
@@ -430,11 +434,28 @@ function openEditScratchModal(id) {
 
   // Highlight category chip
   selectScratchCategory(_scratchSelectedCategory);
+
+  // Close manager modal so edit modal is displayed cleanly in front
+  closeModal('modal-scratchpad-manager');
   openModal('modal-quick-scratch');
 
   setTimeout(() => {
-    if (textEl) textEl.focus();
+    if (textEl) {
+      textEl.focus();
+      const len = textEl.value.length;
+      textEl.setSelectionRange(len, len);
+    }
   }, 180);
+}
+
+function cancelQuickScratch() {
+  const wasManager = _scratchEditSource === 'manager';
+  _editingScratchId = null;
+  _scratchEditSource = null;
+  closeModal('modal-quick-scratch');
+  if (wasManager) {
+    openScratchpadManagerModal();
+  }
 }
 
 function selectScratchCategory(cat) {
@@ -513,7 +534,7 @@ function saveQuickScratch() {
 
   // IMP-28: If in editing mode, update existing note
   if (_editingScratchId) {
-    const sp = (S.scratchpad || []).find(s => s.id === _editingScratchId);
+    const sp = (S.scratchpad || []).find(s => String(s.id) === String(_editingScratchId));
     if (sp) {
       sp.title = title;
       sp.text = text;
@@ -525,6 +546,10 @@ function saveQuickScratch() {
       sp.synced = false;
       sv();
       closeModal('modal-quick-scratch');
+      const wasManager = _scratchEditSource === 'manager';
+      _editingScratchId = null;
+      _scratchEditSource = null;
+
       triggerHaptic('success');
       showToast('Note updated ✓');
 
@@ -535,9 +560,15 @@ function saveQuickScratch() {
         svAndSync('quick_scratch');
       }
 
-      _editingScratchId = null;
       renderScratchpadList();
       renderDash();
+      if (typeof renderReportSnapPicker === 'function') {
+        renderReportSnapPicker();
+      }
+
+      if (wasManager) {
+        openScratchpadManagerModal();
+      }
       return;
     }
   }
@@ -622,7 +653,7 @@ function renderScratchpadList() {
           ` : ''}
         </div>
         <div class="scratch-card-actions">
-          <button class="scratch-act-btn" onclick="openEditScratchModal('${sp.id}')" title="Edit Note">
+          <button class="scratch-act-btn" onclick="openEditScratchModal('${sp.id}', 'manager')" title="Edit Note">
             ✏️ Edit
           </button>
           <button class="scratch-act-btn" onclick="convertScratchToTask('${sp.id}')" title="Convert to formal Task">

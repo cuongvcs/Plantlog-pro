@@ -319,6 +319,9 @@ function renderReportSnapsPreview(){
         </div>
         ${sp.photo?`<img src="${sp.photo}" onclick="previewImage('${sp.photo}')" style="width:50px;height:50px;object-fit:cover;border-radius:var(--rs);border:1px solid var(--n200);flex-shrink:0;">`:''}
       </div>
+      <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--n100);display:flex;justify-content:flex-end;">
+        <button class="scratch-act-btn" onclick="openEditScratchModal('${sp.id}', 'report')" style="font-size:11px;padding:2px 8px;" title="Edit Note">✏️ Edit</button>
+      </div>
     </div>
   `).join('');
 }

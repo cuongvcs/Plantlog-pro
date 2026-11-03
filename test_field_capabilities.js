@@ -497,8 +497,8 @@ console.log('  ✓ Non-destructive row-level append, update, and delete tested a
 console.log('\n🔍 Test 13: Testing Quick Note / Snap In-Place Editing (IMP-28)...');
 const ftCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'fieldtools.js'), 'utf8');
 assert.ok(ftCode.includes("let _editingScratchId = null"), 'fieldtools.js must track _editingScratchId');
-assert.ok(ftCode.includes("function openEditScratchModal(id)"), 'fieldtools.js must define openEditScratchModal');
-assert.ok(ftCode.includes("openEditScratchModal('${sp.id}')"), 'renderScratchpadList must render Edit button');
+assert.ok(ftCode.includes("function openEditScratchModal"), 'fieldtools.js must define openEditScratchModal');
+assert.ok(ftCode.includes("openEditScratchModal('${sp.id}'"), 'renderScratchpadList must render Edit button');
 assert.ok(ftCode.includes("sp.updatedAt = new Date().toISOString()"), 'saveQuickScratch must update timestamp in edit mode');
 
 const indexHtmlCode = fs.readFileSync(path.join(__dirname, 'src', 'index.html'), 'utf8');
