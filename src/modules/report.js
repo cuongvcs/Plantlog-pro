@@ -22,7 +22,10 @@ function gotoStep(n){
     if(n===1) renderReadings();
     if(n===2) renderIssues();
     if(n===3) renderTeam();
-    if(n===4) renderReportTaskPicker();
+    if(n===4){
+      renderReportTaskPicker();
+      renderReportSnapPicker();
+    }
     if(n===5){
       // Step 5 = Sign-off & Handover: render readiness, spare parts, signature & update date
       try{
@@ -196,6 +199,128 @@ function renderReportTasksPreview(){
   });
 
   taskList.innerHTML=html;
+}
+
+// ═══════ REPORT SNAP / FIELD NOTE PICKER (IMP-29) ═══════
+
+function renderReportSnapPicker(){
+  if(!curReport)return;
+  if(!curReport.reportSnaps)curReport.reportSnaps=[];
+
+  const pickerList=document.getElementById('snap-picker-list');
+  const pickerEmpty=document.getElementById('snap-picker-empty');
+  if(!pickerList)return;
+
+  // Filter notes: notes linked to curTrip, or unassigned notes
+  const allSnaps=(S.scratchpad||[]).filter(sp=>!sp.tripId||sp.tripId===curTrip);
+  allSnaps.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+
+  // Default: if reportSnaps empty, auto-select notes specifically linked to this trip
+  if(curReport.reportSnaps.length===0 && allSnaps.some(sp=>sp.tripId===curTrip)){
+    curReport.reportSnaps=allSnaps.filter(sp=>sp.tripId===curTrip).map(sp=>sp.id);
+    sv();
+  }
+
+  if(!allSnaps.length){
+    pickerList.innerHTML='';
+    if(pickerEmpty)pickerEmpty.style.display='';
+  } else {
+    if(pickerEmpty)pickerEmpty.style.display='none';
+    const catIcons={
+      general:'📝 Note',
+      defect:'⚠️ Defect',
+      measurement:'📊 Reading',
+      wiring:'⚡ Wiring',
+      nameplate:'🏷️ Nameplate'
+    };
+
+    pickerList.innerHTML=allSnaps.map(sp=>{
+      const sel=curReport.reportSnaps.includes(sp.id);
+      const isTrip=sp.tripId===curTrip;
+      const dateStr=new Date(sp.createdAt).toLocaleDateString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      return `<div class="snap-pick-item${sel?' selected':''}" onclick="toggleReportSnap('${sp.id}')">
+        <div class="snap-pick-cb">✓</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
+            <span class="scratch-badge-cat cat-${sp.category}">${catIcons[sp.category]||'📝 Note'}</span>
+            <span style="font-size:11px;color:var(--n500);">${dateStr}</span>
+            ${!isTrip?`<span style="font-size:10px;color:var(--n400);font-style:italic;">(Unassigned)</span>`:''}
+          </div>
+          <div class="snap-pick-title">${sp.title||'Untitled Note'}</div>
+          ${sp.text?`<div class="snap-pick-desc">${sp.text.length>100?sp.text.substring(0,97)+'…':sp.text}</div>`:''}
+        </div>
+        ${sp.photo?`<img src="${sp.photo}" onclick="event.stopPropagation();previewImage('${sp.photo}')" style="width:48px;height:48px;object-fit:cover;border-radius:var(--rs);border:1px solid var(--n200);flex-shrink:0;">`:''}
+      </div>`;
+    }).join('');
+  }
+
+  renderReportSnapsPreview();
+}
+
+function toggleReportSnap(id){
+  if(!curReport)return;
+  if(!curReport.reportSnaps)curReport.reportSnaps=[];
+  const idx=curReport.reportSnaps.indexOf(id);
+  if(idx>=0)curReport.reportSnaps.splice(idx,1);
+  else curReport.reportSnaps.push(id);
+  sv();
+  renderReportSnapPicker();
+}
+
+function selectAllReportSnaps(){
+  if(!curReport)return;
+  const allSnaps=(S.scratchpad||[]).filter(sp=>!sp.tripId||sp.tripId===curTrip);
+  curReport.reportSnaps=allSnaps.map(sp=>sp.id);
+  sv();
+  renderReportSnapPicker();
+}
+
+function clearAllReportSnaps(){
+  if(!curReport)return;
+  curReport.reportSnaps=[];
+  sv();
+  renderReportSnapPicker();
+}
+
+function renderReportSnapsPreview(){
+  const preview=document.getElementById('report-snaps-preview');
+  const snapList=document.getElementById('report-snaps-list');
+  const countEl=document.getElementById('selected-snap-count');
+  if(!preview||!snapList)return;
+
+  const selected=(curReport.reportSnaps||[]);
+  if(countEl)countEl.textContent=selected.length;
+
+  if(!selected.length){
+    preview.style.display='none';
+    return;
+  }
+  preview.style.display='';
+
+  const catIcons={
+    general:'📝 Note',
+    defect:'⚠️ Defect',
+    measurement:'📊 Reading',
+    wiring:'⚡ Wiring',
+    nameplate:'🏷️ Nameplate'
+  };
+
+  const snaps=selected.map(id=>(S.scratchpad||[]).find(sp=>sp.id===id)).filter(Boolean);
+  snapList.innerHTML=snaps.map(sp=>`
+    <div class="rpt-snap-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
+            <span class="scratch-badge-cat cat-${sp.category}">${catIcons[sp.category]||'📝 Note'}</span>
+            <span style="font-size:11px;color:var(--n500);">${fmtDate(sp.createdAt)}</span>
+          </div>
+          <div style="font-size:13px;font-weight:700;color:var(--n800);">${sp.title}</div>
+          ${sp.text?`<div style="font-size:12px;color:var(--n700);margin-top:4px;line-height:1.4;white-space:pre-wrap;">${sp.text}</div>`:''}
+        </div>
+        ${sp.photo?`<img src="${sp.photo}" onclick="previewImage('${sp.photo}')" style="width:50px;height:50px;object-fit:cover;border-radius:var(--rs);border:1px solid var(--n200);flex-shrink:0;">`:''}
+      </div>
+    </div>
+  `).join('');
 }
 
 // ═══════ CHECKLIST ═══════
@@ -1241,6 +1366,45 @@ async function exportPDF(){
       chk();
     });
     ln();
+  }
+
+  // ── Field Notes & Observations (IMP-29) ──
+  const rptSnapIds = r.reportSnaps || [];
+  if (rptSnapIds.length) {
+    const selectedSnaps = rptSnapIds.map(id => (S.scratchpad || []).find(s => s.id === id)).filter(Boolean);
+    if (selectedSnaps.length) {
+      chk();
+      sec(`FIELD NOTES & OBSERVATIONS (${selectedSnaps.length})`);
+      selectedSnaps.forEach(sp => {
+        const catTag = `[${(sp.category || 'note').toUpperCase()}]`;
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(33, 37, 41);
+        doc.text(`• ${catTag} ${sp.title || 'Field Note'}`, mg + 2, y);
+        doc.setFont('helvetica', 'normal');
+        if (sp.createdAt) {
+          rtxt(fmtDate(sp.createdAt), y, [110, 110, 110]);
+        }
+        y += 4.5;
+        if (sp.text || sp.notes) {
+          doc.setFontSize(8);
+          doc.setTextColor(80, 80, 80);
+          const nl = doc.splitTextToSize(sp.text || sp.notes, W - mg * 2 - 8);
+          doc.text(nl, mg + 6, y);
+          y += nl.length * 4 + 1;
+        }
+        if (sp.photo && typeof sp.photo === 'string' && sp.photo.startsWith('data:image/')) {
+          try {
+            chk();
+            doc.addImage(sp.photo, 'JPEG', mg + 6, y, 35, 26);
+            y += 28;
+          } catch(e) {}
+        }
+        y += 2;
+        chk();
+      });
+      ln();
+    }
   }
 
   sec('SIGN-OFF');kv2('Result',r.signoff&&r.signoff.result||'Completed');if(r.signoff&&r.signoff.summary)kv2('Summary',r.signoff.summary);if(r.signoff&&r.signoff.remarks)kv2('Remarks',r.signoff.remarks);if(pdfWorkCount>0)kv2('Total Work Hours',`${fmtPdfMins(pdfWorkMins)} (${pdfWorkCount} task${pdfWorkCount>1?'s':''})`);if(pdfTravelCount>0)kv2('Total Travel Hours',`${fmtPdfMins(pdfTravelMins)} (${pdfTravelCount} task${pdfTravelCount>1?'s':''})`);if(pdfLeaveCount>0)kv2('Total Leave Hours',`${fmtPdfMins(pdfLeaveMins)} (${pdfLeaveCount} task${pdfLeaveCount>1?'s':''})`);y+=4;

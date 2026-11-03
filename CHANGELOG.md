@@ -111,6 +111,30 @@
   - Cơ chế dự phòng an toàn (Fallback Graceful Degradation): Nếu Web App Google Apps Script của người dùng chưa cập nhật phiên bản mới (trả về lỗi `Unknown action`), hệ thống tự động quay về cơ chế `svAndSync` truyền thống để đảm bảo dữ liệu không bị thất lạc.
   - Đảm bảo tính năng Offline-First 100%: Khi mất mạng, ghi chú vẫn được lưu an toàn tại LocalStorage, và sẽ tự động đồng bộ khi có kết nối hoặc khi người dùng thực hiện Sync All.
 
+#### ✏️ 12. [IMP-28] Cho Phép Chỉnh Sửa Ghi Chú Quick Notes Sau Khi Tạo (In-Place Note Editing):
+- **Nút Edit trên từng thẻ ghi chú hiện trường:** Bổ sung nút `✏️ Edit` trên mọi thẻ ghi chú trong danh sách Scratchpad (`renderScratchpadList`).
+- **Nạp lại toàn bộ dữ liệu vào Modal (`openEditScratchModal`):**
+  - Mở lại modal ghi chú với tiêu đề `✏️ Edit Field Note` và nút `💾 Update Note`.
+  - Tự động nạp lại tiêu đề, nội dung ghi chú, phân loại danh mục (chips), chuyến đi liên kết và ảnh hiện trường đã chụp kèm nút `✕ Remove`.
+  - Hỗ trợ đổi chuyến đi, sửa nội dung, gỡ ảnh hoặc thay ảnh chụp mới.
+- **Cập nhật tức thì và Đồng bộ gia tăng vi mô:**
+  - Khi bấm `💾 Update Note`: Cập nhật ghi chú tại LocalStorage (`updatedAt = new Date().toISOString()`), tự động gọi `syncSingleQuickSnap(sp)`.
+  - Google Apps Script tìm đúng `id` và cập nhật dòng tương ứng trên Google Sheets trong 200–500ms mà không làm thay đổi các dòng khác.
+  - Bảo toàn 100% khả năng hoạt động offline.
+
+#### 📊 13. [IMP-29] Tích Hợp Chọn Ghi Chú Hiện Trường Vào Báo Cáo Kỹ Thuật & Xuất Bản PDF (Field Notes in Report):
+- **Mở rộng Bước 5 Báo cáo Kỹ thuật (`5 Tasks & Notes`):**
+  - Đổi tên tab 5 thành `5 Tasks & Notes` trên thanh điều hướng Báo cáo.
+  - Bổ sung khối chọn ghi chú **`ADD FIELD NOTES & SNAPS TO REPORT`** ngay dưới danh mục Tasks.
+  - Tự động ưu tiên lọc các ghi chú liên kết với chuyến đi hiện tại (`sp.tripId === curTrip`) và ghi chú chưa gán (`Unassigned`).
+  - Thẻ chọn ghi chú trực quan (`.snap-pick-item`): Hộp chọn `✓`, huy hiệu phân loại, ngày tạo, tiêu đề, trích đoạn nội dung và ảnh thumbnail xem trước.
+  - Nút tiện ích `All` (chọn tất cả) và `Clear` (bỏ chọn).
+  - Tự động lưu danh sách ID ghi chú vào `curReport.reportSnaps`.
+- **Xuất bản Báo cáo Kỹ thuật PDF Chuyên nghiệp (`exportPDF`):**
+  - Bổ sung chuyên mục **`FIELD NOTES & OBSERVATIONS (N)`** trong tệp PDF xuất bản trước phần Nghiệm thu (Sign-off).
+  - Trình bày rõ ràng: Dòng tiêu đề in đậm với tag danh mục `• [CATEGORY] Tiêu đề`, thời gian bên phải, đoạn văn bản ghi chú chi tiết bọc vừa vặn trang giấy.
+  - Tự động nhúng ảnh thumbnail hiện trường sắc nét (kích thước chuẩn `35mm x 26mm`) với cơ chế ngắt trang an toàn `chk()`.
+
 ---
 
 ## [v4.12] - 02/11/2026

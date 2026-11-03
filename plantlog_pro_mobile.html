@@ -710,6 +710,16 @@ input, textarea, select, button { font-family: var(--font); }
 .rpt-task-notes { width:100%; margin-top:8px; padding:7px 10px; border:1.5px solid var(--n200); border-radius:var(--r-sm); font-family:var(--font); font-size:12px; color:var(--n700); background:var(--n50); resize:none; min-height:50px; outline:none; transition:border-color var(--dur-fast); }
 .rpt-task-notes:focus { border-color:var(--brand); }
 
+/* ── REPORT SNAP / NOTE PICKER (IMP-29) ─────────────────── */
+.snap-pick-item { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-bottom:1px solid var(--n100); background:var(--surface); transition:background var(--dur-fast); cursor:pointer; }
+.snap-pick-item:last-child { border-bottom:none; }
+.snap-pick-item.selected { background:var(--brand-pale); }
+.snap-pick-cb { width:22px; height:22px; border-radius:6px; border:1.5px solid var(--n300); background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; color:transparent; transition:all var(--dur-fast); }
+.snap-pick-item.selected .snap-pick-cb { background:var(--brand); border-color:var(--brand); color:#fff; }
+.snap-pick-title { font-size:13px; font-weight:600; color:var(--n800); line-height:1.3; }
+.snap-pick-desc { font-size:12px; color:var(--n600); margin-top:2px; line-height:1.35; }
+.rpt-snap-card { background:var(--surface); border-radius:var(--r); box-shadow:var(--sh); margin-bottom:8px; overflow:hidden; border:1px solid var(--n150); border-left:3px solid var(--brand); padding:10px 12px; }
+
 /* ── STEP TABS (report) ────────────────────────────────── */
 .stabs {
   display:flex; overflow-x:auto; scrollbar-width:none;
@@ -1899,7 +1909,7 @@ input, textarea, select, button { font-family: var(--font); }
       <button class="stab" onclick="gotoStep(1)" data-t="tab2">2 Readings</button>
       <button class="stab" onclick="gotoStep(2)" data-t="tab3">3 Issues</button>
       <button class="stab" onclick="gotoStep(3)" data-t="tab4">4 Team</button>
-      <button class="stab" onclick="gotoStep(4)" data-t="tab5">5 Tasks</button>
+      <button class="stab" onclick="gotoStep(4)" data-t="tab5">5 Tasks &amp; Notes</button>
       <button class="stab" onclick="gotoStep(5)" data-t="tab6">6 Sign-off</button>
     </div>
   </div>
@@ -1945,7 +1955,27 @@ input, textarea, select, button { font-family: var(--font); }
         <div style="font-size:11px;font-weight:600;color:var(--g500);margin:8px 0 6px;letter-spacing:0.06em;">SELECTED TASKS (<span id="selected-task-count">0</span>)</div>
         <div id="report-tasks-list"></div>
       </div>
-      <div class="brow" style="margin-top:8px;">
+
+      <!-- IMP-29: Picker: select field notes / snaps to include in report -->
+      <div class="card" id="snap-picker-card" style="margin-top:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.06em;">ADD FIELD NOTES &amp; SNAPS TO REPORT</div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" onclick="selectAllReportSnaps()" style="font-size:11px;color:var(--green);background:none;border:none;cursor:pointer;font-weight:600;">All</button>
+            <button type="button" onclick="clearAllReportSnaps()" style="font-size:11px;color:var(--g500);background:none;border:none;cursor:pointer;">Clear</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--g500);margin-bottom:8px;">Select field memos, nameplates, or observations from this trip to include in the technical report.</div>
+        <div id="snap-picker-list"></div>
+        <div id="snap-picker-empty" style="display:none;padding:16px 0;text-align:center;font-size:13px;color:var(--g400);">No field notes linked to this trip. Add notes in Quick Note / Scratchpad first.</div>
+      </div>
+      <!-- Selected snaps preview -->
+      <div id="report-snaps-preview" style="display:none;margin-top:10px;">
+        <div style="font-size:11px;font-weight:600;color:var(--g500);margin:8px 0 6px;letter-spacing:0.06em;">SELECTED NOTES (<span id="selected-snap-count">0</span>)</div>
+        <div id="report-snaps-list"></div>
+      </div>
+
+      <div class="brow" style="margin-top:12px;">
         <button class="btn btn-o" onclick="gotoStep(3)">←</button>
         <button class="btn btn-p" style="flex:1;" onclick="gotoStep(5)">Next: Sign-off →</button>
       </div>
@@ -3524,7 +3554,7 @@ input, textarea, select, button { font-family: var(--font); }
 <div id="modal-quick-scratch" class="mo"><div class="modal">
   <div class="mh"></div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-    <div class="mt" style="margin-bottom:0;">⚡ Field Quick Notes &amp; Snap</div>
+    <div class="mt" id="scratch-modal-title" style="margin-bottom:0;">⚡ Field Quick Notes &amp; Snap</div>
     <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-quick-scratch');openScratchpadManagerModal();" style="font-size:11px;padding:3px 8px;">
       📂 View All (<span id="scratch-modal-count">0</span>)
     </button>
@@ -3585,7 +3615,7 @@ input, textarea, select, button { font-family: var(--font); }
 
   <div class="brow">
     <button type="button" class="btn btn-o" onclick="closeModal('modal-quick-scratch')">Cancel</button>
-    <button type="button" class="btn btn-p" style="flex:1;" onclick="saveQuickScratch()">💾 Save Note</button>
+    <button type="button" class="btn btn-p" id="scratch-save-btn" style="flex:1;" onclick="saveQuickScratch()">💾 Save Note</button>
   </div>
 </div></div>
 
@@ -5849,12 +5879,13 @@ function openReport(){
     S.reports[tr.id]={
       checklist:[],readings:[],issues:[],team:defTeam,
       signoff:{summary:'',result:'Completed',remarks:''},
-      signature:'',reportTasks:[],reportTaskNotes:{}
+      signature:'',reportTasks:[],reportTaskNotes:{},reportSnaps:[]
     };
   }
   curReport=S.reports[tr.id];
   if(!curReport.reportTasks)     curReport.reportTasks=[];
   if(!curReport.reportTaskNotes) curReport.reportTaskNotes={};
+  if(!curReport.reportSnaps)     curReport.reportSnaps=[];
   if(!curReport.signoff)         curReport.signoff={summary:'',result:'Completed',remarks:''};
   S.reports[tr.id]=curReport;
 
@@ -7998,7 +8029,10 @@ function gotoStep(n){
     if(n===1) renderReadings();
     if(n===2) renderIssues();
     if(n===3) renderTeam();
-    if(n===4) renderReportTaskPicker();
+    if(n===4){
+      renderReportTaskPicker();
+      renderReportSnapPicker();
+    }
     if(n===5){
       // Step 5 = Sign-off & Handover: render readiness, spare parts, signature & update date
       try{
@@ -8172,6 +8206,128 @@ function renderReportTasksPreview(){
   });
 
   taskList.innerHTML=html;
+}
+
+// ═══════ REPORT SNAP / FIELD NOTE PICKER (IMP-29) ═══════
+
+function renderReportSnapPicker(){
+  if(!curReport)return;
+  if(!curReport.reportSnaps)curReport.reportSnaps=[];
+
+  const pickerList=document.getElementById('snap-picker-list');
+  const pickerEmpty=document.getElementById('snap-picker-empty');
+  if(!pickerList)return;
+
+  // Filter notes: notes linked to curTrip, or unassigned notes
+  const allSnaps=(S.scratchpad||[]).filter(sp=>!sp.tripId||sp.tripId===curTrip);
+  allSnaps.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+
+  // Default: if reportSnaps empty, auto-select notes specifically linked to this trip
+  if(curReport.reportSnaps.length===0 && allSnaps.some(sp=>sp.tripId===curTrip)){
+    curReport.reportSnaps=allSnaps.filter(sp=>sp.tripId===curTrip).map(sp=>sp.id);
+    sv();
+  }
+
+  if(!allSnaps.length){
+    pickerList.innerHTML='';
+    if(pickerEmpty)pickerEmpty.style.display='';
+  } else {
+    if(pickerEmpty)pickerEmpty.style.display='none';
+    const catIcons={
+      general:'📝 Note',
+      defect:'⚠️ Defect',
+      measurement:'📊 Reading',
+      wiring:'⚡ Wiring',
+      nameplate:'🏷️ Nameplate'
+    };
+
+    pickerList.innerHTML=allSnaps.map(sp=>{
+      const sel=curReport.reportSnaps.includes(sp.id);
+      const isTrip=sp.tripId===curTrip;
+      const dateStr=new Date(sp.createdAt).toLocaleDateString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      return `<div class="snap-pick-item${sel?' selected':''}" onclick="toggleReportSnap('${sp.id}')">
+        <div class="snap-pick-cb">✓</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
+            <span class="scratch-badge-cat cat-${sp.category}">${catIcons[sp.category]||'📝 Note'}</span>
+            <span style="font-size:11px;color:var(--n500);">${dateStr}</span>
+            ${!isTrip?`<span style="font-size:10px;color:var(--n400);font-style:italic;">(Unassigned)</span>`:''}
+          </div>
+          <div class="snap-pick-title">${sp.title||'Untitled Note'}</div>
+          ${sp.text?`<div class="snap-pick-desc">${sp.text.length>100?sp.text.substring(0,97)+'…':sp.text}</div>`:''}
+        </div>
+        ${sp.photo?`<img src="${sp.photo}" onclick="event.stopPropagation();previewImage('${sp.photo}')" style="width:48px;height:48px;object-fit:cover;border-radius:var(--rs);border:1px solid var(--n200);flex-shrink:0;">`:''}
+      </div>`;
+    }).join('');
+  }
+
+  renderReportSnapsPreview();
+}
+
+function toggleReportSnap(id){
+  if(!curReport)return;
+  if(!curReport.reportSnaps)curReport.reportSnaps=[];
+  const idx=curReport.reportSnaps.indexOf(id);
+  if(idx>=0)curReport.reportSnaps.splice(idx,1);
+  else curReport.reportSnaps.push(id);
+  sv();
+  renderReportSnapPicker();
+}
+
+function selectAllReportSnaps(){
+  if(!curReport)return;
+  const allSnaps=(S.scratchpad||[]).filter(sp=>!sp.tripId||sp.tripId===curTrip);
+  curReport.reportSnaps=allSnaps.map(sp=>sp.id);
+  sv();
+  renderReportSnapPicker();
+}
+
+function clearAllReportSnaps(){
+  if(!curReport)return;
+  curReport.reportSnaps=[];
+  sv();
+  renderReportSnapPicker();
+}
+
+function renderReportSnapsPreview(){
+  const preview=document.getElementById('report-snaps-preview');
+  const snapList=document.getElementById('report-snaps-list');
+  const countEl=document.getElementById('selected-snap-count');
+  if(!preview||!snapList)return;
+
+  const selected=(curReport.reportSnaps||[]);
+  if(countEl)countEl.textContent=selected.length;
+
+  if(!selected.length){
+    preview.style.display='none';
+    return;
+  }
+  preview.style.display='';
+
+  const catIcons={
+    general:'📝 Note',
+    defect:'⚠️ Defect',
+    measurement:'📊 Reading',
+    wiring:'⚡ Wiring',
+    nameplate:'🏷️ Nameplate'
+  };
+
+  const snaps=selected.map(id=>(S.scratchpad||[]).find(sp=>sp.id===id)).filter(Boolean);
+  snapList.innerHTML=snaps.map(sp=>`
+    <div class="rpt-snap-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">
+            <span class="scratch-badge-cat cat-${sp.category}">${catIcons[sp.category]||'📝 Note'}</span>
+            <span style="font-size:11px;color:var(--n500);">${fmtDate(sp.createdAt)}</span>
+          </div>
+          <div style="font-size:13px;font-weight:700;color:var(--n800);">${sp.title}</div>
+          ${sp.text?`<div style="font-size:12px;color:var(--n700);margin-top:4px;line-height:1.4;white-space:pre-wrap;">${sp.text}</div>`:''}
+        </div>
+        ${sp.photo?`<img src="${sp.photo}" onclick="previewImage('${sp.photo}')" style="width:50px;height:50px;object-fit:cover;border-radius:var(--rs);border:1px solid var(--n200);flex-shrink:0;">`:''}
+      </div>
+    </div>
+  `).join('');
 }
 
 // ═══════ CHECKLIST ═══════
@@ -9217,6 +9373,45 @@ async function exportPDF(){
       chk();
     });
     ln();
+  }
+
+  // ── Field Notes & Observations (IMP-29) ──
+  const rptSnapIds = r.reportSnaps || [];
+  if (rptSnapIds.length) {
+    const selectedSnaps = rptSnapIds.map(id => (S.scratchpad || []).find(s => s.id === id)).filter(Boolean);
+    if (selectedSnaps.length) {
+      chk();
+      sec(`FIELD NOTES & OBSERVATIONS (${selectedSnaps.length})`);
+      selectedSnaps.forEach(sp => {
+        const catTag = `[${(sp.category || 'note').toUpperCase()}]`;
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(33, 37, 41);
+        doc.text(`• ${catTag} ${sp.title || 'Field Note'}`, mg + 2, y);
+        doc.setFont('helvetica', 'normal');
+        if (sp.createdAt) {
+          rtxt(fmtDate(sp.createdAt), y, [110, 110, 110]);
+        }
+        y += 4.5;
+        if (sp.text || sp.notes) {
+          doc.setFontSize(8);
+          doc.setTextColor(80, 80, 80);
+          const nl = doc.splitTextToSize(sp.text || sp.notes, W - mg * 2 - 8);
+          doc.text(nl, mg + 6, y);
+          y += nl.length * 4 + 1;
+        }
+        if (sp.photo && typeof sp.photo === 'string' && sp.photo.startsWith('data:image/')) {
+          try {
+            chk();
+            doc.addImage(sp.photo, 'JPEG', mg + 6, y, 35, 26);
+            y += 28;
+          } catch(e) {}
+        }
+        y += 2;
+        chk();
+      });
+      ln();
+    }
   }
 
   sec('SIGN-OFF');kv2('Result',r.signoff&&r.signoff.result||'Completed');if(r.signoff&&r.signoff.summary)kv2('Summary',r.signoff.summary);if(r.signoff&&r.signoff.remarks)kv2('Remarks',r.signoff.remarks);if(pdfWorkCount>0)kv2('Total Work Hours',`${fmtPdfMins(pdfWorkMins)} (${pdfWorkCount} task${pdfWorkCount>1?'s':''})`);if(pdfTravelCount>0)kv2('Total Travel Hours',`${fmtPdfMins(pdfTravelMins)} (${pdfTravelCount} task${pdfTravelCount>1?'s':''})`);if(pdfLeaveCount>0)kv2('Total Leave Hours',`${fmtPdfMins(pdfLeaveMins)} (${pdfLeaveCount} task${pdfLeaveCount>1?'s':''})`);y+=4;
@@ -10476,6 +10671,7 @@ function onSignalInput(source) {
 
 let _scratchPhotoBase64 = '';
 let _scratchSelectedCategory = 'general';
+let _editingScratchId = null;
 
 function initScratchpadStore() {
   if (!S.scratchpad) S.scratchpad = [];
@@ -10483,8 +10679,14 @@ function initScratchpadStore() {
 
 function openQuickScratchModal(prefillCategory = 'general') {
   initScratchpadStore();
+  _editingScratchId = null;
   _scratchPhotoBase64 = '';
   _scratchSelectedCategory = prefillCategory || 'general';
+
+  const modalTitle = document.getElementById('scratch-modal-title');
+  const saveBtn = document.getElementById('scratch-save-btn');
+  if (modalTitle) modalTitle.textContent = '⚡ Field Quick Notes & Snap';
+  if (saveBtn) saveBtn.textContent = '💾 Save Note';
 
   const titleEl = document.getElementById('scratch-title');
   const textEl = document.getElementById('scratch-text');
@@ -10522,6 +10724,77 @@ function openQuickScratchModal(prefillCategory = 'general') {
   openModal('modal-quick-scratch');
 
   // Auto focus text input for instant typing
+  setTimeout(() => {
+    if (textEl) textEl.focus();
+  }, 180);
+}
+
+/**
+ * IMP-28: Open modal pre-filled to edit an existing Quick Note / Snap
+ */
+function openEditScratchModal(id) {
+  initScratchpadStore();
+  const sp = (S.scratchpad || []).find(s => s.id === id);
+  if (!sp) {
+    showToast('Note not found');
+    return;
+  }
+
+  _editingScratchId = id;
+  _scratchPhotoBase64 = sp.photo || '';
+  _scratchSelectedCategory = sp.category || 'general';
+
+  const modalTitle = document.getElementById('scratch-modal-title');
+  const saveBtn = document.getElementById('scratch-save-btn');
+  if (modalTitle) modalTitle.textContent = '✏️ Edit Field Note';
+  if (saveBtn) saveBtn.textContent = '💾 Update Note';
+
+  const titleEl = document.getElementById('scratch-title');
+  const textEl = document.getElementById('scratch-text');
+  const photoPreview = document.getElementById('scratch-photo-preview');
+  const photoWrap = document.getElementById('scratch-photo-preview-wrap');
+  const clearBtn = document.getElementById('scratch-photo-clear-btn');
+  const tripSelect = document.getElementById('scratch-trip-select');
+  const fileInput = document.getElementById('scratch-file-input');
+  const countEl = document.getElementById('scratch-modal-count');
+
+  if (titleEl) titleEl.value = sp.title || '';
+  if (textEl) textEl.value = sp.text || sp.notes || '';
+  if (fileInput) fileInput.value = '';
+
+  if (_scratchPhotoBase64) {
+    if (photoPreview) {
+      photoPreview.src = _scratchPhotoBase64;
+      photoPreview.style.display = 'block';
+    }
+    if (photoWrap) photoWrap.style.display = 'block';
+    if (clearBtn) clearBtn.style.display = 'inline-flex';
+  } else {
+    if (photoPreview) {
+      photoPreview.src = '';
+      photoPreview.style.display = 'none';
+    }
+    if (photoWrap) photoWrap.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+
+  if (countEl) countEl.textContent = (S.scratchpad || []).length;
+
+  // Populate trips dropdown with newest trips on top
+  if (tripSelect) {
+    let opts = '<option value="">-- No Linked Trip (Unassigned) --</option>';
+    const sortedTrips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    sortedTrips.forEach(tr => {
+      const sel = (sp.tripId && tr.id === sp.tripId) ? ' selected' : '';
+      opts += `<option value="${tr.id}"${sel}>🏭 ${tr.plant} (${fmtDate(tr.date)})</option>`;
+    });
+    tripSelect.innerHTML = opts;
+  }
+
+  // Highlight category chip
+  selectScratchCategory(_scratchSelectedCategory);
+  openModal('modal-quick-scratch');
+
   setTimeout(() => {
     if (textEl) textEl.focus();
   }, 180);
@@ -10598,6 +10871,37 @@ function saveQuickScratch() {
         nameplate: 'Nameplate Snap'
       };
       title = `${catLabels[_scratchSelectedCategory] || 'Field Memo'} - ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+  }
+
+  // IMP-28: If in editing mode, update existing note
+  if (_editingScratchId) {
+    const sp = (S.scratchpad || []).find(s => s.id === _editingScratchId);
+    if (sp) {
+      sp.title = title;
+      sp.text = text;
+      sp.notes = text;
+      sp.photo = _scratchPhotoBase64;
+      sp.category = _scratchSelectedCategory;
+      sp.tripId = tripId;
+      sp.updatedAt = new Date().toISOString();
+      sp.synced = false;
+      sv();
+      closeModal('modal-quick-scratch');
+      triggerHaptic('success');
+      showToast('Note updated ✓');
+
+      // IMP-27: Incremental sync - update ONLY this edited note on Google Sheets
+      if (typeof syncSingleQuickSnap === 'function') {
+        syncSingleQuickSnap(sp);
+      } else if (typeof svAndSync === 'function') {
+        svAndSync('quick_scratch');
+      }
+
+      _editingScratchId = null;
+      renderScratchpadList();
+      renderDash();
+      return;
     }
   }
 
@@ -10681,6 +10985,9 @@ function renderScratchpadList() {
           ` : ''}
         </div>
         <div class="scratch-card-actions">
+          <button class="scratch-act-btn" onclick="openEditScratchModal('${sp.id}')" title="Edit Note">
+            ✏️ Edit
+          </button>
           <button class="scratch-act-btn" onclick="convertScratchToTask('${sp.id}')" title="Convert to formal Task">
             📋 Convert to Task
           </button>
@@ -11526,11 +11833,12 @@ function openReportDirect(step){
   if(!S.reports[tr.id]){
     S.reports[tr.id]={checklist:[],readings:[],issues:[],team:[],
       signoff:{summary:'',result:'Completed',remarks:''},
-      signature:'',reportTasks:[],reportTaskNotes:{}};
+      signature:'',reportTasks:[],reportTaskNotes:{},reportSnaps:[]};
   }
   curReport=S.reports[tr.id];
   if(!curReport.reportTasks)     curReport.reportTasks=[];
   if(!curReport.reportTaskNotes) curReport.reportTaskNotes={};
+  if(!curReport.reportSnaps)     curReport.reportSnaps=[];
   if(!curReport.signoff)         curReport.signoff={summary:'',result:'Completed',remarks:''};
   S.reports[tr.id]=curReport;
 

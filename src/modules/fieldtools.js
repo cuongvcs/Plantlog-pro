@@ -308,6 +308,7 @@ function onSignalInput(source) {
 
 let _scratchPhotoBase64 = '';
 let _scratchSelectedCategory = 'general';
+let _editingScratchId = null;
 
 function initScratchpadStore() {
   if (!S.scratchpad) S.scratchpad = [];
@@ -315,8 +316,14 @@ function initScratchpadStore() {
 
 function openQuickScratchModal(prefillCategory = 'general') {
   initScratchpadStore();
+  _editingScratchId = null;
   _scratchPhotoBase64 = '';
   _scratchSelectedCategory = prefillCategory || 'general';
+
+  const modalTitle = document.getElementById('scratch-modal-title');
+  const saveBtn = document.getElementById('scratch-save-btn');
+  if (modalTitle) modalTitle.textContent = '⚡ Field Quick Notes & Snap';
+  if (saveBtn) saveBtn.textContent = '💾 Save Note';
 
   const titleEl = document.getElementById('scratch-title');
   const textEl = document.getElementById('scratch-text');
@@ -354,6 +361,77 @@ function openQuickScratchModal(prefillCategory = 'general') {
   openModal('modal-quick-scratch');
 
   // Auto focus text input for instant typing
+  setTimeout(() => {
+    if (textEl) textEl.focus();
+  }, 180);
+}
+
+/**
+ * IMP-28: Open modal pre-filled to edit an existing Quick Note / Snap
+ */
+function openEditScratchModal(id) {
+  initScratchpadStore();
+  const sp = (S.scratchpad || []).find(s => s.id === id);
+  if (!sp) {
+    showToast('Note not found');
+    return;
+  }
+
+  _editingScratchId = id;
+  _scratchPhotoBase64 = sp.photo || '';
+  _scratchSelectedCategory = sp.category || 'general';
+
+  const modalTitle = document.getElementById('scratch-modal-title');
+  const saveBtn = document.getElementById('scratch-save-btn');
+  if (modalTitle) modalTitle.textContent = '✏️ Edit Field Note';
+  if (saveBtn) saveBtn.textContent = '💾 Update Note';
+
+  const titleEl = document.getElementById('scratch-title');
+  const textEl = document.getElementById('scratch-text');
+  const photoPreview = document.getElementById('scratch-photo-preview');
+  const photoWrap = document.getElementById('scratch-photo-preview-wrap');
+  const clearBtn = document.getElementById('scratch-photo-clear-btn');
+  const tripSelect = document.getElementById('scratch-trip-select');
+  const fileInput = document.getElementById('scratch-file-input');
+  const countEl = document.getElementById('scratch-modal-count');
+
+  if (titleEl) titleEl.value = sp.title || '';
+  if (textEl) textEl.value = sp.text || sp.notes || '';
+  if (fileInput) fileInput.value = '';
+
+  if (_scratchPhotoBase64) {
+    if (photoPreview) {
+      photoPreview.src = _scratchPhotoBase64;
+      photoPreview.style.display = 'block';
+    }
+    if (photoWrap) photoWrap.style.display = 'block';
+    if (clearBtn) clearBtn.style.display = 'inline-flex';
+  } else {
+    if (photoPreview) {
+      photoPreview.src = '';
+      photoPreview.style.display = 'none';
+    }
+    if (photoWrap) photoWrap.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+
+  if (countEl) countEl.textContent = (S.scratchpad || []).length;
+
+  // Populate trips dropdown with newest trips on top
+  if (tripSelect) {
+    let opts = '<option value="">-- No Linked Trip (Unassigned) --</option>';
+    const sortedTrips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    sortedTrips.forEach(tr => {
+      const sel = (sp.tripId && tr.id === sp.tripId) ? ' selected' : '';
+      opts += `<option value="${tr.id}"${sel}>🏭 ${tr.plant} (${fmtDate(tr.date)})</option>`;
+    });
+    tripSelect.innerHTML = opts;
+  }
+
+  // Highlight category chip
+  selectScratchCategory(_scratchSelectedCategory);
+  openModal('modal-quick-scratch');
+
   setTimeout(() => {
     if (textEl) textEl.focus();
   }, 180);
@@ -430,6 +508,37 @@ function saveQuickScratch() {
         nameplate: 'Nameplate Snap'
       };
       title = `${catLabels[_scratchSelectedCategory] || 'Field Memo'} - ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+  }
+
+  // IMP-28: If in editing mode, update existing note
+  if (_editingScratchId) {
+    const sp = (S.scratchpad || []).find(s => s.id === _editingScratchId);
+    if (sp) {
+      sp.title = title;
+      sp.text = text;
+      sp.notes = text;
+      sp.photo = _scratchPhotoBase64;
+      sp.category = _scratchSelectedCategory;
+      sp.tripId = tripId;
+      sp.updatedAt = new Date().toISOString();
+      sp.synced = false;
+      sv();
+      closeModal('modal-quick-scratch');
+      triggerHaptic('success');
+      showToast('Note updated ✓');
+
+      // IMP-27: Incremental sync - update ONLY this edited note on Google Sheets
+      if (typeof syncSingleQuickSnap === 'function') {
+        syncSingleQuickSnap(sp);
+      } else if (typeof svAndSync === 'function') {
+        svAndSync('quick_scratch');
+      }
+
+      _editingScratchId = null;
+      renderScratchpadList();
+      renderDash();
+      return;
     }
   }
 
@@ -513,6 +622,9 @@ function renderScratchpadList() {
           ` : ''}
         </div>
         <div class="scratch-card-actions">
+          <button class="scratch-act-btn" onclick="openEditScratchModal('${sp.id}')" title="Edit Note">
+            ✏️ Edit
+          </button>
           <button class="scratch-act-btn" onclick="convertScratchToTask('${sp.id}')" title="Convert to formal Task">
             📋 Convert to Task
           </button>

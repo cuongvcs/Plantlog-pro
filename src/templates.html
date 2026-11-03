@@ -207,7 +207,7 @@
       <button class="stab" onclick="gotoStep(1)" data-t="tab2">2 Readings</button>
       <button class="stab" onclick="gotoStep(2)" data-t="tab3">3 Issues</button>
       <button class="stab" onclick="gotoStep(3)" data-t="tab4">4 Team</button>
-      <button class="stab" onclick="gotoStep(4)" data-t="tab5">5 Tasks</button>
+      <button class="stab" onclick="gotoStep(4)" data-t="tab5">5 Tasks &amp; Notes</button>
       <button class="stab" onclick="gotoStep(5)" data-t="tab6">6 Sign-off</button>
     </div>
   </div>
@@ -253,7 +253,27 @@
         <div style="font-size:11px;font-weight:600;color:var(--g500);margin:8px 0 6px;letter-spacing:0.06em;">SELECTED TASKS (<span id="selected-task-count">0</span>)</div>
         <div id="report-tasks-list"></div>
       </div>
-      <div class="brow" style="margin-top:8px;">
+
+      <!-- IMP-29: Picker: select field notes / snaps to include in report -->
+      <div class="card" id="snap-picker-card" style="margin-top:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.06em;">ADD FIELD NOTES &amp; SNAPS TO REPORT</div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" onclick="selectAllReportSnaps()" style="font-size:11px;color:var(--green);background:none;border:none;cursor:pointer;font-weight:600;">All</button>
+            <button type="button" onclick="clearAllReportSnaps()" style="font-size:11px;color:var(--g500);background:none;border:none;cursor:pointer;">Clear</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--g500);margin-bottom:8px;">Select field memos, nameplates, or observations from this trip to include in the technical report.</div>
+        <div id="snap-picker-list"></div>
+        <div id="snap-picker-empty" style="display:none;padding:16px 0;text-align:center;font-size:13px;color:var(--g400);">No field notes linked to this trip. Add notes in Quick Note / Scratchpad first.</div>
+      </div>
+      <!-- Selected snaps preview -->
+      <div id="report-snaps-preview" style="display:none;margin-top:10px;">
+        <div style="font-size:11px;font-weight:600;color:var(--g500);margin:8px 0 6px;letter-spacing:0.06em;">SELECTED NOTES (<span id="selected-snap-count">0</span>)</div>
+        <div id="report-snaps-list"></div>
+      </div>
+
+      <div class="brow" style="margin-top:12px;">
         <button class="btn btn-o" onclick="gotoStep(3)">←</button>
         <button class="btn btn-p" style="flex:1;" onclick="gotoStep(5)">Next: Sign-off →</button>
       </div>

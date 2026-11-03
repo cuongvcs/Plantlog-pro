@@ -443,12 +443,13 @@ function openReport(){
     S.reports[tr.id]={
       checklist:[],readings:[],issues:[],team:defTeam,
       signoff:{summary:'',result:'Completed',remarks:''},
-      signature:'',reportTasks:[],reportTaskNotes:{}
+      signature:'',reportTasks:[],reportTaskNotes:{},reportSnaps:[]
     };
   }
   curReport=S.reports[tr.id];
   if(!curReport.reportTasks)     curReport.reportTasks=[];
   if(!curReport.reportTaskNotes) curReport.reportTaskNotes={};
+  if(!curReport.reportSnaps)     curReport.reportSnaps=[];
   if(!curReport.signoff)         curReport.signoff={summary:'',result:'Completed',remarks:''};
   S.reports[tr.id]=curReport;
 

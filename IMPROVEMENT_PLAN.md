@@ -52,6 +52,8 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 | **IMP-25** | **Khắc phục lỗi hồi sinh bản ghi & Bảo đảm đồng bộ xóa (Tombstone & Cloud Delete Sync)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 | **IMP-26** | **Tinh chỉnh cân đối khung chữ ký nằm gọn trong khung ngoài (Signature Frame Proportions)** | 🟢 **P3** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.25 ngày |
 | **IMP-27** | **Đồng bộ gia tăng vi mô cho Ghi chú nhanh (Incremental Single-Note Cloud Sync)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
+| **IMP-28** | **Cho phép chỉnh sửa Ghi chú nhanh sau khi tạo (In-Place Note Editing)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.25 ngày |
+| **IMP-29** | **Tích hợp chọn Ghi chú vào Báo cáo Kỹ thuật & Xuất bản PDF (Field Notes in Report)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 
 ---
 
@@ -388,6 +390,27 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 
 ---
 
+### 🟠 IMP-28: Cho Phép Chỉnh Sửa Ghi Chú Nhanh Sau Khi Tạo (In-Place Note Editing)
+* **Mức độ ưu tiên:** 🟠 **P2 (Cần thiết)**
+* **Tính cần thiết:** Giúp kỹ sư sửa sai sót, bổ sung thông tin hoặc cập nhật ảnh hiện trường mà không phải xóa đi tạo lại.
+* **Giải pháp kỹ thuật:**
+  1. Thêm nút `✏️ Edit` trên mỗi thẻ ghi chú (`renderScratchpadList`).
+  2. Hàm `openEditScratchModal(id)`: Nạp lại tiêu đề, nội dung, phân loại, chuyến đi và ảnh hiện trường đã chụp vào modal.
+  3. Cập nhật `saveQuickScratch()`: Khi ở chế độ sửa, cập nhật trực tiếp bản ghi trong `S.scratchpad` (`updatedAt = new Date().toISOString()`), tự động gọi `syncSingleQuickSnap(sp)` để cập nhật đè đúng dòng đó trên Google Sheets thông qua cơ chế `upsertQuickSnapRow` của IMP-27.
+
+---
+
+### 🔴 IMP-29: Tích Hợp Chọn Ghi Chú Hiện Trường Vào Báo Cáo Kỹ Thuật & Xuất Bản PDF (Field Notes in Report)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao / Rất cần thiết)**
+* **Tính cần thiết:** Đưa các ghi chép, tem mác và quan sát hiện trường vào báo cáo kỹ thuật để làm bằng chứng nghiệm thu bàn giao cho khách hàng.
+* **Giải pháp kỹ thuật:**
+  1. Mở rộng Bước 5 Báo cáo Kỹ thuật thành `5 Tasks & Notes`.
+  2. Bổ sung thẻ chọn `ADD FIELD NOTES & SNAPS TO REPORT`: Lọc các ghi chú của chuyến đi (`sp.tripId === curTrip`) và ghi chú chưa gán (`Unassigned`), hỗ trợ chọn/bỏ chọn (`toggleReportSnap`), chọn tất cả (`selectAllReportSnaps`) và xem trước.
+  3. Lưu danh sách ID ghi chú được chọn vào `curReport.reportSnaps`.
+  4. Xuất bản PDF (`exportPDF`): Bổ sung phần `FIELD NOTES & OBSERVATIONS (N)` trước mục Sign-off, hiển thị tag phân loại in đậm, nội dung ghi chú và tự động nhúng ảnh thumbnail thu nhỏ (`35mm x 26mm`) an toàn với ngắt trang `chk()`.
+
+---
+
 ## 3. 📅 LỘ TRÌNH TRIỂN KHAI THEO GIAI ĐOẠN (ROADMAP)
 
 ```mermaid
@@ -448,6 +471,8 @@ gantt
   - [x] Khắc phục triệt để lỗi hồi sinh bản ghi đã xóa & bảo đảm đồng bộ xóa lên Google Sheets (Tombstone Deletion & Cloud Delete Sync với `Array.isArray` guard và Fast Delete Debounce) (Đã xong - IMP-25)
   - [x] Tinh chỉnh cân đối khung chữ ký nằm gọn gàng 100% trong khung ngoài trên cả giao diện ứng dụng (box-sizing: border-box) và tệp PDF xuất bản (50mm x 17mm) (Đã xong - IMP-26)
   - [x] Đồng bộ gia tăng vi mô cho Ghi chú nhanh Quick Notes: Chỉ đẩy/xóa bản ghi mới thay vì tải và ghi đè toàn bộ cơ sở dữ liệu lên Google Sheets (Đã xong - IMP-27)
+  - [x] Cho phép chỉnh sửa Ghi chú nhanh sau khi tạo: nút Edit trên thẻ, nạp lại form và đồng bộ cập nhật tại chỗ lên Google Sheets (Đã xong - IMP-28)
+  - [x] Tích hợp chọn Ghi chú Hiện trường vào Báo cáo Kỹ thuật (bước 5 Tasks & Notes) và xuất bản tự động vào tệp PDF (Đã xong - IMP-29)
 
 ---
 
