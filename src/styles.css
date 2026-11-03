@@ -1058,6 +1058,11 @@ input, textarea, select, button { font-family: var(--font); }
 
 [data-theme="dark"] .scratch-badge-cat.cat-general { background: rgba(3,105,161,0.25); color: #38BDF8; }
 [data-theme="dark"] .scratch-badge-cat.cat-nameplate { background: rgba(99,102,241,0.25); color: #A5B4FC; }
+.scratch-badge-synced {
+  font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+  background: var(--gl); color: var(--gd);
+}
+[data-theme="dark"] .scratch-badge-synced { background: rgba(16, 185, 129, 0.2); color: #34D399; }
 .scratch-card-actions {
   display: flex; gap: 6px; margin-top: 8px; border-top: 1px solid var(--n150);
   padding-top: 6px; flex-wrap: wrap;

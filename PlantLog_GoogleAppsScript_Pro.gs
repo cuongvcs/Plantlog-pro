@@ -155,6 +155,8 @@ function doPost(e){
     const act=body.action;
     // syncAll uses body.payload, file actions use body directly
     if(act==='syncAll')  return json_({ok:true,result:syncAll(body.payload)});
+    if(act==='upsertQuickSnap')  return json_(upsertQuickSnapRow(body.item));
+    if(act==='deleteQuickSnap')  return json_(deleteQuickSnapRow(body.id));
     if(act==='syncReminders') return json_(syncReminders(body.payload));
     if(act==='ping')     return json_({ok:true,result:{message:'PlantLog Pro API running'}});
     if(act==='uploadFile') return json_(uploadFileToDrive(body));
@@ -291,6 +293,82 @@ function syncAll(p){
   try{s.getSheets().forEach(sh=>{if(sh.getLastColumn()>0)sh.autoResizeColumns(1,sh.getLastColumn());});}catch(x){}
   log_('SYNC_ALL','All','',JSON.stringify(r));
   return r;
+}
+
+/**
+ * IMP-27: Upsert a single QuickSnap record into the QuickSnap sheet
+ * Inserts if ID does not exist, or updates the existing row in-place
+ */
+function upsertQuickSnapRow(item){
+  if(!item || !item.id) return {ok:false, error:'Missing item or id'};
+  const s=db_();
+  const sh=ensureSheet(s, SN.QUICK_SNAP, COLS.quicksnap);
+  const last=sh.getLastRow();
+
+  function safeVal(c){
+    if(c===null||c===undefined)return'';
+    if(c instanceof Date)return cellStr(c);
+    var val=(typeof c==='object')?JSON.stringify(c):c;
+    if(typeof val==='string'&&val.length>49000)val=val.substring(0,49000);
+    return val;
+  }
+
+  var row = [
+    safeVal(item.id),
+    safeVal(item.category || 'general'),
+    safeVal(item.title || ''),
+    safeVal(item.notes || item.text || ''),
+    safeVal(item.tripId || ''),
+    safeVal(item.tripPlant || ''),
+    safeVal(item.photo || ''),
+    safeVal(item.createdAt || new Date().toISOString()),
+    safeVal(item.updatedAt || new Date().toISOString())
+  ];
+
+  var foundRow = -1;
+  if(last > 1){
+    var ids = sh.getRange(2, 1, last - 1, 1).getValues();
+    for(var i = 0; i < ids.length; i++){
+      if(String(ids[i][0]).trim() === String(item.id).trim()){
+        foundRow = i + 2;
+        break;
+      }
+    }
+  }
+
+  var mode = 'inserted';
+  if(foundRow > 1){
+    sh.getRange(foundRow, 1, 1, row.length).setValues([row]);
+    mode = 'updated';
+  } else {
+    sh.appendRow(row);
+  }
+
+  log_('UPSERT_QUICK_SNAP', 'QuickSnap', item.id, mode + ': ' + (item.title || ''));
+  return {ok:true, id:item.id, mode:mode};
+}
+
+/**
+ * IMP-27: Delete a single QuickSnap record by ID without touching other rows
+ */
+function deleteQuickSnapRow(id){
+  if(!id) return {ok:false, error:'Missing id'};
+  const s=db_();
+  const sh=ensureSheet(s, SN.QUICK_SNAP, COLS.quicksnap);
+  const last=sh.getLastRow();
+  var deleted = false;
+  if(last > 1){
+    var ids = sh.getRange(2, 1, last - 1, 1).getValues();
+    for(var i = 0; i < ids.length; i++){
+      if(String(ids[i][0]).trim() === String(id).trim()){
+        sh.deleteRow(i + 2);
+        deleted = true;
+        break;
+      }
+    }
+  }
+  log_('DELETE_QUICK_SNAP', 'QuickSnap', id, deleted ? 'Deleted' : 'Not found');
+  return {ok:true, id:id, deleted:deleted};
 }
 
 function setupSheets(){

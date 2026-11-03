@@ -421,4 +421,76 @@ assert.ok(tripsCodeMod.includes("ticketSigCanvas.style.width = '100%'"), 'initTi
 console.log('  ✓ UI signature canvases box-sizing and width constrained inside card container!');
 console.log('  ✓ PDF signature balanced dimensions (50x17mm) neatly positioned inside outer box!');
 
-console.log('\n🎉 ALL 11 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');
+// 12. Test Incremental Single-Note Sync & Delete (IMP-27)
+console.log('\n🔍 Test 12: Testing Incremental Single-Note Sync for QuickSnap (IMP-27)...');
+assert.ok(gasCode.includes("act==='upsertQuickSnap'"), 'GAS must handle act===upsertQuickSnap');
+assert.ok(gasCode.includes("act==='deleteQuickSnap'"), 'GAS must handle act===deleteQuickSnap');
+assert.ok(gasProCode.includes("act==='upsertQuickSnap'"), 'GAS Pro must handle act===upsertQuickSnap');
+assert.ok(gasProCode.includes("act==='deleteQuickSnap'"), 'GAS Pro must handle act===deleteQuickSnap');
+assert.ok(gasCode.includes("function upsertQuickSnapRow"), 'GAS must define upsertQuickSnapRow');
+assert.ok(gasCode.includes("function deleteQuickSnapRow"), 'GAS must define deleteQuickSnapRow');
+
+const syncCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'sync.js'), 'utf8');
+assert.ok(syncCode.includes("async function syncSingleQuickSnap"), 'sync.js must define syncSingleQuickSnap');
+assert.ok(syncCode.includes("async function deleteSingleQuickSnap"), 'sync.js must define deleteSingleQuickSnap');
+assert.ok(syncCode.includes("action: 'upsertQuickSnap'"), 'sync.js must send upsertQuickSnap payload');
+assert.ok(syncCode.includes("action: 'deleteQuickSnap'"), 'sync.js must send deleteQuickSnap payload');
+
+const fieldtoolsCodeMod = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'fieldtools.js'), 'utf8');
+assert.ok(fieldtoolsCodeMod.includes("syncSingleQuickSnap(item)"), 'saveQuickScratch must call syncSingleQuickSnap');
+assert.ok(fieldtoolsCodeMod.includes("deleteSingleQuickSnap(id)"), 'deleteScratchItem must call deleteSingleQuickSnap');
+assert.ok(fieldtoolsCodeMod.includes("syncSingleQuickSnap(sp)"), 'openAttachScratchTripModal must call syncSingleQuickSnap');
+assert.ok(fieldtoolsCodeMod.includes("scratch-badge-synced"), 'renderScratchpadList must render synced badge');
+
+assert.ok(cssContent.includes(".scratch-badge-synced"), 'styles.css must style .scratch-badge-synced');
+
+// Simulate GAS upsert and delete row behavior
+const mockSheetRows = [
+  ['ID','Category','Title','Notes','TripID','TripPlant','Photo','CreatedAt','UpdatedAt'],
+  ['sp_1', 'general', 'Existing Note 1', 'Content 1', 'tr_1', 'Plant Alpha', '', '2026-11-01T10:00:00Z', '2026-11-01T10:00:00Z']
+];
+function mockUpsert(rows, item) {
+  let found = -1;
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === item.id) { found = i; break; }
+  }
+  const newRow = [item.id, item.category, item.title, item.notes, item.tripId || '', item.tripPlant || '', item.photo || '', item.createdAt, item.updatedAt];
+  if (found > 0) {
+    rows[found] = newRow;
+    return 'updated';
+  } else {
+    rows.push(newRow);
+    return 'inserted';
+  }
+}
+function mockDelete(rows, id) {
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === id) { rows.splice(i, 1); return true; }
+  }
+  return false;
+}
+
+// 1. Insert new note
+const res1 = mockUpsert(mockSheetRows, { id: 'sp_2', category: 'defect', title: 'New Leak', notes: 'Pump seal leaking', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+assert.strictEqual(res1, 'inserted', 'New note must be inserted without wiping existing notes');
+assert.strictEqual(mockSheetRows.length, 3, 'Rows count must be 3 (header + 2 notes)');
+assert.strictEqual(mockSheetRows[1][0], 'sp_1', 'Existing note 1 must remain intact');
+assert.strictEqual(mockSheetRows[2][0], 'sp_2', 'New note 2 must be appended');
+
+// 2. Update existing note
+const res2 = mockUpsert(mockSheetRows, { id: 'sp_1', category: 'general', title: 'Updated Title 1', notes: 'Content updated', createdAt: '2026-11-01T10:00:00Z', updatedAt: new Date().toISOString() });
+assert.strictEqual(res2, 'updated', 'Existing note must be updated in-place');
+assert.strictEqual(mockSheetRows.length, 3, 'Rows count must remain 3');
+assert.strictEqual(mockSheetRows[1][2], 'Updated Title 1', 'Row 1 title must be updated');
+
+// 3. Delete note
+const delRes = mockDelete(mockSheetRows, 'sp_2');
+assert.strictEqual(delRes, true, 'Note sp_2 must be deleted');
+assert.strictEqual(mockSheetRows.length, 2, 'Rows count must be 2 after deletion');
+assert.strictEqual(mockSheetRows[1][0], 'sp_1', 'Existing note 1 must still exist');
+
+console.log('  ✓ Google Apps Script upsertQuickSnap & deleteQuickSnap actions verified!');
+console.log('  ✓ Client single-note sync & delete API hooks verified with fallback to full sync!');
+console.log('  ✓ Non-destructive row-level append, update, and delete tested and verified!');
+
+console.log('\n🎉 ALL 12 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');

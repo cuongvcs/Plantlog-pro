@@ -51,6 +51,7 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 | **IMP-24** | **Hồ sơ lý lịch thiết bị & Dòng thời gian bảo trì (Asset Passport & Timeline)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 | **IMP-25** | **Khắc phục lỗi hồi sinh bản ghi & Bảo đảm đồng bộ xóa (Tombstone & Cloud Delete Sync)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 | **IMP-26** | **Tinh chỉnh cân đối khung chữ ký nằm gọn trong khung ngoài (Signature Frame Proportions)** | 🟢 **P3** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.25 ngày |
+| **IMP-27** | **Đồng bộ gia tăng vi mô cho Ghi chú nhanh (Incremental Single-Note Cloud Sync)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 
 ---
 
@@ -348,6 +349,45 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 
 ---
 
+### 🔴 IMP-25: Khắc Phục Lỗi Hồi Sinh Bản Ghi Đã Xóa & Bảo Đảm Đồng Bộ Xóa (Tombstone & Cloud Delete Sync)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao / Rất cần thiết)**
+* **Tính cần thiết:** Đảm bảo độ toàn vẹn của thao tác xóa dữ liệu hiện trường.
+* **Hiện trạng & Vấn đề:**
+  * Thao tác xóa ghi chú Quick Note trên app khi mở lại bị khôi phục lại từ Google Sheets do `p.quickSnap.length === 0` bị bỏ qua trong `syncAll()`.
+* **Giải pháp kỹ thuật:**
+  1. Cập nhật `Array.isArray(p.quickSnap)` trong `PlantLog_GoogleAppsScript.gs` để kích hoạt xóa trắng bảng khi mảng rỗng `[]`.
+  2. Bổ sung `S.deletedIds` (Tombstone records) trong `core.js` và `mergeCollectionByTimestamp` để ngăn chặn triệt để zombie records.
+  3. Giảm debounce xóa xuống 350ms (`Fast Delete Debounce`).
+
+---
+
+### 🟢 IMP-26: Tinh Chỉnh Cân Đối Khung Chữ Ký Nằm Gọn Gàng Trong Khung Ngoài (Signature Frame Proportions)
+* **Mức độ ưu tiên:** 🟢 **P3 (Cải thiện UX / Thẩm mỹ công nghiệp)**
+* **Tính cần thiết:** Đảm bảo chữ ký hiển thị chuyên nghiệp, không tràn viền.
+* **Giải pháp kỹ thuật:**
+  1. Giao diện: Áp dụng `box-sizing: border-box; width: 100%` cho `#sigCanvas` và `#ticketSigCanvas`.
+  2. Xuất bản PDF: Định hình kích thước chuẩn vàng `50mm x 17mm` đặt gọn gàng bên trong khung viền 32mm.
+
+---
+
+### 🔴 IMP-27: Đồng Bộ Gia Tăng Vi Mô Cho Ghi Chú Nhanh Quick Notes (Incremental Single-Note Cloud Sync)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao / Rất cần thiết)**
+* **Tính cần thiết:** Giảm thiểu tối đa lưu lượng mạng, tránh đồng bộ lại toàn bộ cơ sở dữ liệu khi chỉ thêm hoặc sửa 1 ghi chú nhỏ.
+* **Hiện trạng & Vấn đề:**
+  * Trước đây mỗi lần nhập 1 Quick Note mới, ứng dụng kích hoạt `svAndSync('quick_scratch')`, gọi `syncToSheets()` thu thập toàn bộ Trips, Tasks, Bills, nén lại toàn bộ ảnh và gửi gói `syncAll` khổng lồ.
+  * Google Apps Script phải xóa dòng 2 trở đi của sheet `QuickSnap` và ghi lại toàn bộ ghi chú từ đầu, gây lãng phí băng thông di động 4G và mất từ 3 - 6 giây.
+* **Giải pháp kỹ thuật:**
+  1. **Backend Google Apps Script (`PlantLog_GoogleAppsScript.gs` & `PlantLog_GoogleAppsScript_Pro.gs`):**
+     * Thêm hành động `upsertQuickSnap`: `upsertQuickSnapRow(item)` tìm ID ở cột 1. Nếu có thì ghi đè đúng dòng đó; nếu chưa có thì gọi `sh.appendRow(row)`. Không xóa bảng, không ảnh hưởng các dòng khác.
+     * Thêm hành động `deleteQuickSnap`: `deleteQuickSnapRow(id)` tìm đúng ID và gọi `sh.deleteRow()`.
+  2. **Client Frontend (`sync.js` & `fieldtools.js`):**
+     * Thêm `syncSingleQuickSnap(item)`: Đóng gói và gửi duy nhất 1 ghi chú (~500B), hoàn tất trong 200 - 500ms.
+     * Thêm `deleteSingleQuickSnap(id)`: Gửi ID để xóa dòng trên Google Sheets tức thì.
+     * Hiển thị huy hiệu `☁️ Synced` trong danh sách Quick Notes.
+     * Tự động fallback về `svAndSync` truyền thống nếu Apps Script chưa được cập nhật bản mới.
+
+---
+
 ## 3. 📅 LỘ TRÌNH TRIỂN KHAI THEO GIAI ĐOẠN (ROADMAP)
 
 ```mermaid
@@ -407,6 +447,7 @@ gantt
   - [x] Tối ưu Trải nghiệm & Độ tin cậy Đồng bộ Đám mây: Tự động sắp xếp Chuyến đi mới nhất lên đầu trong menu Quick Snap, kích hoạt Auto-sync (`svAndSync`), bảo vệ tràn ô 49,000 ký tự trên Google Sheets và tương thích trường dữ liệu (Đã xong)
   - [x] Khắc phục triệt để lỗi hồi sinh bản ghi đã xóa & bảo đảm đồng bộ xóa lên Google Sheets (Tombstone Deletion & Cloud Delete Sync với `Array.isArray` guard và Fast Delete Debounce) (Đã xong - IMP-25)
   - [x] Tinh chỉnh cân đối khung chữ ký nằm gọn gàng 100% trong khung ngoài trên cả giao diện ứng dụng (box-sizing: border-box) và tệp PDF xuất bản (50mm x 17mm) (Đã xong - IMP-26)
+  - [x] Đồng bộ gia tăng vi mô cho Ghi chú nhanh Quick Notes: Chỉ đẩy/xóa bản ghi mới thay vì tải và ghi đè toàn bộ cơ sở dữ liệu lên Google Sheets (Đã xong - IMP-27)
 
 ---
 

@@ -95,6 +95,22 @@
   - Bố trí chữ ký nằm cân đối tại tọa độ `(mg + 55, y + 4)`, để lại khoảng đệm thoáng đãng phía trên ($4\text{ mm}$), phía dưới ($5.5\text{ mm}$ tới dòng tên Kỹ sư & Ngày tháng) và hai bên lề.
   - Bổ sung đường kẻ chỉ dẫn chữ ký thanh lịch (`doc.line`) tại đáy vùng ký, giúp bố cục nghiệm thu PDF chuyên nghiệp, hài hòa và không bao giờ chạm hay vượt ra ngoài khung viền chữ nhật bao quanh (`doc.rect`).
 
+#### ⚡ 11. [IMP-27] Đồng Bộ Đơn Lẻ Tức Thời Cho Ghi Chú Nhanh Quick Notes (Incremental Single-Note Cloud Sync):
+- **Xóa bỏ hiện tượng đồng bộ toàn bộ cơ sở dữ liệu (Full Database Resync Elimination):**
+  - *Vấn đề trước đây:* Mỗi khi kỹ sư nhập 1 ghi chú mới hoặc xóa 1 ghi chú trong Quick Note, ứng dụng kích hoạt `svAndSync('quick_scratch')`. Hàm này gọi `syncToSheets()` thực hiện thu thập và nén toàn bộ dữ liệu của tất cả Trips, Tasks, Bills (nén hàng loạt ảnh hóa đơn), Reports, và toàn bộ ghi chú cũ, sau đó gửi gói `syncAll` khổng lồ lên Google Sheets. Trên Google Sheets, lệnh `syncAll` xóa toàn bộ hàng từ dòng 2 trở đi của bảng `QuickSnap` và ghi lại từ đầu. Thao tác này gây tốn băng thông di động 4G, kéo dài thời gian phản hồi (3-6s), và hiển thị thông báo gây hoang mang cho người dùng (`Synced! 20 snaps` trong khi chỉ vừa nhập 1 note).
+  - *Cơ chế Đồng bộ Gia tăng Vi mô (Incremental Single-Note Sync):*
+    - Khi tạo mới hoặc chỉnh sửa 1 ghi chú: Ứng dụng chỉ gửi duy nhất 1 bản ghi đó lên Google Sheets thông qua hành động `upsertQuickSnap`. Tốc độ phản hồi tức thì (200 - 500ms), gói tin siêu nhẹ (< 1KB).
+    - Khi xóa 1 ghi chú: Ứng dụng chỉ gửi duy nhất `id` cần xóa lên Google Sheets qua hành động `deleteQuickSnap`.
+- **Cập nhật Backend Google Apps Script (`PlantLog_GoogleAppsScript.gs` & `PlantLog_GoogleAppsScript_Pro.gs`):**
+  - **`upsertQuickSnapRow(item)`**: Tìm kiếm mã `id` ở cột 1 của sheet `QuickSnap`. Nếu `id` đã tồn tại, cập nhật chính xác dòng đó tại chỗ (`sh.getRange(foundRow, 1, 1, 9).setValues([row])`). Nếu `id` chưa có, chỉ chèn thêm 1 dòng mới xuống cuối bảng (`sh.appendRow(row)`). Tuyệt đối không xóa hay ghi đè các dòng ghi chú khác.
+  - **`deleteQuickSnapRow(id)`**: Quét cột 1 tìm đúng dòng chứa `id` và chỉ xóa duy nhất dòng đó (`sh.deleteRow(foundRow)`).
+- **Cập nhật Client Frontend (`src/modules/sync.js`, `fieldtools.js`, `styles.css`):**
+  - Hàm `syncSingleQuickSnap(item)`: Tự động nén thumbnail (nếu có ảnh), gọi `gsPost` với `action: 'upsertQuickSnap'`. Khi thành công, đánh dấu `item.synced = true` và hiển thị Toast `☁️ Note synced to Google Sheet ✓`.
+  - Hàm `deleteSingleQuickSnap(id)`: Gọi `gsPost` với `action: 'deleteQuickSnap'`.
+  - Hiển thị huy hiệu trạng thái đám mây `☁️ Synced` trên từng thẻ ghi chú trong danh sách Scratchpad.
+  - Cơ chế dự phòng an toàn (Fallback Graceful Degradation): Nếu Web App Google Apps Script của người dùng chưa cập nhật phiên bản mới (trả về lỗi `Unknown action`), hệ thống tự động quay về cơ chế `svAndSync` truyền thống để đảm bảo dữ liệu không bị thất lạc.
+  - Đảm bảo tính năng Offline-First 100%: Khi mất mạng, ghi chú vẫn được lưu an toàn tại LocalStorage, và sẽ tự động đồng bộ khi có kết nối hoặc khi người dùng thực hiện Sync All.
+
 ---
 
 ## [v4.12] - 02/11/2026

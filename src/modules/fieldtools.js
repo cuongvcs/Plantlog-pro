@@ -442,7 +442,8 @@ function saveQuickScratch() {
     category: _scratchSelectedCategory,
     tripId: tripId,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    synced: false
   };
 
   S.scratchpad.unshift(item);
@@ -450,7 +451,13 @@ function saveQuickScratch() {
   closeModal('modal-quick-scratch');
   triggerHaptic('success');
   showToast('Quick note saved ✓');
-  if (typeof svAndSync === 'function') svAndSync('quick_scratch');
+
+  // IMP-27: Incremental sync - sync ONLY this new note to Google Sheets
+  if (typeof syncSingleQuickSnap === 'function') {
+    syncSingleQuickSnap(item);
+  } else if (typeof svAndSync === 'function') {
+    svAndSync('quick_scratch');
+  }
 
   // Refresh lists if open
   renderScratchpadList();
@@ -491,10 +498,11 @@ function renderScratchpadList() {
       <div class="scratch-card" id="scratch-item-${sp.id}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
           <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">
+            <div class="scratch-badge-container" style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">
               <span class="scratch-badge-cat cat-${sp.category}">${catIcons[sp.category] || '📝 Note'}</span>
               <span style="font-size:11px;color:var(--n500);">${dateStr}</span>
               ${sp.tripId ? `<span style="font-size:11px;color:var(--brand);font-weight:600;">${tripLabel}</span>` : ''}
+              ${sp.synced ? `<span class="scratch-badge-synced" title="Synced to Google Sheets">☁️ Synced</span>` : ''}
             </div>
             <div style="font-size:13px;font-weight:700;color:var(--n800);margin-bottom:4px;">${sp.title}</div>
             ${sp.text ? `<div style="font-size:12px;color:var(--n600);line-height:1.4;white-space:pre-wrap;margin-bottom:6px;">${sp.text}</div>` : ''}
@@ -542,7 +550,13 @@ async function deleteScratchItem(id) {
   triggerHaptic('light');
   renderScratchpadList();
   showToast('Note deleted');
-  if (typeof svAndSync === 'function') svAndSync('scratch_delete');
+
+  // IMP-27: Incremental delete - remove ONLY this note row on Google Sheets
+  if (typeof deleteSingleQuickSnap === 'function') {
+    deleteSingleQuickSnap(id);
+  } else if (typeof svAndSync === 'function') {
+    svAndSync('scratch_delete');
+  }
 }
 
 function convertScratchToTask(id) {
@@ -593,7 +607,13 @@ async function openAttachScratchTripModal(id) {
       sv();
       renderScratchpadList();
       showToast(`Assigned to ${trips[idx].plant} ✓`);
-      if (typeof svAndSync === 'function') svAndSync('scratch_assign');
+
+      // IMP-27: Incremental sync - update ONLY this note on Google Sheets
+      if (typeof syncSingleQuickSnap === 'function') {
+        syncSingleQuickSnap(sp);
+      } else if (typeof svAndSync === 'function') {
+        svAndSync('scratch_assign');
+      }
     } else {
       showToast('Invalid trip number');
     }

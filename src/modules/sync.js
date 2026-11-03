@@ -108,6 +108,138 @@ async function testGSConnection(){
   }
 }
 
+// Compress bill & field photos to small JPEG thumbnails before sending
+const compressPhoto=async dataUrl=>{
+  if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) {
+    return (typeof dataUrl === 'string' && dataUrl.startsWith('http')) ? dataUrl : '';
+  }
+  if (dataUrl.length < 3000) return dataUrl;
+  if (typeof window === 'undefined' || typeof Image === 'undefined') return dataUrl;
+  try{
+    return await new Promise(resolve=>{
+      const timeout = setTimeout(() => resolve(''), 2500);
+      const img=new Image();
+      img.onload=()=>{
+        clearTimeout(timeout);
+        try {
+          const MAX=180;
+          let w=img.width,h=img.height;
+          if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+          if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+          const c=document.createElement('canvas');c.width=w;c.height=h;
+          c.getContext('2d').drawImage(img,0,0,w,h);
+          resolve(c.toDataURL('image/jpeg',0.4));
+        } catch(ex){ resolve(''); }
+      };
+      img.onerror=()=>{ clearTimeout(timeout); resolve(''); };
+      img.src=dataUrl;
+    });
+  }catch(e){return '';}
+};
+
+/**
+ * IMP-27: Incremental Single-Note Sync for QuickSnap
+ * Pushes only the newly created or modified Quick Note to Google Sheets
+ */
+async function syncSingleQuickSnap(item) {
+  if (!item || !item.id) return { ok: false, error: 'No item specified' };
+  const url = getGSUrl();
+  if (!url) {
+    item.synced = false;
+    return { ok: false, offline: true };
+  }
+
+  // Compress photo if present
+  let photoStr = String(item.photo || '');
+  if (photoStr.startsWith('data:image')) {
+    try {
+      if (typeof compressPhoto === 'function') {
+        photoStr = await compressPhoto(photoStr);
+      }
+    } catch (e) {}
+  }
+
+  const s = v => (v === null || v === undefined) ? '' : String(v);
+  const tr = (S.trips || []).find(t => t.id === item.tripId);
+  const payload = {
+    action: 'upsertQuickSnap',
+    item: {
+      id: s(item.id),
+      category: s(item.category) || 'general',
+      title: s(item.title),
+      notes: s(item.notes || item.text),
+      tripId: s(item.tripId),
+      tripPlant: tr ? s(tr.plant) : (s(item.tripPlant) || ''),
+      photo: photoStr,
+      createdAt: s(item.createdAt || new Date().toISOString()),
+      updatedAt: s(item.updatedAt || new Date().toISOString())
+    }
+  };
+
+  try {
+    const res = await gsPost(url, payload);
+    if (res && res.ok) {
+      item.synced = true;
+      sv();
+      // Dynamically add synced badge if item card is visible
+      const card = document.getElementById(`scratch-item-${item.id}`);
+      if (card) {
+        const badgeBox = card.querySelector('.scratch-badge-container');
+        if (badgeBox && !badgeBox.querySelector('.scratch-badge-synced')) {
+          const badge = document.createElement('span');
+          badge.className = 'scratch-badge-synced';
+          badge.title = 'Synced to Google Sheets';
+          badge.textContent = '☁️ Synced';
+          badgeBox.appendChild(badge);
+        }
+      }
+      showToast('☁️ Note synced to Google Sheet ✓');
+      return { ok: true, mode: res.mode, id: item.id };
+    } else if (res && res.error && res.error.includes('Unknown action')) {
+      // Backend GAS not updated with IMP-27 yet; fallback to debounced full sync
+      console.warn('Backend GAS missing upsertQuickSnap, falling back to full sync');
+      if (typeof svAndSync === 'function') svAndSync('quick_scratch');
+      return { ok: false, fallback: true };
+    } else {
+      item.synced = false;
+      sv();
+      return { ok: false, error: (res && res.error) || 'Sync failed' };
+    }
+  } catch (err) {
+    console.warn('Single snap sync network error:', err);
+    item.synced = false;
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
+ * IMP-27: Incremental Single-Note Deletion on Google Sheets
+ * Deletes only the targeted row without clearing or rewriting the sheet
+ */
+async function deleteSingleQuickSnap(id) {
+  if (!id) return { ok: false, error: 'No id' };
+  const url = getGSUrl();
+  if (!url) return { ok: false, offline: true };
+
+  try {
+    const res = await gsPost(url, {
+      action: 'deleteQuickSnap',
+      id: String(id)
+    });
+    if (res && res.ok) {
+      return { ok: true, id: id };
+    } else if (res && res.error && res.error.includes('Unknown action')) {
+      // Fallback to debounced svAndSync
+      if (typeof svAndSync === 'function') svAndSync('scratch_delete');
+      return { ok: false, fallback: true };
+    }
+    return { ok: false, error: (res && res.error) || 'Delete failed' };
+  } catch (err) {
+    console.warn('Single snap delete network error:', err);
+    return { ok: false, error: err.message };
+  }
+}
+
 async function syncToSheets(){
   const url=getGSUrl();
   if(!url){updateGSStatus();openModal('modal-gsheet');showGSResult('⚠ Paste your Apps Script URL first','warn');return;}
@@ -180,34 +312,6 @@ async function syncToSheets(){
     savedReports:  tr.savedReports&&tr.savedReports.length?JSON.stringify(tr.savedReports):'',
     createdAt:     s(tr.createdAt)
   }));
-
-  // Compress bill & field photos to small JPEG thumbnails before sending
-  const compressPhoto=async dataUrl=>{
-    if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) {
-      return (typeof dataUrl === 'string' && dataUrl.startsWith('http')) ? dataUrl : '';
-    }
-    if (dataUrl.length < 3000) return dataUrl;
-    try{
-      return await new Promise(resolve=>{
-        const timeout = setTimeout(() => resolve(''), 2500);
-        const img=new Image();
-        img.onload=()=>{
-          clearTimeout(timeout);
-          try {
-            const MAX=180;
-            let w=img.width,h=img.height;
-            if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-            if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
-            const c=document.createElement('canvas');c.width=w;c.height=h;
-            c.getContext('2d').drawImage(img,0,0,w,h);
-            resolve(c.toDataURL('image/jpeg',0.4));
-          } catch(ex){ resolve(''); }
-        };
-        img.onerror=()=>{ clearTimeout(timeout); resolve(''); };
-        img.src=dataUrl;
-      });
-    }catch(e){return '';}
-  };
 
   // Build compressed bills array
   const buildBills=async()=>{
@@ -369,7 +473,9 @@ async function syncToSheets(){
     if(btn){btn.disabled=false;btn.textContent='⬆ Sync all data';}
     if(data&&data.ok){
       const res=data.result||{};
-      S.lastSync=new Date().toISOString();sv();updateGSStatus();
+      S.lastSync=new Date().toISOString();
+      (S.scratchpad||[]).forEach(sc=>{sc.synced=true;});
+      sv();updateGSStatus();
 
       const snapPart = res.quicksnap !== undefined ? ` · ${res.quicksnap} snaps` : '';
       const ticketPart = res.tickets !== undefined ? ` · ${res.tickets} tickets` : '';
@@ -708,7 +814,8 @@ async function loadFromSheets(silent){
           tripId: ss(q.TripID),
           photo: ss(q.Photo),
           createdAt: ss(q.CreatedAt),
-          updatedAt: ss(q.UpdatedAt || q.CreatedAt)
+          updatedAt: ss(q.UpdatedAt || q.CreatedAt),
+          synced: true
         }));
         S.scratchpad = mergeCollectionByTimestamp(existingScratch, remoteScratch, 'id');
       }
