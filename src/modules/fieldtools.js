@@ -534,6 +534,9 @@ async function deleteScratchItem(id) {
   });
   if (!ok) return;
 
+  if (!S.deletedIds) S.deletedIds = {};
+  S.deletedIds[id] = Date.now();
+
   S.scratchpad = (S.scratchpad || []).filter(s => s.id !== id);
   sv();
   triggerHaptic('light');

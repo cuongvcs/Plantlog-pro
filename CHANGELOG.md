@@ -71,6 +71,20 @@
   - Bổ sung cơ chế Timeout an toàn (2.5 giây) và kiểm tra chuỗi rỗng trong `compressPhoto()` của client, chống nguy cơ treo vĩnh viễn tiến trình đồng bộ khi gặp ảnh/chữ ký lỗi.
   - Thêm cơ chế tự động giới hạn độ dài chuỗi tối đa 49,000 ký tự trong hàm `writeSheet()` của `PlantLog_GoogleAppsScript.gs` và `PlantLog_GoogleAppsScript_Pro.gs`, ngăn chặn triệt để ngoại lệ vượt giới hạn 50,000 ký tự của Google Sheets (`Cells cannot contain more than 50,000 characters`) khi lưu ảnh và chữ ký số.
 
+#### 🛡️ 9. [IMP-25] Khắc Phục Triệt Để Lỗi Dữ Liệu Tái Xuất Hiện Sau Khi Xóa & Bảo Đảm Đồng Bộ Xóa Đám Mây (Tombstone Deletion & Cloud Delete Sync):
+- **Khắc phục lỗi bỏ qua xóa trên Google Apps Script (`Array.isArray` guard):**
+  - *Nguyên nhân:* Trước đó trong `PlantLog_GoogleAppsScript.gs`, lệnh ghi bảng dùng điều kiện `if(p.quickSnap && p.quickSnap.length)`. Khi người dùng xóa hết các ghi chú Quick Snap, mảng gửi lên là rỗng `[]` (`length === 0`), khiến Google Apps Script bỏ qua và không gọi `writeSheet()`, dẫn tới hàng dữ liệu cũ trên Sheet không hề bị xóa! Khi mở lại app, tiến trình auto-load đã kéo hàng cũ này về lại ứng dụng.
+  - *Giải pháp:* Chuyển toàn bộ điều kiện ghi trong `syncAll()` sang `if(Array.isArray(p.quickSnap))` (và tương tự cho `bills`, `tasks`, `trips`, `serviceTickets`, `siteSafety`). Khi mảng rỗng `[]`, hàm `writeSheet()` vẫn được kích hoạt và thực thi `sh.getRange(2,1,last-1,sh.getMaxColumns()).clearContent()`, dọn sạch 100% các dòng đã xóa trên Google Sheet.
+- **Cơ chế Tombstones (`S.deletedIds`) chống hồi sinh bản ghi đã xóa (Zombie Records):**
+  - Tích hợp sổ ghi nhận mã định danh đã xóa `S.deletedIds[id] = Date.now()` bền vững trong `localStorage`.
+  - Trong thuật toán gộp dữ liệu 2 chiều `mergeCollectionByTimestamp()`, nếu phát hiện bản ghi từ Google Sheets nằm trong danh sách đã xóa (`deletedIds`) và không có chỉnh sửa mới hơn từ thiết bị khác, hệ thống sẽ bỏ qua và không bao giờ phục hồi lại bản ghi đó vào bộ nhớ.
+  - Tự động dọn dẹp các mã tombstone cũ quá 30 ngày trong `ld()` để tối ưu hóa bộ nhớ thiết bị.
+- **Tăng tốc đồng bộ khi Xóa (Fast Deletion Debounce):**
+  - Giảm thời gian chờ đồng bộ trong `svAndSync()` từ 3.0 giây xuống chỉ **350ms** đối với các thao tác xóa (`scratch_delete`, `task_delete`, `bill_delete`, `service_ticket_delete`), giúp lệnh xóa được đẩy lên Google Sheets tức thời trước khi người dùng kịp đóng hoặc chuyển ứng dụng.
+- **Minh bạch trạng thái đồng bộ Google Sheets trên giao diện:**
+  - Hiển thị rõ số lượng ghi chú đã đồng bộ trong Toast và Panel cài đặt: `✅ Synced! ... 0 snaps ...` giúp người dùng biết chắc chắn dữ liệu trên Sheet đã được xóa về 0.
+  - Tự động phát hiện nếu Web App Google Apps Script của người dùng đang chạy phiên bản cũ chưa hỗ trợ QuickSnap để cảnh báo người dùng cập nhật phiên bản mới trên Google Sheets.
+
 ---
 
 ## [v4.12] - 02/11/2026

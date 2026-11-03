@@ -110,6 +110,7 @@ let S={
   inspections:[],
   assets:[],      // [{id, tag, name, customer, model, serial, spec, location, notes, createdAt}] (IMP-24)
   scratchpad:[],  // [{id, title, text, photo, category, tripId, createdAt}] (IMP-22)
+  deletedIds:{},  // { [id]: timestamp } (tombstones to prevent zombie records on sync)
   library:[],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
   defaultTeam:[],lang:'en',
   theme:'auto', // 'auto' | 'light' | 'dark' (IMP-13)
@@ -195,6 +196,13 @@ function ld(){
   }catch(e){}
   if(!S.assets) S.assets = [];
   if(!S.scratchpad) S.scratchpad = [];
+  if(!S.deletedIds) S.deletedIds = {};
+  try {
+    const cutoff = Date.now() - 30 * 86400 * 1000; // prune tombstones older than 30 days
+    for (const [k, v] of Object.entries(S.deletedIds)) {
+      if (v < cutoff) delete S.deletedIds[k];
+    }
+  } catch(e){}
   applyTheme();
 }
 function t(k){return T[S.lang][k]||T.en[k]||k;}

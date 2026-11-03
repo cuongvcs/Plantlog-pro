@@ -49,6 +49,7 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 | **IMP-22** | **Sổ tay ghi chú nhanh & Chụp Nameplate (Quick Scratchpad & Snapper)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 | **IMP-23** | **An toàn EHS, Giấy phép công tác & 4 bước LOTO (Site Safety Checklist)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 | **IMP-24** | **Hồ sơ lý lịch thiết bị & Dòng thời gian bảo trì (Asset Passport & Timeline)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
+| **IMP-25** | **Khắc phục lỗi hồi sinh bản ghi & Bảo đảm đồng bộ xóa (Tombstone & Cloud Delete Sync)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 
 ---
 
@@ -403,6 +404,7 @@ gantt
   - [x] Quản lý Hồ sơ Lý lịch Thiết bị (Asset Passport) & Quét dòng thời gian lịch sử dịch vụ/bảo trì tự động từ Trips, Tasks, Reports (Đã xong - IMP-24)
   - [x] Đồng bộ Đa bảng Google Sheets: Tạo mới 3 Sheet chuyên dụng (`QuickSnap`, `SiteSafety`, `ServiceTickets`) với cơ chế nén ảnh, gộp timestamp hai chiều (Đã xong)
   - [x] Tối ưu Trải nghiệm & Độ tin cậy Đồng bộ Đám mây: Tự động sắp xếp Chuyến đi mới nhất lên đầu trong menu Quick Snap, kích hoạt Auto-sync (`svAndSync`), bảo vệ tràn ô 49,000 ký tự trên Google Sheets và tương thích trường dữ liệu (Đã xong)
+  - [x] Khắc phục triệt để lỗi hồi sinh bản ghi đã xóa & bảo đảm đồng bộ xóa lên Google Sheets (Tombstone Deletion & Cloud Delete Sync với `Array.isArray` guard và Fast Delete Debounce) (Đã xong - IMP-25)
 
 ---
 
@@ -410,9 +412,7 @@ gantt
 
 Các hạng mục dưới đây đã được phân tích và lưu lại để xem xét khi có nhu cầu nâng cấp mở rộng trong tương lai:
 
-1. **Chống "hồi sinh" bản ghi đã xóa khi Đồng bộ (Tombstone Pattern):**
-   * *Mô tả:* Đánh dấu cờ `deleted: true` thay vì xóa mảng cục bộ, giúp Google Apps Script tự động gạch bỏ bản ghi trên Google Sheet tương ứng khi đồng bộ 2 chiều.
-2. **Pre-cache thư viện jsPDF trong Service Worker:**
+1. **Pre-cache thư viện jsPDF trong Service Worker:**
    * *Mô tả:* Tải trước tệp `jspdf.umd.min.js` vào bộ nhớ cache PWA để có thể kết xuất PDF trong điều kiện mất sóng điện thoại 100%.
-3. **Nâng cấp kho lưu trữ từ LocalStorage sang IndexedDB:**
+2. **Nâng cấp kho lưu trữ từ LocalStorage sang IndexedDB:**
    * *Mô tả:* Mở rộng dung lượng lưu trữ cục bộ từ 5MB lên hàng trăm MB phục vụ lưu trữ nhiều năm dữ liệu.

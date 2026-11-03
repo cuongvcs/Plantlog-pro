@@ -328,6 +328,8 @@ async function deleteBillFromScreen(id) {
     icon: '🧾'
   });
   if (!ok) return;
+  if (!S.deletedIds) S.deletedIds = {};
+  S.deletedIds[id] = Date.now();
   S.bills = S.bills.filter(b => b.id !== id);
   sv(); renderBillsScreen(); renderDash(); svAndSync('bill_delete');
 }

@@ -171,7 +171,7 @@ function doPost(e){
 function syncAll(p){
   const s=db_();const r={};
 
-  if(p.trips&&p.trips.length){
+  if(Array.isArray(p.trips)){
     writeSheet(s,SN.TRIPS,COLS.trips,p.trips.map(t=>[
       t.id,t.plant,t.location,t.date,t.dateEnd,
       t.purpose,t.contact,t.transport,t.status,
@@ -207,7 +207,7 @@ function syncAll(p){
     pushToPowerAutomateWebhook(p.trips);
   }
 
-  if(p.tasks&&p.tasks.length){
+  if(Array.isArray(p.tasks)){
     writeSheet(s,SN.TASKS,COLS.tasks,p.tasks.map(t=>[
       t.id,t.title,t.desc,t.category,
       t.dateStart,t.timeStart,t.dateEnd,t.timeEnd,
@@ -228,7 +228,7 @@ function syncAll(p){
     writeSheet(s,SN.LEAVE,COLS.leave,rows);r.leave=rows.length;
   }
 
-  if(p.bills&&p.bills.length){
+  if(Array.isArray(p.bills)){
     writeSheet(s,SN.BILLS,COLS.bills,p.bills.map(b=>[
       b.id,b.tripId,b.date,b.billNumber,
       b.detail,b.amount||0,b.currency,b.vndAmount||0,b.category,
@@ -262,14 +262,14 @@ function syncAll(p){
   }
 
   // QuickSnap (Scratchpad)
-  if(p.quickSnap&&p.quickSnap.length){
+  if(Array.isArray(p.quickSnap)){
     writeSheet(s,SN.QUICK_SNAP,COLS.quicksnap,p.quickSnap.map(q=>[
       q.id,q.category,q.title,q.notes,q.tripId,q.tripPlant||'',q.photo||'',q.createdAt,q.updatedAt
     ]));r.quicksnap=p.quickSnap.length;
   }
 
   // Site Safety & LOTO
-  if(p.siteSafety&&p.siteSafety.length){
+  if(Array.isArray(p.siteSafety)){
     writeSheet(s,SN.SITE_SAFETY,COLS.site_safety,p.siteSafety.map(sf=>[
       sf.tripId,sf.plant||'',sf.permitNo,sf.validUntil,sf.permitTypes,
       sf.padlockId,sf.electricalIsolated?'YES':'NO',sf.pneumaticIsolated?'YES':'NO',
@@ -279,7 +279,7 @@ function syncAll(p){
   }
 
   // Daily Service Tickets
-  if(p.serviceTickets&&p.serviceTickets.length){
+  if(Array.isArray(p.serviceTickets)){
     writeSheet(s,SN.SERVICE_TICKETS,COLS.service_tickets,p.serviceTickets.map(tk=>[
       tk.id,tk.tripId,tk.plant||'',tk.date,
       tk.normalHours||0,tk.ot15Hours||0,tk.ot20Hours||0,tk.standbyHours||0,tk.travelHours||0,

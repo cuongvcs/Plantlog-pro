@@ -363,4 +363,41 @@ assert.ok(tripsCode.includes("svAndSync('trip_safety')"));
 console.log('  ✓ Google Apps Script backend, cell overflow guard & Client sync.js schema and data handlers verified!');
 console.log('  ✓ QuickSnap trip sorting (newest first) & auto-sync hooks (svAndSync) verified!');
 
-console.log('\n🎉 ALL 9 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');
+// 10. Test Tombstone Deletion Sync & Zombie Record Prevention (IMP-25)
+console.log('\n🔍 Test 10: Testing Tombstone Deletion & Empty Array Sheet Clearing (IMP-25)...');
+assert.ok(gasCode.includes("if(Array.isArray(p.quickSnap))"), "GAS must use Array.isArray for quickSnap so empty array clears sheet");
+assert.ok(gasProCode.includes("if(Array.isArray(p.quickSnap))"), "GAS Pro must use Array.isArray for quickSnap");
+assert.ok(gasCode.includes("if(Array.isArray(p.bills))"), "GAS must use Array.isArray for bills");
+assert.ok(gasCode.includes("if(Array.isArray(p.tasks))"), "GAS must use Array.isArray for tasks");
+assert.ok(gasCode.includes("if(Array.isArray(p.trips))"), "GAS must use Array.isArray for trips");
+
+assert.ok(fieldtoolsCode.includes("S.deletedIds[id] = Date.now()"), "fieldtools.js must record deletedIds for quick notes");
+assert.ok(syncModuleCode.includes("Tombstone check"), "sync.js must implement tombstone check in mergeCollectionByTimestamp");
+assert.ok(syncModuleCode.includes("source.includes('delete')"), "sync.js must trigger fast debounce for deletes");
+
+// Test tombstone simulation logic
+const testDeletedIds = { 'del-1': Date.now() };
+const testRemote = [
+  { id: 'del-1', title: 'Deleted Note', updatedAt: new Date(Date.now() - 5000).toISOString() },
+  { id: 'keep-2', title: 'Active Note', updatedAt: new Date().toISOString() }
+];
+const testLocal = [
+  { id: 'keep-2', title: 'Active Note', updatedAt: new Date().toISOString() }
+];
+
+// Run merge logic with mock S
+const globalS = { deletedIds: testDeletedIds };
+const mergeFnMatch = syncModuleCode.match(/function mergeCollectionByTimestamp\([\s\S]*?\n\}/);
+assert.ok(mergeFnMatch, 'mergeCollectionByTimestamp exists');
+const vm = require('vm');
+const sandbox = { S: globalS, console };
+vm.createContext(sandbox);
+vm.runInContext(mergeFnMatch[0], sandbox);
+const testResult = sandbox.mergeCollectionByTimestamp(testLocal, testRemote, 'id');
+
+assert.strictEqual(testResult.length, 1, 'Deleted record del-1 must be filtered out by tombstone');
+assert.strictEqual(testResult[0].id, 'keep-2', 'Only active record keep-2 should remain');
+console.log('  ✓ Empty array clearing in Google Apps Script verified!');
+console.log('  ✓ Tombstone deletion & zombie record prevention (mergeCollectionByTimestamp) verified!');
+
+console.log('\n🎉 ALL 10 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');

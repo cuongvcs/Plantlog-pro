@@ -370,8 +370,18 @@ async function syncToSheets(){
     if(data&&data.ok){
       const res=data.result||{};
       S.lastSync=new Date().toISOString();sv();updateGSStatus();
-      showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills · ${res.quicksnap||0} snaps · ${res.tickets||0} tickets`,'ok');
-      showToast('Synced to Google Sheets ✓');
+
+      const snapPart = res.quicksnap !== undefined ? ` · ${res.quicksnap} snaps` : '';
+      const ticketPart = res.tickets !== undefined ? ` · ${res.tickets} tickets` : '';
+      const safetyPart = res.safety !== undefined ? ` · ${res.safety} safety` : '';
+
+      if (res.quicksnap === undefined) {
+        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills\n⚠️ Google Apps Script chưa có code QuickSnap/Safety. Vui lòng copy PlantLog_GoogleAppsScript.gs và Triển khai (Deploy) Bản mới (New version) trên Google Sheet.`, 'warn');
+        showToast('Synced (Cần cập nhật Apps Script cho QuickSnap)');
+      } else {
+        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills${snapPart}${ticketPart}`, 'ok');
+        showToast(`Synced to Google Sheets ✓ (${res.quicksnap} snaps)`);
+      }
     } else {
       showGSResult('❌ Sync error: '+((data&&data.error)||'Unknown'),'error');
       showToast('Sync failed — check error in sync panel');
@@ -403,6 +413,19 @@ function mergeCollectionByTimestamp(localList, remoteList, idKey = 'id') {
   for (const remote of remoteList) {
     const id = String(remote[idKey] || '');
     if (!id) continue;
+
+    // IMP-25: Tombstone check - Do not resurrect locally deleted items
+    if (typeof S !== 'undefined' && S && S.deletedIds && S.deletedIds[id]) {
+      const deletedAt = S.deletedIds[id];
+      const remoteTime = new Date(remote.updatedAt || remote.createdAt || 0).getTime();
+      if (remoteTime <= deletedAt) {
+        continue; // Skip resurrecting deleted item
+      } else {
+        // Item was updated remotely after the local deletion
+        delete S.deletedIds[id];
+      }
+    }
+
     processedIds.add(id);
 
     const local = localMap.get(id);
@@ -674,11 +697,11 @@ async function loadFromSheets(silent){
       }
 
       // IMP-22: Load QuickSnap (Scratchpad)
-      if(d.quicksnap && d.quicksnap.length){
+      if(d.quicksnap && Array.isArray(d.quicksnap)){
         const existingScratch = S.scratchpad || [];
         const remoteScratch = d.quicksnap.map(q => ({
           id: ss(q.ID),
-          category: ss(q.Category) || 'nameplate',
+          category: ss(q.Category) || 'general',
           title: ss(q.Title),
           text: ss(q.Notes),
           notes: ss(q.Notes),
@@ -777,18 +800,19 @@ async function loadFromSheets(silent){
   }
 }
 
-// Auto-sync debounced — triggers 3s after last save action
+// Auto-sync debounced — triggers 350ms after delete or 2.5s after other actions
 let syncTimer=null;
 function svAndSync(source){
   sv();
   if(!S.gsUrl)return;
   clearTimeout(syncTimer);
+  const delay = (typeof source === 'string' && source.includes('delete')) ? 350 : 2500;
   syncTimer=setTimeout(()=>{
     // Show subtle indicator
     const el=document.getElementById('gsheet-status');
     if(el)el.textContent='Syncing…';
     syncToSheets().then(()=>{}).catch(()=>{});
-  },3000);
+  }, delay);
 }
 
 // ═══════ BILLS ═══════
@@ -1076,6 +1100,8 @@ async function deleteBill(id){
     icon: '🧾'
   });
   if(!ok) return;
+  if (!S.deletedIds) S.deletedIds = {};
+  S.deletedIds[id] = Date.now();
   S.bills=S.bills.filter(b=>b.id!==id);
   sv();
   if(curTrip)renderTripBills(curTrip);

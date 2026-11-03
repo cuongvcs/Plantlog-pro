@@ -611,6 +611,8 @@ async function deleteTask(id){
     icon: '🗑️'
   });
   if(!ok) return;
+  if (!S.deletedIds) S.deletedIds = {};
+  S.deletedIds[id] = Date.now();
   S.tasks=S.tasks.filter(t=>t.id!==id);sv();renderTasks();renderDash();renderCalendar();
   svAndSync('task_delete');
 }

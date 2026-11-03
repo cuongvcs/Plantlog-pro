@@ -379,6 +379,8 @@ async function deleteTripCurrent(){
     icon: '🗑️'
   });
   if(!ok) return;
+  if (!S.deletedIds) S.deletedIds = {};
+  S.deletedIds[curTrip] = Date.now();
   S.trips=S.trips.filter(tr=>tr.id!==curTrip);
   delete S.reports[curTrip];
   sv();
@@ -1038,6 +1040,9 @@ async function deleteServiceTicket(ticketId) {
     icon: '🗑️'
   });
   if (!ok) return;
+
+  if (!S.deletedIds) S.deletedIds = {};
+  S.deletedIds[ticketId] = Date.now();
 
   tr.timesheets = (tr.timesheets || []).filter(t => t.id !== ticketId);
   sv();
