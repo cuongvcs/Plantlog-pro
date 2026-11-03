@@ -3554,10 +3554,11 @@ input, textarea, select, button { font-family: var(--font); }
 <!-- MODAL: QUICK FIELD SCRATCHPAD (IMP-22) -->
 <div id="modal-quick-scratch" class="mo"><div class="modal">
   <div class="mh"></div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
     <div class="mt" id="scratch-modal-title" style="margin-bottom:0;">⚡ Field Quick Notes &amp; Snap</div>
-    <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-quick-scratch');openScratchpadManagerModal();" style="font-size:11px;padding:3px 8px;">
-      📂 View All (<span id="scratch-modal-count">0</span>)
+    <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-quick-scratch');openScratchpadManagerModal();" style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 10px;line-height:1.2;flex-shrink:0;border-radius:8px;min-width:76px;text-align:center;" title="View all saved field notes">
+      <span style="font-size:11px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:3px;">📂 View All</span>
+      <span style="font-size:10px;font-weight:600;color:var(--n500);margin-top:2px;white-space:nowrap;">(<span id="scratch-modal-count">0</span>)</span>
     </button>
   </div>
 

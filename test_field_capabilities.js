@@ -559,4 +559,12 @@ console.log('  ✓ Report Wizard step 5 snap picker DOM elements verified!');
 console.log('  ✓ Report snap toggle, selection and preview handlers verified!');
 console.log('  ✓ PDF Export FIELD NOTES & OBSERVATIONS integration verified!');
 
-console.log('\n🎉 ALL 14 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');
+// 15. Test Quick Note Modal Header 2-Line Balanced Layout (IMP-30)
+console.log('\n🔍 Test 15: Testing Quick Note View All Button 2-Line Layout (IMP-30)...');
+assert.ok(indexHtmlCode.includes('id="scratch-modal-count"'), 'index.html must maintain scratch-modal-count span ID');
+assert.ok(indexHtmlCode.includes('flex-direction:column') || indexHtmlCode.includes('flex-direction: column'), 'View All button must use column layout');
+assert.ok(indexHtmlCode.includes('white-space:nowrap') || indexHtmlCode.includes('white-space: nowrap'), 'View All elements must prevent wrapping');
+assert.ok(indexHtmlCode.includes('📂 View All'), 'View All button must show icon and text');
+console.log('  ✓ Quick Note modal header 2-line layout and count badge verified!');
+
+console.log('\n🎉 ALL 15 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');

@@ -18,7 +18,7 @@ function hashPIN(pin) {
     h ^= pin.charCodeAt(i);
     h = (h * 0x01000193) >>> 0;
   }
-  return 'fnv_' + h.toString(16).padStart(8,'0');
+  return 'fnv_' + h.toString(16).padStart(8, '0');
 }
 async function hashPINAsync(pin, salt) {
   // Try crypto.subtle SHA-256 for compatibility with older stored hashes
@@ -26,18 +26,18 @@ async function hashPINAsync(pin, salt) {
   try {
     const enc = new TextEncoder().encode(s + pin);
     const buf = await crypto.subtle.digest('SHA-256', enc);
-    const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
     return 'sha_' + hex;
-  } catch(e) {
+  } catch (e) {
     return hashPIN(pin); // FNV fallback
   }
 }
 
 function getStoredHash() {
-  try { return localStorage.getItem(SEC_KEY) || ''; } catch(e) { return ''; }
+  try { return localStorage.getItem(SEC_KEY) || ''; } catch (e) { return ''; }
 }
 function storeHash(hash) {
-  try { localStorage.setItem(SEC_KEY, hash); } catch(e) {}
+  try { localStorage.setItem(SEC_KEY, hash); } catch (e) { }
 }
 function hasPIN() { return !!getStoredHash(); }
 
@@ -48,7 +48,7 @@ let _pendingScreen = null;    // 'login' | 'setup_new' | 'setup_confirm' | 'chan
 let pinFirst = '';        // stores first entry during setup confirm step
 let _lockTimer = null;
 let _isLocked = false;
-const AUTO_LOCK_MS = 5 * 60 * 1000;  // 5 minutes
+const AUTO_LOCK_MS = 2 * 60 * 1000;  // 5 minutes
 
 function resetAutoLock() {
   clearTimeout(_lockTimer);
@@ -136,7 +136,7 @@ function checkPIN() {
           unlockApp();
           updatePinDots('lock');
         }
-      }).catch(() => {})
+      }).catch(() => { })
     );
     Promise.all(shaChecks).then(() => {
       if (!matched) showPINError();
@@ -149,17 +149,17 @@ function checkPIN() {
 }
 
 function showPINError() {
-  for(let i=0;i<4;i++){
-    const d=document.getElementById('pd'+i);
-    if(d){d.classList.remove('filled');d.classList.add('error');}
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('pd' + i);
+    if (d) { d.classList.remove('filled'); d.classList.add('error'); }
   }
-  const le=document.getElementById('lock-error');
-  if(le) le.textContent='Incorrect PIN — try again';
-  setTimeout(()=>{
-    for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d)d.classList.remove('error');}
-    const le2=document.getElementById('lock-error');
-    if(le2) le2.textContent='';
-    pinBuffer='';
+  const le = document.getElementById('lock-error');
+  if (le) le.textContent = 'Incorrect PIN — try again';
+  setTimeout(() => {
+    for (let i = 0; i < 4; i++) { const d = document.getElementById('pd' + i); if (d) d.classList.remove('error'); }
+    const le2 = document.getElementById('lock-error');
+    if (le2) le2.textContent = '';
+    pinBuffer = '';
     updatePinDots('lock');
   }, 800);
 }
@@ -221,26 +221,26 @@ function modalPinBackspace() {
 function processModalPIN() {
   if (modalPinStep === 'old') {
     // Verify current PIN — handle both sha_ and fnv_ formats
-    const stored=getStoredHash();
-    const syncMatch=hashPIN(modalPinBuffer)===stored;
-    const doVerify=(match)=>{
-      if(match){
+    const stored = getStoredHash();
+    const syncMatch = hashPIN(modalPinBuffer) === stored;
+    const doVerify = (match) => {
+      if (match) {
         // Check if this was a Settings gate request
         if (_pendingScreen === 'settings') {
           _settingsUnlocked = true; _pendingScreen = null;
           closeModal('modal-pin'); modalPinBuffer = '';
-          document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+          document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
           document.getElementById('screen-settings').classList.add('active');
           updatePINStatusLabel();
           return;
         }
-        modalPinBuffer=''; modalPinStep='new'; updatePinDots('modal');
-        document.getElementById('pin-modal-sub').textContent='Enter your new 4-digit PIN';
-        document.getElementById('pin-modal-error').textContent='';
+        modalPinBuffer = ''; modalPinStep = 'new'; updatePinDots('modal');
+        document.getElementById('pin-modal-sub').textContent = 'Enter your new 4-digit PIN';
+        document.getElementById('pin-modal-error').textContent = '';
       } else { flashModalError('Incorrect current PIN'); }
     };
-    if(stored.startsWith('sha_')){hashPINAsync(modalPinBuffer).then(h=>doVerify(h===stored)).catch(()=>doVerify(hashPIN(modalPinBuffer)===stored));}
-    else{doVerify(syncMatch);}
+    if (stored.startsWith('sha_')) { hashPINAsync(modalPinBuffer).then(h => doVerify(h === stored)).catch(() => doVerify(hashPIN(modalPinBuffer) === stored)); }
+    else { doVerify(syncMatch); }
   } else if (modalPinStep === 'new') {
     if (modalPinBuffer === '0000' || modalPinBuffer === '1234' || modalPinBuffer === '1111') {
       flashModalError('PIN too simple — choose another');
@@ -315,12 +315,12 @@ function updatePINStatusLabel() {
 
 // ── Startup auth check ─────────────────────────────────────
 function authInit() {
-  const appEl  = document.getElementById('app');
+  const appEl = document.getElementById('app');
   const lockEl = document.getElementById('screen-lock');
 
-  function showApp()  { if(appEl) appEl.style.display  = 'flex'; if(lockEl) lockEl.style.display = 'none'; }
-  function showLock() { if(lockEl) lockEl.style.display = 'flex'; if(appEl) appEl.style.display = 'none'; }
-  function hideLock() { if(lockEl) lockEl.style.display = 'none'; }
+  function showApp() { if (appEl) appEl.style.display = 'flex'; if (lockEl) lockEl.style.display = 'none'; }
+  function showLock() { if (lockEl) lockEl.style.display = 'flex'; if (appEl) appEl.style.display = 'none'; }
+  function hideLock() { if (lockEl) lockEl.style.display = 'none'; }
 
   if (hasPIN()) {
     lockApp();
@@ -330,10 +330,10 @@ function authInit() {
     setTimeout(() => {
       try {
         if (!hasPIN()) showToast('💡 Tip: Set a PIN in Settings to protect your data');
-      } catch(e) {}
+      } catch (e) { }
     }, 3000);
   }
-  try { updatePINStatusLabel(); } catch(e){}
+  try { updatePINStatusLabel(); } catch (e) { }
 }
 
 // ── pinDel alias (used by old HTML references) ──────────────

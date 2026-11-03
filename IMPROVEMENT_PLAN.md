@@ -54,6 +54,7 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 | **IMP-27** | **Đồng bộ gia tăng vi mô cho Ghi chú nhanh (Incremental Single-Note Cloud Sync)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 | **IMP-28** | **Cho phép chỉnh sửa Ghi chú nhanh sau khi tạo (In-Place Note Editing)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.25 ngày |
 | **IMP-29** | **Tích hợp chọn Ghi chú vào Báo cáo Kỹ thuật & Xuất bản PDF (Field Notes in Report)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
+| **IMP-30** | **Tinh chỉnh cân đối nút View All 2 hàng trong Quick Notes (2-Line Balanced Layout)** | 🟢 **P3** | **Cải thiện UX** | ✅ Hoàn tất (v4.13) | 0.25 ngày |
 
 ---
 
@@ -473,6 +474,7 @@ gantt
   - [x] Đồng bộ gia tăng vi mô cho Ghi chú nhanh Quick Notes: Chỉ đẩy/xóa bản ghi mới thay vì tải và ghi đè toàn bộ cơ sở dữ liệu lên Google Sheets (Đã xong - IMP-27)
   - [x] Cho phép chỉnh sửa Ghi chú nhanh sau khi tạo: nút Edit trên thẻ, nạp lại form và đồng bộ cập nhật tại chỗ lên Google Sheets (Đã xong - IMP-28)
   - [x] Tích hợp chọn Ghi chú Hiện trường vào Báo cáo Kỹ thuật (bước 5 Tasks & Notes) và xuất bản tự động vào tệp PDF (Đã xong - IMP-29)
+  - [x] Tinh chỉnh cân đối nút View All 2 hàng trong Quick Note modal: Tách (N) xuống dòng dưới View All, chống co vỡ giao diện trên di động (Đã xong - IMP-30)
 
 ---
 

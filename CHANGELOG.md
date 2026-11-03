@@ -135,6 +135,15 @@
   - Trình bày rõ ràng: Dòng tiêu đề in đậm với tag danh mục `• [CATEGORY] Tiêu đề`, thời gian bên phải, đoạn văn bản ghi chú chi tiết bọc vừa vặn trang giấy.
   - Tự động nhúng ảnh thumbnail hiện trường sắc nét (kích thước chuẩn `35mm x 26mm`) với cơ chế ngắt trang an toàn `chk()`.
 
+#### 📱 14. [IMP-30] Tinh Chỉnh Cân Đối Nút "View All" 2 Hàng Trong Modal Quick Notes & Snap (2-Line Balanced Layout):
+- **Khắc phục lỗi vỡ chữ trên màn hình di động hẹp:**
+  - *Hiện trạng trước:* Nút `📂 View All (4)` nằm trên cùng một hàng ngang ở góc phải modal ghi chú nhanh (`modal-quick-scratch`). Do tiêu đề bên trái (`⚡ Field Quick Notes & Snap`) chiếm diện tích và nút bị co ép, dấu ngoặc và số lượng bị ngắt dòng bất đối xứng (`📂 View All  4 )` trên một dòng và dấu `(` rớt xuống dòng dưới) gây mất thẩm mỹ.
+- **Tái cấu trúc bố cục 2 dòng cân xứng (2-Line Column Flex Layout):**
+  - Chuyển cấu trúc bên trong nút thành flexbox dạng cột (`display: inline-flex; flex-direction: column; align-items: center; justify-content: center;`).
+  - **Dòng 1:** `📂 View All` (chữ in đậm `font-weight: 700`, kích cỡ 11px, ghim cứng `white-space: nowrap` không bao giờ bị ngắt dòng).
+  - **Dòng 2:** `(<span id="scratch-modal-count">N</span>)` đặt ngay ngắn, căn giữa hoàn hảo bên dưới dòng chữ `View All` với `white-space: nowrap` và màu trung tính tinh tế (`var(--n500)`).
+  - Khóa chống co nghẽn flex (`flex-shrink: 0; min-width: 76px;`) và thêm khoảng đệm `gap: 8px` với tiêu đề, đảm bảo nút luôn giữ nguyên hình dáng cân đối, chuyên nghiệp trên mọi kích cỡ màn hình điện thoại.
+
 ---
 
 ## [v4.12] - 02/11/2026
