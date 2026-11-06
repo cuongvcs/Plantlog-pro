@@ -174,6 +174,11 @@
     - Bổ sung nút bấm **`☁️ Sync All Trip Claims to Google Sheet`** ngay trên thanh Tổng kết (`tc-summary-strip`) và nút **`☁️ Sync`** trên thanh Topbar khi ở màn hình Trip Claims.
     - Bổ sung hành động xử lý tốc độ cao `syncTripClaims` và hàm `syncTripClaimsBatch(claims)` trong Google Apps Script backend (`PlantLog_GoogleAppsScript.gs` và `PlantLog_GoogleAppsScript_Pro.gs`), ghi toàn bộ danh sách chuyến đi vào sheet `TripClaims` chỉ trong 300 - 500ms mà không phải xử lý lại ảnh hóa đơn.
     - Cơ chế tự động khởi tạo claim object cho mọi chuyến đi trong `renderTripClaimsScreen()` giúp danh sách dữ liệu luôn sẵn sàng 100% để xuất/đồng bộ sang Google Sheet.
+  - **Sắp xếp Tuần Tự Thời Gian từ Week 1 (trên cùng) tới Week 53 (dưới cùng) trên Google Sheet:**
+    - Khắc phục triệt để hiện tượng danh sách các chuyến đi bị xếp lộn xộn tuần trên Google Sheet do thứ tự tạo chuyến đi không theo tuần tự thời gian.
+    - Tích hợp hàm chuẩn hóa thứ tự `compareTripClaimsChronological` trong Client (`sync.js`) và `compareTripClaimsChronological_` trong Google Apps Script backend (`PlantLog_GoogleAppsScript.gs` & `PlantLog_GoogleAppsScript_Pro.gs`): Tự động sắp xếp các chuyến đi theo Năm ➔ Tuần (ISO-8601 Week) ➔ Ngày đi (`FromDate`) ➔ Ngày về (`ToDate`) theo chiều tăng dần (Ascending).
+    - Tự động thực thi `sortTripClaimsSheet_` trên Google Apps Script để sắp xếp vật lý toàn bộ dải ô dữ liệu của sheet `TripClaims` theo Cột 2 (`FromDate`) và Cột 3 (`ToDate`) sau mỗi lần Đồng bộ Hàng loạt (`syncTripClaims`), Đồng bộ Toàn bộ (`syncAll`), hoặc Cập nhật Tức thì từng dòng (`upsertTripClaim`).
+    - Bổ sung hàm định dạng trực quan chuyên nghiệp `formatTripClaimsSheet_`: Tự động căn lề phải và định dạng số có phân tách hàng nghìn (`#,##0`) cho cột `TotalClaim`, căn giữa mã chuyến đi, các cột ngày tháng, số tuần và trạng thái thanh toán, kèm theo căn chỉnh độ rộng các cột tối ưu trên bảng tính Google Spreadsheet.
 
 ---
 

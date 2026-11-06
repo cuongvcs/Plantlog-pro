@@ -476,7 +476,7 @@ gantt
   - [x] Cho phép chỉnh sửa Ghi chú nhanh sau khi tạo: nút Edit trên thẻ, nạp lại form và đồng bộ cập nhật tại chỗ lên Google Sheets (Đã xong - IMP-28)
   - [x] Tích hợp chọn Ghi chú Hiện trường vào Báo cáo Kỹ thuật (bước 5 Tasks & Notes) và xuất bản tự động vào tệp PDF (Đã xong - IMP-29)
   - [x] Tinh chỉnh cân đối nút View All 2 hàng trong Quick Note modal: Tách (N) xuống dòng dưới View All, chống co vỡ giao diện trên di động (Đã xong - IMP-30)
-  - [x] Bảng tổng hợp chuyến đi & Theo dõi thanh toán công tác phí: Smart Accordion Row 1 dòng, bộ lọc Tháng/Năm/Status, tiến độ 4 bước (Req/Appr/Proc/Done), nút đồng bộ 1 chạm All Claims và đồng bộ phẳng Google Sheet TripClaims chuyên dụng (Đã xong - IMP-31)
+  - [x] Bảng tổng hợp chuyến đi & Theo dõi thanh toán công tác phí: Smart Accordion Row 1 dòng, bộ lọc Tháng/Năm/Status, tiến độ 4 bước (Req/Appr/Proc/Done), nút đồng bộ 1 chạm All Claims, tự động sắp xếp chuẩn thời gian từ Week 1 (trên cùng) tới Week 53 (dưới cùng) và đồng bộ phẳng Google Sheet TripClaims chuyên dụng (Đã xong - IMP-31)
 
 ---
 

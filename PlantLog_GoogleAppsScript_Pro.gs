@@ -297,12 +297,15 @@ function syncAll(p){
 
   // Trip Claims & Reimbursements (IMP-31)
   if(Array.isArray(p.tripClaims)){
+    p.tripClaims.sort(compareTripClaimsChronological_);
     writeSheet(s,SN.TRIP_CLAIMS,COLS.trip_claims,p.tripClaims.map(c=>[
       c.tripId||'', c.fromDate||'', c.toDate||'', c.weekNo||'',
       c.travelDetail||'', c.totalClaim||0,
       c.dateRequest||'', c.dateApproved||'', c.processDate||'', c.doneDate||'',
       c.paymentStatus||'Not yet', c.comment||'', c.updatedAt||new Date().toISOString()
-    ]));r.tripClaims=p.tripClaims.length;
+    ]));
+    sortTripClaimsSheet_(s);
+    r.tripClaims=p.tripClaims.length;
   }
 
   try{s.getSheets().forEach(sh=>{if(sh.getLastColumn()>0)sh.autoResizeColumns(1,sh.getLastColumn());});}catch(x){}
@@ -439,24 +442,100 @@ function upsertTripClaimRow(item){
     sh.appendRow(row);
   }
 
+  // Ensure sheet rows stay sorted chronologically from Week 1 at top to Week 53 at bottom
+  sortTripClaimsSheet_(s);
+
   log_('UPSERT_TRIP_CLAIM', 'TripClaims', item.tripId, mode + ': Status=' + (item.paymentStatus || 'Not yet'));
   return {ok:true, tripId:item.tripId, mode:mode};
 }
 
 /**
+ * IMP-31: Compare trip claims chronologically (Week 1 -> Week 53)
+ */
+function compareTripClaimsChronological_(a, b) {
+  var da = String(a.fromDate || a.date || '').trim();
+  var db = String(b.fromDate || b.date || '').trim();
+  if (!da && !db) return String(a.tripId || '').localeCompare(String(b.tripId || ''));
+  if (!da) return 1;
+  if (!db) return -1;
+  if (da !== db) return da.localeCompare(db);
+  var ea = String(a.toDate || a.dateEnd || '').trim();
+  var eb = String(b.toDate || b.dateEnd || '').trim();
+  if (ea !== eb) return ea.localeCompare(eb);
+  return String(a.tripId || '').localeCompare(String(b.tripId || ''));
+}
+
+/**
  * IMP-31: Batch sync all TripClaims to the TripClaims sheet
+ * Guarantees rows are sorted chronologically from Week 1 (top) to Week 53 (bottom)
  */
 function syncTripClaimsBatch(claims){
   if(!Array.isArray(claims)) return {ok:false, error:'Missing claims array'};
   const s=db_();
+  // Sort claims chronologically (Week 1 at top -> Week 53 at bottom)
+  claims.sort(compareTripClaimsChronological_);
   writeSheet(s,SN.TRIP_CLAIMS,COLS.trip_claims,claims.map(c=>[
     c.tripId||'', c.fromDate||'', c.toDate||'', c.weekNo||'',
     c.travelDetail||'', c.totalClaim||0,
     c.dateRequest||'', c.dateApproved||'', c.processDate||'', c.doneDate||'',
     c.paymentStatus||'Not yet', c.comment||'', c.updatedAt||new Date().toISOString()
   ]));
-  log_('SYNC_TRIP_CLAIMS', 'TripClaims', 'All', 'Synced ' + claims.length + ' claims');
+  sortTripClaimsSheet_(s);
+  log_('SYNC_TRIP_CLAIMS', 'TripClaims', 'All', 'Synced ' + claims.length + ' claims (Week 1 -> Week 53)');
   return {ok:true, count:claims.length};
+}
+
+/**
+ * IMP-31: Format and sort TripClaims sheet in Google Spreadsheet
+ */
+function sortTripClaimsSheet_(s){
+  try {
+    var sh = s.getSheetByName(SN.TRIP_CLAIMS);
+    if (!sh) return;
+    var last = sh.getLastRow();
+    if (last > 2) {
+      // Column 2 is FromDate (ascending), Column 3 is ToDate (ascending)
+      sh.getRange(2, 1, last - 1, sh.getLastColumn()).sort([
+        { column: 2, ascending: true },
+        { column: 3, ascending: true }
+      ]);
+    }
+    formatTripClaimsSheet_(sh);
+  } catch (e) {
+    Logger.log('sortTripClaimsSheet_ error: ' + e.message);
+  }
+}
+
+function formatTripClaimsSheet_(sh){
+  try {
+    if (!sh) return;
+    var maxR = Math.max(sh.getMaxRows(), 2);
+    // Alignments & Number formatting
+    sh.getRange(1, 1, maxR, 4).setHorizontalAlignment('center'); // TripID, FromDate, ToDate, WeekNo
+    sh.getRange(1, 5, maxR, 1).setHorizontalAlignment('left');   // TravelDetail
+    sh.getRange(2, 6, maxR - 1, 1).setHorizontalAlignment('right').setNumberFormat('#,##0'); // TotalClaim
+    sh.getRange(1, 7, maxR, 5).setHorizontalAlignment('center'); // Dates & PaymentStatus
+    sh.getRange(1, 12, maxR, 1).setHorizontalAlignment('left');  // Comment
+    sh.getRange(1, 13, maxR, 1).setHorizontalAlignment('center'); // UpdatedAt
+
+    if (sh.getLastRow() > 1) {
+      sh.setColumnWidth(1, 110); // TripID
+      sh.setColumnWidth(2, 100); // FromDate
+      sh.setColumnWidth(3, 100); // ToDate
+      sh.setColumnWidth(4, 95);  // WeekNo
+      sh.setColumnWidth(5, 260); // TravelDetail
+      sh.setColumnWidth(6, 120); // TotalClaim
+      sh.setColumnWidth(7, 110); // DateRequest
+      sh.setColumnWidth(8, 110); // DateApproved
+      sh.setColumnWidth(9, 110); // ProcessDate
+      sh.setColumnWidth(10, 110); // DoneDate
+      sh.setColumnWidth(11, 110); // PaymentStatus
+      sh.setColumnWidth(12, 220); // Comment
+      sh.setColumnWidth(13, 140); // UpdatedAt
+    }
+  } catch(e) {
+    Logger.log('formatTripClaimsSheet_ error: ' + e.message);
+  }
 }
 
 function setupSheets(){

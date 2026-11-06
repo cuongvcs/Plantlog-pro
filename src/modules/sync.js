@@ -262,6 +262,32 @@ async function syncSingleTripClaim(item) {
 }
 
 /**
+ * IMP-31: Compare trip claims in chronological order
+ * Sorts from Week 1 (early in year) down to Week 52/53 (late in year)
+ */
+function compareTripClaimsChronological(a, b) {
+  const da = String(a.fromDate || a.date || '').trim();
+  const db = String(b.fromDate || b.date || '').trim();
+  if (!da && !db) return String(a.tripId || '').localeCompare(String(b.tripId || ''));
+  if (!da) return 1;
+  if (!db) return -1;
+
+  const infoA = typeof getWeekInfo === 'function' ? getWeekInfo(da) : null;
+  const infoB = typeof getWeekInfo === 'function' ? getWeekInfo(db) : null;
+
+  if (infoA && infoB) {
+    if (infoA.year !== infoB.year) return infoA.year - infoB.year;
+    if (infoA.week !== infoB.week) return infoA.week - infoB.week;
+  }
+
+  if (da !== db) return da.localeCompare(db);
+  const ea = String(a.toDate || a.dateEnd || '').trim();
+  const eb = String(b.toDate || b.dateEnd || '').trim();
+  if (ea !== eb) return ea.localeCompare(eb);
+  return String(a.tripId || '').localeCompare(String(b.tripId || ''));
+}
+
+/**
  * IMP-31: Dedicated One-Click Sync for All Trip Claims
  * Computes claims for all trips and pushes them to the TripClaims sheet immediately
  */
@@ -304,6 +330,9 @@ async function syncAllTripClaims() {
       claim.updatedAt = claim.updatedAt || new Date().toISOString();
       return claim;
     });
+
+    // IMP-31: Sort claims chronologically ascending (Week 1 -> Week 53)
+    claims.sort(compareTripClaimsChronological);
     sv();
 
     // Try fast batch claims sync first
@@ -568,7 +597,7 @@ async function syncToSheets(){
 
   // IMP-31: Build Trip Claims payload
   const buildTripClaims = () => {
-    return (S.trips || []).map(tr => {
+    const list = (S.trips || []).map(tr => {
       const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tr.id)) || {};
       const totalClaim = typeof calculateTripTotalClaim === 'function' ? calculateTripTotalClaim(tr.id) : 0;
       const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
@@ -588,6 +617,7 @@ async function syncToSheets(){
         updatedAt: s(claim.updatedAt || new Date().toISOString())
       };
     });
+    return list.sort(compareTripClaimsChronological);
   };
   const enrichedTripClaims = buildTripClaims();
 

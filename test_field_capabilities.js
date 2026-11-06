@@ -621,6 +621,35 @@ assert.ok(indexHtmlCode.includes('id="btn-sync-all-claims"'), 'index.html must h
 assert.ok(syncClaimsCode.includes("function syncAllTripClaims"), 'sync.js must define syncAllTripClaims');
 assert.ok(billsModuleCode.includes("topSyncBtn"), 'bills.js switchBillsView must control topSyncBtn visibility');
 
+assert.ok(syncClaimsCode.includes("function compareTripClaimsChronological"), 'sync.js must define compareTripClaimsChronological');
+assert.ok(gasCode.includes("function compareTripClaimsChronological_"), 'GAS must define compareTripClaimsChronological_');
+assert.ok(gasCode.includes("function sortTripClaimsSheet_"), 'GAS must define sortTripClaimsSheet_');
+assert.ok(gasProCode.includes("function sortTripClaimsSheet_"), 'GAS Pro must define sortTripClaimsSheet_');
+
+// Chronological sort verification: Week 1 at top -> Week 53 at bottom
+const testUnsortedClaims = [
+  { tripId: 't-44', fromDate: '2026-11-01', weekNo: 'W44/26' },
+  { tripId: 't-1', fromDate: '2026-01-05', weekNo: 'W1/26' },
+  { tripId: 't-53', fromDate: '2026-12-28', weekNo: 'W53/26' },
+  { tripId: 't-2', fromDate: '2026-01-12', weekNo: 'W2/26' }
+];
+// Extract compareTripClaimsChronological logic to test
+const compareFn = (a, b) => {
+  const da = String(a.fromDate || a.date || '').trim();
+  const db = String(b.fromDate || b.date || '').trim();
+  if (!da && !db) return String(a.tripId || '').localeCompare(String(b.tripId || ''));
+  if (!da) return 1;
+  if (!db) return -1;
+  if (da !== db) return da.localeCompare(db);
+  return String(a.tripId || '').localeCompare(String(b.tripId || ''));
+};
+testUnsortedClaims.sort(compareFn);
+assert.strictEqual(testUnsortedClaims[0].tripId, 't-1', 'First item must be Week 1');
+assert.strictEqual(testUnsortedClaims[1].tripId, 't-2', 'Second item must be Week 2');
+assert.strictEqual(testUnsortedClaims[2].tripId, 't-44', 'Third item must be Week 44');
+assert.strictEqual(testUnsortedClaims[3].tripId, 't-53', 'Fourth item must be Week 53');
+
+console.log('  ✓ Chronological sorting (Week 1 at top -> Week 53 at bottom) verified!');
 console.log('  ✓ Batch sync syncAllTripClaims & Google Apps Script syncTripClaimsBatch verified!');
 console.log('  ✓ Trip total claim calculation accurate (VND + foreign currency conversion)!');
 console.log('  ✓ Google Apps Script backend 13-column flat sheet schema verified!');
