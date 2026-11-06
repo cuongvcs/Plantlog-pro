@@ -762,6 +762,25 @@ function renderTripClaimsScreen() {
 
     const tripBillsCount = (S.bills || []).filter(b => String(b.tripId) === String(t.id)).length;
     const isCompleted = t.status === 'completed';
+    const isActive = t.status === 'in_progress';
+    const isPlanned = t.status === 'planned' || (!isCompleted && !isActive);
+
+    let rowStatusClass = 'claim-row-completed';
+    let tripBadgeHtml = `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--g100);color:var(--green);font-weight:700;">✅ Done</span>`;
+    let bodyTripStatusText = `<strong style="color:var(--green);">🟢 Completed</strong>`;
+    let bodyTripSubText = 'Finalized';
+
+    if (isActive) {
+      rowStatusClass = 'claim-row-active';
+      tripBadgeHtml = `<span class="badge" style="font-size:10px;padding:1px 6px;background:#DBEAFE;color:#1E40AF;font-weight:700;border:1px solid #BFDBFE;">🔄 Active</span>`;
+      bodyTripStatusText = `<strong style="color:#1E40AF;">🔄 Active (In Progress)</strong>`;
+      bodyTripSubText = 'In Progress';
+    } else if (isPlanned) {
+      rowStatusClass = 'claim-row-planned';
+      tripBadgeHtml = `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--n200);color:var(--n600);font-weight:600;">📋 Planned</span>`;
+      bodyTripStatusText = `<strong style="color:var(--n500);">📋 Planned (Not Active)</strong>`;
+      bodyTripSubText = 'Upcoming';
+    }
 
     // Status styling
     let statusClass = 'claim-status-notyet';
@@ -781,12 +800,13 @@ function renderTripClaimsScreen() {
     const stepDoneDone = Boolean(claim.doneDate);
 
     html += `
-      <div class="claim-row" id="claim-row-${t.id}">
+      <div class="claim-row ${rowStatusClass}" id="claim-row-${t.id}">
         <!-- Single-line Collapsed Header -->
         <div class="claim-row-header" onclick="toggleTripClaimAccordion('${t.id}')">
           <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap;">
               <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🏭 ${t.plant}</span>
+              ${tripBadgeHtml}
               ${weekLabel ? `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--g100);color:var(--green);font-weight:700;">${weekLabel}</span>` : ''}
             </div>
             <div style="font-size:11px;color:var(--n500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
@@ -794,7 +814,7 @@ function renderTripClaimsScreen() {
             </div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
-            <div style="font-size:13px;font-weight:800;color:var(--green);font-family:var(--mono);">
+            <div style="font-size:13px;font-weight:800;color:${isPlanned ? 'var(--n400)' : 'var(--green)'};font-family:var(--mono);">
               ${fmtAmt(totalClaim, 'VND')} ₫
             </div>
             <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:2px;">
@@ -807,8 +827,8 @@ function renderTripClaimsScreen() {
         <!-- Expandable Detail Body -->
         <div class="claim-row-body" id="claim-body-${t.id}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;">
-            <span style="color:var(--n600);">Trip Status: <strong>${isCompleted ? '🟢 Completed' : '🟡 In Progress'}</strong> (${tripBillsCount} bills linked)</span>
-            <span style="font-size:10px;color:var(--n400);">${isCompleted ? 'Finalized' : 'Estimate'}</span>
+            <span style="color:var(--n600);">Trip Status: ${bodyTripStatusText} (${tripBillsCount} bills linked)</span>
+            <span style="font-size:10px;color:var(--n400);">${bodyTripSubText}</span>
           </div>
 
           ${t.purpose ? `<div style="font-size:11px;color:var(--n700);margin-bottom:8px;background:#fff;padding:6px 8px;border-radius:4px;border:1px solid var(--n200);"><strong>Purpose:</strong> ${t.purpose}</div>` : ''}

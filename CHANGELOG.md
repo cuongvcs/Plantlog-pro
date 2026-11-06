@@ -179,6 +179,11 @@
     - Tích hợp hàm chuẩn hóa thứ tự `compareTripClaimsChronological` trong Client (`sync.js`) và `compareTripClaimsChronological_` trong Google Apps Script backend (`PlantLog_GoogleAppsScript.gs` & `PlantLog_GoogleAppsScript_Pro.gs`): Tự động sắp xếp các chuyến đi theo Năm ➔ Tuần (ISO-8601 Week) ➔ Ngày đi (`FromDate`) ➔ Ngày về (`ToDate`) theo chiều tăng dần (Ascending).
     - Tự động thực thi `sortTripClaimsSheet_` trên Google Apps Script để sắp xếp vật lý toàn bộ dải ô dữ liệu của sheet `TripClaims` theo Cột 2 (`FromDate`) và Cột 3 (`ToDate`) sau mỗi lần Đồng bộ Hàng loạt (`syncTripClaims`), Đồng bộ Toàn bộ (`syncAll`), hoặc Cập nhật Tức thì từng dòng (`upsertTripClaim`).
     - Bổ sung hàm định dạng trực quan chuyên nghiệp `formatTripClaimsSheet_`: Tự động căn lề phải và định dạng số có phân tách hàng nghìn (`#,##0`) cho cột `TotalClaim`, căn giữa mã chuyến đi, các cột ngày tháng, số tuần và trạng thái thanh toán, kèm theo căn chỉnh độ rộng các cột tối ưu trên bảng tính Google Spreadsheet.
+  - **Phân cấp Thị giác Thông minh (Smart Visual Hierarchy for Planned & Active Trips):**
+    - Khi lọc xem toàn bộ các tháng hoặc toàn bộ năm (`All Months` / `All Year`), danh sách hiển thị nhiều chuyến đi khiến giao diện dễ bị rối mắt nếu tất cả đều có độ tương phản bằng nhau.
+    - **Chuyến đi chưa Active (`Planned`):** Thiết kế làm mờ trực quan (`opacity: 0.55`), nền xám nhạt (`var(--n50)`), viền nét đứt (`dashed`), số tiền công tác phí mang tông màu trung tính cùng huy hiệu `📋 Planned` và nhãn `Upcoming`. Khi người dùng di chuột (hover) hoặc bấm mở rộng Accordion xem chi tiết, độ mờ mượt mà tăng lên `opacity: 0.95`, nền sáng và viền trở lại nét liền để dễ dàng tương tác và chỉnh sửa.
+    - **Chuyến đi đang diễn ra (`Active` / `in_progress`):** Hiển thị rõ ràng, sắc nét 100% (`opacity: 1`), làm nổi bật với viền xanh dương đậm (`border-left: 4px solid #2563EB; border: 1.5px solid #2563EB;`), hiệu ứng đổ bóng xanh nhẹ và huy hiệu nổi bật `🔄 Active`. Giúp kỹ sư nhận biết ngay lập tức chuyến đi hiện tại đang cần xử lý giữa danh sách dài.
+    - **Chuyến đi đã hoàn tất (`Done` / `completed`):** Hiển thị bình thường 100% (`opacity: 1`), viền xanh lá hoàn tất (`border-left: 4px solid var(--green)`) và huy hiệu `✅ Done`.
 
 ---
 

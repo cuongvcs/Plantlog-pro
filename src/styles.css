@@ -1122,6 +1122,35 @@ input, textarea, select, button { font-family: var(--font); }
   background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
   margin-bottom: 8px; box-shadow: var(--sh); overflow: hidden; transition: all 0.2s ease;
 }
+/* Planned / Chưa active: Dimmed / Mờ */
+.claim-row.claim-row-planned {
+  opacity: 0.55;
+  background: var(--n50);
+  border: 1px dashed var(--n250);
+  box-shadow: none;
+}
+.claim-row.claim-row-planned:hover,
+.claim-row.claim-row-planned.expanded {
+  opacity: 0.95;
+  background: var(--surface);
+  border-style: solid;
+  box-shadow: var(--sh);
+}
+/* Active: Hiển thị bình thường, nổi bật */
+.claim-row.claim-row-active {
+  opacity: 1;
+  background: var(--surface);
+  border: 1.5px solid #2563EB;
+  border-left: 4px solid #2563EB;
+  box-shadow: 0 2px 10px rgba(37,99,235,0.12);
+}
+/* Completed: Hiển thị bình thường */
+.claim-row.claim-row-completed {
+  opacity: 1;
+  background: var(--surface);
+  border: 1px solid var(--n200);
+  border-left: 4px solid var(--green);
+}
 .claim-row-header {
   display: flex; justify-content: space-between; align-items: center; padding: 10px 12px;
   cursor: pointer; user-select: none; background: var(--surface); gap: 8px;

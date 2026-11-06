@@ -649,6 +649,15 @@ assert.strictEqual(testUnsortedClaims[1].tripId, 't-2', 'Second item must be Wee
 assert.strictEqual(testUnsortedClaims[2].tripId, 't-44', 'Third item must be Week 44');
 assert.strictEqual(testUnsortedClaims[3].tripId, 't-53', 'Fourth item must be Week 53');
 
+// Visual distinction: Planned (Chưa active) -> Dimmed (mờ), Active -> Normal
+const stylesCssCode = fs.readFileSync(path.join(__dirname, 'src', 'styles.css'), 'utf8');
+assert.ok(stylesCssCode.includes('.claim-row.claim-row-planned'), 'styles.css must style claim-row-planned');
+assert.ok(stylesCssCode.includes('.claim-row.claim-row-active'), 'styles.css must style claim-row-active');
+assert.ok(billsModuleCode.includes('claim-row-planned'), 'bills.js must apply claim-row-planned');
+assert.ok(billsModuleCode.includes('claim-row-active'), 'bills.js must apply claim-row-active');
+assert.ok(billsModuleCode.includes('claim-row-completed'), 'bills.js must apply claim-row-completed');
+
+console.log('  ✓ Trip claim visual distinction (Planned/Chưa active dimmed, Active normal) verified!');
 console.log('  ✓ Chronological sorting (Week 1 at top -> Week 53 at bottom) verified!');
 console.log('  ✓ Batch sync syncAllTripClaims & Google Apps Script syncTripClaimsBatch verified!');
 console.log('  ✓ Trip total claim calculation accurate (VND + foreign currency conversion)!');
