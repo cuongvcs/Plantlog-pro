@@ -509,3 +509,472 @@ function emailBillsReport() {
   openModal('modal-email');
 }
 
+// ═══════════════════════════════════════════════════════════
+// ✈️ TRIP CLAIM & REIMBURSEMENT TRACKER (IMP-31)
+// ═══════════════════════════════════════════════════════════
+
+let currentBillsView = 'bills'; // 'bills' | 'claims'
+let tripClaimStatusFilter = 'all'; // 'all' | 'Not yet' | 'Processing' | 'Done'
+let _editingClaimStatus = 'Not yet';
+
+/**
+ * Switch view between Expense Bills and Trip Claims Summary
+ */
+function switchBillsView(view) {
+  currentBillsView = view;
+  const tabBills = document.getElementById('view-tab-bills');
+  const tabClaims = document.getElementById('view-tab-claims');
+  const billsFilterBar = document.getElementById('bills-filter-bar');
+  const billsBody = document.getElementById('bills-screen-body');
+  const claimsView = document.getElementById('claims-view-container');
+  const topTitle = document.getElementById('bills-topbar-title');
+  const addBtn = document.getElementById('bills-add-btn');
+
+  if (view === 'claims') {
+    if (tabBills) { tabBills.className = 'btn btn-sm btn-o'; }
+    if (tabClaims) { tabClaims.className = 'btn btn-sm btn-p'; }
+    if (billsFilterBar) billsFilterBar.style.display = 'none';
+    if (billsBody) billsBody.style.display = 'none';
+    if (claimsView) claimsView.style.display = 'flex';
+    if (topTitle) topTitle.textContent = '✈️ Trip Claims Summary';
+    if (addBtn) addBtn.style.display = 'none';
+    renderTripClaimsScreen();
+  } else {
+    if (tabBills) { tabBills.className = 'btn btn-sm btn-p'; }
+    if (tabClaims) { tabClaims.className = 'btn btn-sm btn-o'; }
+    if (billsFilterBar) billsFilterBar.style.display = 'block';
+    if (billsBody) billsBody.style.display = 'block';
+    if (claimsView) claimsView.style.display = 'none';
+    if (topTitle) topTitle.textContent = '💳 Expense Bills';
+    if (addBtn) addBtn.style.display = 'inline-flex';
+    renderBillsScreen();
+  }
+}
+
+/**
+ * Calculate total claim amount (VND) from all bills linked to a trip
+ */
+function calculateTripTotalClaim(tripId) {
+  if (!tripId || !Array.isArray(S.bills)) return 0;
+  const tripBills = S.bills.filter(b => String(b.tripId) === String(tripId));
+  return tripBills.reduce((sum, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') {
+      return sum + (parseFloat(b.amount) || 0);
+    }
+    return sum + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+}
+
+/**
+ * Get or initialize claim data for a trip
+ */
+function getTripClaimData(tripId) {
+  if (!S.tripClaims) S.tripClaims = [];
+  let found = S.tripClaims.find(c => String(c.tripId) === String(tripId));
+  if (!found) {
+    found = {
+      tripId: tripId,
+      dateRequest: '',
+      dateApproved: '',
+      processDate: '',
+      doneDate: '',
+      paymentStatus: 'Not yet',
+      comment: '',
+      updatedAt: ''
+    };
+  }
+  return found;
+}
+
+/**
+ * Filter by payment status in Trip Claims view
+ */
+function setTripClaimStatusFilter(status) {
+  tripClaimStatusFilter = status;
+  const chips = ['all', 'notyet', 'proc', 'done'];
+  chips.forEach(c => {
+    const el = document.getElementById('tcf-' + c);
+    if (!el) return;
+    const match = (c === 'all' && status === 'all') ||
+                  (c === 'notyet' && status === 'Not yet') ||
+                  (c === 'proc' && status === 'Processing') ||
+                  (c === 'done' && status === 'Done');
+    el.classList.toggle('active', match);
+  });
+  renderTripClaimsScreen();
+}
+
+/**
+ * Populate Month & Year options for Trip Claims view
+ */
+function populateTripClaimDateSelectors() {
+  const yearSel = document.getElementById('tc-year-select');
+  const monthSel = document.getElementById('tc-month-select');
+  if (!yearSel || !monthSel) return;
+
+  const currentYearVal = yearSel.value;
+  const currentMonthVal = monthSel.value;
+
+  // Extract all years from trips
+  const years = [...new Set((S.trips || []).map(t => (t.date || '').slice(0, 4)).filter(Boolean))].sort().reverse();
+  const thisYear = new Date().getFullYear().toString();
+  if (!years.includes(thisYear)) years.unshift(thisYear);
+
+  let yearOpts = '<option value="">All Years</option>';
+  years.forEach(y => {
+    const sel = (currentYearVal === y) ? ' selected' : '';
+    yearOpts += `<option value="${y}"${sel}>${y}</option>`;
+  });
+  yearSel.innerHTML = yearOpts;
+
+  // Month options
+  const months = [
+    ['', 'All Months'],
+    ['01', 'Tháng 1 (Jan)'], ['02', 'Tháng 2 (Feb)'], ['03', 'Tháng 3 (Mar)'],
+    ['04', 'Tháng 4 (Apr)'], ['05', 'Tháng 5 (May)'], ['06', 'Tháng 6 (Jun)'],
+    ['07', 'Tháng 7 (Jul)'], ['08', 'Tháng 8 (Aug)'], ['09', 'Tháng 9 (Sep)'],
+    ['10', 'Tháng 10 (Oct)'], ['11', 'Tháng 11 (Nov)'], ['12', 'Tháng 12 (Dec)']
+  ];
+  let monthOpts = '';
+  months.forEach(([v, l]) => {
+    const sel = (currentMonthVal === v) ? ' selected' : '';
+    monthOpts += `<option value="${v}"${sel}>${l}</option>`;
+  });
+  monthSel.innerHTML = monthOpts;
+}
+
+/**
+ * Render the entire Trip Claims view
+ */
+function renderTripClaimsScreen() {
+  const container = document.getElementById('tc-claims-list');
+  if (!container) return;
+
+  populateTripClaimDateSelectors();
+
+  const yearSel = document.getElementById('tc-year-select');
+  const monthSel = document.getElementById('tc-month-select');
+  const filterYear = yearSel ? yearSel.value : '';
+  const filterMonth = monthSel ? monthSel.value : '';
+
+  let trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])];
+
+  // Filter by Year
+  if (filterYear) {
+    trips = trips.filter(t => (t.date || '').startsWith(filterYear));
+  }
+  // Filter by Month
+  if (filterMonth) {
+    trips = trips.filter(t => {
+      const parts = (t.date || '').split('-');
+      return parts[1] === filterMonth;
+    });
+  }
+
+  // Filter by Payment Status
+  if (tripClaimStatusFilter !== 'all') {
+    trips = trips.filter(t => {
+      const claim = getTripClaimData(t.id);
+      return claim.paymentStatus === tripClaimStatusFilter;
+    });
+  }
+
+  // Calculate summary stats
+  let totalClaimSum = 0;
+  let receivedSum = 0;
+  let pendingSum = 0;
+
+  trips.forEach(t => {
+    const amt = calculateTripTotalClaim(t.id);
+    const claim = getTripClaimData(t.id);
+    totalClaimSum += amt;
+    if (claim.paymentStatus === 'Done') {
+      receivedSum += amt;
+    } else {
+      pendingSum += amt;
+    }
+  });
+
+  // Update summary strip DOM
+  const countLabel = document.getElementById('tc-count-label');
+  const grandTotalEl = document.getElementById('tc-grand-total');
+  const receivedTotalEl = document.getElementById('tc-received-total');
+  const pendingTotalEl = document.getElementById('tc-pending-total');
+
+  if (countLabel) countLabel.textContent = `TRIP CLAIMS (${trips.length} TRIPS)`;
+  if (grandTotalEl) grandTotalEl.textContent = `${fmtAmt(totalClaimSum, 'VND')} ₫`;
+  if (receivedTotalEl) receivedTotalEl.textContent = `${fmtAmt(receivedSum, 'VND')} ₫`;
+  if (pendingTotalEl) pendingTotalEl.textContent = `${fmtAmt(pendingSum, 'VND')} ₫`;
+
+  if (!trips.length) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="ei">✈️</div>
+        <div class="et">No trip claims found</div>
+        <div class="es">Try selecting a different month, year, or payment status filter.</div>
+      </div>`;
+    return;
+  }
+
+  // Render Smart Accordion Rows
+  let html = '';
+  trips.forEach(t => {
+    const claim = getTripClaimData(t.id);
+    const totalClaim = calculateTripTotalClaim(t.id);
+    const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(t.date, t.dateEnd) : '';
+    const dateRangeStr = (t.dateEnd && t.dateEnd !== t.date)
+      ? `${fmtDate(t.date)} ➔ ${fmtDate(t.dateEnd)}`
+      : fmtDate(t.date);
+
+    const tripBillsCount = (S.bills || []).filter(b => String(b.tripId) === String(t.id)).length;
+    const isCompleted = t.status === 'completed';
+
+    // Status styling
+    let statusClass = 'claim-status-notyet';
+    let statusBadgeText = '🔴 Not yet';
+    if (claim.paymentStatus === 'Processing') {
+      statusClass = 'claim-status-proc';
+      statusBadgeText = '🟡 Processing';
+    } else if (claim.paymentStatus === 'Done') {
+      statusClass = 'claim-status-done';
+      statusBadgeText = '🟢 Done';
+    }
+
+    // Step timeline checks
+    const stepReqDone = Boolean(claim.dateRequest);
+    const stepApprDone = Boolean(claim.dateApproved);
+    const stepProcDone = Boolean(claim.processDate);
+    const stepDoneDone = Boolean(claim.doneDate);
+
+    html += `
+      <div class="claim-row" id="claim-row-${t.id}">
+        <!-- Single-line Collapsed Header -->
+        <div class="claim-row-header" onclick="toggleTripClaimAccordion('${t.id}')">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+              <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🏭 ${t.plant}</span>
+              ${weekLabel ? `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--g100);color:var(--green);font-weight:700;">${weekLabel}</span>` : ''}
+            </div>
+            <div style="font-size:11px;color:var(--n500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              📅 ${dateRangeStr} ${t.location ? `• ${t.location}` : ''}
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--green);font-family:var(--mono);">
+              ${fmtAmt(totalClaim, 'VND')} ₫
+            </div>
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:2px;">
+              <span class="claim-badge-status ${statusClass}">${statusBadgeText}</span>
+              <span class="claim-chevron" id="claim-chevron-${t.id}">▾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expandable Detail Body -->
+        <div class="claim-row-body" id="claim-body-${t.id}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;">
+            <span style="color:var(--n600);">Trip Status: <strong>${isCompleted ? '🟢 Completed' : '🟡 In Progress'}</strong> (${tripBillsCount} bills linked)</span>
+            <span style="font-size:10px;color:var(--n400);">${isCompleted ? 'Finalized' : 'Estimate'}</span>
+          </div>
+
+          ${t.purpose ? `<div style="font-size:11px;color:var(--n700);margin-bottom:8px;background:#fff;padding:6px 8px;border-radius:4px;border:1px solid var(--n200);"><strong>Purpose:</strong> ${t.purpose}</div>` : ''}
+
+          <!-- 4-Step Payment Timeline Matrix -->
+          <div style="font-size:10px;font-weight:700;color:var(--g500);letter-spacing:0.04em;margin-bottom:4px;">PAYMENT TIMELINE</div>
+          <div class="claim-timeline-grid">
+            <div class="claim-step-box ${stepReqDone ? 'done' : ''}">
+              <div class="claim-step-title">1. Request</div>
+              <div class="claim-step-date">${claim.dateRequest ? fmtDate(claim.dateRequest) : '──'}</div>
+              <div style="font-size:10px;margin-top:2px;">${stepReqDone ? '🟢' : '⚪'}</div>
+            </div>
+            <div class="claim-step-box ${stepApprDone ? 'done' : ''}">
+              <div class="claim-step-title">2. Approve</div>
+              <div class="claim-step-date">${claim.dateApproved ? fmtDate(claim.dateApproved) : '──'}</div>
+              <div style="font-size:10px;margin-top:2px;">${stepApprDone ? '🟢' : '⚪'}</div>
+            </div>
+            <div class="claim-step-box ${stepProcDone ? 'done' : ''}">
+              <div class="claim-step-title">3. Process</div>
+              <div class="claim-step-date">${claim.processDate ? fmtDate(claim.processDate) : '──'}</div>
+              <div style="font-size:10px;margin-top:2px;">${stepProcDone ? '🟢' : '⚪'}</div>
+            </div>
+            <div class="claim-step-box ${stepDoneDone ? 'done' : ''}">
+              <div class="claim-step-title">4. Received</div>
+              <div class="claim-step-date">${claim.doneDate ? fmtDate(claim.doneDate) : '──'}</div>
+              <div style="font-size:10px;margin-top:2px;">${stepDoneDone ? '🟢' : '⚪'}</div>
+            </div>
+          </div>
+
+          <!-- Comment Display -->
+          ${claim.comment ? `
+            <div style="font-size:11px;color:var(--n700);background:#fff;padding:6px 8px;border-radius:4px;border:1px solid var(--n200);margin-top:6px;">
+              💬 <strong>Comment:</strong> ${claim.comment}
+            </div>` : ''}
+
+          <!-- Action Buttons -->
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="button" class="btn btn-sm btn-p" style="flex:1;font-size:11px;padding:6px 10px;" onclick="openEditTripClaimModal('${t.id}')">
+              ✏️ Update Claim Info
+            </button>
+            <button type="button" class="btn btn-sm btn-o" style="font-size:11px;padding:6px 10px;" onclick="filterBillsByTrip('${t.id}')">
+              🧾 View Bills (${tripBillsCount})
+            </button>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+/**
+ * Toggle Accordion Row
+ */
+function toggleTripClaimAccordion(tripId) {
+  const row = document.getElementById('claim-row-' + tripId);
+  if (row) {
+    row.classList.toggle('expanded');
+  }
+}
+
+/**
+ * Filter bills screen by a specific trip
+ */
+function filterBillsByTrip(tripId) {
+  switchBillsView('bills');
+  setBillFilter('trip');
+  const selTrip = document.getElementById('bf-trip-select');
+  if (selTrip) {
+    selTrip.value = tripId;
+    renderBillsScreen();
+  }
+}
+
+/**
+ * Open Modal to edit Trip Claim dates and status
+ */
+function openEditTripClaimModal(tripId) {
+  const trip = (S.trips || []).find(t => String(t.id) === String(tripId));
+  if (!trip) {
+    showToast('Trip not found');
+    return;
+  }
+
+  const claim = getTripClaimData(tripId);
+  const totalClaim = calculateTripTotalClaim(tripId);
+  const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(trip.date, trip.dateEnd) : '';
+  const dateRangeStr = (trip.dateEnd && trip.dateEnd !== trip.date)
+    ? `${fmtDate(trip.date)} ➔ ${fmtDate(trip.dateEnd)}`
+    : fmtDate(trip.date);
+
+  const plantEl = document.getElementById('tce-plant');
+  const weekEl = document.getElementById('tce-week-badge');
+  const datesDetailEl = document.getElementById('tce-dates-detail');
+  const totalClaimEl = document.getElementById('tce-total-claim');
+  const tripIdInput = document.getElementById('tce-trip-id');
+
+  if (plantEl) plantEl.textContent = trip.plant;
+  if (weekEl) weekEl.textContent = weekLabel || 'Trip';
+  if (datesDetailEl) datesDetailEl.textContent = `${dateRangeStr} ${trip.location ? '• ' + trip.location : ''}`;
+  if (totalClaimEl) totalClaimEl.textContent = `${fmtAmt(totalClaim, 'VND')} ₫`;
+  if (tripIdInput) tripIdInput.value = tripId;
+
+  // Status
+  setTripClaimEditStatus(claim.paymentStatus || 'Not yet');
+
+  // Dates
+  const dateReqEl = document.getElementById('tce-date-req');
+  const dateApprEl = document.getElementById('tce-date-appr');
+  const dateProcEl = document.getElementById('tce-date-proc');
+  const dateDoneEl = document.getElementById('tce-date-done');
+  const commentEl = document.getElementById('tce-comment');
+
+  if (dateReqEl) dateReqEl.value = claim.dateRequest || '';
+  if (dateApprEl) dateApprEl.value = claim.dateApproved || '';
+  if (dateProcEl) dateProcEl.value = claim.processDate || '';
+  if (dateDoneEl) dateDoneEl.value = claim.doneDate || '';
+  if (commentEl) commentEl.value = claim.comment || '';
+
+  openModal('modal-trip-claim-edit');
+}
+
+/**
+ * Set status in Edit Modal
+ */
+function setTripClaimEditStatus(status) {
+  _editingClaimStatus = status;
+  const btns = document.querySelectorAll('.tce-status-btn');
+  btns.forEach(b => {
+    const s = b.getAttribute('data-status');
+    if (s === status) {
+      b.style.opacity = '1';
+      b.style.boxShadow = '0 0 0 2px var(--brand)';
+    } else {
+      b.style.opacity = '0.55';
+      b.style.boxShadow = 'none';
+    }
+  });
+}
+
+/**
+ * Set today's date in a claim date field
+ */
+function setClaimTodayDate(fieldId) {
+  const el = document.getElementById(fieldId);
+  if (el) {
+    el.value = new Date().toISOString().slice(0, 10);
+  }
+}
+
+/**
+ * Save Trip Claim and trigger cloud sync
+ */
+function saveTripClaim() {
+  const tripIdInput = document.getElementById('tce-trip-id');
+  const tripId = tripIdInput ? tripIdInput.value : '';
+  if (!tripId) return;
+
+  const trip = (S.trips || []).find(t => String(t.id) === String(tripId));
+  if (!trip) return;
+
+  const dateReq = document.getElementById('tce-date-req')?.value || '';
+  const dateAppr = document.getElementById('tce-date-appr')?.value || '';
+  const dateProc = document.getElementById('tce-date-proc')?.value || '';
+  const dateDone = document.getElementById('tce-date-done')?.value || '';
+  const comment = document.getElementById('tce-comment')?.value.trim() || '';
+
+  if (!S.tripClaims) S.tripClaims = [];
+  let claim = S.tripClaims.find(c => String(c.tripId) === String(tripId));
+  if (!claim) {
+    claim = { tripId: tripId };
+    S.tripClaims.push(claim);
+  }
+
+  claim.dateRequest = dateReq;
+  claim.dateApproved = dateAppr;
+  claim.processDate = dateProc;
+  claim.doneDate = dateDone;
+  claim.paymentStatus = _editingClaimStatus || 'Not yet';
+  claim.comment = comment;
+  claim.updatedAt = new Date().toISOString();
+
+  // Populate metadata fields for Google Sheet export
+  const totalClaim = calculateTripTotalClaim(tripId);
+  const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(trip.date, trip.dateEnd) : '';
+  claim.fromDate = trip.date || '';
+  claim.toDate = trip.dateEnd || trip.date || '';
+  claim.weekNo = weekLabel || '';
+  claim.travelDetail = `${trip.plant}${trip.location ? ' • ' + trip.location : ''}${trip.purpose ? ' (' + trip.purpose + ')' : ''}`;
+  claim.totalClaim = totalClaim;
+
+  sv();
+  closeModal('modal-trip-claim-edit');
+  renderTripClaimsScreen();
+  showToast('✓ Claim info saved');
+
+  // Sync to Google Sheet (Incremental single-row sync)
+  if (typeof syncSingleTripClaim === 'function') {
+    syncSingleTripClaim(claim);
+  }
+}
+
+

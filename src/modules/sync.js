@@ -213,6 +213,55 @@ async function syncSingleQuickSnap(item) {
 }
 
 /**
+ * IMP-31: Incremental Single-Row Sync for TripClaims
+ * Updates only the targeted trip claim on Google Sheets in-place
+ */
+async function syncSingleTripClaim(item) {
+  if (!item || !item.tripId) return { ok: false, error: 'No item or tripId specified' };
+  const url = getGSUrl();
+  if (!url) {
+    return { ok: false, offline: true };
+  }
+
+  const s = v => (v === null || v === undefined) ? '' : String(v);
+  const payload = {
+    action: 'upsertTripClaim',
+    item: {
+      tripId: s(item.tripId),
+      fromDate: s(item.fromDate),
+      toDate: s(item.toDate),
+      weekNo: s(item.weekNo),
+      travelDetail: s(item.travelDetail),
+      totalClaim: typeof item.totalClaim === 'number' ? item.totalClaim : (parseFloat(item.totalClaim) || 0),
+      dateRequest: s(item.dateRequest),
+      dateApproved: s(item.dateApproved),
+      processDate: s(item.processDate),
+      doneDate: s(item.doneDate),
+      paymentStatus: s(item.paymentStatus || 'Not yet'),
+      comment: s(item.comment),
+      updatedAt: s(item.updatedAt || new Date().toISOString())
+    }
+  };
+
+  try {
+    const res = await gsPost(url, payload);
+    if (res && res.ok) {
+      showToast('☁️ Claim synced to Google Sheet ✓');
+      return { ok: true, mode: res.mode, tripId: item.tripId };
+    } else if (res && res.error && res.error.includes('Unknown action')) {
+      console.warn('Backend GAS missing upsertTripClaim, falling back to full sync');
+      if (typeof svAndSync === 'function') svAndSync('trip_claim');
+      return { ok: false, fallback: true };
+    } else {
+      return { ok: false, error: (res && res.error) || 'Sync failed' };
+    }
+  } catch (err) {
+    console.warn('Single trip claim sync network error:', err);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
  * IMP-27: Incremental Single-Note Deletion on Google Sheets
  * Deletes only the targeted row without clearing or rewriting the sheet
  */
@@ -444,6 +493,31 @@ async function syncToSheets(){
   };
   const enrichedServiceTickets = await buildServiceTickets();
 
+  // IMP-31: Build Trip Claims payload
+  const buildTripClaims = () => {
+    return (S.trips || []).map(tr => {
+      const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tr.id)) || {};
+      const totalClaim = typeof calculateTripTotalClaim === 'function' ? calculateTripTotalClaim(tr.id) : 0;
+      const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
+      return {
+        tripId: s(tr.id),
+        fromDate: s(tr.date),
+        toDate: s(tr.dateEnd || tr.date),
+        weekNo: s(weekLabel),
+        travelDetail: `${s(tr.plant)}${tr.location ? ' • ' + s(tr.location) : ''}${tr.purpose ? ' (' + s(tr.purpose) + ')' : ''}`,
+        totalClaim: totalClaim,
+        dateRequest: s(claim.dateRequest),
+        dateApproved: s(claim.dateApproved),
+        processDate: s(claim.processDate),
+        doneDate: s(claim.doneDate),
+        paymentStatus: s(claim.paymentStatus || 'Not yet'),
+        comment: s(claim.comment),
+        updatedAt: s(claim.updatedAt || new Date().toISOString())
+      };
+    });
+  };
+  const enrichedTripClaims = buildTripClaims();
+
   const reports={};
   Object.entries(S.reports||{}).forEach(([id,rep])=>{
     if(!rep)return;
@@ -465,7 +539,8 @@ async function syncToSheets(){
     reminders:(S.reminders||[]),
     quickSnap:enrichedQuickSnap,
     siteSafety:enrichedSiteSafety,
-    serviceTickets:enrichedServiceTickets
+    serviceTickets:enrichedServiceTickets,
+    tripClaims:enrichedTripClaims
   };
 
   try{
@@ -886,6 +961,27 @@ async function loadFromSheets(silent){
         });
       }
 
+      // IMP-31: Load Trip Claims
+      if(d.tripClaims && Array.isArray(d.tripClaims)){
+        const existingClaims = S.tripClaims || [];
+        const remoteClaims = d.tripClaims.map(c => ({
+          tripId: ss(c.TripID),
+          fromDate: safeDate(c.FromDate),
+          toDate: safeDate(c.ToDate),
+          weekNo: ss(c.WeekNo),
+          travelDetail: ss(c.TravelDetail),
+          totalClaim: safeNum(c.TotalClaim),
+          dateRequest: safeDate(c.DateRequest),
+          dateApproved: safeDate(c.DateApproved),
+          processDate: safeDate(c.ProcessDate),
+          doneDate: safeDate(c.DoneDate),
+          paymentStatus: ss(c.PaymentStatus) || 'Not yet',
+          comment: ss(c.Comment),
+          updatedAt: ss(c.UpdatedAt || c.CreatedAt)
+        }));
+        S.tripClaims = mergeCollectionByTimestamp(existingClaims, remoteClaims, 'tripId');
+      }
+
       sv();
       try{ if(typeof autoStartTodayItems==='function') autoStartTodayItems(); }catch(e){}
       renderDash();renderTripList();renderTasks();renderCalendar();
@@ -896,6 +992,7 @@ async function loadFromSheets(silent){
       if(typeof renderTripSafety==='function' && typeof curTrip!=='undefined' && curTrip) {
         renderTripSafety(curTrip);
       }
+      if(typeof renderTripClaimsScreen==='function') renderTripClaimsScreen();
       showGSResult('✅ Data loaded from Google Sheets successfully!','ok');
       showToast('Loaded from Google Sheets ✓');
     } else {

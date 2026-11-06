@@ -116,7 +116,8 @@ let S={
   theme:'auto', // 'auto' | 'light' | 'dark' (IMP-13)
   telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
   calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
-  reminders:[]  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
+  reminders:[],  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
+  tripClaims:[]  // [{tripId, dateRequest, dateApproved, processDate, doneDate, paymentStatus, comment, updatedAt}] (IMP-31)
 };
 let curTrip=null,curReport=null,sigCanvas,sigCtx,isDrw=false;
 let calY,calM,selDay=null,signoffRes='Completed';
@@ -196,6 +197,7 @@ function ld(){
   }catch(e){}
   if(!S.assets) S.assets = [];
   if(!S.scratchpad) S.scratchpad = [];
+  if(!S.tripClaims) S.tripClaims = [];
   if(!S.deletedIds) S.deletedIds = {};
   try {
     const cutoff = Date.now() - 30 * 86400 * 1000; // prune tombstones older than 30 days
@@ -674,7 +676,13 @@ function showScreen(n){
   if(n==='home')renderDash();
   if(n==='trips')renderTripList();
   if(n==='tasks')renderTasks();
-  if(n==='bills')renderBillsScreen();
+  if(n==='bills') {
+    if(typeof currentBillsView!=='undefined' && currentBillsView==='claims') {
+      if(typeof renderTripClaimsScreen==='function') renderTripClaimsScreen();
+    } else {
+      renderBillsScreen();
+    }
+  }
   if(n==='export'){saveSignoff();buildPDFPreview();populateReportName();}
   if(n==='leave')renderCalendar();
   if(n==='library')renderLibrary();

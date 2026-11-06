@@ -144,6 +144,26 @@
   - **Dòng 2:** `(<span id="scratch-modal-count">N</span>)` đặt ngay ngắn, căn giữa hoàn hảo bên dưới dòng chữ `View All` với `white-space: nowrap` và màu trung tính tinh tế (`var(--n500)`).
   - Khóa chống co nghẽn flex (`flex-shrink: 0; min-width: 76px;`) và thêm khoảng đệm `gap: 8px` với tiêu đề, đảm bảo nút luôn giữ nguyên hình dáng cân đối, chuyên nghiệp trên mọi kích cỡ màn hình điện thoại.
 
+#### ✈️ 15. [IMP-31] Bảng Tổng Hợp Chuyến Đi & Theo Dõi Thanh Toán Công Tác Phí (Trip Claims & Reimbursement Tracker):
+- **Tự động trích xuất thông tin chuyến đi (Zero Manual Typing):**
+  - Tự động lấy Ngày bắt đầu (`From Date`), Ngày kết thúc (`To Date`), Tuần ISO-8601 (`Week No`, ví dụ `W44/26`), và Chi tiết hành trình (`Travel detail`: Tên nhà máy • Địa điểm • Mục đích) trực tiếp từ chuyến đi.
+  - Tự động quét và cộng dồn toàn bộ hóa đơn thuộc chuyến đi trong `S.bills` để tính tổng chi phí công tác (`Total claim` theo VND). Phân biệt rõ trạng thái chuyến đi đã hoàn thành (`Finalized`) hay đang diễn ra (`Estimate`).
+- **Giao diện Dòng Thông Minh (Smart Accordion Row View) trong màn hình Bills:**
+  - **Chuyển đổi chế độ xem tiện ích (View Switcher):** Thanh tab ở đầu màn hình Bills cho phép chuyển qua lại giữa `🧾 Expense Bills` và `✈️ Trip Claims Summary`.
+  - **Bộ lọc Năm & Tháng (Month/Year Filter):** Bổ sung dropdown chọn Năm và Tháng để kỹ sư dễ dàng lọc danh sách khi số lượng chuyến đi nhiều qua các năm.
+  - **Bộ lọc Trạng thái Thanh toán (Payment Status Filter):** Các nút lọc nhanh: `All Status`, 🔴 **`Not yet`**, 🟡 **`Processing`**, 🟢 **`Done`**.
+  - **Thanh tổng kết chi phí trực quan (Summary Strip):** Tự động thống kê tổng số chuyến đi, Tổng số tiền claim (`Grand Total`), Số tiền đã nhận thanh toán (`Received`) và Số tiền đang chờ thanh toán (`Pending`) theo đúng bộ lọc đang chọn.
+  - **Thiết kế 1 trip = 1 dòng tinh gọn (cao ~50px):** Trạng thái đóng hiển thị ngắn gọn Tên nhà máy, Ngày, Tuần, Số tiền và Badge trạng thái. Chạm nhẹ vào dòng để mở rộng (Accordion) xem chi tiết hành trình, khối tiến độ 4 bước (`1. Request ➔ 2. Approve ➔ 3. Process ➔ 4. Received`) và nút xem nhanh danh sách hóa đơn liên kết (`View Bills`).
+- **Modal Cập nhật Tiến độ Thanh toán (`modal-trip-claim-edit`):**
+  - Cho phép kỹ sư chọn 4 mốc ngày thanh toán: `Date request`, `Date Approved`, `Process date`, `Done date` với nút tiện ích `⚡ Today` chọn nhanh ngày hôm nay chỉ với 1 chạm.
+  - Chọn trạng thái thanh toán bằng 3 chip lớn dễ bấm (`Not yet`, `Processing`, `Done`).
+  - Khung nhập ghi chú phản hồi kế toán (`Note/Comment`).
+- **Đồng bộ 2 chiều & Cấu trúc Dữ liệu Phẳng trên Google Sheet (`TripClaims`):**
+  - Tạo mới bảng tính chuyên dụng **`TripClaims`** trên Google Spreadsheet với 13 cột:
+    `[TripID, FromDate, ToDate, WeekNo, TravelDetail, TotalClaim, DateRequest, DateApproved, ProcessDate, DoneDate, PaymentStatus, Comment, UpdatedAt]`.
+  - Mỗi chuyến đi tương ứng **đúng 1 dòng (row)** trên Google Sheet, dữ liệu phẳng hoàn toàn không gộp ô, thuận tiện tuyệt đối cho việc lọc, sắp xếp, làm pivot table hoặc tính tổng hàm `=SUM()`.
+  - **Cơ chế Đồng bộ Vi mô Tức thì (`syncSingleTripClaim`):** Khi kỹ sư cập nhật tiến độ hoặc ghi chú của một chuyến đi, ứng dụng chỉ đẩy duy nhất dòng của chuyến đi đó lên Google Sheets trong ~300ms thông qua hàm `upsertTripClaimRow`, cập nhật đúng dòng tương ứng mà không làm ảnh hưởng đến các dòng khác.
+
 ---
 
 ## [v4.12] - 02/11/2026

@@ -1139,6 +1139,48 @@ input, textarea, select, button { font-family: var(--font); }
   flex: 1; background: var(--n50); border: 1px solid var(--n200); border-radius: var(--rs); padding: 8px 10px;
 }
 
+/* ── IMP-31: Trip Claim & Reimbursement Tracker ───────────── */
+.claim-row {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
+  margin-bottom: 8px; box-shadow: var(--sh); overflow: hidden; transition: all 0.2s ease;
+}
+.claim-row-header {
+  display: flex; justify-content: space-between; align-items: center; padding: 10px 12px;
+  cursor: pointer; user-select: none; background: var(--surface); gap: 8px;
+}
+.claim-row-header:active { background: var(--n50); }
+.claim-row-body {
+  padding: 10px 12px 12px; background: var(--n50); border-top: 1px solid var(--n150); display: none;
+}
+.claim-row.expanded .claim-row-body { display: block; }
+.claim-row.expanded .claim-chevron { transform: rotate(180deg); }
+.claim-chevron {
+  transition: transform 0.2s ease; font-size: 11px; color: var(--n400); display: inline-block;
+}
+.claim-timeline-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 8px 0;
+}
+.claim-step-box {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: 6px;
+  padding: 6px 3px; text-align: center;
+}
+.claim-step-box.done {
+  border-color: #86EFAC; background: #F0FDF4;
+}
+.claim-step-title {
+  font-size: 9px; font-weight: 700; color: var(--n600); margin-bottom: 2px; text-transform: uppercase;
+}
+.claim-step-date {
+  font-size: 10px; font-weight: 700; color: var(--n800); font-family: var(--mono);
+}
+.claim-badge-status {
+  padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;
+}
+.claim-status-notyet { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+.claim-status-proc   { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+.claim-status-done   { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
+
+
 
 </style>
 </head>
@@ -2158,13 +2200,19 @@ input, textarea, select, button { font-family: var(--font); }
 <div id="screen-bills" class="screen">
   <div class="topbar">
     <div style="flex:1;">
-      <div class="tb-title">💳 Expense Bills</div>
+      <div class="tb-title" id="bills-topbar-title">💳 Expense Bills</div>
     </div>
-    <button class="tb-action" onclick="openAddBillFromScreen()" title="Add bill">＋</button>
+    <button class="tb-action" id="bills-add-btn" onclick="openAddBillFromScreen()" title="Add bill">＋</button>
   </div>
 
-  <!-- Filter bar -->
-  <div style="background:#fff;padding:8px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
+  <!-- Top View Switcher (IMP-31) -->
+  <div style="background:#fff;padding:8px 12px 6px;border-bottom:1px solid var(--n150);display:flex;gap:6px;flex-shrink:0;">
+    <button type="button" class="btn btn-sm btn-p" id="view-tab-bills" onclick="switchBillsView('bills')" style="flex:1;font-size:12px;font-weight:700;padding:6px 10px;border-radius:var(--rs);">🧾 Expense Bills</button>
+    <button type="button" class="btn btn-sm btn-o" id="view-tab-claims" onclick="switchBillsView('claims')" style="flex:1;font-size:12px;font-weight:700;padding:6px 10px;border-radius:var(--rs);">✈️ Trip Claims</button>
+  </div>
+
+  <!-- Filter bar for Expense Bills -->
+  <div id="bills-filter-bar" style="background:#fff;padding:8px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
     <!-- View tabs -->
     <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px;">
       <button class="tf-btn active" id="bf-all"   onclick="setBillFilter('all')">All</button>
@@ -2196,6 +2244,45 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 
   <div class="sb" id="bills-screen-body"></div>
+
+  <!-- TRIP CLAIMS VIEW (IMP-31) -->
+  <div id="claims-view-container" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+    <!-- Filter Bar -->
+    <div style="background:#fff;padding:8px 12px 6px;flex-shrink:0;border-bottom:1px solid var(--n150);">
+      <!-- Year & Month Selectors -->
+      <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <select class="fsel" id="tc-year-select" style="width:105px;font-size:12px;height:34px;font-weight:600;" onchange="renderTripClaimsScreen()">
+        </select>
+        <select class="fsel" id="tc-month-select" style="flex:1;font-size:12px;height:34px;font-weight:600;" onchange="renderTripClaimsScreen()">
+        </select>
+      </div>
+      <!-- Status Filter Chips -->
+      <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;">
+        <button type="button" class="tf-btn active" id="tcf-all" onclick="setTripClaimStatusFilter('all')" style="font-size:11px;padding:3px 9px;">All Status</button>
+        <button type="button" class="tf-btn" id="tcf-notyet" onclick="setTripClaimStatusFilter('Not yet')" style="font-size:11px;padding:3px 9px;">🔴 Not yet</button>
+        <button type="button" class="tf-btn" id="tcf-proc" onclick="setTripClaimStatusFilter('Processing')" style="font-size:11px;padding:3px 9px;">🟡 Processing</button>
+        <button type="button" class="tf-btn" id="tcf-done" onclick="setTripClaimStatusFilter('Done')" style="font-size:11px;padding:3px 9px;">🟢 Done</button>
+      </div>
+    </div>
+
+    <!-- Scrollable Body with Summary Strip & Accordion Rows -->
+    <div class="sb" style="flex:1;overflow-y:auto;padding:10px 12px 24px;">
+      <!-- Summary Strip -->
+      <div id="tc-summary-strip" style="background:#fff;border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;box-shadow:var(--sh);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.05em;" id="tc-count-label">TRIP CLAIMS</span>
+          <span style="font-size:15px;font-weight:800;color:var(--brand-dark);" id="tc-grand-total">0 ₫</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--n600);border-top:1px dashed var(--n200);padding-top:4px;margin-top:4px;">
+          <span>Received: <strong style="color:#166534;" id="tc-received-total">0 ₫</strong></span>
+          <span>Pending: <strong style="color:#92400E;" id="tc-pending-total">0 ₫</strong></span>
+        </div>
+      </div>
+
+      <!-- Accordion list container -->
+      <div id="tc-claims-list"></div>
+    </div>
+  </div>
 
   <div class="bnav">
     <button class="nb" onclick="showScreen('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span data-t="home">Home</span></button>
@@ -3749,6 +3836,92 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 </div></div>
 
+<!-- MODAL: TRIP CLAIM EDIT (IMP-31) -->
+<div id="modal-trip-claim-edit" class="mo"><div class="modal">
+  <div class="mh"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div>
+      <div class="mt" style="margin-bottom:0;" id="tce-modal-title">✈️ Update Claim Info</div>
+      <div style="font-size:11px;color:var(--n500);" id="tce-modal-subtitle">Trip Claim &amp; Reimbursement</div>
+    </div>
+    <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-trip-claim-edit')" style="font-size:12px;padding:3px 8px;">✕</button>
+  </div>
+
+  <!-- Read-only Trip Info Card -->
+  <div class="card" style="padding:10px 12px;margin-bottom:10px;background:var(--n50);border:1px solid var(--n200);">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+      <div style="font-size:13px;font-weight:700;color:var(--n800);" id="tce-plant">DongNai Plant</div>
+      <span class="badge" id="tce-week-badge" style="background:var(--g100);color:var(--green);font-weight:700;font-size:11px;">W44/26</span>
+    </div>
+    <div style="font-size:11px;color:var(--n600);margin-bottom:6px;" id="tce-dates-detail">01/11/2026 ➔ 05/11/2026 • Bien Hoa, Dong Nai</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px dashed var(--n200);">
+      <span style="font-size:11px;font-weight:600;color:var(--n600);">Total Claim (from bills):</span>
+      <span style="font-size:14px;font-weight:800;color:var(--green);" id="tce-total-claim">14,850,000 ₫</span>
+    </div>
+  </div>
+
+  <!-- Hidden field for current trip ID -->
+  <input type="hidden" id="tce-trip-id" value="">
+
+  <!-- Payment Status Selection -->
+  <div class="fg" style="margin-bottom:10px;">
+    <label class="fl">Payment Status *</label>
+    <div style="display:flex;gap:6px;" id="tce-status-chips">
+      <button type="button" class="btn btn-sm tce-status-btn" data-status="Not yet" onclick="setTripClaimEditStatus('Not yet')" style="flex:1;font-size:11px;padding:6px 4px;font-weight:700;border:1px solid #FCA5A5;background:#FEF2F2;color:#991B1B;">🔴 Not yet</button>
+      <button type="button" class="btn btn-sm tce-status-btn" data-status="Processing" onclick="setTripClaimEditStatus('Processing')" style="flex:1;font-size:11px;padding:6px 4px;font-weight:700;border:1px solid #FCD34D;background:#FEF3C7;color:#92400E;">🟡 Processing</button>
+      <button type="button" class="btn btn-sm tce-status-btn" data-status="Done" onclick="setTripClaimEditStatus('Done')" style="flex:1;font-size:11px;padding:6px 4px;font-weight:700;border:1px solid #86EFAC;background:#DCFCE7;color:#166534;">🟢 Done</button>
+    </div>
+  </div>
+
+  <!-- 4 Date Fields with Today helper buttons -->
+  <div style="background:#fff;border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;">
+    <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.05em;margin-bottom:8px;">PAYMENT TIMELINE DATES</div>
+    
+    <div class="fg" style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <label class="fl" style="margin-bottom:0;font-size:11px;">1. Date Request (Ngày nộp claim)</label>
+        <button type="button" class="btn btn-sm btn-o" onclick="setClaimTodayDate('tce-date-req')" style="font-size:10px;padding:1px 6px;">⚡ Today</button>
+      </div>
+      <input type="date" class="fi" id="tce-date-req" style="font-size:13px;height:36px;">
+    </div>
+
+    <div class="fg" style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <label class="fl" style="margin-bottom:0;font-size:11px;">2. Date Approved (Ngày sếp duyệt)</label>
+        <button type="button" class="btn btn-sm btn-o" onclick="setClaimTodayDate('tce-date-appr')" style="font-size:10px;padding:1px 6px;">⚡ Today</button>
+      </div>
+      <input type="date" class="fi" id="tce-date-appr" style="font-size:13px;height:36px;">
+    </div>
+
+    <div class="fg" style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <label class="fl" style="margin-bottom:0;font-size:11px;">3. Process Date (Ngày kế toán xử lý)</label>
+        <button type="button" class="btn btn-sm btn-o" onclick="setClaimTodayDate('tce-date-proc')" style="font-size:10px;padding:1px 6px;">⚡ Today</button>
+      </div>
+      <input type="date" class="fi" id="tce-date-proc" style="font-size:13px;height:36px;">
+    </div>
+
+    <div class="fg" style="margin-bottom:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <label class="fl" style="margin-bottom:0;font-size:11px;">4. Done Date (Ngày tiền về tài khoản)</label>
+        <button type="button" class="btn btn-sm btn-o" onclick="setClaimTodayDate('tce-date-done')" style="font-size:10px;padding:1px 6px;">⚡ Today</button>
+      </div>
+      <input type="date" class="fi" id="tce-date-done" style="font-size:13px;height:36px;">
+    </div>
+  </div>
+
+  <!-- Note / Comment Textarea -->
+  <div class="fg" style="margin-bottom:12px;">
+    <label class="fl">Note / Comment</label>
+    <textarea class="fi" id="tce-comment" rows="2" placeholder="e.g. Đã nhận đủ tiền chuyển khoản VCB, số UNC 9982..." style="height:auto;resize:vertical;font-size:13px;"></textarea>
+  </div>
+
+  <div class="brow">
+    <button type="button" class="btn btn-o" onclick="closeModal('modal-trip-claim-edit')">Cancel</button>
+    <button type="button" class="btn btn-p" style="flex:1;" onclick="saveTripClaim()">💾 Save &amp; Sync to Sheet</button>
+  </div>
+</div></div>
+
 <div id="toast" class="toast"></div>
 </div>
 
@@ -3881,7 +4054,8 @@ let S={
   theme:'auto', // 'auto' | 'light' | 'dark' (IMP-13)
   telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
   calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
-  reminders:[]  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
+  reminders:[],  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
+  tripClaims:[]  // [{tripId, dateRequest, dateApproved, processDate, doneDate, paymentStatus, comment, updatedAt}] (IMP-31)
 };
 let curTrip=null,curReport=null,sigCanvas,sigCtx,isDrw=false;
 let calY,calM,selDay=null,signoffRes='Completed';
@@ -3961,6 +4135,7 @@ function ld(){
   }catch(e){}
   if(!S.assets) S.assets = [];
   if(!S.scratchpad) S.scratchpad = [];
+  if(!S.tripClaims) S.tripClaims = [];
   if(!S.deletedIds) S.deletedIds = {};
   try {
     const cutoff = Date.now() - 30 * 86400 * 1000; // prune tombstones older than 30 days
@@ -4439,7 +4614,13 @@ function showScreen(n){
   if(n==='home')renderDash();
   if(n==='trips')renderTripList();
   if(n==='tasks')renderTasks();
-  if(n==='bills')renderBillsScreen();
+  if(n==='bills') {
+    if(typeof currentBillsView!=='undefined' && currentBillsView==='claims') {
+      if(typeof renderTripClaimsScreen==='function') renderTripClaimsScreen();
+    } else {
+      renderBillsScreen();
+    }
+  }
   if(n==='export'){saveSignoff();buildPDFPreview();populateReportName();}
   if(n==='leave')renderCalendar();
   if(n==='library')renderLibrary();
@@ -5075,7 +5256,7 @@ function hashPIN(pin) {
     h ^= pin.charCodeAt(i);
     h = (h * 0x01000193) >>> 0;
   }
-  return 'fnv_' + h.toString(16).padStart(8,'0');
+  return 'fnv_' + h.toString(16).padStart(8, '0');
 }
 async function hashPINAsync(pin, salt) {
   // Try crypto.subtle SHA-256 for compatibility with older stored hashes
@@ -5083,18 +5264,18 @@ async function hashPINAsync(pin, salt) {
   try {
     const enc = new TextEncoder().encode(s + pin);
     const buf = await crypto.subtle.digest('SHA-256', enc);
-    const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
     return 'sha_' + hex;
-  } catch(e) {
+  } catch (e) {
     return hashPIN(pin); // FNV fallback
   }
 }
 
 function getStoredHash() {
-  try { return localStorage.getItem(SEC_KEY) || ''; } catch(e) { return ''; }
+  try { return localStorage.getItem(SEC_KEY) || ''; } catch (e) { return ''; }
 }
 function storeHash(hash) {
-  try { localStorage.setItem(SEC_KEY, hash); } catch(e) {}
+  try { localStorage.setItem(SEC_KEY, hash); } catch (e) { }
 }
 function hasPIN() { return !!getStoredHash(); }
 
@@ -5105,7 +5286,7 @@ let _pendingScreen = null;    // 'login' | 'setup_new' | 'setup_confirm' | 'chan
 let pinFirst = '';        // stores first entry during setup confirm step
 let _lockTimer = null;
 let _isLocked = false;
-const AUTO_LOCK_MS = 5 * 60 * 1000;  // 5 minutes
+const AUTO_LOCK_MS = 2 * 60 * 1000;  // 5 minutes
 
 function resetAutoLock() {
   clearTimeout(_lockTimer);
@@ -5193,7 +5374,7 @@ function checkPIN() {
           unlockApp();
           updatePinDots('lock');
         }
-      }).catch(() => {})
+      }).catch(() => { })
     );
     Promise.all(shaChecks).then(() => {
       if (!matched) showPINError();
@@ -5206,17 +5387,17 @@ function checkPIN() {
 }
 
 function showPINError() {
-  for(let i=0;i<4;i++){
-    const d=document.getElementById('pd'+i);
-    if(d){d.classList.remove('filled');d.classList.add('error');}
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('pd' + i);
+    if (d) { d.classList.remove('filled'); d.classList.add('error'); }
   }
-  const le=document.getElementById('lock-error');
-  if(le) le.textContent='Incorrect PIN — try again';
-  setTimeout(()=>{
-    for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);if(d)d.classList.remove('error');}
-    const le2=document.getElementById('lock-error');
-    if(le2) le2.textContent='';
-    pinBuffer='';
+  const le = document.getElementById('lock-error');
+  if (le) le.textContent = 'Incorrect PIN — try again';
+  setTimeout(() => {
+    for (let i = 0; i < 4; i++) { const d = document.getElementById('pd' + i); if (d) d.classList.remove('error'); }
+    const le2 = document.getElementById('lock-error');
+    if (le2) le2.textContent = '';
+    pinBuffer = '';
     updatePinDots('lock');
   }, 800);
 }
@@ -5278,26 +5459,26 @@ function modalPinBackspace() {
 function processModalPIN() {
   if (modalPinStep === 'old') {
     // Verify current PIN — handle both sha_ and fnv_ formats
-    const stored=getStoredHash();
-    const syncMatch=hashPIN(modalPinBuffer)===stored;
-    const doVerify=(match)=>{
-      if(match){
+    const stored = getStoredHash();
+    const syncMatch = hashPIN(modalPinBuffer) === stored;
+    const doVerify = (match) => {
+      if (match) {
         // Check if this was a Settings gate request
         if (_pendingScreen === 'settings') {
           _settingsUnlocked = true; _pendingScreen = null;
           closeModal('modal-pin'); modalPinBuffer = '';
-          document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+          document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
           document.getElementById('screen-settings').classList.add('active');
           updatePINStatusLabel();
           return;
         }
-        modalPinBuffer=''; modalPinStep='new'; updatePinDots('modal');
-        document.getElementById('pin-modal-sub').textContent='Enter your new 4-digit PIN';
-        document.getElementById('pin-modal-error').textContent='';
+        modalPinBuffer = ''; modalPinStep = 'new'; updatePinDots('modal');
+        document.getElementById('pin-modal-sub').textContent = 'Enter your new 4-digit PIN';
+        document.getElementById('pin-modal-error').textContent = '';
       } else { flashModalError('Incorrect current PIN'); }
     };
-    if(stored.startsWith('sha_')){hashPINAsync(modalPinBuffer).then(h=>doVerify(h===stored)).catch(()=>doVerify(hashPIN(modalPinBuffer)===stored));}
-    else{doVerify(syncMatch);}
+    if (stored.startsWith('sha_')) { hashPINAsync(modalPinBuffer).then(h => doVerify(h === stored)).catch(() => doVerify(hashPIN(modalPinBuffer) === stored)); }
+    else { doVerify(syncMatch); }
   } else if (modalPinStep === 'new') {
     if (modalPinBuffer === '0000' || modalPinBuffer === '1234' || modalPinBuffer === '1111') {
       flashModalError('PIN too simple — choose another');
@@ -5372,12 +5553,12 @@ function updatePINStatusLabel() {
 
 // ── Startup auth check ─────────────────────────────────────
 function authInit() {
-  const appEl  = document.getElementById('app');
+  const appEl = document.getElementById('app');
   const lockEl = document.getElementById('screen-lock');
 
-  function showApp()  { if(appEl) appEl.style.display  = 'flex'; if(lockEl) lockEl.style.display = 'none'; }
-  function showLock() { if(lockEl) lockEl.style.display = 'flex'; if(appEl) appEl.style.display = 'none'; }
-  function hideLock() { if(lockEl) lockEl.style.display = 'none'; }
+  function showApp() { if (appEl) appEl.style.display = 'flex'; if (lockEl) lockEl.style.display = 'none'; }
+  function showLock() { if (lockEl) lockEl.style.display = 'flex'; if (appEl) appEl.style.display = 'none'; }
+  function hideLock() { if (lockEl) lockEl.style.display = 'none'; }
 
   if (hasPIN()) {
     lockApp();
@@ -5387,10 +5568,10 @@ function authInit() {
     setTimeout(() => {
       try {
         if (!hasPIN()) showToast('💡 Tip: Set a PIN in Settings to protect your data');
-      } catch(e) {}
+      } catch (e) { }
     }, 3000);
   }
-  try { updatePINStatusLabel(); } catch(e){}
+  try { updatePINStatusLabel(); } catch (e) { }
 }
 
 // ── pinDel alias (used by old HTML references) ──────────────
@@ -13232,6 +13413,474 @@ function emailBillsReport() {
   openModal('modal-email');
 }
 
+// ═══════════════════════════════════════════════════════════
+// ✈️ TRIP CLAIM & REIMBURSEMENT TRACKER (IMP-31)
+// ═══════════════════════════════════════════════════════════
+
+let currentBillsView = 'bills'; // 'bills' | 'claims'
+let tripClaimStatusFilter = 'all'; // 'all' | 'Not yet' | 'Processing' | 'Done'
+let _editingClaimStatus = 'Not yet';
+
+/**
+ * Switch view between Expense Bills and Trip Claims Summary
+ */
+function switchBillsView(view) {
+  currentBillsView = view;
+  const tabBills = document.getElementById('view-tab-bills');
+  const tabClaims = document.getElementById('view-tab-claims');
+  const billsFilterBar = document.getElementById('bills-filter-bar');
+  const billsBody = document.getElementById('bills-screen-body');
+  const claimsView = document.getElementById('claims-view-container');
+  const topTitle = document.getElementById('bills-topbar-title');
+  const addBtn = document.getElementById('bills-add-btn');
+
+  if (view === 'claims') {
+    if (tabBills) { tabBills.className = 'btn btn-sm btn-o'; }
+    if (tabClaims) { tabClaims.className = 'btn btn-sm btn-p'; }
+    if (billsFilterBar) billsFilterBar.style.display = 'none';
+    if (billsBody) billsBody.style.display = 'none';
+    if (claimsView) claimsView.style.display = 'flex';
+    if (topTitle) topTitle.textContent = '✈️ Trip Claims Summary';
+    if (addBtn) addBtn.style.display = 'none';
+    renderTripClaimsScreen();
+  } else {
+    if (tabBills) { tabBills.className = 'btn btn-sm btn-p'; }
+    if (tabClaims) { tabClaims.className = 'btn btn-sm btn-o'; }
+    if (billsFilterBar) billsFilterBar.style.display = 'block';
+    if (billsBody) billsBody.style.display = 'block';
+    if (claimsView) claimsView.style.display = 'none';
+    if (topTitle) topTitle.textContent = '💳 Expense Bills';
+    if (addBtn) addBtn.style.display = 'inline-flex';
+    renderBillsScreen();
+  }
+}
+
+/**
+ * Calculate total claim amount (VND) from all bills linked to a trip
+ */
+function calculateTripTotalClaim(tripId) {
+  if (!tripId || !Array.isArray(S.bills)) return 0;
+  const tripBills = S.bills.filter(b => String(b.tripId) === String(tripId));
+  return tripBills.reduce((sum, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') {
+      return sum + (parseFloat(b.amount) || 0);
+    }
+    return sum + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+}
+
+/**
+ * Get or initialize claim data for a trip
+ */
+function getTripClaimData(tripId) {
+  if (!S.tripClaims) S.tripClaims = [];
+  let found = S.tripClaims.find(c => String(c.tripId) === String(tripId));
+  if (!found) {
+    found = {
+      tripId: tripId,
+      dateRequest: '',
+      dateApproved: '',
+      processDate: '',
+      doneDate: '',
+      paymentStatus: 'Not yet',
+      comment: '',
+      updatedAt: ''
+    };
+  }
+  return found;
+}
+
+/**
+ * Filter by payment status in Trip Claims view
+ */
+function setTripClaimStatusFilter(status) {
+  tripClaimStatusFilter = status;
+  const chips = ['all', 'notyet', 'proc', 'done'];
+  chips.forEach(c => {
+    const el = document.getElementById('tcf-' + c);
+    if (!el) return;
+    const match = (c === 'all' && status === 'all') ||
+                  (c === 'notyet' && status === 'Not yet') ||
+                  (c === 'proc' && status === 'Processing') ||
+                  (c === 'done' && status === 'Done');
+    el.classList.toggle('active', match);
+  });
+  renderTripClaimsScreen();
+}
+
+/**
+ * Populate Month & Year options for Trip Claims view
+ */
+function populateTripClaimDateSelectors() {
+  const yearSel = document.getElementById('tc-year-select');
+  const monthSel = document.getElementById('tc-month-select');
+  if (!yearSel || !monthSel) return;
+
+  const currentYearVal = yearSel.value;
+  const currentMonthVal = monthSel.value;
+
+  // Extract all years from trips
+  const years = [...new Set((S.trips || []).map(t => (t.date || '').slice(0, 4)).filter(Boolean))].sort().reverse();
+  const thisYear = new Date().getFullYear().toString();
+  if (!years.includes(thisYear)) years.unshift(thisYear);
+
+  let yearOpts = '<option value="">All Years</option>';
+  years.forEach(y => {
+    const sel = (currentYearVal === y) ? ' selected' : '';
+    yearOpts += `<option value="${y}"${sel}>${y}</option>`;
+  });
+  yearSel.innerHTML = yearOpts;
+
+  // Month options
+  const months = [
+    ['', 'All Months'],
+    ['01', 'Tháng 1 (Jan)'], ['02', 'Tháng 2 (Feb)'], ['03', 'Tháng 3 (Mar)'],
+    ['04', 'Tháng 4 (Apr)'], ['05', 'Tháng 5 (May)'], ['06', 'Tháng 6 (Jun)'],
+    ['07', 'Tháng 7 (Jul)'], ['08', 'Tháng 8 (Aug)'], ['09', 'Tháng 9 (Sep)'],
+    ['10', 'Tháng 10 (Oct)'], ['11', 'Tháng 11 (Nov)'], ['12', 'Tháng 12 (Dec)']
+  ];
+  let monthOpts = '';
+  months.forEach(([v, l]) => {
+    const sel = (currentMonthVal === v) ? ' selected' : '';
+    monthOpts += `<option value="${v}"${sel}>${l}</option>`;
+  });
+  monthSel.innerHTML = monthOpts;
+}
+
+/**
+ * Render the entire Trip Claims view
+ */
+function renderTripClaimsScreen() {
+  const container = document.getElementById('tc-claims-list');
+  if (!container) return;
+
+  populateTripClaimDateSelectors();
+
+  const yearSel = document.getElementById('tc-year-select');
+  const monthSel = document.getElementById('tc-month-select');
+  const filterYear = yearSel ? yearSel.value : '';
+  const filterMonth = monthSel ? monthSel.value : '';
+
+  let trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])];
+
+  // Filter by Year
+  if (filterYear) {
+    trips = trips.filter(t => (t.date || '').startsWith(filterYear));
+  }
+  // Filter by Month
+  if (filterMonth) {
+    trips = trips.filter(t => {
+      const parts = (t.date || '').split('-');
+      return parts[1] === filterMonth;
+    });
+  }
+
+  // Filter by Payment Status
+  if (tripClaimStatusFilter !== 'all') {
+    trips = trips.filter(t => {
+      const claim = getTripClaimData(t.id);
+      return claim.paymentStatus === tripClaimStatusFilter;
+    });
+  }
+
+  // Calculate summary stats
+  let totalClaimSum = 0;
+  let receivedSum = 0;
+  let pendingSum = 0;
+
+  trips.forEach(t => {
+    const amt = calculateTripTotalClaim(t.id);
+    const claim = getTripClaimData(t.id);
+    totalClaimSum += amt;
+    if (claim.paymentStatus === 'Done') {
+      receivedSum += amt;
+    } else {
+      pendingSum += amt;
+    }
+  });
+
+  // Update summary strip DOM
+  const countLabel = document.getElementById('tc-count-label');
+  const grandTotalEl = document.getElementById('tc-grand-total');
+  const receivedTotalEl = document.getElementById('tc-received-total');
+  const pendingTotalEl = document.getElementById('tc-pending-total');
+
+  if (countLabel) countLabel.textContent = `TRIP CLAIMS (${trips.length} TRIPS)`;
+  if (grandTotalEl) grandTotalEl.textContent = `${fmtAmt(totalClaimSum, 'VND')} ₫`;
+  if (receivedTotalEl) receivedTotalEl.textContent = `${fmtAmt(receivedSum, 'VND')} ₫`;
+  if (pendingTotalEl) pendingTotalEl.textContent = `${fmtAmt(pendingSum, 'VND')} ₫`;
+
+  if (!trips.length) {
+    container.innerHTML = `
+      <div class="empty">
+        <div class="ei">✈️</div>
+        <div class="et">No trip claims found</div>
+        <div class="es">Try selecting a different month, year, or payment status filter.</div>
+      </div>`;
+    return;
+  }
+
+  // Render Smart Accordion Rows
+  let html = '';
+  trips.forEach(t => {
+    const claim = getTripClaimData(t.id);
+    const totalClaim = calculateTripTotalClaim(t.id);
+    const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(t.date, t.dateEnd) : '';
+    const dateRangeStr = (t.dateEnd && t.dateEnd !== t.date)
+      ? `${fmtDate(t.date)} ➔ ${fmtDate(t.dateEnd)}`
+      : fmtDate(t.date);
+
+    const tripBillsCount = (S.bills || []).filter(b => String(b.tripId) === String(t.id)).length;
+    const isCompleted = t.status === 'completed';
+
+    // Status styling
+    let statusClass = 'claim-status-notyet';
+    let statusBadgeText = '🔴 Not yet';
+    if (claim.paymentStatus === 'Processing') {
+      statusClass = 'claim-status-proc';
+      statusBadgeText = '🟡 Processing';
+    } else if (claim.paymentStatus === 'Done') {
+      statusClass = 'claim-status-done';
+      statusBadgeText = '🟢 Done';
+    }
+
+    // Step timeline checks
+    const stepReqDone = Boolean(claim.dateRequest);
+    const stepApprDone = Boolean(claim.dateApproved);
+    const stepProcDone = Boolean(claim.processDate);
+    const stepDoneDone = Boolean(claim.doneDate);
+
+    html += `
+      <div class="claim-row" id="claim-row-${t.id}">
+        <!-- Single-line Collapsed Header -->
+        <div class="claim-row-header" onclick="toggleTripClaimAccordion('${t.id}')">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+              <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🏭 ${t.plant}</span>
+              ${weekLabel ? `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--g100);color:var(--green);font-weight:700;">${weekLabel}</span>` : ''}
+            </div>
+            <div style="font-size:11px;color:var(--n500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              📅 ${dateRangeStr} ${t.location ? `• ${t.location}` : ''}
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--green);font-family:var(--mono);">
+              ${fmtAmt(totalClaim, 'VND')} ₫
+            </div>
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:2px;">
+              <span class="claim-badge-status ${statusClass}">${statusBadgeText}</span>
+              <span class="claim-chevron" id="claim-chevron-${t.id}">▾</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expandable Detail Body -->
+        <div class="claim-row-body" id="claim-body-${t.id}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;">
+            <span style="color:var(--n600);">Trip Status: <strong>${isCompleted ? '🟢 Completed' : '🟡 In Progress'}</strong> (${tripBillsCount} bills linked)</span>
+            <span style="font-size:10px;color:var(--n400);">${isCompleted ? 'Finalized' : 'Estimate'}</span>
+          </div>
+
+          ${t.purpose ? `<div style="font-size:11px;color:var(--n700);margin-bottom:8px;background:#fff;padding:6px 8px;border-radius:4px;border:1px solid var(--n200);"><strong>Purpose:</strong> ${t.purpose}</div>` : ''}
+
+          <!-- 4-Step Payment Timeline Matrix -->
+          <div style="font-size:10px;font-weight:700;color:var(--g500);letter-spacing:0.04em;margin-bottom:4px;">PAYMENT TIMELINE</div>
+          <div class="claim-timeline-grid">
+            <div class="claim-step-box ${stepReqDone ? 'done' : ''}">
+              <div class="claim-step-title">1. Request</div>
+              <div class="claim-step-date">${claim.dateRequest ? fmtDate(claim.dateRequest) : '──'}</div>
+              <div style="font-size:10px;margin-top:2px;">${stepReqDone ? '🟢' : '⚪'}</div>
+            </div>
+            <div class="claim-step-box ${stepApprDone ? 'done' : ''}">
+              <div class="claim-step-title">2. Approve</div>
+              <div class="claim-step-date">${claim.dateApproved ? fmtDate(claim.dateApproved) : '──'}</div>
+              <div style="font-size:10px;margin-top:2px;">${stepApprDone ? '🟢' : '⚪'}</div>
+            </div>
+            <div class="claim-step-box ${stepProcDone ? 'done' : ''}">
+              <div class="claim-step-title">3. Process</div>
+              <div class="claim-step-date">${claim.processDate ? fmtDate(claim.processDate) : '──'}</div>
+              <div style="font-size:10px;margin-top:2px;">${stepProcDone ? '🟢' : '⚪'}</div>
+            </div>
+            <div class="claim-step-box ${stepDoneDone ? 'done' : ''}">
+              <div class="claim-step-title">4. Received</div>
+              <div class="claim-step-date">${claim.doneDate ? fmtDate(claim.doneDate) : '──'}</div>
+              <div style="font-size:10px;margin-top:2px;">${stepDoneDone ? '🟢' : '⚪'}</div>
+            </div>
+          </div>
+
+          <!-- Comment Display -->
+          ${claim.comment ? `
+            <div style="font-size:11px;color:var(--n700);background:#fff;padding:6px 8px;border-radius:4px;border:1px solid var(--n200);margin-top:6px;">
+              💬 <strong>Comment:</strong> ${claim.comment}
+            </div>` : ''}
+
+          <!-- Action Buttons -->
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="button" class="btn btn-sm btn-p" style="flex:1;font-size:11px;padding:6px 10px;" onclick="openEditTripClaimModal('${t.id}')">
+              ✏️ Update Claim Info
+            </button>
+            <button type="button" class="btn btn-sm btn-o" style="font-size:11px;padding:6px 10px;" onclick="filterBillsByTrip('${t.id}')">
+              🧾 View Bills (${tripBillsCount})
+            </button>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+/**
+ * Toggle Accordion Row
+ */
+function toggleTripClaimAccordion(tripId) {
+  const row = document.getElementById('claim-row-' + tripId);
+  if (row) {
+    row.classList.toggle('expanded');
+  }
+}
+
+/**
+ * Filter bills screen by a specific trip
+ */
+function filterBillsByTrip(tripId) {
+  switchBillsView('bills');
+  setBillFilter('trip');
+  const selTrip = document.getElementById('bf-trip-select');
+  if (selTrip) {
+    selTrip.value = tripId;
+    renderBillsScreen();
+  }
+}
+
+/**
+ * Open Modal to edit Trip Claim dates and status
+ */
+function openEditTripClaimModal(tripId) {
+  const trip = (S.trips || []).find(t => String(t.id) === String(tripId));
+  if (!trip) {
+    showToast('Trip not found');
+    return;
+  }
+
+  const claim = getTripClaimData(tripId);
+  const totalClaim = calculateTripTotalClaim(tripId);
+  const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(trip.date, trip.dateEnd) : '';
+  const dateRangeStr = (trip.dateEnd && trip.dateEnd !== trip.date)
+    ? `${fmtDate(trip.date)} ➔ ${fmtDate(trip.dateEnd)}`
+    : fmtDate(trip.date);
+
+  const plantEl = document.getElementById('tce-plant');
+  const weekEl = document.getElementById('tce-week-badge');
+  const datesDetailEl = document.getElementById('tce-dates-detail');
+  const totalClaimEl = document.getElementById('tce-total-claim');
+  const tripIdInput = document.getElementById('tce-trip-id');
+
+  if (plantEl) plantEl.textContent = trip.plant;
+  if (weekEl) weekEl.textContent = weekLabel || 'Trip';
+  if (datesDetailEl) datesDetailEl.textContent = `${dateRangeStr} ${trip.location ? '• ' + trip.location : ''}`;
+  if (totalClaimEl) totalClaimEl.textContent = `${fmtAmt(totalClaim, 'VND')} ₫`;
+  if (tripIdInput) tripIdInput.value = tripId;
+
+  // Status
+  setTripClaimEditStatus(claim.paymentStatus || 'Not yet');
+
+  // Dates
+  const dateReqEl = document.getElementById('tce-date-req');
+  const dateApprEl = document.getElementById('tce-date-appr');
+  const dateProcEl = document.getElementById('tce-date-proc');
+  const dateDoneEl = document.getElementById('tce-date-done');
+  const commentEl = document.getElementById('tce-comment');
+
+  if (dateReqEl) dateReqEl.value = claim.dateRequest || '';
+  if (dateApprEl) dateApprEl.value = claim.dateApproved || '';
+  if (dateProcEl) dateProcEl.value = claim.processDate || '';
+  if (dateDoneEl) dateDoneEl.value = claim.doneDate || '';
+  if (commentEl) commentEl.value = claim.comment || '';
+
+  openModal('modal-trip-claim-edit');
+}
+
+/**
+ * Set status in Edit Modal
+ */
+function setTripClaimEditStatus(status) {
+  _editingClaimStatus = status;
+  const btns = document.querySelectorAll('.tce-status-btn');
+  btns.forEach(b => {
+    const s = b.getAttribute('data-status');
+    if (s === status) {
+      b.style.opacity = '1';
+      b.style.boxShadow = '0 0 0 2px var(--brand)';
+    } else {
+      b.style.opacity = '0.55';
+      b.style.boxShadow = 'none';
+    }
+  });
+}
+
+/**
+ * Set today's date in a claim date field
+ */
+function setClaimTodayDate(fieldId) {
+  const el = document.getElementById(fieldId);
+  if (el) {
+    el.value = new Date().toISOString().slice(0, 10);
+  }
+}
+
+/**
+ * Save Trip Claim and trigger cloud sync
+ */
+function saveTripClaim() {
+  const tripIdInput = document.getElementById('tce-trip-id');
+  const tripId = tripIdInput ? tripIdInput.value : '';
+  if (!tripId) return;
+
+  const trip = (S.trips || []).find(t => String(t.id) === String(tripId));
+  if (!trip) return;
+
+  const dateReq = document.getElementById('tce-date-req')?.value || '';
+  const dateAppr = document.getElementById('tce-date-appr')?.value || '';
+  const dateProc = document.getElementById('tce-date-proc')?.value || '';
+  const dateDone = document.getElementById('tce-date-done')?.value || '';
+  const comment = document.getElementById('tce-comment')?.value.trim() || '';
+
+  if (!S.tripClaims) S.tripClaims = [];
+  let claim = S.tripClaims.find(c => String(c.tripId) === String(tripId));
+  if (!claim) {
+    claim = { tripId: tripId };
+    S.tripClaims.push(claim);
+  }
+
+  claim.dateRequest = dateReq;
+  claim.dateApproved = dateAppr;
+  claim.processDate = dateProc;
+  claim.doneDate = dateDone;
+  claim.paymentStatus = _editingClaimStatus || 'Not yet';
+  claim.comment = comment;
+  claim.updatedAt = new Date().toISOString();
+
+  // Populate metadata fields for Google Sheet export
+  const totalClaim = calculateTripTotalClaim(tripId);
+  const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(trip.date, trip.dateEnd) : '';
+  claim.fromDate = trip.date || '';
+  claim.toDate = trip.dateEnd || trip.date || '';
+  claim.weekNo = weekLabel || '';
+  claim.travelDetail = `${trip.plant}${trip.location ? ' • ' + trip.location : ''}${trip.purpose ? ' (' + trip.purpose + ')' : ''}`;
+  claim.totalClaim = totalClaim;
+
+  sv();
+  closeModal('modal-trip-claim-edit');
+  renderTripClaimsScreen();
+  showToast('✓ Claim info saved');
+
+  // Sync to Google Sheet (Incremental single-row sync)
+  if (typeof syncSingleTripClaim === 'function') {
+    syncSingleTripClaim(claim);
+  }
+}
+
 // ====== sync.js ======
 // =====================================================
 // PlantLog — sync.js
@@ -13442,6 +14091,55 @@ async function syncSingleQuickSnap(item) {
   } catch (err) {
     console.warn('Single snap sync network error:', err);
     item.synced = false;
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
+ * IMP-31: Incremental Single-Row Sync for TripClaims
+ * Updates only the targeted trip claim on Google Sheets in-place
+ */
+async function syncSingleTripClaim(item) {
+  if (!item || !item.tripId) return { ok: false, error: 'No item or tripId specified' };
+  const url = getGSUrl();
+  if (!url) {
+    return { ok: false, offline: true };
+  }
+
+  const s = v => (v === null || v === undefined) ? '' : String(v);
+  const payload = {
+    action: 'upsertTripClaim',
+    item: {
+      tripId: s(item.tripId),
+      fromDate: s(item.fromDate),
+      toDate: s(item.toDate),
+      weekNo: s(item.weekNo),
+      travelDetail: s(item.travelDetail),
+      totalClaim: typeof item.totalClaim === 'number' ? item.totalClaim : (parseFloat(item.totalClaim) || 0),
+      dateRequest: s(item.dateRequest),
+      dateApproved: s(item.dateApproved),
+      processDate: s(item.processDate),
+      doneDate: s(item.doneDate),
+      paymentStatus: s(item.paymentStatus || 'Not yet'),
+      comment: s(item.comment),
+      updatedAt: s(item.updatedAt || new Date().toISOString())
+    }
+  };
+
+  try {
+    const res = await gsPost(url, payload);
+    if (res && res.ok) {
+      showToast('☁️ Claim synced to Google Sheet ✓');
+      return { ok: true, mode: res.mode, tripId: item.tripId };
+    } else if (res && res.error && res.error.includes('Unknown action')) {
+      console.warn('Backend GAS missing upsertTripClaim, falling back to full sync');
+      if (typeof svAndSync === 'function') svAndSync('trip_claim');
+      return { ok: false, fallback: true };
+    } else {
+      return { ok: false, error: (res && res.error) || 'Sync failed' };
+    }
+  } catch (err) {
+    console.warn('Single trip claim sync network error:', err);
     return { ok: false, error: err.message };
   }
 }
@@ -13678,6 +14376,31 @@ async function syncToSheets(){
   };
   const enrichedServiceTickets = await buildServiceTickets();
 
+  // IMP-31: Build Trip Claims payload
+  const buildTripClaims = () => {
+    return (S.trips || []).map(tr => {
+      const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tr.id)) || {};
+      const totalClaim = typeof calculateTripTotalClaim === 'function' ? calculateTripTotalClaim(tr.id) : 0;
+      const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
+      return {
+        tripId: s(tr.id),
+        fromDate: s(tr.date),
+        toDate: s(tr.dateEnd || tr.date),
+        weekNo: s(weekLabel),
+        travelDetail: `${s(tr.plant)}${tr.location ? ' • ' + s(tr.location) : ''}${tr.purpose ? ' (' + s(tr.purpose) + ')' : ''}`,
+        totalClaim: totalClaim,
+        dateRequest: s(claim.dateRequest),
+        dateApproved: s(claim.dateApproved),
+        processDate: s(claim.processDate),
+        doneDate: s(claim.doneDate),
+        paymentStatus: s(claim.paymentStatus || 'Not yet'),
+        comment: s(claim.comment),
+        updatedAt: s(claim.updatedAt || new Date().toISOString())
+      };
+    });
+  };
+  const enrichedTripClaims = buildTripClaims();
+
   const reports={};
   Object.entries(S.reports||{}).forEach(([id,rep])=>{
     if(!rep)return;
@@ -13699,7 +14422,8 @@ async function syncToSheets(){
     reminders:(S.reminders||[]),
     quickSnap:enrichedQuickSnap,
     siteSafety:enrichedSiteSafety,
-    serviceTickets:enrichedServiceTickets
+    serviceTickets:enrichedServiceTickets,
+    tripClaims:enrichedTripClaims
   };
 
   try{
@@ -14120,6 +14844,27 @@ async function loadFromSheets(silent){
         });
       }
 
+      // IMP-31: Load Trip Claims
+      if(d.tripClaims && Array.isArray(d.tripClaims)){
+        const existingClaims = S.tripClaims || [];
+        const remoteClaims = d.tripClaims.map(c => ({
+          tripId: ss(c.TripID),
+          fromDate: safeDate(c.FromDate),
+          toDate: safeDate(c.ToDate),
+          weekNo: ss(c.WeekNo),
+          travelDetail: ss(c.TravelDetail),
+          totalClaim: safeNum(c.TotalClaim),
+          dateRequest: safeDate(c.DateRequest),
+          dateApproved: safeDate(c.DateApproved),
+          processDate: safeDate(c.ProcessDate),
+          doneDate: safeDate(c.DoneDate),
+          paymentStatus: ss(c.PaymentStatus) || 'Not yet',
+          comment: ss(c.Comment),
+          updatedAt: ss(c.UpdatedAt || c.CreatedAt)
+        }));
+        S.tripClaims = mergeCollectionByTimestamp(existingClaims, remoteClaims, 'tripId');
+      }
+
       sv();
       try{ if(typeof autoStartTodayItems==='function') autoStartTodayItems(); }catch(e){}
       renderDash();renderTripList();renderTasks();renderCalendar();
@@ -14130,6 +14875,7 @@ async function loadFromSheets(silent){
       if(typeof renderTripSafety==='function' && typeof curTrip!=='undefined' && curTrip) {
         renderTripSafety(curTrip);
       }
+      if(typeof renderTripClaimsScreen==='function') renderTripClaimsScreen();
       showGSResult('✅ Data loaded from Google Sheets successfully!','ok');
       showToast('Loaded from Google Sheets ✓');
     } else {

@@ -21,7 +21,8 @@
 const SN={TRIPS:'Trips',TASKS:'Tasks',LEAVE:'Leave',REPORTS:'Reports',
   CHECKLIST:'Checklist',READINGS:'Readings',ISSUES:'Issues',TEAM:'Team',
   BILLS:'Bills',MACHINES:'Machines',PLANS:'Plans',LOG:'SyncLog',REMINDERS:'Reminders',FLIGHT_TA:'Flight_TA_Schedule',
-  QUICK_SNAP:'QuickSnap',SITE_SAFETY:'SiteSafety',SERVICE_TICKETS:'ServiceTickets'};
+  QUICK_SNAP:'QuickSnap',SITE_SAFETY:'SiteSafety',SERVICE_TICKETS:'ServiceTickets',
+  TRIP_CLAIMS:'TripClaims'};
 
 const COLS={
   trips:           ['ID','Plant','Location','Date','DateEnd','Purpose','Contact','Transport','Status','Notes','Flight','TA','SavedReports','CreatedAt'],
@@ -40,7 +41,8 @@ const COLS={
   log:             ['Timestamp','Action','Entity','EntityID','Status','Details'],
   quicksnap:       ['ID','Category','Title','Notes','TripID','TripPlant','Photo','CreatedAt','UpdatedAt'],
   site_safety:     ['TripID','Plant','PermitNo','ValidUntil','PermitTypes','PadlockID','ElectricalIsolated','PneumaticIsolated','DangerTagHung','ZeroEnergyVerified','CCRPhone','EHSPhone','MedicalPhone','Photo','UpdatedAt'],
-  service_tickets: ['ID','TripID','Plant','Date','NormalHours','OT15Hours','OT20Hours','StandbyHours','TravelHours','TotalHours','Summary','SupervisorName','SupervisorSig','CreatedAt','UpdatedAt']
+  service_tickets: ['ID','TripID','Plant','Date','NormalHours','OT15Hours','OT20Hours','StandbyHours','TravelHours','TotalHours','Summary','SupervisorName','SupervisorSig','CreatedAt','UpdatedAt'],
+  trip_claims:     ['TripID','FromDate','ToDate','WeekNo','TravelDetail','TotalClaim','DateRequest','DateApproved','ProcessDate','DoneDate','PaymentStatus','Comment','UpdatedAt']
 };
 
 function db_(){
@@ -145,6 +147,7 @@ function doGet(e){
     if(act==='getAll'||act==='getQuickSnap')      d.quicksnap=readSheet(s,SN.QUICK_SNAP,COLS.quicksnap);
     if(act==='getAll'||act==='getSiteSafety')     d.safety=readSheet(s,SN.SITE_SAFETY,COLS.site_safety);
     if(act==='getAll'||act==='getServiceTickets') d.tickets=readSheet(s,SN.SERVICE_TICKETS,COLS.service_tickets);
+    if(act==='getAll'||act==='getTripClaims')     d.tripClaims=readSheet(s,SN.TRIP_CLAIMS,COLS.trip_claims);
     return json_({ok:true,data:d});
   }catch(x){return json_({ok:false,error:x.message});}
 }
@@ -157,6 +160,7 @@ function doPost(e){
     if(act==='syncAll')  return json_({ok:true,result:syncAll(body.payload)});
     if(act==='upsertQuickSnap')  return json_(upsertQuickSnapRow(body.item));
     if(act==='deleteQuickSnap')  return json_(deleteQuickSnapRow(body.id));
+    if(act==='upsertTripClaim')  return json_(upsertTripClaimRow(body.item));
     if(act==='syncReminders') return json_(syncReminders(body.payload));
     if(act==='ping')     return json_({ok:true,result:{message:'PlantLog Pro API running'}});
     if(act==='uploadFile') return json_(uploadFileToDrive(body));
@@ -290,6 +294,16 @@ function syncAll(p){
     ]));r.tickets=p.serviceTickets.length;
   }
 
+  // Trip Claims & Reimbursements (IMP-31)
+  if(Array.isArray(p.tripClaims)){
+    writeSheet(s,SN.TRIP_CLAIMS,COLS.trip_claims,p.tripClaims.map(c=>[
+      c.tripId||'', c.fromDate||'', c.toDate||'', c.weekNo||'',
+      c.travelDetail||'', c.totalClaim||0,
+      c.dateRequest||'', c.dateApproved||'', c.processDate||'', c.doneDate||'',
+      c.paymentStatus||'Not yet', c.comment||'', c.updatedAt||new Date().toISOString()
+    ]));r.tripClaims=p.tripClaims.length;
+  }
+
   try{s.getSheets().forEach(sh=>{if(sh.getLastColumn()>0)sh.autoResizeColumns(1,sh.getLastColumn());});}catch(x){}
   log_('SYNC_ALL','All','',JSON.stringify(r));
   return r;
@@ -371,12 +385,70 @@ function deleteQuickSnapRow(id){
   return {ok:true, id:id, deleted:deleted};
 }
 
+/**
+ * IMP-31: Upsert a single TripClaim record into the TripClaims sheet
+ * Locates row by TripID (col 1). If found, updates row in-place; else appends new row.
+ */
+function upsertTripClaimRow(item){
+  if(!item || !item.tripId) return {ok:false, error:'Missing item or tripId'};
+  const s=db_();
+  const sh=ensureSheet(s, SN.TRIP_CLAIMS, COLS.trip_claims);
+  const last=sh.getLastRow();
+
+  function safeVal(c){
+    if(c===null||c===undefined)return'';
+    if(c instanceof Date)return cellStr(c);
+    var val=(typeof c==='object')?JSON.stringify(c):c;
+    if(typeof val==='string'&&val.length>49000)val=val.substring(0,49000);
+    return val;
+  }
+
+  var row = [
+    safeVal(item.tripId),
+    safeVal(item.fromDate || ''),
+    safeVal(item.toDate || ''),
+    safeVal(item.weekNo || ''),
+    safeVal(item.travelDetail || ''),
+    safeVal(item.totalClaim || 0),
+    safeVal(item.dateRequest || ''),
+    safeVal(item.dateApproved || ''),
+    safeVal(item.processDate || ''),
+    safeVal(item.doneDate || ''),
+    safeVal(item.paymentStatus || 'Not yet'),
+    safeVal(item.comment || ''),
+    safeVal(item.updatedAt || new Date().toISOString())
+  ];
+
+  var foundRow = -1;
+  if(last > 1){
+    var ids = sh.getRange(2, 1, last - 1, 1).getValues();
+    for(var i = 0; i < ids.length; i++){
+      if(String(ids[i][0]).trim() === String(item.tripId).trim()){
+        foundRow = i + 2;
+        break;
+      }
+    }
+  }
+
+  var mode = 'inserted';
+  if(foundRow > 1){
+    sh.getRange(foundRow, 1, 1, row.length).setValues([row]);
+    mode = 'updated';
+  } else {
+    sh.appendRow(row);
+  }
+
+  log_('UPSERT_TRIP_CLAIM', 'TripClaims', item.tripId, mode + ': Status=' + (item.paymentStatus || 'Not yet'));
+  return {ok:true, tripId:item.tripId, mode:mode};
+}
+
 function setupSheets(){
   const s=db_();
   [['Trips',COLS.trips],['Flight_TA_Schedule',COLS.flight_ta],['Tasks',COLS.tasks],['Leave',COLS.leave],['Reports',COLS.reports],['Reminders',COLS.reminders],
    ['Checklist',COLS.checklist],['Readings',COLS.readings],['Issues',COLS.issues],['Team',COLS.team],
    ['Bills',COLS.bills],['Machines',COLS.machines],['Plans',COLS.plans],['SyncLog',COLS.log],
-   ['QuickSnap',COLS.quicksnap],['SiteSafety',COLS.site_safety],['ServiceTickets',COLS.service_tickets]
+   ['QuickSnap',COLS.quicksnap],['SiteSafety',COLS.site_safety],['ServiceTickets',COLS.service_tickets],
+   ['TripClaims',COLS.trip_claims]
   ].forEach(([n,h])=>ensureSheet(s,n,h));
   try{const d=s.getSheetByName('Sheet1');if(d&&s.getSheets().length>1)s.deleteSheet(d);}catch(x){}
   const url=s.getUrl();

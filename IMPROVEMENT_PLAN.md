@@ -55,6 +55,7 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 | **IMP-28** | **Cho phép chỉnh sửa Ghi chú nhanh sau khi tạo (In-Place Note Editing)** | 🟠 **P2** | **Cần thiết** | ✅ Hoàn tất (v4.13) | 0.25 ngày |
 | **IMP-29** | **Tích hợp chọn Ghi chú vào Báo cáo Kỹ thuật & Xuất bản PDF (Field Notes in Report)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 | **IMP-30** | **Tinh chỉnh cân đối nút View All 2 hàng trong Quick Notes (2-Line Balanced Layout)** | 🟢 **P3** | **Cải thiện UX** | ✅ Hoàn tất (v4.13) | 0.25 ngày |
+| **IMP-31** | **Bảng tổng hợp chuyến đi & Theo dõi thanh toán công tác phí (Trip Claims Tracker)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 
 ---
 
@@ -475,14 +476,24 @@ gantt
   - [x] Cho phép chỉnh sửa Ghi chú nhanh sau khi tạo: nút Edit trên thẻ, nạp lại form và đồng bộ cập nhật tại chỗ lên Google Sheets (Đã xong - IMP-28)
   - [x] Tích hợp chọn Ghi chú Hiện trường vào Báo cáo Kỹ thuật (bước 5 Tasks & Notes) và xuất bản tự động vào tệp PDF (Đã xong - IMP-29)
   - [x] Tinh chỉnh cân đối nút View All 2 hàng trong Quick Note modal: Tách (N) xuống dòng dưới View All, chống co vỡ giao diện trên di động (Đã xong - IMP-30)
+  - [x] Bảng tổng hợp chuyến đi & Theo dõi thanh toán công tác phí: Smart Accordion Row 1 dòng, bộ lọc Tháng/Năm/Status, tiến độ 4 bước (Req/Appr/Proc/Done) và đồng bộ phẳng Google Sheet TripClaims (Đã xong - IMP-31)
 
 ---
 
 ## 4. 📌 DANH MỤC ĐỀ XUẤT XEM XÉT SAU (BACKLOG / FUTURE REVIEW)
 
-Các hạng mục dưới đây đã được phân tích và lưu lại để xem xét khi có nhu cầu nâng cấp mở rộng trong tương lai:
+Các hạng mục dưới đây đã được phân tích, lập kế hoạch kiến trúc chi tiết và lưu lại để triển khai khi có nhu cầu trong tương lai:
 
-1. **Pre-cache thư viện jsPDF trong Service Worker:**
-   * *Mô tả:* Tải trước tệp `jspdf.umd.min.js` vào bộ nhớ cache PWA để có thể kết xuất PDF trong điều kiện mất sóng điện thoại 100%.
-2. **Nâng cấp kho lưu trữ từ LocalStorage sang IndexedDB:**
-   * *Mô tả:* Mở rộng dung lượng lưu trữ cục bộ từ 5MB lên hàng trăm MB phục vụ lưu trữ nhiều năm dữ liệu.
+1. **Pre-cache thư viện jsPDF trong Service Worker (Xuất PDF khi mất sóng 100%):**
+   * *Hiện trạng:* Thư viện đang nạp qua CDN Cloudflare (`cdnjs.cloudflare.com`) trong `src/index.html`, và Service Worker (`src/sw.js`) cố tình bỏ qua không cache các request ngoại vi. Khi kỹ sư ở tầng hầm hoặc vùng mất sóng điện thoại hoàn toàn, nếu trình duyệt chưa lưu bộ nhớ đệm HTTP thì hàm xuất PDF có nguy cơ không hoạt động.
+   * *Kế hoạch triển khai khi cần:*
+     - Tải tệp `jspdf.umd.min.js` (~280KB) về lưu trữ cục bộ trong thư mục dự án.
+     - Đổi đường dẫn trong `src/index.html` sang tệp cục bộ và khai báo vào danh sách `c.addAll([...])` trong `src/sw.js`.
+     - Giúp ứng dụng đạt chuẩn Offline-First 100%, xuất báo cáo kỹ thuật mọi lúc mọi nơi kể cả khi bật Chế độ máy bay.
+
+2. **Nâng cấp kho lưu trữ từ LocalStorage sang IndexedDB (Lưu trữ nhiều năm không đầy bộ nhớ):**
+   * *Hiện trạng:* Toàn bộ dữ liệu lưu trong `localStorage` với dung lượng trần 5MB–10MB và chạy đồng bộ chặn luồng UI (gây giật nhẹ khi dữ liệu lớn).
+   * *Kế hoạch kiến trúc khi triển khai:*
+     - **Mô hình Hybrid Memory-First Reactive Store:** Biến `S` trong RAM vẫn là Single Source of Truth cho toàn bộ logic giao diện tức thì (không làm xáo trộn các module nghiệp vụ hiện tại).
+     - **Engine IndexedDB ngầm (~1KB, Zero-dependency):** Tạo cơ sở dữ liệu `PlantLogDB`, ghi dữ liệu bất đồng bộ với cơ chế Debounce 300ms giúp giao diện luôn mượt mà 60fps và nâng dung lượng lên hàng trăm MB (hàng Gigabyte).
+     - **Cơ chế Auto-Migration 1 lần tự động:** Khi mở app phiên bản mới, tự động sao chép toàn bộ dữ liệu từ `localStorage` sang `IndexedDB`. Dữ liệu cũ trong `localStorage` vẫn được giữ nguyên làm bản sao lưu an toàn (Backup), đảm bảo 0% rủi ro mất dữ liệu.

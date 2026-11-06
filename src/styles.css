@@ -1117,4 +1117,46 @@ input, textarea, select, button { font-family: var(--font); }
   flex: 1; background: var(--n50); border: 1px solid var(--n200); border-radius: var(--rs); padding: 8px 10px;
 }
 
+/* ── IMP-31: Trip Claim & Reimbursement Tracker ───────────── */
+.claim-row {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
+  margin-bottom: 8px; box-shadow: var(--sh); overflow: hidden; transition: all 0.2s ease;
+}
+.claim-row-header {
+  display: flex; justify-content: space-between; align-items: center; padding: 10px 12px;
+  cursor: pointer; user-select: none; background: var(--surface); gap: 8px;
+}
+.claim-row-header:active { background: var(--n50); }
+.claim-row-body {
+  padding: 10px 12px 12px; background: var(--n50); border-top: 1px solid var(--n150); display: none;
+}
+.claim-row.expanded .claim-row-body { display: block; }
+.claim-row.expanded .claim-chevron { transform: rotate(180deg); }
+.claim-chevron {
+  transition: transform 0.2s ease; font-size: 11px; color: var(--n400); display: inline-block;
+}
+.claim-timeline-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 8px 0;
+}
+.claim-step-box {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: 6px;
+  padding: 6px 3px; text-align: center;
+}
+.claim-step-box.done {
+  border-color: #86EFAC; background: #F0FDF4;
+}
+.claim-step-title {
+  font-size: 9px; font-weight: 700; color: var(--n600); margin-bottom: 2px; text-transform: uppercase;
+}
+.claim-step-date {
+  font-size: 10px; font-weight: 700; color: var(--n800); font-family: var(--mono);
+}
+.claim-badge-status {
+  padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;
+}
+.claim-status-notyet { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+.claim-status-proc   { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+.claim-status-done   { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
+
+
 
