@@ -2202,6 +2202,7 @@ input, textarea, select, button { font-family: var(--font); }
     <div style="flex:1;">
       <div class="tb-title" id="bills-topbar-title">💳 Expense Bills</div>
     </div>
+    <button class="tb-action" id="claims-sync-btn" onclick="syncAllTripClaims()" title="Sync Claims" style="font-size:12px;padding:2px 8px;border-radius:10px;display:none;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);font-weight:700;">☁️ Sync</button>
     <button class="tb-action" id="bills-add-btn" onclick="openAddBillFromScreen()" title="Add bill">＋</button>
   </div>
 
@@ -2277,6 +2278,7 @@ input, textarea, select, button { font-family: var(--font); }
           <span>Received: <strong style="color:#166534;" id="tc-received-total">0 ₫</strong></span>
           <span>Pending: <strong style="color:#92400E;" id="tc-pending-total">0 ₫</strong></span>
         </div>
+        <button type="button" class="btn btn-sm btn-p" onclick="syncAllTripClaims()" id="btn-sync-all-claims" style="font-size:11px;padding:6px 12px;margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;">☁️ Sync All Trip Claims to Google Sheet</button>
       </div>
 
       <!-- Accordion list container -->
@@ -3879,7 +3881,7 @@ input, textarea, select, button { font-family: var(--font); }
     
     <div class="fg" style="margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-        <label class="fl" style="margin-bottom:0;font-size:11px;">1. Date Request (Ngày nộp claim)</label>
+        <label class="fl" style="margin-bottom:0;font-size:11px;">1. Date Request (Claim submitted)</label>
         <button type="button" class="btn btn-sm btn-o" onclick="setClaimTodayDate('tce-date-req')" style="font-size:10px;padding:1px 6px;">⚡ Today</button>
       </div>
       <input type="date" class="fi" id="tce-date-req" style="font-size:13px;height:36px;">
@@ -3887,7 +3889,7 @@ input, textarea, select, button { font-family: var(--font); }
 
     <div class="fg" style="margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-        <label class="fl" style="margin-bottom:0;font-size:11px;">2. Date Approved (Ngày sếp duyệt)</label>
+        <label class="fl" style="margin-bottom:0;font-size:11px;">2. Date Approved (Manager sign-off)</label>
         <button type="button" class="btn btn-sm btn-o" onclick="setClaimTodayDate('tce-date-appr')" style="font-size:10px;padding:1px 6px;">⚡ Today</button>
       </div>
       <input type="date" class="fi" id="tce-date-appr" style="font-size:13px;height:36px;">
@@ -3895,7 +3897,7 @@ input, textarea, select, button { font-family: var(--font); }
 
     <div class="fg" style="margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-        <label class="fl" style="margin-bottom:0;font-size:11px;">3. Process Date (Ngày kế toán xử lý)</label>
+        <label class="fl" style="margin-bottom:0;font-size:11px;">3. Process Date (Accounting processing)</label>
         <button type="button" class="btn btn-sm btn-o" onclick="setClaimTodayDate('tce-date-proc')" style="font-size:10px;padding:1px 6px;">⚡ Today</button>
       </div>
       <input type="date" class="fi" id="tce-date-proc" style="font-size:13px;height:36px;">
@@ -3903,7 +3905,7 @@ input, textarea, select, button { font-family: var(--font); }
 
     <div class="fg" style="margin-bottom:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-        <label class="fl" style="margin-bottom:0;font-size:11px;">4. Done Date (Ngày tiền về tài khoản)</label>
+        <label class="fl" style="margin-bottom:0;font-size:11px;">4. Done Date (Payment received)</label>
         <button type="button" class="btn btn-sm btn-o" onclick="setClaimTodayDate('tce-date-done')" style="font-size:10px;padding:1px 6px;">⚡ Today</button>
       </div>
       <input type="date" class="fi" id="tce-date-done" style="font-size:13px;height:36px;">
@@ -3913,7 +3915,7 @@ input, textarea, select, button { font-family: var(--font); }
   <!-- Note / Comment Textarea -->
   <div class="fg" style="margin-bottom:12px;">
     <label class="fl">Note / Comment</label>
-    <textarea class="fi" id="tce-comment" rows="2" placeholder="e.g. Đã nhận đủ tiền chuyển khoản VCB, số UNC 9982..." style="height:auto;resize:vertical;font-size:13px;"></textarea>
+    <textarea class="fi" id="tce-comment" rows="2" placeholder="e.g. Reimbursement transferred, bank ref #9982..." style="height:auto;resize:vertical;font-size:13px;"></textarea>
   </div>
 
   <div class="brow">
@@ -13433,6 +13435,7 @@ function switchBillsView(view) {
   const claimsView = document.getElementById('claims-view-container');
   const topTitle = document.getElementById('bills-topbar-title');
   const addBtn = document.getElementById('bills-add-btn');
+  const topSyncBtn = document.getElementById('claims-sync-btn');
 
   if (view === 'claims') {
     if (tabBills) { tabBills.className = 'btn btn-sm btn-o'; }
@@ -13442,6 +13445,7 @@ function switchBillsView(view) {
     if (claimsView) claimsView.style.display = 'flex';
     if (topTitle) topTitle.textContent = '✈️ Trip Claims Summary';
     if (addBtn) addBtn.style.display = 'none';
+    if (topSyncBtn) topSyncBtn.style.display = 'inline-flex';
     renderTripClaimsScreen();
   } else {
     if (tabBills) { tabBills.className = 'btn btn-sm btn-p'; }
@@ -13451,6 +13455,7 @@ function switchBillsView(view) {
     if (claimsView) claimsView.style.display = 'none';
     if (topTitle) topTitle.textContent = '💳 Expense Bills';
     if (addBtn) addBtn.style.display = 'inline-flex';
+    if (topSyncBtn) topSyncBtn.style.display = 'none';
     renderBillsScreen();
   }
 }
@@ -13534,10 +13539,10 @@ function populateTripClaimDateSelectors() {
   // Month options
   const months = [
     ['', 'All Months'],
-    ['01', 'Tháng 1 (Jan)'], ['02', 'Tháng 2 (Feb)'], ['03', 'Tháng 3 (Mar)'],
-    ['04', 'Tháng 4 (Apr)'], ['05', 'Tháng 5 (May)'], ['06', 'Tháng 6 (Jun)'],
-    ['07', 'Tháng 7 (Jul)'], ['08', 'Tháng 8 (Aug)'], ['09', 'Tháng 9 (Sep)'],
-    ['10', 'Tháng 10 (Oct)'], ['11', 'Tháng 11 (Nov)'], ['12', 'Tháng 12 (Dec)']
+    ['01', 'January'], ['02', 'February'], ['03', 'March'],
+    ['04', 'April'], ['05', 'May'], ['06', 'June'],
+    ['07', 'July'], ['08', 'August'], ['09', 'September'],
+    ['10', 'October'], ['11', 'November'], ['12', 'December']
   ];
   let monthOpts = '';
   months.forEach(([v, l]) => {
@@ -13553,6 +13558,37 @@ function populateTripClaimDateSelectors() {
 function renderTripClaimsScreen() {
   const container = document.getElementById('tc-claims-list');
   if (!container) return;
+
+  // Auto-populate S.tripClaims for all trips to ensure sync readiness
+  if (!S.tripClaims) S.tripClaims = [];
+  let stateChanged = false;
+  (S.trips || []).forEach(tr => {
+    let claim = S.tripClaims.find(c => String(c.tripId) === String(tr.id));
+    const totalClaim = calculateTripTotalClaim(tr.id);
+    const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
+    if (!claim) {
+      claim = {
+        tripId: tr.id,
+        dateRequest: '',
+        dateApproved: '',
+        processDate: '',
+        doneDate: '',
+        paymentStatus: 'Not yet',
+        comment: '',
+        createdAt: new Date().toISOString()
+      };
+      S.tripClaims.push(claim);
+      stateChanged = true;
+    }
+    claim.fromDate = tr.date || '';
+    claim.toDate = tr.dateEnd || tr.date || '';
+    claim.weekNo = weekLabel || '';
+    claim.travelDetail = `${tr.plant}${tr.location ? ' • ' + tr.location : ''}${tr.purpose ? ' (' + tr.purpose + ')' : ''}`;
+    claim.totalClaim = totalClaim;
+  });
+  if (stateChanged && typeof sv === 'function') {
+    sv();
+  }
 
   populateTripClaimDateSelectors();
 
@@ -14145,6 +14181,79 @@ async function syncSingleTripClaim(item) {
 }
 
 /**
+ * IMP-31: Dedicated One-Click Sync for All Trip Claims
+ * Computes claims for all trips and pushes them to the TripClaims sheet immediately
+ */
+async function syncAllTripClaims() {
+  const url = getGSUrl();
+  if (!url) {
+    showToast('⚠️ Google Sheets URL not configured in Settings');
+    return;
+  }
+
+  const syncBtn = document.getElementById('btn-sync-all-claims');
+  const topSyncBtn = document.getElementById('claims-sync-btn');
+  if (syncBtn) { syncBtn.disabled = true; syncBtn.innerHTML = '⟳ Syncing claims…'; }
+  if (topSyncBtn) { topSyncBtn.disabled = true; topSyncBtn.innerHTML = '⟳…'; }
+
+  try {
+    if (!S.tripClaims) S.tripClaims = [];
+    const claims = (S.trips || []).map(tr => {
+      let claim = S.tripClaims.find(c => String(c.tripId) === String(tr.id));
+      const totalClaim = typeof calculateTripTotalClaim === 'function' ? calculateTripTotalClaim(tr.id) : 0;
+      const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
+      if (!claim) {
+        claim = {
+          tripId: tr.id,
+          dateRequest: '',
+          dateApproved: '',
+          processDate: '',
+          doneDate: '',
+          paymentStatus: 'Not yet',
+          comment: '',
+          createdAt: new Date().toISOString()
+        };
+        S.tripClaims.push(claim);
+      }
+      claim.fromDate = tr.date || '';
+      claim.toDate = tr.dateEnd || tr.date || '';
+      claim.weekNo = weekLabel || '';
+      claim.travelDetail = `${tr.plant}${tr.location ? ' • ' + tr.location : ''}${tr.purpose ? ' (' + tr.purpose + ')' : ''}`;
+      claim.totalClaim = totalClaim;
+      claim.updatedAt = claim.updatedAt || new Date().toISOString();
+      return claim;
+    });
+    sv();
+
+    // Try fast batch claims sync first
+    const res = await gsPost(url, { action: 'syncTripClaims', claims: claims });
+    if (res && res.ok) {
+      showToast(`☁️ Synced ${claims.length} Trip Claims to Google Sheet ✓`);
+      if (typeof renderTripClaimsScreen === 'function') renderTripClaimsScreen();
+      return { ok: true, count: claims.length };
+    } else {
+      // Fallback to full syncToSheets
+      console.warn('Batch claims sync returned non-ok, falling back to syncToSheets:', res);
+      await syncToSheets();
+      showToast(`☁️ Synced ${claims.length} Trip Claims to Google Sheet ✓`);
+      if (typeof renderTripClaimsScreen === 'function') renderTripClaimsScreen();
+      return { ok: true, fallback: true };
+    }
+  } catch (err) {
+    console.warn('syncAllTripClaims error, falling back to syncToSheets:', err);
+    try {
+      await syncToSheets();
+      showToast('☁️ Synced Trip Claims to Google Sheet ✓');
+    } catch(e2) {
+      showToast('❌ Sync failed: ' + err.message);
+    }
+  } finally {
+    if (syncBtn) { syncBtn.disabled = false; syncBtn.innerHTML = '☁️ Sync All Trip Claims to Google Sheet'; }
+    if (topSyncBtn) { topSyncBtn.disabled = false; topSyncBtn.innerHTML = '☁️ Sync'; }
+  }
+}
+
+/**
  * IMP-27: Incremental Single-Note Deletion on Google Sheets
  * Deletes only the targeted row without clearing or rewriting the sheet
  */
@@ -14438,13 +14547,14 @@ async function syncToSheets(){
       const snapPart = res.quicksnap !== undefined ? ` · ${res.quicksnap} snaps` : '';
       const ticketPart = res.tickets !== undefined ? ` · ${res.tickets} tickets` : '';
       const safetyPart = res.safety !== undefined ? ` · ${res.safety} safety` : '';
+      const claimPart = res.tripClaims !== undefined ? ` · ${res.tripClaims} claims` : '';
 
-      if (res.quicksnap === undefined) {
-        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills\n⚠️ Google Apps Script chưa có code QuickSnap/Safety. Vui lòng copy PlantLog_GoogleAppsScript.gs và Triển khai (Deploy) Bản mới (New version) trên Google Sheet.`, 'warn');
-        showToast('Synced (Cần cập nhật Apps Script cho QuickSnap)');
+      if (res.tripClaims === undefined && res.quicksnap === undefined) {
+        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills\n⚠️ Google Apps Script chưa có code TripClaims/QuickSnap. Vui lòng copy PlantLog_GoogleAppsScript.gs và Triển khai (Deploy) Bản mới trên Google Sheet.`, 'warn');
+        showToast('Synced (Cần cập nhật Apps Script cho TripClaims)');
       } else {
-        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills${snapPart}${ticketPart}`, 'ok');
-        showToast(`Synced to Google Sheets ✓ (${res.quicksnap} snaps)`);
+        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills${snapPart}${ticketPart}${claimPart}`, 'ok');
+        showToast(`Synced to Google Sheets ✓ (${res.tripClaims !== undefined ? res.tripClaims : (res.quicksnap||0)} items)`);
       }
     } else {
       showGSResult('❌ Sync error: '+((data&&data.error)||'Unknown'),'error');

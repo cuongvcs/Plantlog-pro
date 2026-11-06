@@ -154,15 +154,26 @@
   - **Bộ lọc Trạng thái Thanh toán (Payment Status Filter):** Các nút lọc nhanh: `All Status`, 🔴 **`Not yet`**, 🟡 **`Processing`**, 🟢 **`Done`**.
   - **Thanh tổng kết chi phí trực quan (Summary Strip):** Tự động thống kê tổng số chuyến đi, Tổng số tiền claim (`Grand Total`), Số tiền đã nhận thanh toán (`Received`) và Số tiền đang chờ thanh toán (`Pending`) theo đúng bộ lọc đang chọn.
   - **Thiết kế 1 trip = 1 dòng tinh gọn (cao ~50px):** Trạng thái đóng hiển thị ngắn gọn Tên nhà máy, Ngày, Tuần, Số tiền và Badge trạng thái. Chạm nhẹ vào dòng để mở rộng (Accordion) xem chi tiết hành trình, khối tiến độ 4 bước (`1. Request ➔ 2. Approve ➔ 3. Process ➔ 4. Received`) và nút xem nhanh danh sách hóa đơn liên kết (`View Bills`).
-- **Modal Cập nhật Tiến độ Thanh toán (`modal-trip-claim-edit`):**
-  - Cho phép kỹ sư chọn 4 mốc ngày thanh toán: `Date request`, `Date Approved`, `Process date`, `Done date` với nút tiện ích `⚡ Today` chọn nhanh ngày hôm nay chỉ với 1 chạm.
-  - Chọn trạng thái thanh toán bằng 3 chip lớn dễ bấm (`Not yet`, `Processing`, `Done`).
-  - Khung nhập ghi chú phản hồi kế toán (`Note/Comment`).
+- **Modal Cập nhật Tiến độ Thanh toán (`modal-trip-claim-edit`) & Chuẩn hóa 100% Tiếng Anh:**
+  - Chuẩn hóa toàn bộ nhãn 4 mốc ngày sang tiếng Anh công nghiệp:
+    - `1. Date Request (Claim submitted)`
+    - `2. Date Approved (Manager sign-off)`
+    - `3. Process Date (Accounting processing)`
+    - `4. Done Date (Payment received)`
+  - Nút tiện ích `⚡ Today` chọn nhanh ngày hiện tại với 1 chạm.
+  - Chọn trạng thái thanh toán bằng 3 chip lớn dễ bấm: `🔴 Not yet`, `🟡 Processing`, `🟢 Done`.
+  - Khung nhập ghi chú với placeholder tiếng Anh: `e.g. Reimbursement transferred, bank ref #9982...`.
+  - Chuẩn hóa bộ chọn Tháng sang tiếng Anh: `January`, `February`, ... `December`.
 - **Đồng bộ 2 chiều & Cấu trúc Dữ liệu Phẳng trên Google Sheet (`TripClaims`):**
   - Tạo mới bảng tính chuyên dụng **`TripClaims`** trên Google Spreadsheet với 13 cột:
     `[TripID, FromDate, ToDate, WeekNo, TravelDetail, TotalClaim, DateRequest, DateApproved, ProcessDate, DoneDate, PaymentStatus, Comment, UpdatedAt]`.
   - Mỗi chuyến đi tương ứng **đúng 1 dòng (row)** trên Google Sheet, dữ liệu phẳng hoàn toàn không gộp ô, thuận tiện tuyệt đối cho việc lọc, sắp xếp, làm pivot table hoặc tính tổng hàm `=SUM()`.
   - **Cơ chế Đồng bộ Vi mô Tức thì (`syncSingleTripClaim`):** Khi kỹ sư cập nhật tiến độ hoặc ghi chú của một chuyến đi, ứng dụng chỉ đẩy duy nhất dòng của chuyến đi đó lên Google Sheets trong ~300ms thông qua hàm `upsertTripClaimRow`, cập nhật đúng dòng tương ứng mà không làm ảnh hưởng đến các dòng khác.
+  - **Đồng bộ Hàng loạt 1 Chạm Toàn Bộ Chuyến Đi (`syncAllTripClaims`):**
+    - Tự động quét và liên kết toàn bộ chuyến đi (`S.trips`), tự động tính toán tổng số tiền công tác phí (`totalClaim` VND) từ toàn bộ hóa đơn liên quan (`S.bills`), kèm tuần làm việc và chi tiết hành trình.
+    - Bổ sung nút bấm **`☁️ Sync All Trip Claims to Google Sheet`** ngay trên thanh Tổng kết (`tc-summary-strip`) và nút **`☁️ Sync`** trên thanh Topbar khi ở màn hình Trip Claims.
+    - Bổ sung hành động xử lý tốc độ cao `syncTripClaims` và hàm `syncTripClaimsBatch(claims)` trong Google Apps Script backend (`PlantLog_GoogleAppsScript.gs` và `PlantLog_GoogleAppsScript_Pro.gs`), ghi toàn bộ danh sách chuyến đi vào sheet `TripClaims` chỉ trong 300 - 500ms mà không phải xử lý lại ảnh hóa đơn.
+    - Cơ chế tự động khởi tạo claim object cho mọi chuyến đi trong `renderTripClaimsScreen()` giúp danh sách dữ liệu luôn sẵn sàng 100% để xuất/đồng bộ sang Google Sheet.
 
 ---
 

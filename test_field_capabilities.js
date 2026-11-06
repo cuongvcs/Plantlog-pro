@@ -613,6 +613,15 @@ function testCalcTripTotal(tid) {
 }
 assert.strictEqual(testCalcTripTotal('trip_claim_test_1'), 9900000, 'trip_claim_test_1 should total 9,900,000 VND');
 assert.strictEqual(testCalcTripTotal('trip_claim_test_2'), 3000000, 'trip_claim_test_2 should total 3,000,000 VND');
+assert.ok(gasCode.includes("function syncTripClaimsBatch"), 'GAS must define syncTripClaimsBatch');
+assert.ok(gasProCode.includes("function syncTripClaimsBatch"), 'GAS Pro must define syncTripClaimsBatch');
+assert.ok(indexHtmlCode.includes('id="claims-sync-btn"'), 'index.html must have claims-sync-btn in topbar');
+assert.ok(indexHtmlCode.includes('id="btn-sync-all-claims"'), 'index.html must have btn-sync-all-claims in summary strip');
+
+assert.ok(syncClaimsCode.includes("function syncAllTripClaims"), 'sync.js must define syncAllTripClaims');
+assert.ok(billsModuleCode.includes("topSyncBtn"), 'bills.js switchBillsView must control topSyncBtn visibility');
+
+console.log('  ✓ Batch sync syncAllTripClaims & Google Apps Script syncTripClaimsBatch verified!');
 console.log('  ✓ Trip total claim calculation accurate (VND + foreign currency conversion)!');
 console.log('  ✓ Google Apps Script backend 13-column flat sheet schema verified!');
 console.log('  ✓ Smart Accordion Row and 4-step payment timeline verified!');

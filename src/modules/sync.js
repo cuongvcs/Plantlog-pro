@@ -262,6 +262,79 @@ async function syncSingleTripClaim(item) {
 }
 
 /**
+ * IMP-31: Dedicated One-Click Sync for All Trip Claims
+ * Computes claims for all trips and pushes them to the TripClaims sheet immediately
+ */
+async function syncAllTripClaims() {
+  const url = getGSUrl();
+  if (!url) {
+    showToast('⚠️ Google Sheets URL not configured in Settings');
+    return;
+  }
+
+  const syncBtn = document.getElementById('btn-sync-all-claims');
+  const topSyncBtn = document.getElementById('claims-sync-btn');
+  if (syncBtn) { syncBtn.disabled = true; syncBtn.innerHTML = '⟳ Syncing claims…'; }
+  if (topSyncBtn) { topSyncBtn.disabled = true; topSyncBtn.innerHTML = '⟳…'; }
+
+  try {
+    if (!S.tripClaims) S.tripClaims = [];
+    const claims = (S.trips || []).map(tr => {
+      let claim = S.tripClaims.find(c => String(c.tripId) === String(tr.id));
+      const totalClaim = typeof calculateTripTotalClaim === 'function' ? calculateTripTotalClaim(tr.id) : 0;
+      const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
+      if (!claim) {
+        claim = {
+          tripId: tr.id,
+          dateRequest: '',
+          dateApproved: '',
+          processDate: '',
+          doneDate: '',
+          paymentStatus: 'Not yet',
+          comment: '',
+          createdAt: new Date().toISOString()
+        };
+        S.tripClaims.push(claim);
+      }
+      claim.fromDate = tr.date || '';
+      claim.toDate = tr.dateEnd || tr.date || '';
+      claim.weekNo = weekLabel || '';
+      claim.travelDetail = `${tr.plant}${tr.location ? ' • ' + tr.location : ''}${tr.purpose ? ' (' + tr.purpose + ')' : ''}`;
+      claim.totalClaim = totalClaim;
+      claim.updatedAt = claim.updatedAt || new Date().toISOString();
+      return claim;
+    });
+    sv();
+
+    // Try fast batch claims sync first
+    const res = await gsPost(url, { action: 'syncTripClaims', claims: claims });
+    if (res && res.ok) {
+      showToast(`☁️ Synced ${claims.length} Trip Claims to Google Sheet ✓`);
+      if (typeof renderTripClaimsScreen === 'function') renderTripClaimsScreen();
+      return { ok: true, count: claims.length };
+    } else {
+      // Fallback to full syncToSheets
+      console.warn('Batch claims sync returned non-ok, falling back to syncToSheets:', res);
+      await syncToSheets();
+      showToast(`☁️ Synced ${claims.length} Trip Claims to Google Sheet ✓`);
+      if (typeof renderTripClaimsScreen === 'function') renderTripClaimsScreen();
+      return { ok: true, fallback: true };
+    }
+  } catch (err) {
+    console.warn('syncAllTripClaims error, falling back to syncToSheets:', err);
+    try {
+      await syncToSheets();
+      showToast('☁️ Synced Trip Claims to Google Sheet ✓');
+    } catch(e2) {
+      showToast('❌ Sync failed: ' + err.message);
+    }
+  } finally {
+    if (syncBtn) { syncBtn.disabled = false; syncBtn.innerHTML = '☁️ Sync All Trip Claims to Google Sheet'; }
+    if (topSyncBtn) { topSyncBtn.disabled = false; topSyncBtn.innerHTML = '☁️ Sync'; }
+  }
+}
+
+/**
  * IMP-27: Incremental Single-Note Deletion on Google Sheets
  * Deletes only the targeted row without clearing or rewriting the sheet
  */
@@ -555,13 +628,14 @@ async function syncToSheets(){
       const snapPart = res.quicksnap !== undefined ? ` · ${res.quicksnap} snaps` : '';
       const ticketPart = res.tickets !== undefined ? ` · ${res.tickets} tickets` : '';
       const safetyPart = res.safety !== undefined ? ` · ${res.safety} safety` : '';
+      const claimPart = res.tripClaims !== undefined ? ` · ${res.tripClaims} claims` : '';
 
-      if (res.quicksnap === undefined) {
-        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills\n⚠️ Google Apps Script chưa có code QuickSnap/Safety. Vui lòng copy PlantLog_GoogleAppsScript.gs và Triển khai (Deploy) Bản mới (New version) trên Google Sheet.`, 'warn');
-        showToast('Synced (Cần cập nhật Apps Script cho QuickSnap)');
+      if (res.tripClaims === undefined && res.quicksnap === undefined) {
+        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills\n⚠️ Google Apps Script chưa có code TripClaims/QuickSnap. Vui lòng copy PlantLog_GoogleAppsScript.gs và Triển khai (Deploy) Bản mới trên Google Sheet.`, 'warn');
+        showToast('Synced (Cần cập nhật Apps Script cho TripClaims)');
       } else {
-        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills${snapPart}${ticketPart}`, 'ok');
-        showToast(`Synced to Google Sheets ✓ (${res.quicksnap} snaps)`);
+        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills${snapPart}${ticketPart}${claimPart}`, 'ok');
+        showToast(`Synced to Google Sheets ✓ (${res.tripClaims !== undefined ? res.tripClaims : (res.quicksnap||0)} items)`);
       }
     } else {
       showGSResult('❌ Sync error: '+((data&&data.error)||'Unknown'),'error');

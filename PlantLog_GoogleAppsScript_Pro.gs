@@ -161,6 +161,7 @@ function doPost(e){
     if(act==='upsertQuickSnap')  return json_(upsertQuickSnapRow(body.item));
     if(act==='deleteQuickSnap')  return json_(deleteQuickSnapRow(body.id));
     if(act==='upsertTripClaim')  return json_(upsertTripClaimRow(body.item));
+    if(act==='syncTripClaims')   return json_(syncTripClaimsBatch(body.claims || body.payload || []));
     if(act==='syncReminders') return json_(syncReminders(body.payload));
     if(act==='ping')     return json_({ok:true,result:{message:'PlantLog Pro API running'}});
     if(act==='uploadFile') return json_(uploadFileToDrive(body));
@@ -440,6 +441,22 @@ function upsertTripClaimRow(item){
 
   log_('UPSERT_TRIP_CLAIM', 'TripClaims', item.tripId, mode + ': Status=' + (item.paymentStatus || 'Not yet'));
   return {ok:true, tripId:item.tripId, mode:mode};
+}
+
+/**
+ * IMP-31: Batch sync all TripClaims to the TripClaims sheet
+ */
+function syncTripClaimsBatch(claims){
+  if(!Array.isArray(claims)) return {ok:false, error:'Missing claims array'};
+  const s=db_();
+  writeSheet(s,SN.TRIP_CLAIMS,COLS.trip_claims,claims.map(c=>[
+    c.tripId||'', c.fromDate||'', c.toDate||'', c.weekNo||'',
+    c.travelDetail||'', c.totalClaim||0,
+    c.dateRequest||'', c.dateApproved||'', c.processDate||'', c.doneDate||'',
+    c.paymentStatus||'Not yet', c.comment||'', c.updatedAt||new Date().toISOString()
+  ]));
+  log_('SYNC_TRIP_CLAIMS', 'TripClaims', 'All', 'Synced ' + claims.length + ' claims');
+  return {ok:true, count:claims.length};
 }
 
 function setupSheets(){

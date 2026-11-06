@@ -529,6 +529,7 @@ function switchBillsView(view) {
   const claimsView = document.getElementById('claims-view-container');
   const topTitle = document.getElementById('bills-topbar-title');
   const addBtn = document.getElementById('bills-add-btn');
+  const topSyncBtn = document.getElementById('claims-sync-btn');
 
   if (view === 'claims') {
     if (tabBills) { tabBills.className = 'btn btn-sm btn-o'; }
@@ -538,6 +539,7 @@ function switchBillsView(view) {
     if (claimsView) claimsView.style.display = 'flex';
     if (topTitle) topTitle.textContent = '✈️ Trip Claims Summary';
     if (addBtn) addBtn.style.display = 'none';
+    if (topSyncBtn) topSyncBtn.style.display = 'inline-flex';
     renderTripClaimsScreen();
   } else {
     if (tabBills) { tabBills.className = 'btn btn-sm btn-p'; }
@@ -547,6 +549,7 @@ function switchBillsView(view) {
     if (claimsView) claimsView.style.display = 'none';
     if (topTitle) topTitle.textContent = '💳 Expense Bills';
     if (addBtn) addBtn.style.display = 'inline-flex';
+    if (topSyncBtn) topSyncBtn.style.display = 'none';
     renderBillsScreen();
   }
 }
@@ -630,10 +633,10 @@ function populateTripClaimDateSelectors() {
   // Month options
   const months = [
     ['', 'All Months'],
-    ['01', 'Tháng 1 (Jan)'], ['02', 'Tháng 2 (Feb)'], ['03', 'Tháng 3 (Mar)'],
-    ['04', 'Tháng 4 (Apr)'], ['05', 'Tháng 5 (May)'], ['06', 'Tháng 6 (Jun)'],
-    ['07', 'Tháng 7 (Jul)'], ['08', 'Tháng 8 (Aug)'], ['09', 'Tháng 9 (Sep)'],
-    ['10', 'Tháng 10 (Oct)'], ['11', 'Tháng 11 (Nov)'], ['12', 'Tháng 12 (Dec)']
+    ['01', 'January'], ['02', 'February'], ['03', 'March'],
+    ['04', 'April'], ['05', 'May'], ['06', 'June'],
+    ['07', 'July'], ['08', 'August'], ['09', 'September'],
+    ['10', 'October'], ['11', 'November'], ['12', 'December']
   ];
   let monthOpts = '';
   months.forEach(([v, l]) => {
@@ -649,6 +652,37 @@ function populateTripClaimDateSelectors() {
 function renderTripClaimsScreen() {
   const container = document.getElementById('tc-claims-list');
   if (!container) return;
+
+  // Auto-populate S.tripClaims for all trips to ensure sync readiness
+  if (!S.tripClaims) S.tripClaims = [];
+  let stateChanged = false;
+  (S.trips || []).forEach(tr => {
+    let claim = S.tripClaims.find(c => String(c.tripId) === String(tr.id));
+    const totalClaim = calculateTripTotalClaim(tr.id);
+    const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
+    if (!claim) {
+      claim = {
+        tripId: tr.id,
+        dateRequest: '',
+        dateApproved: '',
+        processDate: '',
+        doneDate: '',
+        paymentStatus: 'Not yet',
+        comment: '',
+        createdAt: new Date().toISOString()
+      };
+      S.tripClaims.push(claim);
+      stateChanged = true;
+    }
+    claim.fromDate = tr.date || '';
+    claim.toDate = tr.dateEnd || tr.date || '';
+    claim.weekNo = weekLabel || '';
+    claim.travelDetail = `${tr.plant}${tr.location ? ' • ' + tr.location : ''}${tr.purpose ? ' (' + tr.purpose + ')' : ''}`;
+    claim.totalClaim = totalClaim;
+  });
+  if (stateChanged && typeof sv === 'function') {
+    sv();
+  }
 
   populateTripClaimDateSelectors();
 
