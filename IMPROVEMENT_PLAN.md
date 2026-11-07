@@ -56,6 +56,7 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 | **IMP-29** | **Tích hợp chọn Ghi chú vào Báo cáo Kỹ thuật & Xuất bản PDF (Field Notes in Report)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 | **IMP-30** | **Tinh chỉnh cân đối nút View All 2 hàng trong Quick Notes (2-Line Balanced Layout)** | 🟢 **P3** | **Cải thiện UX** | ✅ Hoàn tất (v4.13) | 0.25 ngày |
 | **IMP-31** | **Bảng tổng hợp chuyến đi & Theo dõi thanh toán công tác phí (Trip Claims Tracker)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
+| **IMP-32** | **Quản lý thẻ tín dụng & Hoàn ứng công tác phí (Credit Card Budget & Tracker)** | 🔴 **P1** | **Rất cần thiết** | ✅ Hoàn tất (v4.13) | 0.5 ngày |
 
 ---
 
@@ -476,7 +477,9 @@ gantt
   - [x] Cho phép chỉnh sửa Ghi chú nhanh sau khi tạo: nút Edit trên thẻ, nạp lại form và đồng bộ cập nhật tại chỗ lên Google Sheets (Đã xong - IMP-28)
   - [x] Tích hợp chọn Ghi chú Hiện trường vào Báo cáo Kỹ thuật (bước 5 Tasks & Notes) và xuất bản tự động vào tệp PDF (Đã xong - IMP-29)
   - [x] Tinh chỉnh cân đối nút View All 2 hàng trong Quick Note modal: Tách (N) xuống dòng dưới View All, chống co vỡ giao diện trên di động (Đã xong - IMP-30)
-  - [x] Bảng tổng hợp chuyến đi & Theo dõi thanh toán công tác phí: Smart Accordion Row 1 dòng, bộ lọc Tháng/Năm/Status, tiến độ 4 bước (Req/Appr/Proc/Done), nút đồng bộ 1 chạm All Claims, tự động sắp xếp chuẩn thời gian từ Week 1 (trên cùng) tới Week 53 (dưới cùng), phân cấp thị giác làm mờ chuyến đi chưa active (Planned) và làm nổi bật chuyến đi Active khi xem cả năm/tháng, đồng bộ phẳng Google Sheet TripClaims chuyên dụng (Đã xong - IMP-31)
+  - [x] Bảng tổng hợp chuyến đi & Theo dõi thanh toán công tác phí: Smart Accordion Row 1 dòng, bộ lọc Tháng/Năm/Status, tiến độ 4 bước (Req/Appr/Proc/Done), nút đồng bộ 1 chạm All Claims, tự động sắp xếp chuẩn thời gian từ Week 1 (trên cùng) tới Week 53 (dưới cùng), phân cấp thị giác làm mờ chuyến đi chưa active (Planned) và làm nổi bật chuyến đi Active khi xem cả năm/tháng, cơ chế chỉ đồng bộ vi mô khi có thay đổi (change-only sync) và đồng bộ phẳng Google Sheet TripClaims chuyên dụng (Đã xong - IMP-31)
+  - [x] Quản lý thẻ tín dụng & Hoàn ứng công tác phí: Tab Credit Card trên màn hình Bills, cài đặt hạn mức thẻ/ngân sách, tự động trừ khi có bill thanh toán bằng thẻ, tổng hợp chi tiêu theo tháng, tính năng Transfer back to Card khi nhận tiền trả từ công ty và cập nhật hạn mức khả dụng (Đã xong - IMP-32)
+  - [x] Tinh chỉnh cân đối bảng Daily Service Tickets trên PDF (chống ngắt trang lửng lơ, sửa lỗi ký tự font checkmark sang [Signed]) và chuyển chữ ký về thẳng hàng ngay dưới nhãn Signature: (Đã xong)
 
 ---
 

@@ -1349,22 +1349,41 @@ async function exportPDF(){
 
   // ── Daily Service Tickets table (IMP-19) ──
   if (trip.timesheets && trip.timesheets.length) {
+    if (y > 195 && trip.timesheets.length >= 2) {
+      doc.addPage();
+      y = 20;
+      pageNum++;
+      addPN();
+    }
     sec(`DAILY SERVICE TICKETS (${trip.timesheets.length})`);
     trip.timesheets.forEach(tk => {
+      chk();
+      // Compact header strip for ticket
+      doc.setFillColor(246, 248, 250);
+      doc.rect(mg, y - 3, W - mg * 2, 7, 'F');
       doc.setFontSize(8.5);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(33, 37, 41);
-      doc.text(`• ${fmtDate(tk.date)}`, mg + 2, y);
-      doc.setFont('helvetica', 'normal');
+      doc.text(`• ${fmtDate(tk.date)}`, mg + 3, y + 1.2);
+
       const hrs = `${tk.normalHours||0}h Norm${parseFloat(tk.ot15Hours)>0?` +${tk.ot15Hours}h OT`:''}${parseFloat(tk.standbyHours)>0?` +${tk.standbyHours}h Stby`:''}`;
-      rtxt(hrs + (tk.signature ? ' (Signed ✓)' : ''), y, [15, 110, 86]);
-      y += 4.5;
+      const hasSig = Boolean(tk.supervisorSig || tk.signature);
+      const sigText = hasSig ? (tk.supervisorName ? `Signed: ${tk.supervisorName}` : 'Signed') : 'Pending Sign-off';
+      const sigColor = hasSig ? [15, 110, 86] : [130, 130, 130];
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      rtxt(`${hrs}  |  ${sigText}`, y + 1.2, sigColor);
+      y += 6;
+
       if (tk.workSummary) {
         doc.setFontSize(7.5);
-        doc.setTextColor(90, 90, 90);
+        doc.setTextColor(80, 80, 80);
         const sl = doc.splitTextToSize(tk.workSummary, W - mg * 2 - 8);
-        doc.text(sl, mg + 6, y);
-        y += sl.length * 3.8 + 1;
+        doc.text(sl, mg + 5, y);
+        y += sl.length * 3.8 + 2;
+      } else {
+        y += 1;
       }
       chk();
     });
@@ -1430,11 +1449,11 @@ async function exportPDF(){
       if(optSig){
         const sigW = 50;
         const sigH = 17;
-        const sigX = mg + 55;
-        const sigY = y + 4;
+        const sigX = mg + 4;
+        const sigY = y + 6;
         doc.setDrawColor(220,220,220);
         doc.setLineWidth(0.3);
-        doc.line(sigX, y + 21.5, sigX + sigW, y + 21.5);
+        doc.line(sigX, y + 23, sigX + sigW, y + 23);
         const imgFmt = optSig.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG';
         doc.addImage(optSig, imgFmt, sigX, sigY, sigW, sigH, undefined, 'FAST');
       }

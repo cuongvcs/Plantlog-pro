@@ -1187,5 +1187,29 @@ input, textarea, select, button { font-family: var(--font); }
 .claim-status-proc   { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
 .claim-status-done   { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
 
+/* ── Credit Card Tracker (IMP-32) ── */
+.cc-item-row {
+  background: var(--surface);
+  border: 1px solid var(--n200);
+  border-radius: var(--rs);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  box-shadow: var(--sh);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+.cc-item-row:hover {
+  background: var(--n50);
+}
+.cc-item-row.transfer {
+  border-left: 3.5px solid var(--green);
+}
+.cc-item-row.expense {
+  border-left: 3.5px solid #7C3AED;
+}
+
+
 
 

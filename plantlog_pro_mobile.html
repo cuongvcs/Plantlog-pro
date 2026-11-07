@@ -1209,6 +1209,30 @@ input, textarea, select, button { font-family: var(--font); }
 .claim-status-proc   { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
 .claim-status-done   { background: #DCFCE7; color: #166534; border: 1px solid #86EFAC; }
 
+/* ── Credit Card Tracker (IMP-32) ── */
+.cc-item-row {
+  background: var(--surface);
+  border: 1px solid var(--n200);
+  border-radius: var(--rs);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  box-shadow: var(--sh);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+.cc-item-row:hover {
+  background: var(--n50);
+}
+.cc-item-row.transfer {
+  border-left: 3.5px solid var(--green);
+}
+.cc-item-row.expense {
+  border-left: 3.5px solid #7C3AED;
+}
+
+
 
 
 </style>
@@ -2235,10 +2259,11 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="tb-action" id="bills-add-btn" onclick="openAddBillFromScreen()" title="Add bill">＋</button>
   </div>
 
-  <!-- Top View Switcher (IMP-31) -->
+  <!-- Top View Switcher (IMP-31, IMP-32) -->
   <div style="background:#fff;padding:8px 12px 6px;border-bottom:1px solid var(--n150);display:flex;gap:6px;flex-shrink:0;">
-    <button type="button" class="btn btn-sm btn-p" id="view-tab-bills" onclick="switchBillsView('bills')" style="flex:1;font-size:12px;font-weight:700;padding:6px 10px;border-radius:var(--rs);">🧾 Expense Bills</button>
-    <button type="button" class="btn btn-sm btn-o" id="view-tab-claims" onclick="switchBillsView('claims')" style="flex:1;font-size:12px;font-weight:700;padding:6px 10px;border-radius:var(--rs);">✈️ Trip Claims</button>
+    <button type="button" class="btn btn-sm btn-p" id="view-tab-bills" onclick="switchBillsView('bills')" style="flex:1;font-size:11px;font-weight:700;padding:6px 4px;border-radius:var(--rs);white-space:nowrap;">🧾 Expense Bills</button>
+    <button type="button" class="btn btn-sm btn-o" id="view-tab-claims" onclick="switchBillsView('claims')" style="flex:1;font-size:11px;font-weight:700;padding:6px 4px;border-radius:var(--rs);white-space:nowrap;">✈️ Trip Claims</button>
+    <button type="button" class="btn btn-sm btn-o" id="view-tab-card" onclick="switchBillsView('card')" style="flex:1;font-size:11px;font-weight:700;padding:6px 4px;border-radius:var(--rs);white-space:nowrap;">💳 Credit Card</button>
   </div>
 
   <!-- Filter bar for Expense Bills -->
@@ -2312,6 +2337,83 @@ input, textarea, select, button { font-family: var(--font); }
 
       <!-- Accordion list container -->
       <div id="tc-claims-list"></div>
+    </div>
+  </div>
+
+  <!-- CREDIT CARD TRACKER VIEW (IMP-32) -->
+  <div id="card-view-container" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+    <!-- Filter Bar (Year & Month) -->
+    <div style="background:#fff;padding:8px 12px 6px;flex-shrink:0;border-bottom:1px solid var(--n150);">
+      <div style="display:flex;gap:6px;">
+        <select class="fsel" id="cc-year-select" style="width:105px;font-size:12px;height:34px;font-weight:600;" onchange="renderCreditCardScreen()">
+        </select>
+        <select class="fsel" id="cc-month-select" style="flex:1;font-size:12px;height:34px;font-weight:600;" onchange="renderCreditCardScreen()">
+        </select>
+      </div>
+    </div>
+
+    <!-- Scrollable Body -->
+    <div class="sb" style="flex:1;overflow-y:auto;padding:10px 12px 24px;">
+      <!-- Card Overview & Budget Card -->
+      <div style="background:linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);color:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 4px 15px rgba(49,46,129,0.25);position:relative;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.8;font-weight:700;">Credit Card Limit / Budget</div>
+            <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em;margin-top:2px;" id="cc-budget-display">50,000,000 ₫</div>
+            <div style="font-size:11px;opacity:0.85;margin-top:2px;" id="cc-card-name-display">Corporate Card</div>
+          </div>
+          <button type="button" class="btn btn-sm" onclick="openSetCardBudgetModal()" style="font-size:11px;padding:4px 9px;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;">⚙️ Set Budget</button>
+        </div>
+
+        <!-- Available & Balance Due Badges -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.2);">
+          <div style="background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:10px;opacity:0.85;">Available Limit (Khả dụng)</div>
+            <div style="font-size:14px;font-weight:800;color:#6EE7B7;margin-top:2px;" id="cc-avail-display">0 ₫</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:10px;opacity:0.85;">Balance Due (Dư nợ thẻ)</div>
+            <div style="font-size:14px;font-weight:800;color:#FCA5A5;margin-top:2px;" id="cc-debt-display">0 ₫</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Button Strip -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button type="button" class="btn btn-p" onclick="openTransferBackModal()" style="flex:1;font-size:12px;padding:9px 12px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;box-shadow:var(--sh);">
+          ➕ Transfer Back to Card
+        </button>
+      </div>
+
+      <!-- Monthly Summary Strip -->
+      <div style="background:#fff;border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;box-shadow:var(--sh);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.04em;" id="cc-month-label">MONTHLY ACTIVITY</span>
+          <span style="font-size:11px;color:var(--n500);" id="cc-month-bill-count">0 bills</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px;">
+          <div style="background:var(--n50);border-radius:6px;padding:7px 9px;">
+            <div style="font-size:10px;color:var(--n500);">🔴 Spent via Card (Đã quẹt)</div>
+            <div style="font-size:13px;font-weight:700;color:#DC2626;margin-top:2px;" id="cc-month-spent">0 ₫</div>
+          </div>
+          <div style="background:var(--n50);border-radius:6px;padding:7px 9px;">
+            <div style="font-size:10px;color:var(--n500);">🟢 Transferred Back (Đã trả)</div>
+            <div style="font-size:13px;font-weight:700;color:#166534;margin-top:2px;" id="cc-month-reimbursed">0 ₫</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub tabs: Card Bills vs Transfer History -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button type="button" class="tf-btn active" id="cc-tab-bills" onclick="switchCreditCardSubTab('bills')" style="flex:1;font-size:11px;padding:6px;text-align:center;">🧾 Card Bills (<span id="cc-bills-badge">0</span>)</button>
+        <button type="button" class="tf-btn" id="cc-tab-transfers" onclick="switchCreditCardSubTab('transfers')" style="flex:1;font-size:11px;padding:6px;text-align:center;">🏦 Transfer History (<span id="cc-transfers-badge">0</span>)</button>
+      </div>
+
+      <!-- Card Bills List -->
+      <div id="cc-bills-list-container"></div>
+
+      <!-- Transfer History List -->
+      <div id="cc-transfers-list-container" style="display:none;"></div>
     </div>
   </div>
 
@@ -3950,6 +4052,70 @@ input, textarea, select, button { font-family: var(--font); }
   <div class="brow">
     <button type="button" class="btn btn-o" onclick="closeModal('modal-trip-claim-edit')">Cancel</button>
     <button type="button" class="btn btn-p" style="flex:1;" onclick="saveTripClaim()">💾 Save &amp; Sync to Sheet</button>
+  </div>
+</div></div>
+
+<!-- MODAL: SET CREDIT CARD BUDGET (IMP-32) -->
+<div id="modal-card-budget" class="mo"><div class="modal">
+  <div class="mh"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div>
+      <div class="mt" style="margin-bottom:0;">💳 Set Credit Card Budget</div>
+      <div style="font-size:11px;color:var(--n500);">Card Limit &amp; Parameters</div>
+    </div>
+    <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-card-budget')" style="font-size:12px;padding:3px 8px;">✕</button>
+  </div>
+  <div class="fg" style="margin-bottom:8px;">
+    <label class="fl">Card Name / Bank</label>
+    <input type="text" class="fi" id="cc-input-name" placeholder="e.g. VPBank Visa / Corporate Card" style="font-size:13px;height:36px;">
+  </div>
+  <div class="fg" style="margin-bottom:12px;">
+    <label class="fl">Credit Card Limit / Budget (VND) *</label>
+    <input type="number" class="fi" id="cc-input-budget" placeholder="50000000" style="font-size:15px;font-weight:700;height:40px;" oninput="updateCardBudgetHint()">
+    <div style="font-size:11px;color:var(--n500);margin-top:4px;" id="cc-input-budget-hint"></div>
+  </div>
+  <div class="brow">
+    <button type="button" class="btn btn-o" onclick="closeModal('modal-card-budget')">Cancel</button>
+    <button type="button" class="btn btn-p" style="flex:1;" onclick="saveCardBudget()">💾 Save Budget</button>
+  </div>
+</div></div>
+
+<!-- MODAL: TRANSFER BACK TO CREDIT CARD (IMP-32) -->
+<div id="modal-card-transfer" class="mo"><div class="modal">
+  <div class="mh"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div>
+      <div class="mt" style="margin-bottom:0;" id="cc-transfer-modal-title">➕ Transfer Back to Card</div>
+      <div style="font-size:11px;color:var(--n500);">Company Reimbursement Payment</div>
+    </div>
+    <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-card-transfer')" style="font-size:12px;padding:3px 8px;">✕</button>
+  </div>
+  <input type="hidden" id="cc-transfer-id" value="">
+  <div class="fg" style="margin-bottom:8px;">
+    <label class="fl">Amount Received from Company (VND) *</label>
+    <input type="number" class="fi" id="cc-transfer-amount" placeholder="e.g. 15000000" style="font-size:15px;font-weight:700;height:40px;" oninput="updateCardTransferHint()">
+    <div style="font-size:11px;color:var(--n500);margin-top:4px;" id="cc-transfer-amount-hint"></div>
+  </div>
+  <div class="fg" style="margin-bottom:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+      <label class="fl" style="margin-bottom:0;font-size:11px;">Transfer Date *</label>
+      <button type="button" class="btn btn-sm btn-o" onclick="setCardTransferToday()" style="font-size:10px;padding:1px 6px;">⚡ Today</button>
+    </div>
+    <input type="date" class="fi" id="cc-transfer-date" style="font-size:13px;height:36px;">
+  </div>
+  <div class="fg" style="margin-bottom:8px;">
+    <label class="fl">Linked Trip (Optional)</label>
+    <select class="fsel" id="cc-transfer-trip" style="font-size:13px;height:36px;">
+      <option value="">— Not linked to specific trip —</option>
+    </select>
+  </div>
+  <div class="fg" style="margin-bottom:12px;">
+    <label class="fl">Note / Reference</label>
+    <input type="text" class="fi" id="cc-transfer-note" placeholder="e.g. Reimbursement payment for Trip Formosa W44..." style="font-size:13px;height:36px;">
+  </div>
+  <div class="brow">
+    <button type="button" class="btn btn-o" onclick="closeModal('modal-card-transfer')">Cancel</button>
+    <button type="button" class="btn btn-p" style="flex:1;" onclick="saveTransferBack()">💾 Update Credit Card</button>
   </div>
 </div></div>
 
@@ -9570,22 +9736,41 @@ async function exportPDF(){
 
   // ── Daily Service Tickets table (IMP-19) ──
   if (trip.timesheets && trip.timesheets.length) {
+    if (y > 195 && trip.timesheets.length >= 2) {
+      doc.addPage();
+      y = 20;
+      pageNum++;
+      addPN();
+    }
     sec(`DAILY SERVICE TICKETS (${trip.timesheets.length})`);
     trip.timesheets.forEach(tk => {
+      chk();
+      // Compact header strip for ticket
+      doc.setFillColor(246, 248, 250);
+      doc.rect(mg, y - 3, W - mg * 2, 7, 'F');
       doc.setFontSize(8.5);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(33, 37, 41);
-      doc.text(`• ${fmtDate(tk.date)}`, mg + 2, y);
-      doc.setFont('helvetica', 'normal');
+      doc.text(`• ${fmtDate(tk.date)}`, mg + 3, y + 1.2);
+
       const hrs = `${tk.normalHours||0}h Norm${parseFloat(tk.ot15Hours)>0?` +${tk.ot15Hours}h OT`:''}${parseFloat(tk.standbyHours)>0?` +${tk.standbyHours}h Stby`:''}`;
-      rtxt(hrs + (tk.signature ? ' (Signed ✓)' : ''), y, [15, 110, 86]);
-      y += 4.5;
+      const hasSig = Boolean(tk.supervisorSig || tk.signature);
+      const sigText = hasSig ? (tk.supervisorName ? `Signed: ${tk.supervisorName}` : 'Signed') : 'Pending Sign-off';
+      const sigColor = hasSig ? [15, 110, 86] : [130, 130, 130];
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      rtxt(`${hrs}  |  ${sigText}`, y + 1.2, sigColor);
+      y += 6;
+
       if (tk.workSummary) {
         doc.setFontSize(7.5);
-        doc.setTextColor(90, 90, 90);
+        doc.setTextColor(80, 80, 80);
         const sl = doc.splitTextToSize(tk.workSummary, W - mg * 2 - 8);
-        doc.text(sl, mg + 6, y);
-        y += sl.length * 3.8 + 1;
+        doc.text(sl, mg + 5, y);
+        y += sl.length * 3.8 + 2;
+      } else {
+        y += 1;
       }
       chk();
     });
@@ -9651,11 +9836,11 @@ async function exportPDF(){
       if(optSig){
         const sigW = 50;
         const sigH = 17;
-        const sigX = mg + 55;
-        const sigY = y + 4;
+        const sigX = mg + 4;
+        const sigY = y + 6;
         doc.setDrawColor(220,220,220);
         doc.setLineWidth(0.3);
-        doc.line(sigX, y + 21.5, sigX + sigW, y + 21.5);
+        doc.line(sigX, y + 23, sigX + sigW, y + 23);
         const imgFmt = optSig.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG';
         doc.addImage(optSig, imgFmt, sigX, sigY, sigW, sigH, undefined, 'FAST');
       }
@@ -13263,10 +13448,26 @@ async function deleteBillFromScreen(id) {
     icon: '🧾'
   });
   if (!ok) return;
+  const billToDelete = (S.bills || []).find(b => b.id === id);
+  const tripIdOfDeleted = billToDelete ? billToDelete.tripId : '';
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
   S.bills = S.bills.filter(b => b.id !== id);
-  sv(); renderBillsScreen(); renderDash(); svAndSync('bill_delete');
+  sv(); renderBillsScreen(); renderDash();
+
+  // IMP-31: Single-row Trip Claim update when bill is deleted
+  if(tripIdOfDeleted && typeof calculateTripTotalClaim === 'function'){
+    const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tripIdOfDeleted));
+    if(claim){
+      claim.totalClaim = calculateTripTotalClaim(tripIdOfDeleted);
+      claim.updatedAt = new Date().toISOString();
+      if(typeof syncSingleTripClaim === 'function'){
+        syncSingleTripClaim(claim);
+      }
+    }
+  }
+
+  svAndSync('bill_delete');
 }
 
 // ── Bill Export PDF ──────────────────────────────────────────
@@ -13448,20 +13649,22 @@ function emailBillsReport() {
 // ✈️ TRIP CLAIM & REIMBURSEMENT TRACKER (IMP-31)
 // ═══════════════════════════════════════════════════════════
 
-let currentBillsView = 'bills'; // 'bills' | 'claims'
+let currentBillsView = 'bills'; // 'bills' | 'claims' | 'card'
 let tripClaimStatusFilter = 'all'; // 'all' | 'Not yet' | 'Processing' | 'Done'
 let _editingClaimStatus = 'Not yet';
 
 /**
- * Switch view between Expense Bills and Trip Claims Summary
+ * Switch view between Expense Bills, Trip Claims Summary, and Credit Card Tracker
  */
 function switchBillsView(view) {
   currentBillsView = view;
   const tabBills = document.getElementById('view-tab-bills');
   const tabClaims = document.getElementById('view-tab-claims');
+  const tabCard = document.getElementById('view-tab-card');
   const billsFilterBar = document.getElementById('bills-filter-bar');
   const billsBody = document.getElementById('bills-screen-body');
   const claimsView = document.getElementById('claims-view-container');
+  const cardView = document.getElementById('card-view-container');
   const topTitle = document.getElementById('bills-topbar-title');
   const addBtn = document.getElementById('bills-add-btn');
   const topSyncBtn = document.getElementById('claims-sync-btn');
@@ -13469,19 +13672,35 @@ function switchBillsView(view) {
   if (view === 'claims') {
     if (tabBills) { tabBills.className = 'btn btn-sm btn-o'; }
     if (tabClaims) { tabClaims.className = 'btn btn-sm btn-p'; }
+    if (tabCard) { tabCard.className = 'btn btn-sm btn-o'; }
     if (billsFilterBar) billsFilterBar.style.display = 'none';
     if (billsBody) billsBody.style.display = 'none';
     if (claimsView) claimsView.style.display = 'flex';
+    if (cardView) cardView.style.display = 'none';
     if (topTitle) topTitle.textContent = '✈️ Trip Claims Summary';
     if (addBtn) addBtn.style.display = 'none';
     if (topSyncBtn) topSyncBtn.style.display = 'inline-flex';
     renderTripClaimsScreen();
+  } else if (view === 'card') {
+    if (tabBills) { tabBills.className = 'btn btn-sm btn-o'; }
+    if (tabClaims) { tabClaims.className = 'btn btn-sm btn-o'; }
+    if (tabCard) { tabCard.className = 'btn btn-sm btn-p'; }
+    if (billsFilterBar) billsFilterBar.style.display = 'none';
+    if (billsBody) billsBody.style.display = 'none';
+    if (claimsView) claimsView.style.display = 'none';
+    if (cardView) cardView.style.display = 'flex';
+    if (topTitle) topTitle.textContent = '💳 Credit Card Tracker';
+    if (addBtn) addBtn.style.display = 'none';
+    if (topSyncBtn) topSyncBtn.style.display = 'none';
+    renderCreditCardScreen();
   } else {
     if (tabBills) { tabBills.className = 'btn btn-sm btn-p'; }
     if (tabClaims) { tabClaims.className = 'btn btn-sm btn-o'; }
+    if (tabCard) { tabCard.className = 'btn btn-sm btn-o'; }
     if (billsFilterBar) billsFilterBar.style.display = 'block';
     if (billsBody) billsBody.style.display = 'block';
     if (claimsView) claimsView.style.display = 'none';
+    if (cardView) cardView.style.display = 'none';
     if (topTitle) topTitle.textContent = '💳 Expense Bills';
     if (addBtn) addBtn.style.display = 'inline-flex';
     if (topSyncBtn) topSyncBtn.style.display = 'none';
@@ -13964,6 +14183,482 @@ function saveTripClaim() {
   if (typeof syncSingleTripClaim === 'function') {
     syncSingleTripClaim(claim);
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 💳 CREDIT CARD TRACKER (IMP-32)
+// ═══════════════════════════════════════════════════════════
+
+let _currentCreditCardSubTab = 'bills'; // 'bills' | 'transfers'
+
+/**
+ * Ensure S.creditCard state exists with default values
+ */
+function ensureCreditCardState() {
+  if (!S.creditCard) {
+    S.creditCard = {
+      budget: 50000000,
+      cardName: 'Corporate Credit Card',
+      transfers: []
+    };
+  }
+  if (typeof S.creditCard.budget !== 'number') {
+    S.creditCard.budget = parseFloat(S.creditCard.budget) || 50000000;
+  }
+  if (!S.creditCard.cardName) {
+    S.creditCard.cardName = 'Corporate Credit Card';
+  }
+  if (!Array.isArray(S.creditCard.transfers)) {
+    S.creditCard.transfers = [];
+  }
+}
+
+/**
+ * Check if a bill was paid by Credit Card
+ */
+function isCreditCardBill(b) {
+  if (!b) return false;
+  const pm = String(b.paymentMethod || b.paymentTerm || '');
+  return pm.includes('Card') || pm.includes('Credit');
+}
+
+/**
+ * Populate Month & Year options for Credit Card view
+ */
+function populateCardDateSelectors() {
+  const yearSel = document.getElementById('cc-year-select');
+  const monthSel = document.getElementById('cc-month-select');
+  if (!yearSel || !monthSel) return;
+
+  const currentYearVal = yearSel.value;
+  const currentMonthVal = monthSel.value;
+
+  ensureCreditCardState();
+
+  // Extract years from card bills and transfers
+  const cardBillYears = (S.bills || []).filter(isCreditCardBill).map(b => (b.date || '').slice(0, 4)).filter(Boolean);
+  const transferYears = (S.creditCard.transfers || []).map(t => (t.date || '').slice(0, 4)).filter(Boolean);
+  const years = [...new Set([...cardBillYears, ...transferYears])].sort().reverse();
+  const thisYear = new Date().getFullYear().toString();
+  if (!years.includes(thisYear)) years.unshift(thisYear);
+
+  let yearOpts = '<option value="">All Years</option>';
+  years.forEach(y => {
+    const sel = (currentYearVal === y) ? ' selected' : '';
+    yearOpts += `<option value="${y}"${sel}>${y}</option>`;
+  });
+  yearSel.innerHTML = yearOpts;
+
+  // Month options
+  const months = [
+    ['', 'All Months'],
+    ['01', 'January'], ['02', 'February'], ['03', 'March'],
+    ['04', 'April'], ['05', 'May'], ['06', 'June'],
+    ['07', 'July'], ['08', 'August'], ['09', 'September'],
+    ['10', 'October'], ['11', 'November'], ['12', 'December']
+  ];
+  let monthOpts = '';
+  months.forEach(([v, l]) => {
+    const sel = (currentMonthVal === v) ? ' selected' : '';
+    monthOpts += `<option value="${v}"${sel}>${l}</option>`;
+  });
+  monthSel.innerHTML = monthOpts;
+}
+
+/**
+ * Switch sub-tab between Card Bills and Transfer History
+ */
+function switchCreditCardSubTab(subTab) {
+  _currentCreditCardSubTab = subTab;
+  const tabBills = document.getElementById('cc-tab-bills');
+  const tabTransfers = document.getElementById('cc-tab-transfers');
+  const billsContainer = document.getElementById('cc-bills-list-container');
+  const transfersContainer = document.getElementById('cc-transfers-list-container');
+
+  if (subTab === 'transfers') {
+    if (tabBills) tabBills.classList.remove('active');
+    if (tabTransfers) tabTransfers.classList.add('active');
+    if (billsContainer) billsContainer.style.display = 'none';
+    if (transfersContainer) transfersContainer.style.display = 'block';
+  } else {
+    if (tabBills) tabBills.classList.add('active');
+    if (tabTransfers) tabTransfers.classList.remove('active');
+    if (billsContainer) billsContainer.style.display = 'block';
+    if (transfersContainer) transfersContainer.style.display = 'none';
+  }
+}
+
+/**
+ * Render the entire Credit Card Screen
+ */
+function renderCreditCardScreen() {
+  ensureCreditCardState();
+  populateCardDateSelectors();
+
+  const yearSel = document.getElementById('cc-year-select');
+  const monthSel = document.getElementById('cc-month-select');
+  const filterYear = yearSel ? yearSel.value : '';
+  const filterMonth = monthSel ? monthSel.value : '';
+
+  const budget = parseFloat(S.creditCard.budget) || 0;
+  const cardName = S.creditCard.cardName || 'Corporate Credit Card';
+
+  // 1. All-time calculations
+  const allCardBills = (S.bills || []).filter(isCreditCardBill);
+  const totalAllCardSpent = allCardBills.reduce((sum, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') {
+      return sum + (parseFloat(b.amount) || 0);
+    }
+    return sum + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+
+  const totalAllTransferred = (S.creditCard.transfers || []).reduce((sum, t) => {
+    return sum + (parseFloat(t.amount) || 0);
+  }, 0);
+
+  const totalBalanceDue = Math.max(0, totalAllCardSpent - totalAllTransferred);
+  const availableLimit = budget - totalBalanceDue;
+
+  // 2. Filtered calculations for selected month / year
+  let filteredBills = [...allCardBills];
+  let filteredTransfers = [...(S.creditCard.transfers || [])];
+
+  if (filterYear) {
+    filteredBills = filteredBills.filter(b => (b.date || '').startsWith(filterYear));
+    filteredTransfers = filteredTransfers.filter(t => (t.date || '').startsWith(filterYear));
+  }
+  if (filterMonth) {
+    filteredBills = filteredBills.filter(b => {
+      const parts = (b.date || '').split('-');
+      return parts[1] === filterMonth;
+    });
+    filteredTransfers = filteredTransfers.filter(t => {
+      const parts = (t.date || '').split('-');
+      return parts[1] === filterMonth;
+    });
+  }
+
+  // Sort descending by date
+  filteredBills.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  filteredTransfers.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+  const monthSpent = filteredBills.reduce((sum, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') {
+      return sum + (parseFloat(b.amount) || 0);
+    }
+    return sum + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+
+  const monthTransferred = filteredTransfers.reduce((sum, t) => {
+    return sum + (parseFloat(t.amount) || 0);
+  }, 0);
+
+  // 3. Update DOM Displays
+  const budgetEl = document.getElementById('cc-budget-display');
+  const cardNameEl = document.getElementById('cc-card-name-display');
+  const availEl = document.getElementById('cc-avail-display');
+  const debtEl = document.getElementById('cc-debt-display');
+  const monthLabelEl = document.getElementById('cc-month-label');
+  const monthBillCountEl = document.getElementById('cc-month-bill-count');
+  const monthSpentEl = document.getElementById('cc-month-spent');
+  const monthReimbursedEl = document.getElementById('cc-month-reimbursed');
+  const billsBadgeEl = document.getElementById('cc-bills-badge');
+  const transfersBadgeEl = document.getElementById('cc-transfers-badge');
+
+  if (budgetEl) budgetEl.textContent = `${fmtAmt(budget, 'VND')} ₫`;
+  if (cardNameEl) cardNameEl.textContent = cardName;
+  if (availEl) {
+    availEl.textContent = `${fmtAmt(availableLimit, 'VND')} ₫`;
+    availEl.style.color = availableLimit < 0 ? '#FCA5A5' : '#6EE7B7';
+  }
+  if (debtEl) {
+    debtEl.textContent = `${fmtAmt(totalBalanceDue, 'VND')} ₫`;
+    debtEl.style.color = totalBalanceDue > 0 ? '#FCA5A5' : '#E0E7FF';
+  }
+
+  // Monthly activity label
+  let periodLabel = 'ACTIVITY (ALL TIME)';
+  if (filterMonth && filterYear) {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const mIdx = parseInt(filterMonth, 10) - 1;
+    periodLabel = `${monthNames[mIdx] || filterMonth} ${filterYear} ACTIVITY`;
+  } else if (filterYear) {
+    periodLabel = `${filterYear} ACTIVITY`;
+  } else if (filterMonth) {
+    periodLabel = `MONTH ${filterMonth} ACTIVITY`;
+  }
+
+  if (monthLabelEl) monthLabelEl.textContent = periodLabel.toUpperCase();
+  if (monthBillCountEl) monthBillCountEl.textContent = `${filteredBills.length} card bill${filteredBills.length !== 1 ? 's' : ''}`;
+  if (monthSpentEl) monthSpentEl.textContent = `${fmtAmt(monthSpent, 'VND')} ₫`;
+  if (monthReimbursedEl) monthReimbursedEl.textContent = `${fmtAmt(monthTransferred, 'VND')} ₫`;
+  if (billsBadgeEl) billsBadgeEl.textContent = String(filteredBills.length);
+  if (transfersBadgeEl) transfersBadgeEl.textContent = String(filteredTransfers.length);
+
+  // 4. Render Bills List
+  const billsContainer = document.getElementById('cc-bills-list-container');
+  if (billsContainer) {
+    if (!filteredBills.length) {
+      billsContainer.innerHTML = `
+        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+          <div class="ei">💳</div>
+          <div class="et">No card expenses found</div>
+          <div class="es">Bills paid via "3-Credit card" in this period will appear here.</div>
+        </div>`;
+    } else {
+      let bHtml = '';
+      filteredBills.forEach(b => {
+        const trip = (S.trips || []).find(t => String(t.id) === String(b.tripId));
+        const plantStr = trip ? trip.plant : 'General Expense';
+        const amtVND = (b.currency || 'VND').toUpperCase() === 'VND' ? (parseFloat(b.amount) || 0) : (parseFloat(b.vndAmount) || 0);
+        bHtml += `
+          <div class="cc-item-row expense" onclick="openEditBillFromScreen('${b.id}')" style="cursor:pointer;">
+            <div style="flex:1;min-width:0;padding-right:8px;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.detail || 'Bill'}</span>
+              </div>
+              <div style="font-size:11px;color:var(--n500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                📅 ${fmtDate(b.date)} • 🏭 ${plantStr}
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-size:13px;font-weight:800;color:#DC2626;font-family:var(--mono);">
+                -${fmtAmt(amtVND, 'VND')} ₫
+              </div>
+              <div style="font-size:10px;color:var(--n500);margin-top:2px;">
+                💳 Credit Card
+              </div>
+            </div>
+          </div>`;
+      });
+      billsContainer.innerHTML = bHtml;
+    }
+  }
+
+  // 5. Render Transfers List
+  const transfersContainer = document.getElementById('cc-transfers-list-container');
+  if (transfersContainer) {
+    if (!filteredTransfers.length) {
+      transfersContainer.innerHTML = `
+        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+          <div class="ei">🏦</div>
+          <div class="et">No transfers recorded</div>
+          <div class="es">When the company pays your travel claim, click "Transfer Back to Card" above to clear the card debt.</div>
+        </div>`;
+    } else {
+      let tHtml = '';
+      filteredTransfers.forEach(tr => {
+        const trip = (S.trips || []).find(t => String(t.id) === String(tr.tripId));
+        const plantStr = trip ? ` • 🏭 ${trip.plant}` : '';
+        tHtml += `
+          <div class="cc-item-row transfer">
+            <div style="flex:1;min-width:0;padding-right:8px;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                <span style="font-size:13px;font-weight:700;color:#166534;">+${fmtAmt(tr.amount, 'VND')} ₫</span>
+                <span class="badge" style="font-size:10px;padding:1px 6px;background:#DCFCE7;color:#166534;font-weight:700;">Reimbursed</span>
+              </div>
+              <div style="font-size:11px;color:var(--n600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                📅 ${fmtDate(tr.date)}${plantStr}
+              </div>
+              ${tr.note ? `<div style="font-size:11px;color:var(--n500);margin-top:2px;font-style:italic;">💬 ${tr.note}</div>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+              <button type="button" class="btn btn-sm btn-o" onclick="openTransferBackModal('${tr.id}')" style="font-size:11px;padding:4px 7px;">✏️</button>
+              <button type="button" class="btn btn-sm btn-o" onclick="deleteTransferBack('${tr.id}')" style="font-size:11px;padding:4px 7px;color:#DC2626;">🗑️</button>
+            </div>
+          </div>`;
+      });
+      transfersContainer.innerHTML = tHtml;
+    }
+  }
+
+  // Restore sub-tab active state
+  switchCreditCardSubTab(_currentCreditCardSubTab);
+}
+
+/**
+ * Open Modal to set Card Budget & Limit
+ */
+function openSetCardBudgetModal() {
+  ensureCreditCardState();
+  const nameInput = document.getElementById('cc-input-name');
+  const budgetInput = document.getElementById('cc-input-budget');
+  if (nameInput) nameInput.value = S.creditCard.cardName || '';
+  if (budgetInput) budgetInput.value = S.creditCard.budget || 50000000;
+  updateCardBudgetHint();
+  openModal('modal-card-budget');
+}
+
+/**
+ * Update hint below budget input with formatted VND
+ */
+function updateCardBudgetHint() {
+  const el = document.getElementById('cc-input-budget');
+  const hint = document.getElementById('cc-input-budget-hint');
+  if (!el || !hint) return;
+  const val = parseFloat(el.value) || 0;
+  hint.textContent = val > 0 ? `≈ ${fmtAmt(val, 'VND')} VND` : '';
+}
+
+/**
+ * Save Card Budget & Limit
+ */
+function saveCardBudget() {
+  ensureCreditCardState();
+  const nameInput = document.getElementById('cc-input-name');
+  const budgetInput = document.getElementById('cc-input-budget');
+
+  const budgetVal = parseFloat(budgetInput ? budgetInput.value : 0);
+  if (!budgetVal || budgetVal <= 0) {
+    showToast('Please enter a valid card budget / limit');
+    return;
+  }
+
+  S.creditCard.budget = budgetVal;
+  S.creditCard.cardName = (nameInput && nameInput.value.trim()) || 'Corporate Credit Card';
+  S.creditCard.updatedAt = new Date().toISOString();
+
+  sv();
+  closeModal('modal-card-budget');
+  renderCreditCardScreen();
+  showToast('✓ Credit card budget updated');
+}
+
+/**
+ * Open Modal to record a reimbursement payment transferred back to card
+ */
+function openTransferBackModal(transferId) {
+  ensureCreditCardState();
+  const idInput = document.getElementById('cc-transfer-id');
+  const amtInput = document.getElementById('cc-transfer-amount');
+  const dateInput = document.getElementById('cc-transfer-date');
+  const tripSel = document.getElementById('cc-transfer-trip');
+  const noteInput = document.getElementById('cc-transfer-note');
+  const titleEl = document.getElementById('cc-transfer-modal-title');
+
+  // Populate trips dropdown
+  if (tripSel) {
+    const trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])];
+    let opts = '<option value="">— Not linked to specific trip —</option>';
+    trips.forEach(t => {
+      opts += `<option value="${t.id}">🏭 ${t.plant} (${fmtDate(t.date)})</option>`;
+    });
+    tripSel.innerHTML = opts;
+  }
+
+  if (transferId) {
+    const item = (S.creditCard.transfers || []).find(t => String(t.id) === String(transferId));
+    if (!item) {
+      showToast('Transfer record not found');
+      return;
+    }
+    if (idInput) idInput.value = item.id;
+    if (amtInput) amtInput.value = item.amount;
+    if (dateInput) dateInput.value = item.date || '';
+    if (tripSel) tripSel.value = item.tripId || '';
+    if (noteInput) noteInput.value = item.note || '';
+    if (titleEl) titleEl.textContent = '✏️ Edit Card Transfer';
+  } else {
+    if (idInput) idInput.value = '';
+    if (amtInput) amtInput.value = '';
+    if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+    if (tripSel) tripSel.value = '';
+    if (noteInput) noteInput.value = '';
+    if (titleEl) titleEl.textContent = '➕ Transfer Back to Card';
+  }
+
+  updateCardTransferHint();
+  openModal('modal-card-transfer');
+}
+
+/**
+ * Set today's date in transfer modal
+ */
+function setCardTransferToday() {
+  const el = document.getElementById('cc-transfer-date');
+  if (el) el.value = new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Update hint below transfer amount input
+ */
+function updateCardTransferHint() {
+  const el = document.getElementById('cc-transfer-amount');
+  const hint = document.getElementById('cc-transfer-amount-hint');
+  if (!el || !hint) return;
+  const val = parseFloat(el.value) || 0;
+  hint.textContent = val > 0 ? `≈ ${fmtAmt(val, 'VND')} VND` : '';
+}
+
+/**
+ * Save Transfer Back to Credit Card
+ */
+function saveTransferBack() {
+  ensureCreditCardState();
+  const idInput = document.getElementById('cc-transfer-id');
+  const amtInput = document.getElementById('cc-transfer-amount');
+  const dateInput = document.getElementById('cc-transfer-date');
+  const tripSel = document.getElementById('cc-transfer-trip');
+  const noteInput = document.getElementById('cc-transfer-note');
+
+  const amt = parseFloat(amtInput ? amtInput.value : 0);
+  if (!amt || amt <= 0) {
+    showToast('Please enter a valid amount');
+    return;
+  }
+  const date = dateInput ? dateInput.value : '';
+  if (!date) {
+    showToast('Please select transfer date');
+    return;
+  }
+
+  const transferId = idInput && idInput.value;
+  if (transferId) {
+    const existing = S.creditCard.transfers.find(t => String(t.id) === String(transferId));
+    if (existing) {
+      existing.amount = amt;
+      existing.date = date;
+      existing.tripId = tripSel ? tripSel.value : '';
+      existing.note = (noteInput && noteInput.value.trim()) || '';
+      existing.updatedAt = new Date().toISOString();
+    }
+  } else {
+    const newTransfer = {
+      id: 'cct_' + Date.now(),
+      amount: amt,
+      date: date,
+      tripId: tripSel ? tripSel.value : '',
+      note: (noteInput && noteInput.value.trim()) || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    S.creditCard.transfers.unshift(newTransfer);
+  }
+
+  sv();
+  closeModal('modal-card-transfer');
+  renderCreditCardScreen();
+  showToast('✓ Transferred back to card');
+}
+
+/**
+ * Delete a transfer back record
+ */
+async function deleteTransferBack(transferId) {
+  if (!transferId) return;
+  const ok = await appConfirm('Delete this card transfer record? This cannot be undone.', {
+    title: 'Delete Card Transfer',
+    danger: true,
+    confirmText: 'Delete Record',
+    icon: '💳'
+  });
+  if (!ok) return;
+
+  ensureCreditCardState();
+  S.creditCard.transfers = S.creditCard.transfers.filter(t => String(t.id) !== String(transferId));
+  sv();
+  renderCreditCardScreen();
+  showToast('✓ Transfer record deleted');
 }
 
 // ====== sync.js ======
@@ -14611,7 +15306,8 @@ async function syncToSheets(){
     quickSnap:enrichedQuickSnap,
     siteSafety:enrichedSiteSafety,
     serviceTickets:enrichedServiceTickets,
-    tripClaims:enrichedTripClaims
+    tripClaims:enrichedTripClaims,
+    creditCard:S.creditCard||{}
   };
 
   try{
@@ -15359,6 +16055,18 @@ async function saveBill(){
     showToast('Bill saved ✓');
     if(tripId) renderTripBills(tripId);
 
+    // IMP-31: Single-row Trip Claim update when bill changes
+    if(tripId && typeof calculateTripTotalClaim === 'function'){
+      const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tripId));
+      if(claim){
+        claim.totalClaim = calculateTripTotalClaim(tripId);
+        claim.updatedAt = new Date().toISOString();
+        if(typeof syncSingleTripClaim === 'function'){
+          syncSingleTripClaim(claim);
+        }
+      }
+    }
+
   } catch(e) {
     console.error('[saveBill]', e);
     showToast('Error saving bill: '+e.message);
@@ -15376,11 +16084,26 @@ async function deleteBill(id){
     icon: '🧾'
   });
   if(!ok) return;
+  const billToDelete = (S.bills || []).find(b => b.id === id);
+  const tripIdOfDeleted = billToDelete ? billToDelete.tripId : '';
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
   S.bills=S.bills.filter(b=>b.id!==id);
   sv();
   if(curTrip)renderTripBills(curTrip);
+
+  // IMP-31: Single-row Trip Claim update when bill is deleted
+  if(tripIdOfDeleted && typeof calculateTripTotalClaim === 'function'){
+    const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tripIdOfDeleted));
+    if(claim){
+      claim.totalClaim = calculateTripTotalClaim(tripIdOfDeleted);
+      claim.updatedAt = new Date().toISOString();
+      if(typeof syncSingleTripClaim === 'function'){
+        syncSingleTripClaim(claim);
+      }
+    }
+  }
+
   svAndSync('bill_delete');
 }
 

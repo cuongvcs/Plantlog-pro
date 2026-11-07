@@ -184,6 +184,34 @@
     - **Chuyến đi chưa Active (`Planned`):** Thiết kế làm mờ trực quan (`opacity: 0.55`), nền xám nhạt (`var(--n50)`), viền nét đứt (`dashed`), số tiền công tác phí mang tông màu trung tính cùng huy hiệu `📋 Planned` và nhãn `Upcoming`. Khi người dùng di chuột (hover) hoặc bấm mở rộng Accordion xem chi tiết, độ mờ mượt mà tăng lên `opacity: 0.95`, nền sáng và viền trở lại nét liền để dễ dàng tương tác và chỉnh sửa.
     - **Chuyến đi đang diễn ra (`Active` / `in_progress`):** Hiển thị rõ ràng, sắc nét 100% (`opacity: 1`), làm nổi bật với viền xanh dương đậm (`border-left: 4px solid #2563EB; border: 1.5px solid #2563EB;`), hiệu ứng đổ bóng xanh nhẹ và huy hiệu nổi bật `🔄 Active`. Giúp kỹ sư nhận biết ngay lập tức chuyến đi hiện tại đang cần xử lý giữa danh sách dài.
     - **Chuyến đi đã hoàn tất (`Done` / `completed`):** Hiển thị bình thường 100% (`opacity: 1`), viền xanh lá hoàn tất (`border-left: 4px solid var(--green)`) và huy hiệu `✅ Done`.
+  - **Tối ưu Hóa Cơ Chế Đồng Bộ Vi Mô (Selective Change-Only Sync):**
+    - Chấm dứt hoàn toàn việc tự động kích hoạt đồng bộ toàn bộ (Sync All) ngầm khi mở hoặc xem Trip Claims.
+    - Chỉ đồng bộ vi mô 1 hàng (`upsertTripClaim`) khi kỹ sư cập nhật thông tin trong modal, hoặc tự động cập nhật tổng tiền claim của riêng chuyến đi đó khi có hóa đơn thêm mới hoặc xóa bỏ (`saveBill` / `deleteBill`).
+    - Nút `☁️ Sync` trên Topbar và nút `☁️ Sync All Trip Claims` được dành riêng cho việc đồng bộ thủ công toàn bộ khi người dùng chủ động yêu cầu.
+
+#### 💳 16. [IMP-32] Quản Lý Thẻ Tín Dụng & Hoàn Ứng Công Tác Phí (Credit Card Budget & Reimbursement Tracker):
+- **Tab Điều hướng thứ 3 trên màn hình Bills:** Bổ sung tab **`💳 Credit Card`** song song cùng `🧾 Expense Bills` và `✈️ Trip Claims`.
+- **Cài đặt Hạn mức / Ngân sách Thẻ (Credit Card Budget & Limit):**
+  - Cho phép kỹ sư cài đặt hạn mức thẻ tín dụng (ví dụ: `50,000,000 ₫`) và đặt tên thẻ / ngân hàng phát hành (VPBank, Techcombank, Corporate Card...).
+  - Thẻ KPI hiển thị Gradient hiện đại với 2 chỉ số cốt lõi: Hạn mức khả dụng còn lại (**Available Limit**) và Dư nợ thẻ hiện tại (**Balance Due**).
+- **Tự động Khấu trừ khi phát sinh Hóa đơn Quẹt thẻ:**
+  - Tự động lọc toàn bộ các bill có phương thức thanh toán là Credit card (`3-Credit card`), trừ trực tiếp vào hạn mức khả dụng và cộng dồn vào dư nợ thẻ.
+- **Thống kê & Tổng hợp Chi tiêu theo Tháng (Monthly Aggregation & Filter):**
+  - Tích hợp bộ lọc Năm & Tháng (All Months, Jan, Feb...): tự động thống kê tổng tiền đã quẹt thẻ (**Spent via Card**) và tổng tiền đã hoàn trả (**Transferred Back**) trong tháng được chọn.
+  - Phân tách 2 sub-tab trực quan: `🧾 Card Bills (N)` (danh sách hóa đơn quẹt thẻ) và `🏦 Transfer History (N)` (lịch sử hoàn trả nợ thẻ).
+- **Tính năng Hoàn tiền về Thẻ khi nhận Thanh toán từ Công ty (Transfer Back to Card):**
+  - Nút bấm **`➕ Transfer Back to Card`** mở modal chuyên dụng cho phép nhập số tiền cty thanh toán chuyển khoản, ngày nhận tiền (kèm nút `⚡ Today`), liên kết chuyến đi và ghi chú đối soát.
+  - Sau khi xác nhận, số tiền hoàn trả lập tức được bù lại vào hạn mức khả dụng của thẻ, giảm dư nợ thẻ tương ứng và lưu lịch sử an toàn. Hỗ trợ chỉnh sửa và xóa giao dịch linh hoạt.
+- **Tự động sao lưu dữ liệu:** Dữ liệu thẻ và lịch sử hoàn trả (`S.creditCard`) được lưu bền vững trong LocalStorage và tự động đóng gói trong file JSON Backup và gói đồng bộ Sheets.
+
+#### 📑 17. Tinh Chỉnh Cân Đối Bảng Daily Service Tickets & Vị Trí Chữ Ký Trên Báo Cáo PDF:
+- **Cân đối & Chống ngắt trang lửng lơ cho Daily Service Tickets:**
+  - Khắc phục hiện tượng danh sách vé công tác bắt đầu quá sát đáy trang làm rớt 3 mục cuối sang trang sau mà không có tiêu đề. Tự động kiểm tra độ cao và chuyển sang trang mới liền mạch nếu không đủ chỗ.
+  - Khắc phục lỗi ký tự checkmark `(Signed ✓)` bị biến dạng thành `(Signed ')` do font chuẩn Helvetica trong PDF không hỗ trợ unicode. Chuẩn hóa sang nhãn chuyên nghiệp `Signed` / `Signed: [Tên Giám sát]`.
+  - Thiết kế bảng vé dịch vụ theo hàng card với dải tiêu đề xám nhạt thanh lịch (`#F6F8FA`), phân tách rõ Ngày, Số giờ công tác và trạng thái chữ ký giám sát.
+- **Căn chỉnh Chữ ký thẳng hàng ngay dưới nhãn "Signature:":**
+  - Khắc phục lỗi chữ ký và nét gạch ký bị đặt lệch sang bên phải (`mg + 55`), không thẳng hàng với chữ `Signature:` và tên kỹ sư ở bên trái.
+  - Chuyển chữ ký và đường kẻ ký về thẳng hàng dọc bên trái ngay dưới chữ `Signature:` (`sigX = mg + 4, sigY = y + 6`), tên kỹ sư đặt ngay dưới đường kẻ và ngày ký nằm ở góc phải dưới cùng, tạo bố cục chữ ký chuẩn chỉ và cân đối tuyệt đối.
 
 ---
 

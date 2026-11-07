@@ -643,7 +643,8 @@ async function syncToSheets(){
     quickSnap:enrichedQuickSnap,
     siteSafety:enrichedSiteSafety,
     serviceTickets:enrichedServiceTickets,
-    tripClaims:enrichedTripClaims
+    tripClaims:enrichedTripClaims,
+    creditCard:S.creditCard||{}
   };
 
   try{
@@ -1391,6 +1392,18 @@ async function saveBill(){
     showToast('Bill saved ✓');
     if(tripId) renderTripBills(tripId);
 
+    // IMP-31: Single-row Trip Claim update when bill changes
+    if(tripId && typeof calculateTripTotalClaim === 'function'){
+      const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tripId));
+      if(claim){
+        claim.totalClaim = calculateTripTotalClaim(tripId);
+        claim.updatedAt = new Date().toISOString();
+        if(typeof syncSingleTripClaim === 'function'){
+          syncSingleTripClaim(claim);
+        }
+      }
+    }
+
   } catch(e) {
     console.error('[saveBill]', e);
     showToast('Error saving bill: '+e.message);
@@ -1408,11 +1421,26 @@ async function deleteBill(id){
     icon: '🧾'
   });
   if(!ok) return;
+  const billToDelete = (S.bills || []).find(b => b.id === id);
+  const tripIdOfDeleted = billToDelete ? billToDelete.tripId : '';
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
   S.bills=S.bills.filter(b=>b.id!==id);
   sv();
   if(curTrip)renderTripBills(curTrip);
+
+  // IMP-31: Single-row Trip Claim update when bill is deleted
+  if(tripIdOfDeleted && typeof calculateTripTotalClaim === 'function'){
+    const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tripIdOfDeleted));
+    if(claim){
+      claim.totalClaim = calculateTripTotalClaim(tripIdOfDeleted);
+      claim.updatedAt = new Date().toISOString();
+      if(typeof syncSingleTripClaim === 'function'){
+        syncSingleTripClaim(claim);
+      }
+    }
+  }
+
   svAndSync('bill_delete');
 }
 

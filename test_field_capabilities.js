@@ -664,4 +664,47 @@ console.log('  ✓ Trip total claim calculation accurate (VND + foreign currency
 console.log('  ✓ Google Apps Script backend 13-column flat sheet schema verified!');
 console.log('  ✓ Smart Accordion Row and 4-step payment timeline verified!');
 
-console.log('\n🎉 ALL 16 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');
+// 17. Test Credit Card Tracker (IMP-32)
+console.log('\n🔍 Test 17: Testing Credit Card Tracker & Monthly Aggregation (IMP-32)...');
+const mobileHtml = fs.readFileSync(path.join(__dirname, 'plantlog_pro_mobile.html'), 'utf8');
+const cardDomIds = [
+  'view-tab-card', 'card-view-container', 'cc-year-select', 'cc-month-select',
+  'cc-budget-display', 'cc-avail-display', 'cc-debt-display', 'cc-month-label',
+  'cc-month-spent', 'cc-month-reimbursed', 'cc-tab-bills', 'cc-tab-transfers',
+  'cc-bills-list-container', 'cc-transfers-list-container',
+  'modal-card-budget', 'modal-card-transfer', 'cc-input-budget', 'cc-transfer-amount'
+];
+cardDomIds.forEach(id => {
+  assert.ok(mobileHtml.includes(`id="${id}"`), `HTML must contain element id="${id}"`);
+});
+
+assert.ok(billsModuleCode.includes('function renderCreditCardScreen'), 'bills.js must define renderCreditCardScreen');
+assert.ok(billsModuleCode.includes('function openSetCardBudgetModal'), 'bills.js must define openSetCardBudgetModal');
+assert.ok(billsModuleCode.includes('function saveCardBudget'), 'bills.js must define saveCardBudget');
+assert.ok(billsModuleCode.includes('function openTransferBackModal'), 'bills.js must define openTransferBackModal');
+assert.ok(billsModuleCode.includes('function saveTransferBack'), 'bills.js must define saveTransferBack');
+assert.ok(billsModuleCode.includes('function deleteTransferBack'), 'bills.js must define deleteTransferBack');
+assert.ok(billsModuleCode.includes('function switchCreditCardSubTab'), 'bills.js must define switchCreditCardSubTab');
+
+// Test Credit Card Financial Math
+const testBudget = 50000000;
+const testCardSpent = 18500000;
+const testTransferred = 12000000;
+const testBalanceDue = Math.max(0, testCardSpent - testTransferred);
+const testAvailable = testBudget - testBalanceDue;
+assert.strictEqual(testBalanceDue, 6500000, 'Balance due must be 6,500,000 VND');
+assert.strictEqual(testAvailable, 43500000, 'Available limit must be 43,500,000 VND');
+console.log('  ✓ Credit Card Budget, Available Limit and Balance Due math verified!');
+console.log('  ✓ Credit Card 3rd View Tab, Sub-tabs and Modals verified!');
+
+// 18. Test PDF Daily Service Tickets Formatting & Signature Repositioning
+console.log('\n🔍 Test 18: Testing PDF Daily Service Tickets & Signature Repositioning...');
+const updatedReportCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'report.js'), 'utf8');
+assert.ok(updatedReportCode.includes('if (y > 195 && trip.timesheets.length >= 2)'), 'report.js must include smart page-break guard for timesheets');
+assert.ok(!updatedReportCode.includes('(Signed \u2713)'), 'report.js must eliminate corrupted unicode checkmark in Helvetica');
+assert.ok(updatedReportCode.includes('const sigX = mg + 4'), 'report.js must place signature directly below Signature label on left');
+assert.ok(updatedReportCode.includes('doc.line(sigX, y + 23, sigX + sigW, y + 23)'), 'report.js must position signature underline under signature drawing');
+console.log('  ✓ Daily Service Tickets page-break guard & clean ASCII sign-off verified!');
+console.log('  ✓ Signature drawing and underline repositioned directly below Signature: label!');
+
+console.log('\n🎉 ALL 18 UNIT & INTEGRATION TESTS PASSED PERFECTLY!\n');

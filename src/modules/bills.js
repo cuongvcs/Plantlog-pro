@@ -328,10 +328,26 @@ async function deleteBillFromScreen(id) {
     icon: '🧾'
   });
   if (!ok) return;
+  const billToDelete = (S.bills || []).find(b => b.id === id);
+  const tripIdOfDeleted = billToDelete ? billToDelete.tripId : '';
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
   S.bills = S.bills.filter(b => b.id !== id);
-  sv(); renderBillsScreen(); renderDash(); svAndSync('bill_delete');
+  sv(); renderBillsScreen(); renderDash();
+
+  // IMP-31: Single-row Trip Claim update when bill is deleted
+  if(tripIdOfDeleted && typeof calculateTripTotalClaim === 'function'){
+    const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tripIdOfDeleted));
+    if(claim){
+      claim.totalClaim = calculateTripTotalClaim(tripIdOfDeleted);
+      claim.updatedAt = new Date().toISOString();
+      if(typeof syncSingleTripClaim === 'function'){
+        syncSingleTripClaim(claim);
+      }
+    }
+  }
+
+  svAndSync('bill_delete');
 }
 
 // ── Bill Export PDF ──────────────────────────────────────────
@@ -513,20 +529,22 @@ function emailBillsReport() {
 // ✈️ TRIP CLAIM & REIMBURSEMENT TRACKER (IMP-31)
 // ═══════════════════════════════════════════════════════════
 
-let currentBillsView = 'bills'; // 'bills' | 'claims'
+let currentBillsView = 'bills'; // 'bills' | 'claims' | 'card'
 let tripClaimStatusFilter = 'all'; // 'all' | 'Not yet' | 'Processing' | 'Done'
 let _editingClaimStatus = 'Not yet';
 
 /**
- * Switch view between Expense Bills and Trip Claims Summary
+ * Switch view between Expense Bills, Trip Claims Summary, and Credit Card Tracker
  */
 function switchBillsView(view) {
   currentBillsView = view;
   const tabBills = document.getElementById('view-tab-bills');
   const tabClaims = document.getElementById('view-tab-claims');
+  const tabCard = document.getElementById('view-tab-card');
   const billsFilterBar = document.getElementById('bills-filter-bar');
   const billsBody = document.getElementById('bills-screen-body');
   const claimsView = document.getElementById('claims-view-container');
+  const cardView = document.getElementById('card-view-container');
   const topTitle = document.getElementById('bills-topbar-title');
   const addBtn = document.getElementById('bills-add-btn');
   const topSyncBtn = document.getElementById('claims-sync-btn');
@@ -534,19 +552,35 @@ function switchBillsView(view) {
   if (view === 'claims') {
     if (tabBills) { tabBills.className = 'btn btn-sm btn-o'; }
     if (tabClaims) { tabClaims.className = 'btn btn-sm btn-p'; }
+    if (tabCard) { tabCard.className = 'btn btn-sm btn-o'; }
     if (billsFilterBar) billsFilterBar.style.display = 'none';
     if (billsBody) billsBody.style.display = 'none';
     if (claimsView) claimsView.style.display = 'flex';
+    if (cardView) cardView.style.display = 'none';
     if (topTitle) topTitle.textContent = '✈️ Trip Claims Summary';
     if (addBtn) addBtn.style.display = 'none';
     if (topSyncBtn) topSyncBtn.style.display = 'inline-flex';
     renderTripClaimsScreen();
+  } else if (view === 'card') {
+    if (tabBills) { tabBills.className = 'btn btn-sm btn-o'; }
+    if (tabClaims) { tabClaims.className = 'btn btn-sm btn-o'; }
+    if (tabCard) { tabCard.className = 'btn btn-sm btn-p'; }
+    if (billsFilterBar) billsFilterBar.style.display = 'none';
+    if (billsBody) billsBody.style.display = 'none';
+    if (claimsView) claimsView.style.display = 'none';
+    if (cardView) cardView.style.display = 'flex';
+    if (topTitle) topTitle.textContent = '💳 Credit Card Tracker';
+    if (addBtn) addBtn.style.display = 'none';
+    if (topSyncBtn) topSyncBtn.style.display = 'none';
+    renderCreditCardScreen();
   } else {
     if (tabBills) { tabBills.className = 'btn btn-sm btn-p'; }
     if (tabClaims) { tabClaims.className = 'btn btn-sm btn-o'; }
+    if (tabCard) { tabCard.className = 'btn btn-sm btn-o'; }
     if (billsFilterBar) billsFilterBar.style.display = 'block';
     if (billsBody) billsBody.style.display = 'block';
     if (claimsView) claimsView.style.display = 'none';
+    if (cardView) cardView.style.display = 'none';
     if (topTitle) topTitle.textContent = '💳 Expense Bills';
     if (addBtn) addBtn.style.display = 'inline-flex';
     if (topSyncBtn) topSyncBtn.style.display = 'none';
@@ -1030,5 +1064,482 @@ function saveTripClaim() {
     syncSingleTripClaim(claim);
   }
 }
+
+// ═══════════════════════════════════════════════════════════
+// 💳 CREDIT CARD TRACKER (IMP-32)
+// ═══════════════════════════════════════════════════════════
+
+let _currentCreditCardSubTab = 'bills'; // 'bills' | 'transfers'
+
+/**
+ * Ensure S.creditCard state exists with default values
+ */
+function ensureCreditCardState() {
+  if (!S.creditCard) {
+    S.creditCard = {
+      budget: 50000000,
+      cardName: 'Corporate Credit Card',
+      transfers: []
+    };
+  }
+  if (typeof S.creditCard.budget !== 'number') {
+    S.creditCard.budget = parseFloat(S.creditCard.budget) || 50000000;
+  }
+  if (!S.creditCard.cardName) {
+    S.creditCard.cardName = 'Corporate Credit Card';
+  }
+  if (!Array.isArray(S.creditCard.transfers)) {
+    S.creditCard.transfers = [];
+  }
+}
+
+/**
+ * Check if a bill was paid by Credit Card
+ */
+function isCreditCardBill(b) {
+  if (!b) return false;
+  const pm = String(b.paymentMethod || b.paymentTerm || '');
+  return pm.includes('Card') || pm.includes('Credit');
+}
+
+/**
+ * Populate Month & Year options for Credit Card view
+ */
+function populateCardDateSelectors() {
+  const yearSel = document.getElementById('cc-year-select');
+  const monthSel = document.getElementById('cc-month-select');
+  if (!yearSel || !monthSel) return;
+
+  const currentYearVal = yearSel.value;
+  const currentMonthVal = monthSel.value;
+
+  ensureCreditCardState();
+
+  // Extract years from card bills and transfers
+  const cardBillYears = (S.bills || []).filter(isCreditCardBill).map(b => (b.date || '').slice(0, 4)).filter(Boolean);
+  const transferYears = (S.creditCard.transfers || []).map(t => (t.date || '').slice(0, 4)).filter(Boolean);
+  const years = [...new Set([...cardBillYears, ...transferYears])].sort().reverse();
+  const thisYear = new Date().getFullYear().toString();
+  if (!years.includes(thisYear)) years.unshift(thisYear);
+
+  let yearOpts = '<option value="">All Years</option>';
+  years.forEach(y => {
+    const sel = (currentYearVal === y) ? ' selected' : '';
+    yearOpts += `<option value="${y}"${sel}>${y}</option>`;
+  });
+  yearSel.innerHTML = yearOpts;
+
+  // Month options
+  const months = [
+    ['', 'All Months'],
+    ['01', 'January'], ['02', 'February'], ['03', 'March'],
+    ['04', 'April'], ['05', 'May'], ['06', 'June'],
+    ['07', 'July'], ['08', 'August'], ['09', 'September'],
+    ['10', 'October'], ['11', 'November'], ['12', 'December']
+  ];
+  let monthOpts = '';
+  months.forEach(([v, l]) => {
+    const sel = (currentMonthVal === v) ? ' selected' : '';
+    monthOpts += `<option value="${v}"${sel}>${l}</option>`;
+  });
+  monthSel.innerHTML = monthOpts;
+}
+
+/**
+ * Switch sub-tab between Card Bills and Transfer History
+ */
+function switchCreditCardSubTab(subTab) {
+  _currentCreditCardSubTab = subTab;
+  const tabBills = document.getElementById('cc-tab-bills');
+  const tabTransfers = document.getElementById('cc-tab-transfers');
+  const billsContainer = document.getElementById('cc-bills-list-container');
+  const transfersContainer = document.getElementById('cc-transfers-list-container');
+
+  if (subTab === 'transfers') {
+    if (tabBills) tabBills.classList.remove('active');
+    if (tabTransfers) tabTransfers.classList.add('active');
+    if (billsContainer) billsContainer.style.display = 'none';
+    if (transfersContainer) transfersContainer.style.display = 'block';
+  } else {
+    if (tabBills) tabBills.classList.add('active');
+    if (tabTransfers) tabTransfers.classList.remove('active');
+    if (billsContainer) billsContainer.style.display = 'block';
+    if (transfersContainer) transfersContainer.style.display = 'none';
+  }
+}
+
+/**
+ * Render the entire Credit Card Screen
+ */
+function renderCreditCardScreen() {
+  ensureCreditCardState();
+  populateCardDateSelectors();
+
+  const yearSel = document.getElementById('cc-year-select');
+  const monthSel = document.getElementById('cc-month-select');
+  const filterYear = yearSel ? yearSel.value : '';
+  const filterMonth = monthSel ? monthSel.value : '';
+
+  const budget = parseFloat(S.creditCard.budget) || 0;
+  const cardName = S.creditCard.cardName || 'Corporate Credit Card';
+
+  // 1. All-time calculations
+  const allCardBills = (S.bills || []).filter(isCreditCardBill);
+  const totalAllCardSpent = allCardBills.reduce((sum, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') {
+      return sum + (parseFloat(b.amount) || 0);
+    }
+    return sum + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+
+  const totalAllTransferred = (S.creditCard.transfers || []).reduce((sum, t) => {
+    return sum + (parseFloat(t.amount) || 0);
+  }, 0);
+
+  const totalBalanceDue = Math.max(0, totalAllCardSpent - totalAllTransferred);
+  const availableLimit = budget - totalBalanceDue;
+
+  // 2. Filtered calculations for selected month / year
+  let filteredBills = [...allCardBills];
+  let filteredTransfers = [...(S.creditCard.transfers || [])];
+
+  if (filterYear) {
+    filteredBills = filteredBills.filter(b => (b.date || '').startsWith(filterYear));
+    filteredTransfers = filteredTransfers.filter(t => (t.date || '').startsWith(filterYear));
+  }
+  if (filterMonth) {
+    filteredBills = filteredBills.filter(b => {
+      const parts = (b.date || '').split('-');
+      return parts[1] === filterMonth;
+    });
+    filteredTransfers = filteredTransfers.filter(t => {
+      const parts = (t.date || '').split('-');
+      return parts[1] === filterMonth;
+    });
+  }
+
+  // Sort descending by date
+  filteredBills.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  filteredTransfers.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+  const monthSpent = filteredBills.reduce((sum, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') {
+      return sum + (parseFloat(b.amount) || 0);
+    }
+    return sum + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+
+  const monthTransferred = filteredTransfers.reduce((sum, t) => {
+    return sum + (parseFloat(t.amount) || 0);
+  }, 0);
+
+  // 3. Update DOM Displays
+  const budgetEl = document.getElementById('cc-budget-display');
+  const cardNameEl = document.getElementById('cc-card-name-display');
+  const availEl = document.getElementById('cc-avail-display');
+  const debtEl = document.getElementById('cc-debt-display');
+  const monthLabelEl = document.getElementById('cc-month-label');
+  const monthBillCountEl = document.getElementById('cc-month-bill-count');
+  const monthSpentEl = document.getElementById('cc-month-spent');
+  const monthReimbursedEl = document.getElementById('cc-month-reimbursed');
+  const billsBadgeEl = document.getElementById('cc-bills-badge');
+  const transfersBadgeEl = document.getElementById('cc-transfers-badge');
+
+  if (budgetEl) budgetEl.textContent = `${fmtAmt(budget, 'VND')} ₫`;
+  if (cardNameEl) cardNameEl.textContent = cardName;
+  if (availEl) {
+    availEl.textContent = `${fmtAmt(availableLimit, 'VND')} ₫`;
+    availEl.style.color = availableLimit < 0 ? '#FCA5A5' : '#6EE7B7';
+  }
+  if (debtEl) {
+    debtEl.textContent = `${fmtAmt(totalBalanceDue, 'VND')} ₫`;
+    debtEl.style.color = totalBalanceDue > 0 ? '#FCA5A5' : '#E0E7FF';
+  }
+
+  // Monthly activity label
+  let periodLabel = 'ACTIVITY (ALL TIME)';
+  if (filterMonth && filterYear) {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const mIdx = parseInt(filterMonth, 10) - 1;
+    periodLabel = `${monthNames[mIdx] || filterMonth} ${filterYear} ACTIVITY`;
+  } else if (filterYear) {
+    periodLabel = `${filterYear} ACTIVITY`;
+  } else if (filterMonth) {
+    periodLabel = `MONTH ${filterMonth} ACTIVITY`;
+  }
+
+  if (monthLabelEl) monthLabelEl.textContent = periodLabel.toUpperCase();
+  if (monthBillCountEl) monthBillCountEl.textContent = `${filteredBills.length} card bill${filteredBills.length !== 1 ? 's' : ''}`;
+  if (monthSpentEl) monthSpentEl.textContent = `${fmtAmt(monthSpent, 'VND')} ₫`;
+  if (monthReimbursedEl) monthReimbursedEl.textContent = `${fmtAmt(monthTransferred, 'VND')} ₫`;
+  if (billsBadgeEl) billsBadgeEl.textContent = String(filteredBills.length);
+  if (transfersBadgeEl) transfersBadgeEl.textContent = String(filteredTransfers.length);
+
+  // 4. Render Bills List
+  const billsContainer = document.getElementById('cc-bills-list-container');
+  if (billsContainer) {
+    if (!filteredBills.length) {
+      billsContainer.innerHTML = `
+        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+          <div class="ei">💳</div>
+          <div class="et">No card expenses found</div>
+          <div class="es">Bills paid via "3-Credit card" in this period will appear here.</div>
+        </div>`;
+    } else {
+      let bHtml = '';
+      filteredBills.forEach(b => {
+        const trip = (S.trips || []).find(t => String(t.id) === String(b.tripId));
+        const plantStr = trip ? trip.plant : 'General Expense';
+        const amtVND = (b.currency || 'VND').toUpperCase() === 'VND' ? (parseFloat(b.amount) || 0) : (parseFloat(b.vndAmount) || 0);
+        bHtml += `
+          <div class="cc-item-row expense" onclick="openEditBillFromScreen('${b.id}')" style="cursor:pointer;">
+            <div style="flex:1;min-width:0;padding-right:8px;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.detail || 'Bill'}</span>
+              </div>
+              <div style="font-size:11px;color:var(--n500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                📅 ${fmtDate(b.date)} • 🏭 ${plantStr}
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-size:13px;font-weight:800;color:#DC2626;font-family:var(--mono);">
+                -${fmtAmt(amtVND, 'VND')} ₫
+              </div>
+              <div style="font-size:10px;color:var(--n500);margin-top:2px;">
+                💳 Credit Card
+              </div>
+            </div>
+          </div>`;
+      });
+      billsContainer.innerHTML = bHtml;
+    }
+  }
+
+  // 5. Render Transfers List
+  const transfersContainer = document.getElementById('cc-transfers-list-container');
+  if (transfersContainer) {
+    if (!filteredTransfers.length) {
+      transfersContainer.innerHTML = `
+        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+          <div class="ei">🏦</div>
+          <div class="et">No transfers recorded</div>
+          <div class="es">When the company pays your travel claim, click "Transfer Back to Card" above to clear the card debt.</div>
+        </div>`;
+    } else {
+      let tHtml = '';
+      filteredTransfers.forEach(tr => {
+        const trip = (S.trips || []).find(t => String(t.id) === String(tr.tripId));
+        const plantStr = trip ? ` • 🏭 ${trip.plant}` : '';
+        tHtml += `
+          <div class="cc-item-row transfer">
+            <div style="flex:1;min-width:0;padding-right:8px;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                <span style="font-size:13px;font-weight:700;color:#166534;">+${fmtAmt(tr.amount, 'VND')} ₫</span>
+                <span class="badge" style="font-size:10px;padding:1px 6px;background:#DCFCE7;color:#166534;font-weight:700;">Reimbursed</span>
+              </div>
+              <div style="font-size:11px;color:var(--n600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                📅 ${fmtDate(tr.date)}${plantStr}
+              </div>
+              ${tr.note ? `<div style="font-size:11px;color:var(--n500);margin-top:2px;font-style:italic;">💬 ${tr.note}</div>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+              <button type="button" class="btn btn-sm btn-o" onclick="openTransferBackModal('${tr.id}')" style="font-size:11px;padding:4px 7px;">✏️</button>
+              <button type="button" class="btn btn-sm btn-o" onclick="deleteTransferBack('${tr.id}')" style="font-size:11px;padding:4px 7px;color:#DC2626;">🗑️</button>
+            </div>
+          </div>`;
+      });
+      transfersContainer.innerHTML = tHtml;
+    }
+  }
+
+  // Restore sub-tab active state
+  switchCreditCardSubTab(_currentCreditCardSubTab);
+}
+
+/**
+ * Open Modal to set Card Budget & Limit
+ */
+function openSetCardBudgetModal() {
+  ensureCreditCardState();
+  const nameInput = document.getElementById('cc-input-name');
+  const budgetInput = document.getElementById('cc-input-budget');
+  if (nameInput) nameInput.value = S.creditCard.cardName || '';
+  if (budgetInput) budgetInput.value = S.creditCard.budget || 50000000;
+  updateCardBudgetHint();
+  openModal('modal-card-budget');
+}
+
+/**
+ * Update hint below budget input with formatted VND
+ */
+function updateCardBudgetHint() {
+  const el = document.getElementById('cc-input-budget');
+  const hint = document.getElementById('cc-input-budget-hint');
+  if (!el || !hint) return;
+  const val = parseFloat(el.value) || 0;
+  hint.textContent = val > 0 ? `≈ ${fmtAmt(val, 'VND')} VND` : '';
+}
+
+/**
+ * Save Card Budget & Limit
+ */
+function saveCardBudget() {
+  ensureCreditCardState();
+  const nameInput = document.getElementById('cc-input-name');
+  const budgetInput = document.getElementById('cc-input-budget');
+
+  const budgetVal = parseFloat(budgetInput ? budgetInput.value : 0);
+  if (!budgetVal || budgetVal <= 0) {
+    showToast('Please enter a valid card budget / limit');
+    return;
+  }
+
+  S.creditCard.budget = budgetVal;
+  S.creditCard.cardName = (nameInput && nameInput.value.trim()) || 'Corporate Credit Card';
+  S.creditCard.updatedAt = new Date().toISOString();
+
+  sv();
+  closeModal('modal-card-budget');
+  renderCreditCardScreen();
+  showToast('✓ Credit card budget updated');
+}
+
+/**
+ * Open Modal to record a reimbursement payment transferred back to card
+ */
+function openTransferBackModal(transferId) {
+  ensureCreditCardState();
+  const idInput = document.getElementById('cc-transfer-id');
+  const amtInput = document.getElementById('cc-transfer-amount');
+  const dateInput = document.getElementById('cc-transfer-date');
+  const tripSel = document.getElementById('cc-transfer-trip');
+  const noteInput = document.getElementById('cc-transfer-note');
+  const titleEl = document.getElementById('cc-transfer-modal-title');
+
+  // Populate trips dropdown
+  if (tripSel) {
+    const trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])];
+    let opts = '<option value="">— Not linked to specific trip —</option>';
+    trips.forEach(t => {
+      opts += `<option value="${t.id}">🏭 ${t.plant} (${fmtDate(t.date)})</option>`;
+    });
+    tripSel.innerHTML = opts;
+  }
+
+  if (transferId) {
+    const item = (S.creditCard.transfers || []).find(t => String(t.id) === String(transferId));
+    if (!item) {
+      showToast('Transfer record not found');
+      return;
+    }
+    if (idInput) idInput.value = item.id;
+    if (amtInput) amtInput.value = item.amount;
+    if (dateInput) dateInput.value = item.date || '';
+    if (tripSel) tripSel.value = item.tripId || '';
+    if (noteInput) noteInput.value = item.note || '';
+    if (titleEl) titleEl.textContent = '✏️ Edit Card Transfer';
+  } else {
+    if (idInput) idInput.value = '';
+    if (amtInput) amtInput.value = '';
+    if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+    if (tripSel) tripSel.value = '';
+    if (noteInput) noteInput.value = '';
+    if (titleEl) titleEl.textContent = '➕ Transfer Back to Card';
+  }
+
+  updateCardTransferHint();
+  openModal('modal-card-transfer');
+}
+
+/**
+ * Set today's date in transfer modal
+ */
+function setCardTransferToday() {
+  const el = document.getElementById('cc-transfer-date');
+  if (el) el.value = new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Update hint below transfer amount input
+ */
+function updateCardTransferHint() {
+  const el = document.getElementById('cc-transfer-amount');
+  const hint = document.getElementById('cc-transfer-amount-hint');
+  if (!el || !hint) return;
+  const val = parseFloat(el.value) || 0;
+  hint.textContent = val > 0 ? `≈ ${fmtAmt(val, 'VND')} VND` : '';
+}
+
+/**
+ * Save Transfer Back to Credit Card
+ */
+function saveTransferBack() {
+  ensureCreditCardState();
+  const idInput = document.getElementById('cc-transfer-id');
+  const amtInput = document.getElementById('cc-transfer-amount');
+  const dateInput = document.getElementById('cc-transfer-date');
+  const tripSel = document.getElementById('cc-transfer-trip');
+  const noteInput = document.getElementById('cc-transfer-note');
+
+  const amt = parseFloat(amtInput ? amtInput.value : 0);
+  if (!amt || amt <= 0) {
+    showToast('Please enter a valid amount');
+    return;
+  }
+  const date = dateInput ? dateInput.value : '';
+  if (!date) {
+    showToast('Please select transfer date');
+    return;
+  }
+
+  const transferId = idInput && idInput.value;
+  if (transferId) {
+    const existing = S.creditCard.transfers.find(t => String(t.id) === String(transferId));
+    if (existing) {
+      existing.amount = amt;
+      existing.date = date;
+      existing.tripId = tripSel ? tripSel.value : '';
+      existing.note = (noteInput && noteInput.value.trim()) || '';
+      existing.updatedAt = new Date().toISOString();
+    }
+  } else {
+    const newTransfer = {
+      id: 'cct_' + Date.now(),
+      amount: amt,
+      date: date,
+      tripId: tripSel ? tripSel.value : '',
+      note: (noteInput && noteInput.value.trim()) || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    S.creditCard.transfers.unshift(newTransfer);
+  }
+
+  sv();
+  closeModal('modal-card-transfer');
+  renderCreditCardScreen();
+  showToast('✓ Transferred back to card');
+}
+
+/**
+ * Delete a transfer back record
+ */
+async function deleteTransferBack(transferId) {
+  if (!transferId) return;
+  const ok = await appConfirm('Delete this card transfer record? This cannot be undone.', {
+    title: 'Delete Card Transfer',
+    danger: true,
+    confirmText: 'Delete Record',
+    icon: '💳'
+  });
+  if (!ok) return;
+
+  ensureCreditCardState();
+  S.creditCard.transfers = S.creditCard.transfers.filter(t => String(t.id) !== String(transferId));
+  sv();
+  renderCreditCardScreen();
+  showToast('✓ Transfer record deleted');
+}
+
 
 
