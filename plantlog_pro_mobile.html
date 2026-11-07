@@ -2368,11 +2368,11 @@ input, textarea, select, button { font-family: var(--font); }
         <!-- Available & Balance Due Badges -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.2);">
           <div style="background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;">
-            <div style="font-size:10px;opacity:0.85;">Available Limit (Khả dụng)</div>
+            <div style="font-size:10px;opacity:0.85;">Available Limit</div>
             <div style="font-size:14px;font-weight:800;color:#6EE7B7;margin-top:2px;" id="cc-avail-display">0 ₫</div>
           </div>
           <div style="background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;">
-            <div style="font-size:10px;opacity:0.85;">Balance Due (Dư nợ thẻ)</div>
+            <div style="font-size:10px;opacity:0.85;">Balance Due</div>
             <div style="font-size:14px;font-weight:800;color:#FCA5A5;margin-top:2px;" id="cc-debt-display">0 ₫</div>
           </div>
         </div>
@@ -2393,11 +2393,11 @@ input, textarea, select, button { font-family: var(--font); }
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px;">
           <div style="background:var(--n50);border-radius:6px;padding:7px 9px;">
-            <div style="font-size:10px;color:var(--n500);">🔴 Spent via Card (Đã quẹt)</div>
+            <div style="font-size:10px;color:var(--n500);">🔴 Spent via Card</div>
             <div style="font-size:13px;font-weight:700;color:#DC2626;margin-top:2px;" id="cc-month-spent">0 ₫</div>
           </div>
           <div style="background:var(--n50);border-radius:6px;padding:7px 9px;">
-            <div style="font-size:10px;color:var(--n500);">🟢 Transferred Back (Đã trả)</div>
+            <div style="font-size:10px;color:var(--n500);">🟢 Transferred Back</div>
             <div style="font-size:13px;font-weight:700;color:#166534;margin-top:2px;" id="cc-month-reimbursed">0 ₫</div>
           </div>
         </div>
@@ -9822,22 +9822,22 @@ async function exportPDF(){
   doc.rect(mg,y,W-mg*2,32);
   doc.setFontSize(8);
   doc.setTextColor(100,100,100);
-  doc.text('Signature:',mg+4,y+6.5);
+  doc.text('Signature:',mg+4,y+5.5);
   doc.setFont('helvetica','bold');
   doc.setTextColor(33,37,41);
-  doc.text(p.name||'Engineer',mg+4,y+27);
+  doc.text(p.name||'Engineer',mg+4,y+27.5);
   doc.setFont('helvetica','normal');
   doc.setFontSize(8);
   doc.setTextColor(100,100,100);
-  rtxt(new Date().toLocaleDateString('en-GB'),y+27);
+  rtxt(new Date().toLocaleDateString('en-GB'),y+27.5);
   if(r.signature && r.signature.length > 50){
     try{
       const optSig = await getOptimizedSignatureForPdf(r.signature);
       if(optSig){
         const sigW = 50;
-        const sigH = 17;
+        const sigH = 14;
         const sigX = mg + 4;
-        const sigY = y + 6;
+        const sigY = y + 8.5;
         doc.setDrawColor(220,220,220);
         doc.setLineWidth(0.3);
         doc.line(sigX, y + 23, sigX + sigW, y + 23);
@@ -14668,53 +14668,53 @@ async function deleteTransferBack(transferId) {
 // =====================================================
 
 // ═══════ GOOGLE SHEETS SYNC ═══════
-function getGSUrl(){return S.gsUrl||'';}
+function getGSUrl() { return S.gsUrl || ''; }
 
-function gsUrlChanged(){
-  const url=document.getElementById('gs-url').value.trim();
+function gsUrlChanged() {
+  const url = document.getElementById('gs-url').value.trim();
   // Hide old result when user types
-  const res=document.getElementById('gs-test-result');
-  if(res)res.style.display='none';
+  const res = document.getElementById('gs-test-result');
+  if (res) res.style.display = 'none';
 }
 
-function toggleGSGuide(){
-  const body=document.getElementById('gs-guide-body');
-  const arrow=document.getElementById('gs-guide-arrow');
-  if(body){const open=body.style.display==='none';body.style.display=open?'':'none';if(arrow)arrow.textContent=open?'▲':'▼';}
+function toggleGSGuide() {
+  const body = document.getElementById('gs-guide-body');
+  const arrow = document.getElementById('gs-guide-arrow');
+  if (body) { const open = body.style.display === 'none'; body.style.display = open ? '' : 'none'; if (arrow) arrow.textContent = open ? '▲' : '▼'; }
 }
 
-function showGSResult(msg, type){
+function showGSResult(msg, type) {
   // type: 'ok' | 'warn' | 'error'
-  const el=document.getElementById('gs-test-result');
-  if(!el)return;
-  const colors={ok:{bg:'var(--gl)',color:'var(--gd)'},warn:{bg:'var(--al)',color:'#92400E'},error:{bg:'var(--rl)',color:'#991B1B'}};
-  const c=colors[type]||colors.warn;
-  el.style.background=c.bg;el.style.color=c.color;el.style.display='block';
-  el.textContent=msg;
+  const el = document.getElementById('gs-test-result');
+  if (!el) return;
+  const colors = { ok: { bg: 'var(--gl)', color: 'var(--gd)' }, warn: { bg: 'var(--al)', color: '#92400E' }, error: { bg: 'var(--rl)', color: '#991B1B' } };
+  const c = colors[type] || colors.warn;
+  el.style.background = c.bg; el.style.color = c.color; el.style.display = 'block';
+  el.textContent = msg;
 }
 
-function updateGSStatus(){
-  const el=document.getElementById('gsheet-status');
-  const urlEl=document.getElementById('gs-url');
-  const bar=document.getElementById('gs-status-bar');
-  if(S.gsUrl){
-    if(el)el.textContent=S.lastSync?'Last sync: '+new Date(S.lastSync).toLocaleString():'Connected — not synced yet';
-    if(urlEl)urlEl.value=S.gsUrl;
-    if(bar){
-      bar.style.display='flex';
-      bar.style.background=S.lastSync?'var(--gl)':'var(--al)';
-      const icon=document.getElementById('gs-status-icon');
-      const title=document.getElementById('gs-status-title');
-      const sub=document.getElementById('gs-status-sub');
-      if(icon)icon.textContent=S.lastSync?'✅':'⚠️';
-      if(title)title.style.color=S.lastSync?'var(--gd)':'#92400E';
-      if(title)title.textContent=S.lastSync?'Connected & synced':'URL saved — sync to verify';
-      if(sub)sub.style.color=S.lastSync?'var(--gd)':'#92400E';
-      if(sub)sub.textContent=S.lastSync?'Last sync: '+new Date(S.lastSync).toLocaleString():S.gsUrl.substring(0,45)+'...';
+function updateGSStatus() {
+  const el = document.getElementById('gsheet-status');
+  const urlEl = document.getElementById('gs-url');
+  const bar = document.getElementById('gs-status-bar');
+  if (S.gsUrl) {
+    if (el) el.textContent = S.lastSync ? 'Last sync: ' + new Date(S.lastSync).toLocaleString() : 'Connected — not synced yet';
+    if (urlEl) urlEl.value = S.gsUrl;
+    if (bar) {
+      bar.style.display = 'flex';
+      bar.style.background = S.lastSync ? 'var(--gl)' : 'var(--al)';
+      const icon = document.getElementById('gs-status-icon');
+      const title = document.getElementById('gs-status-title');
+      const sub = document.getElementById('gs-status-sub');
+      if (icon) icon.textContent = S.lastSync ? '✅' : '⚠️';
+      if (title) title.style.color = S.lastSync ? 'var(--gd)' : '#92400E';
+      if (title) title.textContent = S.lastSync ? 'Connected & synced' : 'URL saved — sync to verify';
+      if (sub) sub.style.color = S.lastSync ? 'var(--gd)' : '#92400E';
+      if (sub) sub.textContent = S.lastSync ? 'Last sync: ' + new Date(S.lastSync).toLocaleString() : S.gsUrl.substring(0, 45) + '...';
     }
   } else {
-    if(bar)bar.style.display='none';
-    if(el)el.textContent='Not connected';
+    if (bar) bar.style.display = 'none';
+    if (el) el.textContent = 'Not connected';
   }
 }
 
@@ -14722,82 +14722,82 @@ function updateGSStatus(){
 // GET requests work fine (GAS handles CORS for GET)
 // POST must use no-cors mode OR form-encoded via iframe trick
 // Best approach: use fetch with mode:'cors' — GAS doPost supports it when deployed as "Anyone"
-async function gsPost(url, body){
+async function gsPost(url, body) {
   // Primary: direct fetch (works when GAS is deployed as "Anyone" access)
-  try{
-    const r=await fetch(url,{
-      method:'POST',
-      body:JSON.stringify(body),
-      headers:{'Content-Type':'text/plain;charset=utf-8'} // text/plain avoids preflight CORS
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain avoids preflight CORS
     });
     return await r.json();
-  }catch(e){
-    throw new Error('FETCH_FAILED: '+e.message);
+  } catch (e) {
+    throw new Error('FETCH_FAILED: ' + e.message);
   }
 }
 
-async function gsGet(url, params){
-  const qs=Object.entries(params||{}).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
-  const fullUrl=url+(qs?'?'+qs:'');
-  const r=await fetch(fullUrl,{method:'GET',mode:'cors'});
+async function gsGet(url, params) {
+  const qs = Object.entries(params || {}).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+  const fullUrl = url + (qs ? '?' + qs : '');
+  const r = await fetch(fullUrl, { method: 'GET', mode: 'cors' });
   return await r.json();
 }
 
-async function testGSConnection(){
-  const url=document.getElementById('gs-url').value.trim();
-  if(!url){showGSResult('⚠ Paste your Apps Script URL first','warn');return;}
-  if(!url.includes('script.google.com')){showGSResult('❌ URL must be a script.google.com address','error');return;}
-  if(!url.endsWith('/exec')&&!url.includes('/exec?')){showGSResult('⚠ URL should end with /exec — check your deployment URL','warn');S.gsUrl=url;sv();updateGSStatus();return;}
+async function testGSConnection() {
+  const url = document.getElementById('gs-url').value.trim();
+  if (!url) { showGSResult('⚠ Paste your Apps Script URL first', 'warn'); return; }
+  if (!url.includes('script.google.com')) { showGSResult('❌ URL must be a script.google.com address', 'error'); return; }
+  if (!url.endsWith('/exec') && !url.includes('/exec?')) { showGSResult('⚠ URL should end with /exec — check your deployment URL', 'warn'); S.gsUrl = url; sv(); updateGSStatus(); return; }
 
-  showGSResult('Testing connection...','warn');
+  showGSResult('Testing connection...', 'warn');
   // Save URL immediately regardless of test result
-  S.gsUrl=url;sv();updateGSStatus();
+  S.gsUrl = url; sv(); updateGSStatus();
 
-  try{
-    const data=await gsGet(url,{action:'ping'});
-    if(data.ok){
-      showGSResult('✅ Connected! Google Sheet is ready.','ok');
-      S.lastSync=null;sv();updateGSStatus();
+  try {
+    const data = await gsGet(url, { action: 'ping' });
+    if (data.ok) {
+      showGSResult('✅ Connected! Google Sheet is ready.', 'ok');
+      S.lastSync = null; sv(); updateGSStatus();
     } else {
-      showGSResult('⚠ Received response but got error: '+(data.error||'unknown'),'warn');
+      showGSResult('⚠ Received response but got error: ' + (data.error || 'unknown'), 'warn');
     }
-  }catch(e){
+  } catch (e) {
     // CORS blocks GET test from some browsers — this is expected
     // The sync (POST with text/plain) usually works even when GET test fails
-    showGSResult('⚠ Browser CORS blocked the test (this is normal). Tap "Sync all data" to verify the connection actually works.','warn');
-    const btn=document.getElementById('gs-sync-btn');
-    if(btn){btn.style.background='var(--amber)';btn.textContent='⬆ Try sync to verify';}
-    setTimeout(()=>{if(btn){btn.style.background='';btn.textContent='⬆ Sync all data';}},4000);
+    showGSResult('⚠ Browser CORS blocked the test (this is normal). Tap "Sync all data" to verify the connection actually works.', 'warn');
+    const btn = document.getElementById('gs-sync-btn');
+    if (btn) { btn.style.background = 'var(--amber)'; btn.textContent = '⬆ Try sync to verify'; }
+    setTimeout(() => { if (btn) { btn.style.background = ''; btn.textContent = '⬆ Sync all data'; } }, 4000);
   }
 }
 
 // Compress bill & field photos to small JPEG thumbnails before sending
-const compressPhoto=async dataUrl=>{
+const compressPhoto = async dataUrl => {
   if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) {
     return (typeof dataUrl === 'string' && dataUrl.startsWith('http')) ? dataUrl : '';
   }
   if (dataUrl.length < 3000) return dataUrl;
   if (typeof window === 'undefined' || typeof Image === 'undefined') return dataUrl;
-  try{
-    return await new Promise(resolve=>{
+  try {
+    return await new Promise(resolve => {
       const timeout = setTimeout(() => resolve(''), 2500);
-      const img=new Image();
-      img.onload=()=>{
+      const img = new Image();
+      img.onload = () => {
         clearTimeout(timeout);
         try {
-          const MAX=180;
-          let w=img.width,h=img.height;
-          if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-          if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
-          const c=document.createElement('canvas');c.width=w;c.height=h;
-          c.getContext('2d').drawImage(img,0,0,w,h);
-          resolve(c.toDataURL('image/jpeg',0.4));
-        } catch(ex){ resolve(''); }
+          const MAX = 180;
+          let w = img.width, h = img.height;
+          if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+          if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL('image/jpeg', 0.4));
+        } catch (ex) { resolve(''); }
       };
-      img.onerror=()=>{ clearTimeout(timeout); resolve(''); };
-      img.src=dataUrl;
+      img.onerror = () => { clearTimeout(timeout); resolve(''); };
+      img.src = dataUrl;
     });
-  }catch(e){return '';}
+  } catch (e) { return ''; }
 };
 
 /**
@@ -14819,7 +14819,7 @@ async function syncSingleQuickSnap(item) {
       if (typeof compressPhoto === 'function') {
         photoStr = await compressPhoto(photoStr);
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const s = v => (v === null || v === undefined) ? '' : String(v);
@@ -15017,7 +15017,7 @@ async function syncAllTripClaims() {
     try {
       await syncToSheets();
       showToast('☁️ Synced Trip Claims to Google Sheet ✓');
-    } catch(e2) {
+    } catch (e2) {
       showToast('❌ Sync failed: ' + err.message);
     }
   } finally {
@@ -15054,109 +15054,109 @@ async function deleteSingleQuickSnap(id) {
   }
 }
 
-async function syncToSheets(){
-  const url=getGSUrl();
-  if(!url){updateGSStatus();openModal('modal-gsheet');showGSResult('⚠ Paste your Apps Script URL first','warn');return;}
+async function syncToSheets() {
+  const url = getGSUrl();
+  if (!url) { updateGSStatus(); openModal('modal-gsheet'); showGSResult('⚠ Paste your Apps Script URL first', 'warn'); return; }
 
-  const btn=document.getElementById('gs-sync-btn');
-  if(btn){btn.disabled=true;btn.textContent='Syncing...';}
+  const btn = document.getElementById('gs-sync-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing...'; }
   showToast('Syncing to Google Sheets…');
 
   // IMP-02: Tải bù ảnh nền offline lên Google Drive trước khi gửi dữ liệu lên Sheets
-  try { await flushPendingMedia(); } catch(x){}
+  try { await flushPendingMedia(); } catch (x) { }
 
   // ── Every field explicitly cast to String to prevent type issues ──
-  const s=v=>(v===null||v===undefined)?'':String(v);
+  const s = v => (v === null || v === undefined) ? '' : String(v);
 
-  const enrichedTasks=(S.tasks||[]).map(tk=>{
-    const cl=tk.checklist||[];
+  const enrichedTasks = (S.tasks || []).map(tk => {
+    const cl = tk.checklist || [];
     return {
-      id:            s(tk.id),
-      title:         s(tk.title),
-      desc:          s(tk.desc),
-      category:      s(tk.category)||'work',
-      dateStart:     s(tk.dateStart||tk.date),
-      timeStart:     s(tk.timeStart||tk.time),
-      dateEnd:       s(tk.dateEnd||tk.dateStart||tk.date),
-      timeEnd:       s(tk.timeEnd),
-      hours:         s(tk.hours),
-      minutes:       s(tk.minutes),
-      priority:      s(tk.priority)||'medium',
-      period:        s(tk.period),
-      machine:       s(tk.machine),
-      plan:          s(tk.plan),
-      tripId:        s(tk.tripId),
-      status:        s(tk.status)||'pending',
-      checklist:     cl.map(c=>(c.done?'[x] ':'[ ] ')+s(c.text||c.name)).join(' | '),
+      id: s(tk.id),
+      title: s(tk.title),
+      desc: s(tk.desc),
+      category: s(tk.category) || 'work',
+      dateStart: s(tk.dateStart || tk.date),
+      timeStart: s(tk.timeStart || tk.time),
+      dateEnd: s(tk.dateEnd || tk.dateStart || tk.date),
+      timeEnd: s(tk.timeEnd),
+      hours: s(tk.hours),
+      minutes: s(tk.minutes),
+      priority: s(tk.priority) || 'medium',
+      period: s(tk.period),
+      machine: s(tk.machine),
+      plan: s(tk.plan),
+      tripId: s(tk.tripId),
+      status: s(tk.status) || 'pending',
+      checklist: cl.map(c => (c.done ? '[x] ' : '[ ] ') + s(c.text || c.name)).join(' | '),
       checklistJson: JSON.stringify(cl),
-      partsJson:     tk.parts&&tk.parts.length?JSON.stringify(tk.parts):'',
-      flightJson:    tk.flight?JSON.stringify(tk.flight):'',
-      filesJson:     tk.files&&tk.files.length?JSON.stringify(tk.files):'',
-      autoDuration:  tk.autoDuration?'true':'false',
-      durationMins:  (()=>{
-        if(tk.autoDuration&&tk.category==='work'){
-          try{
-            const s=new Date((tk.dateStart||tk.date)+'T'+(tk.timeStart||'00:00'));
-            const e=new Date((tk.dateEnd||tk.dateStart||tk.date)+'T'+(tk.timeEnd||'00:00'));
-            const d=e-s;
-            return d>0?Math.round(d/60000):'';
-          }catch(ex){return '';}
+      partsJson: tk.parts && tk.parts.length ? JSON.stringify(tk.parts) : '',
+      flightJson: tk.flight ? JSON.stringify(tk.flight) : '',
+      filesJson: tk.files && tk.files.length ? JSON.stringify(tk.files) : '',
+      autoDuration: tk.autoDuration ? 'true' : 'false',
+      durationMins: (() => {
+        if (tk.autoDuration && tk.category === 'work') {
+          try {
+            const s = new Date((tk.dateStart || tk.date) + 'T' + (tk.timeStart || '00:00'));
+            const e = new Date((tk.dateEnd || tk.dateStart || tk.date) + 'T' + (tk.timeEnd || '00:00'));
+            const d = e - s;
+            return d > 0 ? Math.round(d / 60000) : '';
+          } catch (ex) { return ''; }
         }
-        if(tk.hours||tk.minutes) return (parseInt(tk.hours||0)*60)+(parseInt(tk.minutes||0));
+        if (tk.hours || tk.minutes) return (parseInt(tk.hours || 0) * 60) + (parseInt(tk.minutes || 0));
         return '';
       })(),
-      createdAt:     s(tk.createdAt),
-      updatedAt:     s(tk.updatedAt)||new Date().toISOString()
+      createdAt: s(tk.createdAt),
+      updatedAt: s(tk.updatedAt) || new Date().toISOString()
     };
   });
 
-  const enrichedTrips=(S.trips||[]).map(tr=>({
-    id:         s(tr.id),
-    plant:      s(tr.plant),
-    location:   s(tr.location),
-    date:       s(tr.date),
-    dateEnd:    s(tr.dateEnd),
-    purpose:    s(tr.purpose),
-    contact:    s(tr.contact),
-    transport:  s(tr.transport),
-    status:     s(tr.status)||'planned',
-    notes:         s(tr.notes),
-    flight:        tr.flight?JSON.stringify(tr.flight):'',
-    ta:            tr.ta?JSON.stringify(tr.ta):'',
-    savedReports:  tr.savedReports&&tr.savedReports.length?JSON.stringify(tr.savedReports):'',
-    createdAt:     s(tr.createdAt)
+  const enrichedTrips = (S.trips || []).map(tr => ({
+    id: s(tr.id),
+    plant: s(tr.plant),
+    location: s(tr.location),
+    date: s(tr.date),
+    dateEnd: s(tr.dateEnd),
+    purpose: s(tr.purpose),
+    contact: s(tr.contact),
+    transport: s(tr.transport),
+    status: s(tr.status) || 'planned',
+    notes: s(tr.notes),
+    flight: tr.flight ? JSON.stringify(tr.flight) : '',
+    ta: tr.ta ? JSON.stringify(tr.ta) : '',
+    savedReports: tr.savedReports && tr.savedReports.length ? JSON.stringify(tr.savedReports) : '',
+    createdAt: s(tr.createdAt)
   }));
 
   // Build compressed bills array
-  const buildBills=async()=>{
-    const result=[];
-    for(const b of (S.bills||[])){
-      const photos=b.photos||[];
-      const compressed=[];
-      for(const p of photos.slice(0,3)){  // max 3 photos per bill
-        const cp=await compressPhoto(p);
-        if(cp)compressed.push(cp);
+  const buildBills = async () => {
+    const result = [];
+    for (const b of (S.bills || [])) {
+      const photos = b.photos || [];
+      const compressed = [];
+      for (const p of photos.slice(0, 3)) {  // max 3 photos per bill
+        const cp = await compressPhoto(p);
+        if (cp) compressed.push(cp);
       }
       result.push({
-        id:         s(b.id),
-        tripId:     s(b.tripId),
-        date:       s(b.date),
+        id: s(b.id),
+        tripId: s(b.tripId),
+        date: s(b.date),
         billNumber: s(b.billNumber),
-        detail:     s(b.detail),
-        amount:     parseFloat(s(b.amount))||0,
-        currency:   s(b.currency)||'VND',
-        vndAmount:  parseFloat(s(b.vndAmount))||0,
-        category:   s(b.category)||'other',
-        paymentMethod: s(b.paymentMethod||b.paymentTerm)||'1-Cash',
-        notes:      s(b.notes),
+        detail: s(b.detail),
+        amount: parseFloat(s(b.amount)) || 0,
+        currency: s(b.currency) || 'VND',
+        vndAmount: parseFloat(s(b.vndAmount)) || 0,
+        category: s(b.category) || 'other',
+        paymentMethod: s(b.paymentMethod || b.paymentTerm) || '1-Cash',
+        notes: s(b.notes),
         photoCount: photos.length,
         photosJson: JSON.stringify(compressed),
-        createdAt:  s(b.createdAt)
+        createdAt: s(b.createdAt)
       });
     }
     return result;
   };
-  const enrichedBills=await buildBills();
+  const enrichedBills = await buildBills();
 
   // IMP-22: Build QuickSnap (Scratchpad) payload
   const buildQuickSnap = async () => {
@@ -15284,22 +15284,22 @@ async function syncToSheets(){
   };
   const enrichedTripClaims = buildTripClaims();
 
-  const reports={};
-  Object.entries(S.reports||{}).forEach(([id,rep])=>{
-    if(!rep)return;
-    reports[id]={
-      checklist:(rep.checklist||[]).map(c=>({id:s(c.id),name:s(c.name),result:s(c.result),note:s(c.note)})),
-      readings: (rep.readings||[]).map(r=>({name:s(r.name),tag:s(r.tag),value:s(r.value),unit:s(r.unit),status:s(r.status),type:s(r.type),condition:s(r.condition),notes:s(r.notes)})),
-      issues:   (rep.issues||[]).map(i=>({title:s(i.title||i.Title),description:s(i.description||i.Description),severity:s(i.severity||i.Severity)||'medium',istatus:s(i.IssueStatus||i.istatus)||'pending',action:s(i.action||i.Action),photos:[]})),
-      team:     (rep.team||[]).map(m=>({name:s(m.name),role:s(m.role),org:s(m.org),signoff:s(m.signoff)})),
-      signoff:  {summary:s(rep.signoff&&rep.signoff.summary),result:s(rep.signoff&&rep.signoff.result),remarks:s(rep.signoff&&rep.signoff.remarks)},
-      signature:''
+  const reports = {};
+  Object.entries(S.reports || {}).forEach(([id, rep]) => {
+    if (!rep) return;
+    reports[id] = {
+      checklist: (rep.checklist || []).map(c => ({ id: s(c.id), name: s(c.name), result: s(c.result), note: s(c.note) })),
+      readings: (rep.readings || []).map(r => ({ name: s(r.name), tag: s(r.tag), value: s(r.value), unit: s(r.unit), status: s(r.status), type: s(r.type), condition: s(r.condition), notes: s(r.notes) })),
+      issues: (rep.issues || []).map(i => ({ title: s(i.title || i.Title), description: s(i.description || i.Description), severity: s(i.severity || i.Severity) || 'medium', istatus: s(i.IssueStatus || i.istatus) || 'pending', action: s(i.action || i.Action), photos: [] })),
+      team: (rep.team || []).map(m => ({ name: s(m.name), role: s(m.role), org: s(m.org), signoff: s(m.signoff) })),
+      signoff: { summary: s(rep.signoff && rep.signoff.summary), result: s(rep.signoff && rep.signoff.result), remarks: s(rep.signoff && rep.signoff.remarks) },
+      signature: ''
     };
   });
 
-  const payload={
-    trips:enrichedTrips, tasks:enrichedTasks,
-    leaveData:S.leaveData||{}, reports,
+  const payload = {
+    trips: enrichedTrips, tasks: enrichedTasks,
+    leaveData: S.leaveData || {}, reports,
     machines:S.machines||[], plans:S.plans||[],
     bills:enrichedBills,
     reminders:(S.reminders||[]),
@@ -15310,14 +15310,14 @@ async function syncToSheets(){
     creditCard:S.creditCard||{}
   };
 
-  try{
-    const data=await gsPost(url,{action:'syncAll',payload});
-    if(btn){btn.disabled=false;btn.textContent='⬆ Sync all data';}
-    if(data&&data.ok){
-      const res=data.result||{};
-      S.lastSync=new Date().toISOString();
-      (S.scratchpad||[]).forEach(sc=>{sc.synced=true;});
-      sv();updateGSStatus();
+  try {
+    const data = await gsPost(url, { action: 'syncAll', payload });
+    if (btn) { btn.disabled = false; btn.textContent = '⬆ Sync all data'; }
+    if (data && data.ok) {
+      const res = data.result || {};
+      S.lastSync = new Date().toISOString();
+      (S.scratchpad || []).forEach(sc => { sc.synced = true; });
+      sv(); updateGSStatus();
 
       const snapPart = res.quicksnap !== undefined ? ` · ${res.quicksnap} snaps` : '';
       const ticketPart = res.tickets !== undefined ? ` · ${res.tickets} tickets` : '';
@@ -15325,19 +15325,19 @@ async function syncToSheets(){
       const claimPart = res.tripClaims !== undefined ? ` · ${res.tripClaims} claims` : '';
 
       if (res.tripClaims === undefined && res.quicksnap === undefined) {
-        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills\n⚠️ Google Apps Script chưa có code TripClaims/QuickSnap. Vui lòng copy PlantLog_GoogleAppsScript.gs và Triển khai (Deploy) Bản mới trên Google Sheet.`, 'warn');
+        showGSResult(`✅ Synced! ${res.trips || 0} trips · ${res.tasks || 0} tasks · ${res.bills || 0} bills\n⚠️ Google Apps Script chưa có code TripClaims/QuickSnap. Vui lòng copy PlantLog_GoogleAppsScript.gs và Triển khai (Deploy) Bản mới trên Google Sheet.`, 'warn');
         showToast('Synced (Cần cập nhật Apps Script cho TripClaims)');
       } else {
-        showGSResult(`✅ Synced! ${res.trips||0} trips · ${res.tasks||0} tasks · ${res.bills||0} bills${snapPart}${ticketPart}${claimPart}`, 'ok');
-        showToast(`Synced to Google Sheets ✓ (${res.tripClaims !== undefined ? res.tripClaims : (res.quicksnap||0)} items)`);
+        showGSResult(`✅ Synced! ${res.trips || 0} trips · ${res.tasks || 0} tasks · ${res.bills || 0} bills${snapPart}${ticketPart}${claimPart}`, 'ok');
+        showToast(`Synced to Google Sheets ✓ (${res.tripClaims !== undefined ? res.tripClaims : (res.quicksnap || 0)} items)`);
       }
     } else {
-      showGSResult('❌ Sync error: '+((data&&data.error)||'Unknown'),'error');
+      showGSResult('❌ Sync error: ' + ((data && data.error) || 'Unknown'), 'error');
       showToast('Sync failed — check error in sync panel');
     }
-  }catch(e){
-    if(btn){btn.disabled=false;btn.textContent='⬆ Sync all data';}
-    showGSResult('❌ Network error. Check URL ends in /exec and access is Anyone.','error');
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = '⬆ Sync all data'; }
+    showGSResult('❌ Network error. Check URL ends in /exec and access is Anyone.', 'error');
     showToast('Could not reach Google Sheet');
   }
 }
@@ -15414,239 +15414,239 @@ function mergeCollectionByTimestamp(localList, remoteList, idKey = 'id') {
   return merged;
 }
 
-async function loadFromSheets(silent){
-  const url=getGSUrl();
-  if(!url){if(!silent){showToast('Set your Google Sheet URL first');openModal('modal-gsheet');}return;}
-  if(!silent)showToast('Loading from Google Sheets…');
-  try{
-    const data=await gsGet(url,{action:'getAll'});
-    if(data.ok&&data.data){
-      const d=data.data;
+async function loadFromSheets(silent) {
+  const url = getGSUrl();
+  if (!url) { if (!silent) { showToast('Set your Google Sheet URL first'); openModal('modal-gsheet'); } return; }
+  if (!silent) showToast('Loading from Google Sheets…');
+  try {
+    const data = await gsGet(url, { action: 'getAll' });
+    if (data.ok && data.data) {
+      const d = data.data;
 
       // ── Universal safe converters ─────────────────────────
       // Converts any value to a clean YYYY-MM-DD string or ''
       // safeNum: strips locale formatting (commas, spaces) before parseFloat
-      const safeNum=v=>{
-        if(v===null||v===undefined||v==='')return 0;
-        const cleaned=String(v).replace(/,/g,'').replace(/\s/g,'').trim();
-        return parseFloat(cleaned)||0;
+      const safeNum = v => {
+        if (v === null || v === undefined || v === '') return 0;
+        const cleaned = String(v).replace(/,/g, '').replace(/\s/g, '').trim();
+        return parseFloat(cleaned) || 0;
       };
-      const safeDate=v=>{
-        if(v===null||v===undefined||v==='')return'';
-        if(v instanceof Date){
-          if(isNaN(v.getTime()))return'';
-          return v.toISOString().slice(0,10);
+      const safeDate = v => {
+        if (v === null || v === undefined || v === '') return '';
+        if (v instanceof Date) {
+          if (isNaN(v.getTime())) return '';
+          return v.toISOString().slice(0, 10);
         }
-        const s=String(v).trim();
+        const s = String(v).trim();
         // Already YYYY-MM-DD
-        if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
         // ISO with time: 2026-05-11T00:00:00.000Z
-        if(/^\d{4}-\d{2}-\d{2}T/.test(s))return s.slice(0,10);
+        if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
         // Slash format: 2026/05/11
-        if(/^\d{4}\/\d{2}\/\d{2}$/.test(s))return s.replace(/\//g,'-');
+        if (/^\d{4}\/\d{2}\/\d{2}$/.test(s)) return s.replace(/\//g, '-');
         // Excel serial number
-        if(/^\d{5}$/.test(s)){
-          const d=new Date(Math.round((parseFloat(s)-25569)*86400*1000));
-          if(!isNaN(d.getTime()))return d.toISOString().slice(0,10);
+        if (/^\d{5}$/.test(s)) {
+          const d = new Date(Math.round((parseFloat(s) - 25569) * 86400 * 1000));
+          if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
         }
         // Try parsing as date string, but only accept YYYY-MM-DD result
-        try{
-          const d=new Date(s);
-          if(!isNaN(d.getTime())&&s.length>=8){
-            const iso=d.toISOString().slice(0,10);
-            if(iso>'1900-01-01')return iso;
+        try {
+          const d = new Date(s);
+          if (!isNaN(d.getTime()) && s.length >= 8) {
+            const iso = d.toISOString().slice(0, 10);
+            if (iso > '1900-01-01') return iso;
           }
-        }catch(e){}
-        return'';
+        } catch (e) { }
+        return '';
       };
       // Safe time: returns HH:MM or ''
-      const safeTime=v=>{
-        if(!v&&v!==0)return'';
-        const s=String(v).trim();
-        if(!s||s==='null'||s==='undefined')return'';
+      const safeTime = v => {
+        if (!v && v !== 0) return '';
+        const s = String(v).trim();
+        if (!s || s === 'null' || s === 'undefined') return '';
 
         // ── 12-hour format from getDisplayValues(): "6:30 AM" / "6:30 PM" ──
-        const ampm=s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
-        if(ampm){
-          let h=parseInt(ampm[1]);
-          const m=ampm[2];
-          const period=ampm[3].toUpperCase();
-          if(period==='AM'&&h===12)h=0;
-          if(period==='PM'&&h!==12)h+=12;
-          return String(h).padStart(2,'0')+':'+m;
+        const ampm = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+        if (ampm) {
+          let h = parseInt(ampm[1]);
+          const m = ampm[2];
+          const period = ampm[3].toUpperCase();
+          if (period === 'AM' && h === 12) h = 0;
+          if (period === 'PM' && h !== 12) h += 12;
+          return String(h).padStart(2, '0') + ':' + m;
         }
 
         // ── 24-hour format: "06:30" / "6:30" / "06:30:00" ──
-        const h24=s.match(/^(\d{1,2}):(\d{2})/);
-        if(h24){
-          return h24[1].padStart(2,'0')+':'+h24[2];
+        const h24 = s.match(/^(\d{1,2}):(\d{2})/);
+        if (h24) {
+          return h24[1].padStart(2, '0') + ':' + h24[2];
         }
 
         // ── ISO with T: "1899-12-30T06:30:00.000Z" ──
-        const isoT=s.match(/T(\d{2}:\d{2})/);
-        if(isoT)return isoT[1];
+        const isoT = s.match(/T(\d{2}:\d{2})/);
+        if (isoT) return isoT[1];
 
         // ── Date object toString: "Sat Dec 30 1899 06:30:00 GMT+0700" ──
-        const dobj=s.match(/(\d{2}):(\d{2}):(\d{2})/);
-        if(dobj)return dobj[1]+':'+dobj[2];
+        const dobj = s.match(/(\d{2}):(\d{2}):(\d{2})/);
+        if (dobj) return dobj[1] + ':' + dobj[2];
 
         // ── Excel serial decimal: 0.270833 = 06:30 ──
-        const num=parseFloat(s);
-        if(!isNaN(num)&&num>0&&num<1){
-          const totalMins=Math.round(num*24*60);
-          return String(Math.floor(totalMins/60)).padStart(2,'0')+':'
-                +String(totalMins%60).padStart(2,'0');
+        const num = parseFloat(s);
+        if (!isNaN(num) && num > 0 && num < 1) {
+          const totalMins = Math.round(num * 24 * 60);
+          return String(Math.floor(totalMins / 60)).padStart(2, '0') + ':'
+            + String(totalMins % 60).padStart(2, '0');
         }
-        return'';
+        return '';
       };
       // Safe string
-      const ss=v=>v===null||v===undefined?'':String(v).trim();
+      const ss = v => v === null || v === undefined ? '' : String(v).trim();
 
-      if(d.trips&&d.trips.length){
-        const strV=v=>safeDate(v)||ss(v);
+      if (d.trips && d.trips.length) {
+        const strV = v => safeDate(v) || ss(v);
         const existingTrips = S.trips || [];
-        const remoteTrips=d.trips.map(tr=>{
-          const st = ss(tr.Status)||'planned';
-          const localTr = existingTrips.find(x=>x.id===ss(tr.ID));
-          const finalSt = (localTr && (localTr.status==='in_progress'||localTr.status==='done') && st==='planned') ? localTr.status : st;
+        const remoteTrips = d.trips.map(tr => {
+          const st = ss(tr.Status) || 'planned';
+          const localTr = existingTrips.find(x => x.id === ss(tr.ID));
+          const finalSt = (localTr && (localTr.status === 'in_progress' || localTr.status === 'done') && st === 'planned') ? localTr.status : st;
           return {
-            id:        ss(tr.ID),
-            plant:     ss(tr.Plant),
-            location:  ss(tr.Location),
-            date:      safeDate(tr.Date),
-            dateEnd:   safeDate(tr.DateEnd),
-            purpose:   ss(tr.Purpose),
-            contact:   ss(tr.Contact),
+            id: ss(tr.ID),
+            plant: ss(tr.Plant),
+            location: ss(tr.Location),
+            date: safeDate(tr.Date),
+            dateEnd: safeDate(tr.DateEnd),
+            purpose: ss(tr.Purpose),
+            contact: ss(tr.Contact),
             transport: ss(tr.Transport),
-            status:    finalSt,
-            notes:     ss(tr.Notes),
-            flight:       tr.Flight?(()=>{try{return JSON.parse(ss(tr.Flight));}catch(e){return null;}})():null,
-            ta:           tr.TA?(()=>{try{return JSON.parse(ss(tr.TA));}catch(e){return null;}})():null,
-            savedReports: (()=>{
-              const raw = ss(tr.SavedReports||tr.savedReports||'');
-              if(!raw) return [];
-              try{ const p=JSON.parse(raw); return Array.isArray(p)?p:[]; }
-              catch(e){ return []; }
+            status: finalSt,
+            notes: ss(tr.Notes),
+            flight: tr.Flight ? (() => { try { return JSON.parse(ss(tr.Flight)); } catch (e) { return null; } })() : null,
+            ta: tr.TA ? (() => { try { return JSON.parse(ss(tr.TA)); } catch (e) { return null; } })() : null,
+            savedReports: (() => {
+              const raw = ss(tr.SavedReports || tr.savedReports || '');
+              if (!raw) return [];
+              try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; }
+              catch (e) { return []; }
             })(),
             createdAt: ss(tr.CreatedAt),
-            updatedAt: ss(tr.UpdatedAt||tr.CreatedAt)
+            updatedAt: ss(tr.UpdatedAt || tr.CreatedAt)
           };
         });
         S.trips = mergeCollectionByTimestamp(existingTrips, remoteTrips, 'id');
       }
-      if(d.tasks&&d.tasks.length){
+      if (d.tasks && d.tasks.length) {
         // Helper: safely convert any value to string, handle Date objects
-        const str=v=>{
-          if(v===null||v===undefined||v==='')return'';
-          if(v instanceof Date)return v.toISOString(); // keep full ISO including time
+        const str = v => {
+          if (v === null || v === undefined || v === '') return '';
+          if (v instanceof Date) return v.toISOString(); // keep full ISO including time
           return String(v);
         };
-        const num=v=>parseFloat(str(v))||0;
+        const num = v => parseFloat(str(v)) || 0;
         const existingTasks = S.tasks || [];
-        const remoteTasks=d.tasks.map(tk=>{
-          let cl=[];
-          try{
-            const cj=str(tk.ChecklistJson||tk.checklistJson||'');
-            if(cj.startsWith('['))cl=JSON.parse(cj);
-            else{const c2=str(tk.Checklist||'');if(c2.startsWith('['))cl=JSON.parse(c2);}
-          }catch(e){cl=[];}
-          const ds=safeDate(tk.DateStart||tk.Date);
-          const de=safeDate(tk.DateEnd)||ds;
-          const ts=safeTime(tk.TimeStart||tk.Time);
-          const te=safeTime(tk.TimeEnd);
+        const remoteTasks = d.tasks.map(tk => {
+          let cl = [];
+          try {
+            const cj = str(tk.ChecklistJson || tk.checklistJson || '');
+            if (cj.startsWith('[')) cl = JSON.parse(cj);
+            else { const c2 = str(tk.Checklist || ''); if (c2.startsWith('[')) cl = JSON.parse(c2); }
+          } catch (e) { cl = []; }
+          const ds = safeDate(tk.DateStart || tk.Date);
+          const de = safeDate(tk.DateEnd) || ds;
+          const ts = safeTime(tk.TimeStart || tk.Time);
+          const te = safeTime(tk.TimeEnd);
           // Parse parts JSON
-          let pts=[];
-          try{
-            const pj=ss(tk.PartsJson||'');
-            if(pj.startsWith('['))pts=JSON.parse(pj);
-          }catch(e){pts=[];}
+          let pts = [];
+          try {
+            const pj = ss(tk.PartsJson || '');
+            if (pj.startsWith('[')) pts = JSON.parse(pj);
+          } catch (e) { pts = []; }
 
           return {
-            id:           ss(tk.ID),
-            title:        ss(tk.Title),
-            desc:         ss(tk.Description),
-            category:     ss(tk.Category)||'work',
-            dateStart:    ds,
-            timeStart:    ts,
-            dateEnd:      de,
-            timeEnd:      te,
-            hours:        safeNum(tk.Hours)||ss(tk.Hours),
-            minutes:      safeNum(tk.Minutes)||ss(tk.Minutes),
-            autoDuration: (ss(tk.AutoDuration)||'').toLowerCase()==='true',
-            durationMins: ss(tk.DurationMins)?parseInt(ss(tk.DurationMins))||0:0,
-            priority:     (()=>{
-              const raw=(ss(tk.Priority)||'medium').toLowerCase().trim();
-              if(raw==='high') return 'high';
-              if(raw==='low')  return 'low';
+            id: ss(tk.ID),
+            title: ss(tk.Title),
+            desc: ss(tk.Description),
+            category: ss(tk.Category) || 'work',
+            dateStart: ds,
+            timeStart: ts,
+            dateEnd: de,
+            timeEnd: te,
+            hours: safeNum(tk.Hours) || ss(tk.Hours),
+            minutes: safeNum(tk.Minutes) || ss(tk.Minutes),
+            autoDuration: (ss(tk.AutoDuration) || '').toLowerCase() === 'true',
+            durationMins: ss(tk.DurationMins) ? parseInt(ss(tk.DurationMins)) || 0 : 0,
+            priority: (() => {
+              const raw = (ss(tk.Priority) || 'medium').toLowerCase().trim();
+              if (raw === 'high') return 'high';
+              if (raw === 'low') return 'low';
               return 'medium';
             })(),
-            period:       ss(tk.Period),
-            machine:      ss(tk.Machine),
-            plan:         ss(tk.Plan),
-            tripId:       ss(tk.TripID),
-            status:       (()=>{
-              const raw=(ss(tk.Status)||'pending').toLowerCase().trim();
+            period: ss(tk.Period),
+            machine: ss(tk.Machine),
+            plan: ss(tk.Plan),
+            tripId: ss(tk.TripID),
+            status: (() => {
+              const raw = (ss(tk.Status) || 'pending').toLowerCase().trim();
               let stVal = 'pending';
-              if(raw.includes('progress')||raw==='in_progress') stVal = 'in_progress';
-              else if(raw==='done'||raw==='complete'||raw==='completed') stVal = 'done';
-              const localTk = (S.tasks||[]).find(x=>x.id===ss(tk.ID));
-              if(localTk && (localTk.status==='in_progress'||localTk.status==='done') && stVal==='pending') {
+              if (raw.includes('progress') || raw === 'in_progress') stVal = 'in_progress';
+              else if (raw === 'done' || raw === 'complete' || raw === 'completed') stVal = 'done';
+              const localTk = (S.tasks || []).find(x => x.id === ss(tk.ID));
+              if (localTk && (localTk.status === 'in_progress' || localTk.status === 'done') && stVal === 'pending') {
                 return localTk.status;
               }
               return stVal;
             })(),
-            checklist:    cl,
-            parts:        pts,
-            flight:       tk.FlightJson?(()=>{try{return JSON.parse(ss(tk.FlightJson));}catch(e){return null;}})():null,
-            files:        tk.FilesJson?(()=>{try{return JSON.parse(ss(tk.FilesJson));}catch(e){return [];}})():[],
-            savedReports: tk.SavedReports?(()=>{try{const p=JSON.parse(ss(tk.SavedReports));return Array.isArray(p)?p:[];}catch(e){return [];}})():[],
-            date:         ds,
-            time:         ts,
-            createdAt:    ss(tk.CreatedAt),
-            updatedAt:    ss(tk.UpdatedAt||tk.CreatedAt)
+            checklist: cl,
+            parts: pts,
+            flight: tk.FlightJson ? (() => { try { return JSON.parse(ss(tk.FlightJson)); } catch (e) { return null; } })() : null,
+            files: tk.FilesJson ? (() => { try { return JSON.parse(ss(tk.FilesJson)); } catch (e) { return []; } })() : [],
+            savedReports: tk.SavedReports ? (() => { try { const p = JSON.parse(ss(tk.SavedReports)); return Array.isArray(p) ? p : []; } catch (e) { return []; } })() : [],
+            date: ds,
+            time: ts,
+            createdAt: ss(tk.CreatedAt),
+            updatedAt: ss(tk.UpdatedAt || tk.CreatedAt)
           };
         });
         S.tasks = mergeCollectionByTimestamp(existingTasks, remoteTasks, 'id');
       }
-      if(d.leave&&d.leave.length){
-        S.leaveData={};
-        d.leave.forEach(l=>{
-          const lDate=safeDate(l.Date)||ss(l.Date);
-          if(lDate&&l.Type)S.leaveData[lDate]=ss(l.Type);
+      if (d.leave && d.leave.length) {
+        S.leaveData = {};
+        d.leave.forEach(l => {
+          const lDate = safeDate(l.Date) || ss(l.Date);
+          if (lDate && l.Type) S.leaveData[lDate] = ss(l.Type);
         });
       }
       // Load bills
-      if(d.bills&&d.bills.length){
-        const strB=v=>v===null||v===undefined?'':v instanceof Date?v.toISOString().slice(0,10):String(v);
+      if (d.bills && d.bills.length) {
+        const strB = v => v === null || v === undefined ? '' : v instanceof Date ? v.toISOString().slice(0, 10) : String(v);
         const existingBills = S.bills || [];
-        const remoteBills=d.bills.map(b=>{
-          let photos=[];
-          try{
-            const pj=strB(b.PhotosJson||b.photosJson||'');
-            if(pj&&pj.startsWith('['))photos=JSON.parse(pj);
-          }catch(e){photos=[];}
+        const remoteBills = d.bills.map(b => {
+          let photos = [];
+          try {
+            const pj = strB(b.PhotosJson || b.photosJson || '');
+            if (pj && pj.startsWith('[')) photos = JSON.parse(pj);
+          } catch (e) { photos = []; }
           return {
-            id:         ss(b.ID),
-            tripId:     ss(b.TripID),
-            date:       safeDate(b.Date)||ss(b.Date),
+            id: ss(b.ID),
+            tripId: ss(b.TripID),
+            date: safeDate(b.Date) || ss(b.Date),
             billNumber: strB(b.BillNumber),
-            detail:     strB(b.Detail),
-            amount:     safeNum(b.Amount),
-            currency:   strB(b.Currency)||'VND',
-            vndAmount:  safeNum(b.VndAmount||b.vndAmount),
-            category:   strB(b.Category)||'other',
-            paymentMethod: strB(b.PaymentMethod||b.paymentMethod||b.PaymentTerm||b.paymentTerm)||'1-Cash',
-            notes:      strB(b.Notes),
-            photos:     photos,
-            createdAt:  strB(b.CreatedAt),
-            updatedAt:  strB(b.UpdatedAt||b.CreatedAt)
+            detail: strB(b.Detail),
+            amount: safeNum(b.Amount),
+            currency: strB(b.Currency) || 'VND',
+            vndAmount: safeNum(b.VndAmount || b.vndAmount),
+            category: strB(b.Category) || 'other',
+            paymentMethod: strB(b.PaymentMethod || b.paymentMethod || b.PaymentTerm || b.paymentTerm) || '1-Cash',
+            notes: strB(b.Notes),
+            photos: photos,
+            createdAt: strB(b.CreatedAt),
+            updatedAt: strB(b.UpdatedAt || b.CreatedAt)
           };
         });
         S.bills = mergeCollectionByTimestamp(existingBills, remoteBills, 'id');
       }
 
       // IMP-22: Load QuickSnap (Scratchpad)
-      if(d.quicksnap && Array.isArray(d.quicksnap)){
+      if (d.quicksnap && Array.isArray(d.quicksnap)) {
         const existingScratch = S.scratchpad || [];
         const remoteScratch = d.quicksnap.map(q => ({
           id: ss(q.ID),
@@ -15664,13 +15664,13 @@ async function loadFromSheets(silent){
       }
 
       // IMP-23: Load Site Safety & LOTO and attach to trips
-      if(d.safety && d.safety.length){
+      if (d.safety && d.safety.length) {
         d.safety.forEach(sf => {
           const tr = (S.trips || []).find(t => t.id === ss(sf.TripID));
-          if(tr){
+          if (tr) {
             const remoteUpdated = new Date(ss(sf.UpdatedAt) || 0).getTime();
             const localUpdated = new Date((tr.safety && tr.safety.updatedAt) || 0).getTime();
-            if(!tr.safety || remoteUpdated >= localUpdated){
+            if (!tr.safety || remoteUpdated >= localUpdated) {
               const types = ss(sf.PermitTypes).split(',').map(x => x.trim()).filter(Boolean);
               tr.safety = {
                 permitNo: ss(sf.PermitNo),
@@ -15697,12 +15697,12 @@ async function loadFromSheets(silent){
       }
 
       // IMP-19: Load Daily Service Tickets and attach to trips
-      if(d.tickets && d.tickets.length){
+      if (d.tickets && d.tickets.length) {
         const ticketsByTrip = {};
         d.tickets.forEach(tk => {
           const tid = ss(tk.TripID);
-          if(!tid) return;
-          if(!ticketsByTrip[tid]) ticketsByTrip[tid] = [];
+          if (!tid) return;
+          if (!ticketsByTrip[tid]) ticketsByTrip[tid] = [];
           ticketsByTrip[tid].push({
             id: ss(tk.ID),
             date: safeDate(tk.Date),
@@ -15722,7 +15722,7 @@ async function loadFromSheets(silent){
         });
 
         (S.trips || []).forEach(tr => {
-          if(ticketsByTrip[tr.id]){
+          if (ticketsByTrip[tr.id]) {
             const existingTickets = tr.timesheets || [];
             tr.timesheets = mergeCollectionByTimestamp(existingTickets, ticketsByTrip[tr.id], 'id');
           }
@@ -15730,7 +15730,7 @@ async function loadFromSheets(silent){
       }
 
       // IMP-31: Load Trip Claims
-      if(d.tripClaims && Array.isArray(d.tripClaims)){
+      if (d.tripClaims && Array.isArray(d.tripClaims)) {
         const existingClaims = S.tripClaims || [];
         const remoteClaims = d.tripClaims.map(c => ({
           tripId: ss(c.TripID),
@@ -15751,67 +15751,67 @@ async function loadFromSheets(silent){
       }
 
       sv();
-      try{ if(typeof autoStartTodayItems==='function') autoStartTodayItems(); }catch(e){}
-      renderDash();renderTripList();renderTasks();renderCalendar();
-      if(typeof renderTripSavedReports==='function') renderTripSavedReports();
-      if(typeof renderTripTimesheets==='function' && typeof curTrip!=='undefined' && curTrip) {
+      try { if (typeof autoStartTodayItems === 'function') autoStartTodayItems(); } catch (e) { }
+      renderDash(); renderTripList(); renderTasks(); renderCalendar();
+      if (typeof renderTripSavedReports === 'function') renderTripSavedReports();
+      if (typeof renderTripTimesheets === 'function' && typeof curTrip !== 'undefined' && curTrip) {
         renderTripTimesheets(curTrip);
       }
-      if(typeof renderTripSafety==='function' && typeof curTrip!=='undefined' && curTrip) {
+      if (typeof renderTripSafety === 'function' && typeof curTrip !== 'undefined' && curTrip) {
         renderTripSafety(curTrip);
       }
-      if(typeof renderTripClaimsScreen==='function') renderTripClaimsScreen();
-      showGSResult('✅ Data loaded from Google Sheets successfully!','ok');
+      if (typeof renderTripClaimsScreen === 'function') renderTripClaimsScreen();
+      showGSResult('✅ Data loaded from Google Sheets successfully!', 'ok');
       showToast('Loaded from Google Sheets ✓');
     } else {
-      showGSResult('⚠ No data found or load error: '+(data&&data.error||'Unknown'),'warn');
+      showGSResult('⚠ No data found or load error: ' + (data && data.error || 'Unknown'), 'warn');
     }
-  }catch(e){
-    showGSResult('❌ Could not load data. Check your URL and internet connection.','error');
+  } catch (e) {
+    showGSResult('❌ Could not load data. Check your URL and internet connection.', 'error');
     showToast('Load failed — check URL');
   }
 }
 
 // Auto-sync debounced — triggers 350ms after delete or 2.5s after other actions
-let syncTimer=null;
-function svAndSync(source){
+let syncTimer = null;
+function svAndSync(source) {
   sv();
-  if(!S.gsUrl)return;
+  if (!S.gsUrl) return;
   clearTimeout(syncTimer);
   const delay = (typeof source === 'string' && source.includes('delete')) ? 350 : 2500;
-  syncTimer=setTimeout(()=>{
+  syncTimer = setTimeout(() => {
     // Show subtle indicator
-    const el=document.getElementById('gsheet-status');
-    if(el)el.textContent='Syncing…';
-    syncToSheets().then(()=>{}).catch(()=>{});
+    const el = document.getElementById('gsheet-status');
+    if (el) el.textContent = 'Syncing…';
+    syncToSheets().then(() => { }).catch(() => { });
   }, delay);
 }
 
 // ═══════ BILLS ═══════
-let editingBillId=null;
-let tmpBillPhotos=[];
-const BILL_CAT_LABELS={accommodation:'🏨 Accommodation',travel:'✈️ Travel',meals:'🍽 Meals',parts:'🔩 Parts/Materials',tools:'🔧 Tools',other:'📋 Other'};
+let editingBillId = null;
+let tmpBillPhotos = [];
+const BILL_CAT_LABELS = { accommodation: '🏨 Accommodation', travel: '✈️ Travel', meals: '🍽 Meals', parts: '🔩 Parts/Materials', tools: '🔧 Tools', other: '📋 Other' };
 
-function renderTripBills(tripId){
-  const el=document.getElementById('trip-bills-section');
-  if(!el)return;
-  const bills=(S.bills||[]).filter(b=>b.tripId===tripId).sort((a,b)=>b.date.localeCompare(a.date));
+function renderTripBills(tripId) {
+  const el = document.getElementById('trip-bills-section');
+  if (!el) return;
+  const bills = (S.bills || []).filter(b => b.tripId === tripId).sort((a, b) => b.date.localeCompare(a.date));
   // Compute totals — VND grand total + per-currency breakdown
-  const totalVND=bills.reduce((s,b)=>{
-    if(b.currency==='VND')return s+(parseFloat(b.amount)||0);
-    return s+(parseFloat(b.vndAmount)||0);
-  },0);
-  const byCur={};
-  bills.forEach(b=>{const c=b.currency||'VND';byCur[c]=(byCur[c]||0)+(parseFloat(b.amount)||0);});
+  const totalVND = bills.reduce((s, b) => {
+    if (b.currency === 'VND') return s + (parseFloat(b.amount) || 0);
+    return s + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+  const byCur = {};
+  bills.forEach(b => { const c = b.currency || 'VND'; byCur[c] = (byCur[c] || 0) + (parseFloat(b.amount) || 0); });
 
-  let html=`<div style="font-size:11px;font-weight:700;color:#00843D;letter-spacing:0.07em;text-transform:uppercase;margin:12px 0 8px;">Expense Bills</div>`;
+  let html = `<div style="font-size:11px;font-weight:700;color:#00843D;letter-spacing:0.07em;text-transform:uppercase;margin:12px 0 8px;">Expense Bills</div>`;
 
-  if(bills.length){
+  if (bills.length) {
     // Show: each currency on left, grand VND total on right
-    const curLines=Object.entries(byCur).map(([c,t])=>
+    const curLines = Object.entries(byCur).map(([c, t]) =>
       `<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);margin-top:2px;">${fmtAmt(t, c)} <span style="font-size:10px;opacity:0.8;">${c}</span></div>`
     ).join('');
-    html+=`<div class="bill-total-bar">
+    html += `<div class="bill-total-bar">
       <div>
         <div class="bill-total-label">Expenses (${bills.length} bills)</div>
         ${curLines}
@@ -15823,135 +15823,135 @@ function renderTripBills(tripId){
     </div>`;
 
     // Group by date
-    const byDate={};
-    bills.forEach(b=>{
-      const d=b.date||'';
-      if(!byDate[d])byDate[d]=[];
+    const byDate = {};
+    bills.forEach(b => {
+      const d = b.date || '';
+      if (!byDate[d]) byDate[d] = [];
       byDate[d].push(b);
     });
 
-    Object.entries(byDate).forEach(([dateKey,dayBills])=>{
-      const dayTotal=dayBills.reduce((s,b)=>s+(parseFloat(b.amount)||0),0);
-      const dc=dayBills[0].currency||'VND';
-      html+=`<div class="bill-day-header">
+    Object.entries(byDate).forEach(([dateKey, dayBills]) => {
+      const dayTotal = dayBills.reduce((s, b) => s + (parseFloat(b.amount) || 0), 0);
+      const dc = dayBills[0].currency || 'VND';
+      html += `<div class="bill-day-header">
         <div class="bill-day-label">📅 ${fmtDate(dateKey)}</div>
         <div class="bill-day-total">${fmtAmt(dayTotal, "VND")} ${dc}</div>
       </div>`;
 
-      dayBills.forEach(b=>{
-        const amt=fmtAmt(b.amount, b.currency);
-        html+=`<div class="bill-card">
+      dayBills.forEach(b => {
+        const amt = fmtAmt(b.amount, b.currency);
+        html += `<div class="bill-card">
           <div class="bill-head">
             <div style="flex:1;min-width:0;">
-              ${b.billNumber?`<div class="bill-num">Receipt #${b.billNumber}</div>`:''}
+              ${b.billNumber ? `<div class="bill-num">Receipt #${b.billNumber}</div>` : ''}
               <div class="bill-detail-text">${b.detail}</div>
               <div class="bill-meta">
-                <span style="background:var(--al);color:#92400E;padding:1px 7px;border-radius:10px;font-size:10px;">${BILL_CAT_LABELS[b.category]||b.category||'Other'}</span>
-                ${b.notes?`<span style="color:var(--g500);">${b.notes}</span>`:''}
+                <span style="background:var(--al);color:#92400E;padding:1px 7px;border-radius:10px;font-size:10px;">${BILL_CAT_LABELS[b.category] || b.category || 'Other'}</span>
+                ${b.notes ? `<span style="color:var(--g500);">${b.notes}</span>` : ''}
               </div>
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;margin-left:10px;">
-              <div class="bill-amount">${amt} ${b.currency||''}</div>
+              <div class="bill-amount">${amt} ${b.currency || ''}</div>
               <div style="display:flex;gap:4px;">
                 <button onclick="openEditBill('${b.id}')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--g200);background:#fff;cursor:pointer;font-size:13px;" title="Edit">✏️</button>
                 <button onclick="deleteBill('${b.id}')" class="db" title="Delete">×</button>
               </div>
             </div>
           </div>
-          ${b.photos&&b.photos.length?`
+          ${b.photos && b.photos.length ? `
           <div class="bill-photo-strip">
-            ${b.photos.map((p,pi)=>`<img class="bill-photo-thumb" src="${p}" onclick="viewBillPhoto('${b.id}',${pi})" title="Tap to view">`).join('')}
-          </div>`:''}
+            ${b.photos.map((p, pi) => `<img class="bill-photo-thumb" src="${p}" onclick="viewBillPhoto('${b.id}',${pi})" title="Tap to view">`).join('')}
+          </div>`: ''}
         </div>`;
       });
     });
   } else {
-    html+=`<div style="text-align:center;padding:16px;font-size:13px;color:var(--g400);">No bills recorded yet.<br>Tap below to add your first expense.</div>`;
+    html += `<div style="text-align:center;padding:16px;font-size:13px;color:var(--g400);">No bills recorded yet.<br>Tap below to add your first expense.</div>`;
   }
-  html+=`<button class="btn btn-o btn-full" style="margin-top:8px;" onclick="openAddBill('${tripId}')">＋ Add expense bill</button>`;
-  el.innerHTML=html;
+  html += `<button class="btn btn-o btn-full" style="margin-top:8px;" onclick="openAddBill('${tripId}')">＋ Add expense bill</button>`;
+  el.innerHTML = html;
 }
 
-function viewBillPhoto(billId, photoIdx){
-  const b=S.bills.find(x=>x.id===billId);
-  if(!b||!b.photos||!b.photos[photoIdx]) return;
+function viewBillPhoto(billId, photoIdx) {
+  const b = S.bills.find(x => x.id === billId);
+  if (!b || !b.photos || !b.photos[photoIdx]) return;
   const src = b.photos[photoIdx];
   // If it's a Drive URL → open directly in browser
-  if(src.startsWith('https://')){
-    window.open(src,'_blank');
+  if (src.startsWith('https://')) {
+    window.open(src, '_blank');
     return;
   }
   // Otherwise show inline overlay for base64 images
-  const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
-  overlay.onclick=()=>overlay.remove();
-  const img=document.createElement('img');
-  img.src=src;
-  img.style.cssText='max-width:95vw;max-height:80vh;border-radius:8px;object-fit:contain;';
-  const close=document.createElement('div');
-  close.textContent='✕ Tap anywhere to close';
-  close.style.cssText='color:rgba(255,255,255,0.6);font-size:13px;';
-  overlay.appendChild(img);overlay.appendChild(close);
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
+  overlay.onclick = () => overlay.remove();
+  const img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'max-width:95vw;max-height:80vh;border-radius:8px;object-fit:contain;';
+  const close = document.createElement('div');
+  close.textContent = '✕ Tap anywhere to close';
+  close.style.cssText = 'color:rgba(255,255,255,0.6);font-size:13px;';
+  overlay.appendChild(img); overlay.appendChild(close);
   document.body.appendChild(overlay);
 }
 
-function openAddBill(tripId){
-  editingBillId=null;
-  tmpBillPhotos=[];
-  _savingBill=false;  // reset guard when opening modal
+function openAddBill(tripId) {
+  editingBillId = null;
+  tmpBillPhotos = [];
+  _savingBill = false;  // reset guard when opening modal
   // Always re-enable button when opening add
-  const _sb2=document.getElementById('bill-save-btn');
-  if(_sb2){ _sb2.disabled=false; _sb2.textContent='💾 Save Bill'; }
-  document.getElementById('bill-modal-title').textContent='Add Bill';
-  document.getElementById('bill-edit-id').textContent='';
-  document.getElementById('bill-save-btn').textContent='💾 Save Bill';
-  ['bill-detail','bill-number','bill-amount','bill-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('bill-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('bill-currency').value='VND';
-  document.getElementById('bill-category').value='other';
-  const vndElR=document.getElementById('bill-vnd');if(vndElR)vndElR.value='';
+  const _sb2 = document.getElementById('bill-save-btn');
+  if (_sb2) { _sb2.disabled = false; _sb2.textContent = '💾 Save Bill'; }
+  document.getElementById('bill-modal-title').textContent = 'Add Bill';
+  document.getElementById('bill-edit-id').textContent = '';
+  document.getElementById('bill-save-btn').textContent = '💾 Save Bill';
+  ['bill-detail', 'bill-number', 'bill-amount', 'bill-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('bill-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('bill-currency').value = 'VND';
+  document.getElementById('bill-category').value = 'other';
+  const vndElR = document.getElementById('bill-vnd'); if (vndElR) vndElR.value = '';
   toggleVNDRow();
   renderBillPhotoGrid();
   // Populate trip selector
-  const ts=document.getElementById('bill-trip-select');
-  if(ts){
-    ts.innerHTML='<option value="">No trip link</option>'+S.trips.map(t=>`<option value="${t.id}"${t.id===tripId?' selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
+  const ts = document.getElementById('bill-trip-select');
+  if (ts) {
+    ts.innerHTML = '<option value="">No trip link</option>' + S.trips.map(t => `<option value="${t.id}"${t.id === tripId ? ' selected' : ''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
   }
-  document.getElementById('bill-save-btn').dataset.tripid=tripId||'';
+  document.getElementById('bill-save-btn').dataset.tripid = tripId || '';
   openModal('modal-add-bill');
 }
 
-function openEditBill(id){
-  const b=S.bills.find(x=>x.id===id);if(!b)return;
-  editingBillId=id;
-  _savingBill=false;  // reset guard when opening modal
+function openEditBill(id) {
+  const b = S.bills.find(x => x.id === id); if (!b) return;
+  editingBillId = id;
+  _savingBill = false;  // reset guard when opening modal
   // Always re-enable button when opening edit (may have been left disabled)
-  const _sb=document.getElementById('bill-save-btn');
-  if(_sb){ _sb.disabled=false; _sb.textContent='💾 Update Bill'; }
+  const _sb = document.getElementById('bill-save-btn');
+  if (_sb) { _sb.disabled = false; _sb.textContent = '💾 Update Bill'; }
   // Load photos: normalise to {src, driveUrl, fileId} format
-  tmpBillPhotos = (b.photos||[]).map(p => {
-    if(typeof p === 'object' && p.src) return p;
-    const url = typeof p==='string' ? p : (p.driveUrl||p.src||'');
-    return {src:url, driveUrl:url.startsWith('https://')?url:'', fileId:''};
+  tmpBillPhotos = (b.photos || []).map(p => {
+    if (typeof p === 'object' && p.src) return p;
+    const url = typeof p === 'string' ? p : (p.driveUrl || p.src || '');
+    return { src: url, driveUrl: url.startsWith('https://') ? url : '', fileId: '' };
   });
-  document.getElementById('bill-modal-title').textContent='Edit Bill';
-  document.getElementById('bill-edit-id').textContent='#'+id.slice(-6);
-  document.getElementById('bill-save-btn').textContent='💾 Update Bill';
-  document.getElementById('bill-date').value=b.date||'';
-  document.getElementById('bill-number').value=b.billNumber||'';
-  document.getElementById('bill-detail').value=b.detail||'';
-  document.getElementById('bill-amount').value=b.amount||'';
-  document.getElementById('bill-currency').value=b.currency||'VND';
-  const vndEl2=document.getElementById('bill-vnd');
-  if(vndEl2)vndEl2.value=(b.currency!=='VND'&&b.vndAmount)?b.vndAmount:'';
+  document.getElementById('bill-modal-title').textContent = 'Edit Bill';
+  document.getElementById('bill-edit-id').textContent = '#' + id.slice(-6);
+  document.getElementById('bill-save-btn').textContent = '💾 Update Bill';
+  document.getElementById('bill-date').value = b.date || '';
+  document.getElementById('bill-number').value = b.billNumber || '';
+  document.getElementById('bill-detail').value = b.detail || '';
+  document.getElementById('bill-amount').value = b.amount || '';
+  document.getElementById('bill-currency').value = b.currency || 'VND';
+  const vndEl2 = document.getElementById('bill-vnd');
+  if (vndEl2) vndEl2.value = (b.currency !== 'VND' && b.vndAmount) ? b.vndAmount : '';
   toggleVNDRow();
-  document.getElementById('bill-category').value=b.category||'other';
-  const pmEl3=document.getElementById('bill-payment-method');if(pmEl3)pmEl3.value=b.paymentMethod||b.paymentTerm||'1-Cash';
-  document.getElementById('bill-notes').value=b.notes||'';
-  document.getElementById('bill-save-btn').dataset.tripid=b.tripId||'';
-  const ts2=document.getElementById('bill-trip-select');
-  if(ts2){
-    ts2.innerHTML='<option value="">No trip link</option>'+S.trips.map(t=>`<option value="${t.id}"${t.id===b.tripId?' selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
+  document.getElementById('bill-category').value = b.category || 'other';
+  const pmEl3 = document.getElementById('bill-payment-method'); if (pmEl3) pmEl3.value = b.paymentMethod || b.paymentTerm || '1-Cash';
+  document.getElementById('bill-notes').value = b.notes || '';
+  document.getElementById('bill-save-btn').dataset.tripid = b.tripId || '';
+  const ts2 = document.getElementById('bill-trip-select');
+  if (ts2) {
+    ts2.innerHTML = '<option value="">No trip link</option>' + S.trips.map(t => `<option value="${t.id}"${t.id === b.tripId ? ' selected' : ''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
   }
   renderBillPhotoGrid();
   openModal('modal-add-bill');
@@ -15959,50 +15959,50 @@ function openEditBill(id){
 
 let _savingBill = false;  // guard against double-submit
 
-async function saveBill(){
+async function saveBill() {
   // ── Prevent double-submit (async function runs over multiple seconds) ──
-  if(_savingBill) return;
+  if (_savingBill) return;
   _savingBill = true;
 
   const saveBtn = document.getElementById('bill-save-btn');
   // origText captured below after origBtnText
   const origBtnText = saveBtn ? saveBtn.textContent : '💾 Save Bill';
-  if(saveBtn){ saveBtn.disabled = true; saveBtn.textContent = '⟳ Saving…'; }
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⟳ Saving…'; }
 
-  try{
-    const detail=document.getElementById('bill-detail').value.trim();
-    const amount=document.getElementById('bill-amount').value;
-    if(!detail||!amount){
+  try {
+    const detail = document.getElementById('bill-detail').value.trim();
+    const amount = document.getElementById('bill-amount').value;
+    if (!detail || !amount) {
       showToast('Detail and amount are required');
-      _savingBill=false;
-      if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 '+( editingBillId?'Update':'Save')+' Bill'; }
+      _savingBill = false;
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 ' + (editingBillId ? 'Update' : 'Save') + ' Bill'; }
       return;
     }
-    const ts=document.getElementById('bill-trip-select');
-    const tripId=(ts&&ts.value)||document.getElementById('bill-save-btn').dataset.tripid||'';
-    const cur=document.getElementById('bill-currency').value;
-    const vndEl=document.getElementById('bill-vnd');
-    const vndAmt=cur==='VND'?parseFloat(amount)||0:(vndEl&&vndEl.value?parseFloat(vndEl.value)||0:0);
+    const ts = document.getElementById('bill-trip-select');
+    const tripId = (ts && ts.value) || document.getElementById('bill-save-btn').dataset.tripid || '';
+    const cur = document.getElementById('bill-currency').value;
+    const vndEl = document.getElementById('bill-vnd');
+    const vndAmt = cur === 'VND' ? parseFloat(amount) || 0 : (vndEl && vndEl.value ? parseFloat(vndEl.value) || 0 : 0);
 
     // Lock billId at start — never changes even during async uploads
-    const billId = editingBillId || ('bill_'+Date.now());
+    const billId = editingBillId || ('bill_' + Date.now());
 
     // Upload local photos to Drive now (at save time — reliable, no race conditions)
-    const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
+    const gsUrl = getGSUrl ? getGSUrl() : (S && S.gsUrl || '');
     const canUpload = gsUrl && gsUrl.includes('/exec');
     const localPhotos = tmpBillPhotos.filter(p => {
-      const src = (typeof p==='string') ? p : (p.src||'');
+      const src = (typeof p === 'string') ? p : (p.src || '');
       return src.startsWith('data:');
     });
 
-    if(canUpload && localPhotos.length){
-      if(saveBtn) saveBtn.textContent = '⟳ Uploading '+localPhotos.length+' photo'+(localPhotos.length>1?'s':'')+'…';
-      for(let i=0; i<tmpBillPhotos.length; i++){
+    if (canUpload && localPhotos.length) {
+      if (saveBtn) saveBtn.textContent = '⟳ Uploading ' + localPhotos.length + ' photo' + (localPhotos.length > 1 ? 's' : '') + '…';
+      for (let i = 0; i < tmpBillPhotos.length; i++) {
         const p = tmpBillPhotos[i];
-        const src = (typeof p==='string') ? p : (p.src||'');
-        if(!src.startsWith('data:')) continue;  // skip already-uploaded
+        const src = (typeof p === 'string') ? p : (p.src || '');
+        if (!src.startsWith('data:')) continue;  // skip already-uploaded
         const result = await uploadBillPhotoToDrive(src, billId, tripId);
-        if(result){
+        if (result) {
           tmpBillPhotos[i] = result;  // replace with Drive URL object
         }
       }
@@ -16010,95 +16010,95 @@ async function saveBill(){
 
     // Build final photos array: Drive URL or base64 fallback
     const savedPhotos = tmpBillPhotos.map(p => {
-      if(typeof p==='string') return p;
+      if (typeof p === 'string') return p;
       return p.driveUrl || p.src || '';
     }).filter(Boolean);
 
-    const bill={
+    const bill = {
       id: billId,
       tripId,
-      date:       document.getElementById('bill-date').value,
+      date: document.getElementById('bill-date').value,
       billNumber: document.getElementById('bill-number').value,
       detail,
-      amount:     parseFloat(amount)||0,
-      currency:   cur,
-      vndAmount:  vndAmt,
-      category:   document.getElementById('bill-category').value,
+      amount: parseFloat(amount) || 0,
+      currency: cur,
+      vndAmount: vndAmt,
+      category: document.getElementById('bill-category').value,
       paymentMethod: document.getElementById('bill-payment-method') ? document.getElementById('bill-payment-method').value : '1-Cash',
-      notes:      document.getElementById('bill-notes').value,
-      photos:     savedPhotos,
-      photoMeta:  tmpBillPhotos.filter(p=>p&&p.fileId).map(p=>({
-        src:      p.driveUrl||p.src,
+      notes: document.getElementById('bill-notes').value,
+      photos: savedPhotos,
+      photoMeta: tmpBillPhotos.filter(p => p && p.fileId).map(p => ({
+        src: p.driveUrl || p.src,
         driveUrl: p.driveUrl,
-        fileId:   p.fileId
+        fileId: p.fileId
       })),
       createdAt: editingBillId
-        ? (S.bills.find(b=>b.id===editingBillId)||{}).createdAt || new Date().toISOString()
+        ? (S.bills.find(b => b.id === editingBillId) || {}).createdAt || new Date().toISOString()
         : new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    if(editingBillId){
-      const idx=S.bills.findIndex(b=>b.id===editingBillId);
-      if(idx>=0) S.bills[idx]=bill; else S.bills.push(bill);
+    if (editingBillId) {
+      const idx = S.bills.findIndex(b => b.id === editingBillId);
+      if (idx >= 0) S.bills[idx] = bill; else S.bills.push(bill);
     } else {
-      if(!S.bills) S.bills=[];
+      if (!S.bills) S.bills = [];
       S.bills.push(bill);
     }
 
-    editingBillId=null;
-    tmpBillPhotos=[];
+    editingBillId = null;
+    tmpBillPhotos = [];
     // Re-enable button BEFORE closing modal (important!)
-    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 Save Bill'; }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Save Bill'; }
     Store.commit('bill:save');
     closeModal('modal-add-bill');
     showToast('Bill saved ✓');
-    if(tripId) renderTripBills(tripId);
+    if (tripId) renderTripBills(tripId);
 
     // IMP-31: Single-row Trip Claim update when bill changes
-    if(tripId && typeof calculateTripTotalClaim === 'function'){
+    if (tripId && typeof calculateTripTotalClaim === 'function') {
       const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tripId));
-      if(claim){
+      if (claim) {
         claim.totalClaim = calculateTripTotalClaim(tripId);
         claim.updatedAt = new Date().toISOString();
-        if(typeof syncSingleTripClaim === 'function'){
+        if (typeof syncSingleTripClaim === 'function') {
           syncSingleTripClaim(claim);
         }
       }
     }
 
-  } catch(e) {
+  } catch (e) {
     console.error('[saveBill]', e);
-    showToast('Error saving bill: '+e.message);
-    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 '+( editingBillId?'Update':'Save')+' Bill'; }
+    showToast('Error saving bill: ' + e.message);
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 ' + (editingBillId ? 'Update' : 'Save') + ' Bill'; }
   } finally {
     _savingBill = false;
   }
 }
 
-async function deleteBill(id){
+async function deleteBill(id) {
   const ok = await appConfirm('Delete this expense bill? This cannot be undone.', {
     title: 'Delete Bill',
     danger: true,
     confirmText: 'Delete Bill',
     icon: '🧾'
   });
-  if(!ok) return;
+  if (!ok) return;
   const billToDelete = (S.bills || []).find(b => b.id === id);
   const tripIdOfDeleted = billToDelete ? billToDelete.tripId : '';
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
-  S.bills=S.bills.filter(b=>b.id!==id);
+  S.bills = S.bills.filter(b => b.id !== id);
   sv();
-  if(curTrip)renderTripBills(curTrip);
+  if (curTrip) renderTripBills(curTrip);
 
   // IMP-31: Single-row Trip Claim update when bill is deleted
-  if(tripIdOfDeleted && typeof calculateTripTotalClaim === 'function'){
+  if (tripIdOfDeleted && typeof calculateTripTotalClaim === 'function') {
     const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tripIdOfDeleted));
-    if(claim){
+    if (claim) {
       claim.totalClaim = calculateTripTotalClaim(tripIdOfDeleted);
       claim.updatedAt = new Date().toISOString();
-      if(typeof syncSingleTripClaim === 'function'){
+      if (typeof syncSingleTripClaim === 'function') {
         syncSingleTripClaim(claim);
       }
     }
@@ -16107,8 +16107,8 @@ async function deleteBill(id){
   svAndSync('bill_delete');
 }
 
-function triggerBillPhoto(){
-  _photoCtxPending='bill';
+function triggerBillPhoto() {
+  _photoCtxPending = 'bill';
   openPhotoSheet('bill');
 }
 
@@ -16116,15 +16116,15 @@ function triggerBillPhoto(){
 // src  = local base64 (data:...) or Drive URL (https://...)
 // Photos are kept locally until Save — uploaded ONLY during saveBill()
 
-function renderBillPhotoGrid(){
-  const g=document.getElementById('bill-photo-grid');
-  if(!g) return;
-  g.innerHTML = tmpBillPhotos.map((p,i)=>{
-    const src    = (typeof p==='string') ? p : (p.driveUrl||p.src||'');
+function renderBillPhotoGrid() {
+  const g = document.getElementById('bill-photo-grid');
+  if (!g) return;
+  g.innerHTML = tmpBillPhotos.map((p, i) => {
+    const src = (typeof p === 'string') ? p : (p.driveUrl || p.src || '');
     const isDrive = src.startsWith('https://');
     return `<div class="pthumb" style="position:relative;">
       <img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;"
-        onclick="${isDrive ? `window.open('`+src+`','_blank')` : `viewBillPhotoLocal(${i})`}">
+        onclick="${isDrive ? `window.open('` + src + `','_blank')` : `viewBillPhotoLocal(${i})`}">
       <button class="pdel" onclick="removeBillPhoto(${i})"
         style="position:absolute;top:3px;right:3px;">×</button>
       ${isDrive ? `<span style="position:absolute;bottom:2px;left:2px;
@@ -16132,79 +16132,79 @@ function renderBillPhotoGrid(){
         font-size:8px;color:#fff;font-weight:700;">✓</span>` : ''}
     </div>`;
   }).join('')
-  + `<div class="padd" onclick="triggerBillPhoto()">
+    + `<div class="padd" onclick="triggerBillPhoto()">
        <span style="font-size:20px;">📷</span>
        <span style="font-size:10px;">Add photo</span>
      </div>`;
 }
 
-function viewBillPhotoLocal(i){
+function viewBillPhotoLocal(i) {
   const p = tmpBillPhotos[i];
-  const src = (typeof p==='string') ? p : (p.src||'');
-  if(!src) return;
-  const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
-  overlay.onclick=()=>overlay.remove();
-  const img=document.createElement('img');
-  img.src=src;
-  img.style.cssText='max-width:95vw;max-height:80vh;border-radius:8px;object-fit:contain;';
-  const hint=document.createElement('div');
-  hint.textContent='Tap anywhere to close';
-  hint.style.cssText='color:rgba(255,255,255,0.5);font-size:12px;';
+  const src = (typeof p === 'string') ? p : (p.src || '');
+  if (!src) return;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;';
+  overlay.onclick = () => overlay.remove();
+  const img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'max-width:95vw;max-height:80vh;border-radius:8px;object-fit:contain;';
+  const hint = document.createElement('div');
+  hint.textContent = 'Tap anywhere to close';
+  hint.style.cssText = 'color:rgba(255,255,255,0.5);font-size:12px;';
   overlay.appendChild(img); overlay.appendChild(hint);
   document.body.appendChild(overlay);
 }
 
-function removeBillPhoto(i){
-  tmpBillPhotos.splice(i,1);
+function removeBillPhoto(i) {
+  tmpBillPhotos.splice(i, 1);
   renderBillPhotoGrid();
 }
 
 // ── Upload one photo to Drive ─────────────────────────────
-async function uploadBillPhotoToDrive(src, billId, tripId){
-  const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
-  if(!gsUrl||!gsUrl.includes('/exec')) return null;
-  if(!src||!src.startsWith('data:')) return null;
+async function uploadBillPhotoToDrive(src, billId, tripId) {
+  const gsUrl = getGSUrl ? getGSUrl() : (S && S.gsUrl || '');
+  if (!gsUrl || !gsUrl.includes('/exec')) return null;
+  if (!src || !src.startsWith('data:')) return null;
 
   let folderName = 'No_Trip';
-  if(tripId){
-    const trip=(S.trips||[]).find(t=>t.id===tripId);
-    if(trip){
-      const safe=(trip.plant||'Trip').replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_').slice(0,25);
-      const d=(trip.date||'').replace(/-/g,'');
-      folderName = safe+(d?'_'+d:'');
+  if (tripId) {
+    const trip = (S.trips || []).find(t => t.id === tripId);
+    if (trip) {
+      const safe = (trip.plant || 'Trip').replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').slice(0, 25);
+      const d = (trip.date || '').replace(/-/g, '');
+      folderName = safe + (d ? '_' + d : '');
     }
   }
 
-  const base64   = src.split(',')[1];
-  const mimeType = src.split(';')[0].replace('data:','');
-  const ext      = mimeType.includes('png')?'png':'jpg';
-  const fileName = `bill_${(billId||'x').slice(-8)}_${Date.now()}.${ext}`;
+  const base64 = src.split(',')[1];
+  const mimeType = src.split(';')[0].replace('data:', '');
+  const ext = mimeType.includes('png') ? 'png' : 'jpg';
+  const fileName = `bill_${(billId || 'x').slice(-8)}_${Date.now()}.${ext}`;
 
-  try{
-    const resp = await fetch(gsUrl,{
-      method:'POST', headers:{'Content-Type':'text/plain'},
+  try {
+    const resp = await fetch(gsUrl, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
-        action:'uploadFile', taskId:'bill_'+billId,
-        fileName, mimeType, dataBase64:base64,
-        folder:'Bills Images/'+folderName
+        action: 'uploadFile', taskId: 'bill_' + billId,
+        fileName, mimeType, dataBase64: base64,
+        folder: 'Bills Images/' + folderName
       })
     });
     const data = await resp.json();
-    if(data&&data.ok) return {src:data.fileUrl, driveUrl:data.fileUrl, fileId:data.fileId};
-  }catch(e){ console.warn('[Bill photo]',e.message); }
+    if (data && data.ok) return { src: data.fileUrl, driveUrl: data.fileUrl, fileId: data.fileId };
+  } catch (e) { console.warn('[Bill photo]', e.message); }
   return null;
 }
 
 // ── Simple add: just store locally, no background upload ─
-async function handleBillPhotos(newPhotos, billId, tripId){
+async function handleBillPhotos(newPhotos, billId, tripId) {
   // Store as simple objects — uploaded during saveBill()
-  for(let src of newPhotos){
+  for (let src of newPhotos) {
     // Safeguard: nếu ảnh base64 lớn hơn 250KB, tự động nén trước khi lưu vào tmpBillPhotos
-    if(typeof src === 'string' && src.startsWith('data:image/') && src.length > 250000 && typeof compressImageFile === 'function'){
-      try { src = await compressImageFile(src, 1280, 0.72); } catch(x){}
+    if (typeof src === 'string' && src.startsWith('data:image/') && src.length > 250000 && typeof compressImageFile === 'function') {
+      try { src = await compressImageFile(src, 1280, 0.72); } catch (x) { }
     }
-    tmpBillPhotos.push({src, driveUrl:'', fileId:''});
+    tmpBillPhotos.push({ src, driveUrl: '', fileId: '' });
   }
   renderBillPhotoGrid();
 }
@@ -16216,27 +16216,27 @@ let _flushingMedia = false;
  * Hàng đợi quét và tải bù ảnh Offline lên Google Drive (IMP-02)
  * Tự động kích hoạt khi có mạng (online event) hoặc khi bắt đầu Đồng bộ (Sync)
  */
-async function flushPendingMedia(){
-  if(_flushingMedia) return;
+async function flushPendingMedia() {
+  if (_flushingMedia) return;
   const gsUrl = getGSUrl ? getGSUrl() : (S && S.gsUrl || '');
-  if(!gsUrl || !gsUrl.includes('/exec')) return;
+  if (!gsUrl || !gsUrl.includes('/exec')) return;
 
   _flushingMedia = true;
   let uploadCount = 0;
 
   try {
     // 1. Quét hóa đơn (Bills)
-    if(Array.isArray(S.bills)){
-      for(const bill of S.bills){
-        if(!Array.isArray(bill.photos)) continue;
-        for(let i = 0; i < bill.photos.length; i++){
+    if (Array.isArray(S.bills)) {
+      for (const bill of S.bills) {
+        if (!Array.isArray(bill.photos)) continue;
+        for (let i = 0; i < bill.photos.length; i++) {
           const src = bill.photos[i];
-          if(typeof src === 'string' && src.startsWith('data:')){
+          if (typeof src === 'string' && src.startsWith('data:')) {
             try {
               const res = await uploadBillPhotoToDrive(src, bill.id, bill.tripId);
-              if(res && res.driveUrl){
+              if (res && res.driveUrl) {
                 bill.photos[i] = res.driveUrl;
-                if(!bill.photoMeta) bill.photoMeta = [];
+                if (!bill.photoMeta) bill.photoMeta = [];
                 bill.photoMeta.push({
                   src: res.driveUrl,
                   driveUrl: res.driveUrl,
@@ -16244,7 +16244,7 @@ async function flushPendingMedia(){
                 });
                 uploadCount++;
               }
-            } catch(upErr){
+            } catch (upErr) {
               console.warn('[flushPendingMedia] Bill photo upload failed:', upErr);
             }
           }
@@ -16253,21 +16253,21 @@ async function flushPendingMedia(){
     }
 
     // 2. Quét sự cố trong Báo cáo (Report Issues)
-    if(S.reports && typeof S.reports === 'object'){
-      for(const [tripId, rep] of Object.entries(S.reports)){
-        if(!rep || !Array.isArray(rep.issues)) continue;
-        for(const issue of rep.issues){
-          if(!Array.isArray(issue.photos)) continue;
-          for(let i = 0; i < issue.photos.length; i++){
+    if (S.reports && typeof S.reports === 'object') {
+      for (const [tripId, rep] of Object.entries(S.reports)) {
+        if (!rep || !Array.isArray(rep.issues)) continue;
+        for (const issue of rep.issues) {
+          if (!Array.isArray(issue.photos)) continue;
+          for (let i = 0; i < issue.photos.length; i++) {
             const src = issue.photos[i];
-            if(typeof src === 'string' && src.startsWith('data:')){
+            if (typeof src === 'string' && src.startsWith('data:')) {
               try {
-                const res = await uploadBillPhotoToDrive(src, 'issue_' + (issue.title||'').slice(0,10), tripId);
-                if(res && res.driveUrl){
+                const res = await uploadBillPhotoToDrive(src, 'issue_' + (issue.title || '').slice(0, 10), tripId);
+                if (res && res.driveUrl) {
                   issue.photos[i] = res.driveUrl;
                   uploadCount++;
                 }
-              } catch(upErr){
+              } catch (upErr) {
                 console.warn('[flushPendingMedia] Issue photo upload failed:', upErr);
               }
             }
@@ -16276,14 +16276,14 @@ async function flushPendingMedia(){
       }
     }
 
-    if(uploadCount > 0){
+    if (uploadCount > 0) {
       sv(); // Lưu state mới (đã giải phóng Base64, thay bằng driveUrl)
-      if(typeof showToast === 'function'){
+      if (typeof showToast === 'function') {
         showToast(`✓ Đã tải bù ${uploadCount} ảnh offline lên Google Drive!`);
       }
       console.log(`[flushPendingMedia] Successfully uploaded ${uploadCount} offline photos to Drive.`);
     }
-  } catch(e) {
+  } catch (e) {
     console.warn('[flushPendingMedia] Error flushing offline media:', e);
   } finally {
     _flushingMedia = false;
@@ -16291,7 +16291,7 @@ async function flushPendingMedia(){
 }
 
 // Lắng nghe sự kiện Online để tự động kích hoạt đẩy ảnh bù
-if(typeof window !== 'undefined'){
+if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
     console.log('[PlantLog] Network back online, checking pending media queue…');
     setTimeout(flushPendingMedia, 2500);

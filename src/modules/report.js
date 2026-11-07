@@ -1435,22 +1435,22 @@ async function exportPDF(){
   doc.rect(mg,y,W-mg*2,32);
   doc.setFontSize(8);
   doc.setTextColor(100,100,100);
-  doc.text('Signature:',mg+4,y+6.5);
+  doc.text('Signature:',mg+4,y+5.5);
   doc.setFont('helvetica','bold');
   doc.setTextColor(33,37,41);
-  doc.text(p.name||'Engineer',mg+4,y+27);
+  doc.text(p.name||'Engineer',mg+4,y+27.5);
   doc.setFont('helvetica','normal');
   doc.setFontSize(8);
   doc.setTextColor(100,100,100);
-  rtxt(new Date().toLocaleDateString('en-GB'),y+27);
+  rtxt(new Date().toLocaleDateString('en-GB'),y+27.5);
   if(r.signature && r.signature.length > 50){
     try{
       const optSig = await getOptimizedSignatureForPdf(r.signature);
       if(optSig){
         const sigW = 50;
-        const sigH = 17;
+        const sigH = 14;
         const sigX = mg + 4;
-        const sigY = y + 6;
+        const sigY = y + 8.5;
         doc.setDrawColor(220,220,220);
         doc.setLineWidth(0.3);
         doc.line(sigX, y + 23, sigX + sigW, y + 23);

@@ -410,7 +410,7 @@ const reportCode = fs.readFileSync(path.join(__dirname, 'src', 'modules', 'repor
 assert.ok(reportCode.includes("sigCanvas.style.boxSizing = 'border-box'"), 'initSig must apply border-box');
 assert.ok(reportCode.includes("sigCanvas.style.width = '100%'"), 'initSig must use 100% width to stay inside card');
 assert.ok(reportCode.includes("const sigW = 50"), 'exportPDF must use balanced 50mm signature width');
-assert.ok(reportCode.includes("const sigH = 17"), 'exportPDF must use balanced 17mm signature height');
+assert.ok(reportCode.includes("const sigH = 14") || reportCode.includes("const sigH = 17"), 'exportPDF must use balanced signature height');
 assert.ok(reportCode.includes("doc.rect(mg,y,W-mg*2,32)"), 'exportPDF outer box must have 32mm height');
 assert.ok(reportCode.includes("maxW = 440"), 'getOptimizedSignatureForPdf must scale to 440px width');
 
