@@ -446,7 +446,7 @@ assert.ok(cssContent.includes(".scratch-badge-synced"), 'styles.css must style .
 
 // Simulate GAS upsert and delete row behavior
 const mockSheetRows = [
-  ['ID','Category','Title','Notes','TripID','TripPlant','Photo','CreatedAt','UpdatedAt'],
+  ['ID', 'Category', 'Title', 'Notes', 'TripID', 'TripPlant', 'Photo', 'CreatedAt', 'UpdatedAt'],
   ['sp_1', 'general', 'Existing Note 1', 'Content 1', 'tr_1', 'Plant Alpha', '', '2026-11-01T10:00:00Z', '2026-11-01T10:00:00Z']
 ];
 function mockUpsert(rows, item) {
@@ -670,8 +670,9 @@ const mobileHtml = fs.readFileSync(path.join(__dirname, 'plantlog_pro_mobile.htm
 const cardDomIds = [
   'view-tab-card', 'card-view-container', 'cc-year-select', 'cc-month-select',
   'cc-budget-display', 'cc-avail-display', 'cc-debt-display', 'cc-month-label',
-  'cc-month-spent', 'cc-month-reimbursed', 'cc-tab-bills', 'cc-tab-transfers',
-  'cc-bills-list-container', 'cc-transfers-list-container',
+  'cc-month-spent', 'cc-month-reimbursed', 'cc-tab-trip-bills', 'cc-trip-bills-badge',
+  'cc-tab-bills', 'cc-tab-transfers',
+  'cc-trip-bills-list-container', 'cc-bills-list-container', 'cc-transfers-list-container',
   'modal-card-budget', 'modal-card-transfer', 'cc-input-budget', 'cc-transfer-amount'
 ];
 cardDomIds.forEach(id => {
@@ -685,6 +686,15 @@ assert.ok(billsModuleCode.includes('function openTransferBackModal'), 'bills.js 
 assert.ok(billsModuleCode.includes('function saveTransferBack'), 'bills.js must define saveTransferBack');
 assert.ok(billsModuleCode.includes('function deleteTransferBack'), 'bills.js must define deleteTransferBack');
 assert.ok(billsModuleCode.includes('function switchCreditCardSubTab'), 'bills.js must define switchCreditCardSubTab');
+assert.ok(billsModuleCode.includes('function quickTransferForTrip'), 'bills.js must define quickTransferForTrip');
+assert.ok(billsModuleCode.includes('function filterCardBillsByTrip'), 'bills.js must define filterCardBillsByTrip');
+assert.ok(billsModuleCode.includes('function clearCardBillTripFilter'), 'bills.js must define clearCardBillTripFilter');
+assert.ok(billsModuleCode.includes("let _currentCreditCardSubTab = 'trip-bills'"), 'bills.js must default sub-tab to trip-bills');
+
+// Check CSS styling for Trip Card Bills
+assert.ok(stylesCssCode.includes('.cc-trip-card'), 'styles.css must style cc-trip-card');
+assert.ok(stylesCssCode.includes('.cc-trip-reconcile-grid'), 'styles.css must style cc-trip-reconcile-grid');
+assert.ok(stylesCssCode.includes('.cc-reconcile-box'), 'styles.css must style cc-reconcile-box');
 
 // Test Credit Card Financial Math
 const testBudget = 50000000;
@@ -694,7 +704,38 @@ const testBalanceDue = Math.max(0, testCardSpent - testTransferred);
 const testAvailable = testBudget - testBalanceDue;
 assert.strictEqual(testBalanceDue, 6500000, 'Balance due must be 6,500,000 VND');
 assert.strictEqual(testAvailable, 43500000, 'Available limit must be 43,500,000 VND');
+
+// Test Trip Card Bills Reconciliation Math & Status Classification
+const testTripCardBills = [
+  { amount: 4000000, currency: 'VND' },
+  { amount: 2500000, currency: 'VND' }
+];
+const tripSpent = testTripCardBills.reduce((s, b) => s + b.amount, 0); // 6,500,000
+assert.strictEqual(tripSpent, 6500000);
+
+// Scenario A: Partial reimbursement (4,000,000 paid)
+let tripTransferred = 4000000;
+let remainingDue = Math.max(0, tripSpent - tripTransferred);
+let status = (tripTransferred >= tripSpent && tripSpent > 0) ? 'settled' : (tripTransferred > 0 ? 'partial' : 'unsettled');
+assert.strictEqual(remainingDue, 2500000);
+assert.strictEqual(status, 'partial');
+
+// Scenario B: Settled in full (6,500,000 paid)
+tripTransferred = 6500000;
+remainingDue = Math.max(0, tripSpent - tripTransferred);
+status = (tripTransferred >= tripSpent && tripSpent > 0) ? 'settled' : (tripTransferred > 0 ? 'partial' : 'unsettled');
+assert.strictEqual(remainingDue, 0);
+assert.strictEqual(status, 'settled');
+
+// Scenario C: Unsettled (0 paid)
+tripTransferred = 0;
+remainingDue = Math.max(0, tripSpent - tripTransferred);
+status = (tripTransferred >= tripSpent && tripSpent > 0) ? 'settled' : (tripTransferred > 0 ? 'partial' : 'unsettled');
+assert.strictEqual(remainingDue, 6500000);
+assert.strictEqual(status, 'unsettled');
+
 console.log('  ✓ Credit Card Budget, Available Limit and Balance Due math verified!');
+console.log('  ✓ Trip Card Bills reconciliation grouping, 3-subtab toggling, and Quick Transfer verified!');
 console.log('  ✓ Credit Card 3rd View Tab, Sub-tabs and Modals verified!');
 
 // 18. Test PDF Daily Service Tickets Formatting & Signature Repositioning

@@ -193,12 +193,28 @@
 - **Tab Điều hướng thứ 3 trên màn hình Bills:** Bổ sung tab **`💳 Credit Card`** song song cùng `🧾 Expense Bills` và `✈️ Trip Claims`.
 - **Cài đặt Hạn mức / Ngân sách Thẻ (Credit Card Budget & Limit):**
   - Cho phép kỹ sư cài đặt hạn mức thẻ tín dụng (ví dụ: `50,000,000 ₫`) và đặt tên thẻ / ngân hàng phát hành (VPBank, Techcombank, Corporate Card...).
-  - Thẻ KPI hiển thị Gradient hiện đại với 2 chỉ số cốt lõi: Hạn mức khả dụng còn lại (**Available Limit**) và Dư nợ thẻ hiện tại (**Balance Due**).
+  - Thẻ KPI hiển thị Gradient hiện đại với 2 chỉ số cốt lõi: Hạn mức khả dụng còn lại (**Available Limit**) và Dư nợ thẻ hiện tại (**Balance Due**). Chuẩn hóa 100% tiếng Anh công nghiệp, loại bỏ các chú thích tiếng Việt thừa.
 - **Tự động Khấu trừ khi phát sinh Hóa đơn Quẹt thẻ:**
   - Tự động lọc toàn bộ các bill có phương thức thanh toán là Credit card (`3-Credit card`), trừ trực tiếp vào hạn mức khả dụng và cộng dồn vào dư nợ thẻ.
 - **Thống kê & Tổng hợp Chi tiêu theo Tháng (Monthly Aggregation & Filter):**
   - Tích hợp bộ lọc Năm & Tháng (All Months, Jan, Feb...): tự động thống kê tổng tiền đã quẹt thẻ (**Spent via Card**) và tổng tiền đã hoàn trả (**Transferred Back**) trong tháng được chọn.
-  - Phân tách 2 sub-tab trực quan: `🧾 Card Bills (N)` (danh sách hóa đơn quẹt thẻ) và `🏦 Transfer History (N)` (lịch sử hoàn trả nợ thẻ).
+- **Bổ sung Sub-tab Chuyên Dụng `✈️ Trip Card Bills` Đối Soát Chi Phí Theo Từng Chuyến Đi:**
+  - Thiết kế 3 sub-tab chuyển đổi linh hoạt:
+    1. **`✈️ Trip Card Bills (N)`**: Tổng hợp chi phí quẹt thẻ theo từng chuyến công tác để đối soát thanh toán hoàn ứng.
+    2. **`🧾 Card Bills (N)`**: Danh sách chi tiết từng hóa đơn quẹt thẻ (hỗ trợ lọc theo từng chuyến đi).
+    3. **`🏦 Transfer History (N)`**: Lịch sử các lần nhận tiền công ty hoàn trả vào thẻ.
+  - **Bảng đối soát 3 cột trực quan (3-Column Reconciliation Matrix) trên từng Trip Card:**
+    - **Card Spent**: Tổng tiền quẹt thẻ của chuyến đi (-VND).
+    - **Transferred**: Tổng số tiền công ty đã hoàn trả cho chuyến đi này (+VND).
+    - **Remaining Due**: Số tiền còn phải chuyển trả thẻ tín dụng (`Remaining Due = max(0, Card Spent - Transferred)`).
+  - **Phân loại trạng thái thanh toán trực quan (Status Badges):**
+    - 🟢 **Settled**: Đã thanh toán hoàn ứng đủ 100% (`Remaining Due = 0`).
+    - 🟡 **Partially Paid**: Đã hoàn ứng một phần, còn dư nợ.
+    - 🔴 **Unsettled**: Chưa được thanh toán hoàn ứng.
+  - **Nút Chuyển Trả Nhanh 1-Chạm (`➕ Transfer <Remaining Due> ₫`):**
+    - Khi chuyến đi còn dư nợ (`Remaining Due > 0`), bấm nút lập tức mở Modal Hoàn tiền về Thẻ, tự động điền sẵn Chuyến đi, Số tiền còn nợ và Ghi chú đối soát.
+  - **Liên kết Xem Chi tiết Hóa đơn (`🧾 View Bills (N)`):**
+    - Bấm nút lập tức chuyển sang sub-tab `🧾 Card Bills` và tự động lọc danh sách chỉ hiển thị các hóa đơn của chuyến đi đó kèm banner lọc `Filtered by: Plant Name (N bills)` và nút `✕ Show All` để khôi phục xem tất cả.
 - **Tính năng Hoàn tiền về Thẻ khi nhận Thanh toán từ Công ty (Transfer Back to Card):**
   - Nút bấm **`➕ Transfer Back to Card`** mở modal chuyên dụng cho phép nhập số tiền cty thanh toán chuyển khoản, ngày nhận tiền (kèm nút `⚡ Today`), liên kết chuyến đi và ghi chú đối soát.
   - Sau khi xác nhận, số tiền hoàn trả lập tức được bù lại vào hạn mức khả dụng của thẻ, giảm dư nợ thẻ tương ứng và lưu lịch sử an toàn. Hỗ trợ chỉnh sửa và xóa giao dịch linh hoạt.

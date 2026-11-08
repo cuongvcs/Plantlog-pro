@@ -1069,7 +1069,8 @@ function saveTripClaim() {
 // 💳 CREDIT CARD TRACKER (IMP-32)
 // ═══════════════════════════════════════════════════════════
 
-let _currentCreditCardSubTab = 'bills'; // 'bills' | 'transfers'
+let _currentCreditCardSubTab = 'trip-bills'; // 'trip-bills' | 'bills' | 'transfers'
+let _cardBillTripFilter = null; // optional tripId to filter granular bills
 
 /**
  * Ensure S.creditCard state exists with default values
@@ -1146,26 +1147,63 @@ function populateCardDateSelectors() {
 }
 
 /**
- * Switch sub-tab between Card Bills and Transfer History
+ * Switch sub-tab between Trip Card Bills, Card Bills and Transfer History
  */
 function switchCreditCardSubTab(subTab) {
   _currentCreditCardSubTab = subTab;
+  const tabTripBills = document.getElementById('cc-tab-trip-bills');
   const tabBills = document.getElementById('cc-tab-bills');
   const tabTransfers = document.getElementById('cc-tab-transfers');
+  const tripBillsContainer = document.getElementById('cc-trip-bills-list-container');
   const billsContainer = document.getElementById('cc-bills-list-container');
   const transfersContainer = document.getElementById('cc-transfers-list-container');
 
-  if (subTab === 'transfers') {
-    if (tabBills) tabBills.classList.remove('active');
-    if (tabTransfers) tabTransfers.classList.add('active');
-    if (billsContainer) billsContainer.style.display = 'none';
-    if (transfersContainer) transfersContainer.style.display = 'block';
-  } else {
-    if (tabBills) tabBills.classList.add('active');
-    if (tabTransfers) tabTransfers.classList.remove('active');
-    if (billsContainer) billsContainer.style.display = 'block';
-    if (transfersContainer) transfersContainer.style.display = 'none';
-  }
+  if (tabTripBills) tabTripBills.classList.toggle('active', subTab === 'trip-bills');
+  if (tabBills) tabBills.classList.toggle('active', subTab === 'bills');
+  if (tabTransfers) tabTransfers.classList.toggle('active', subTab === 'transfers');
+
+  if (tripBillsContainer) tripBillsContainer.style.display = subTab === 'trip-bills' ? 'block' : 'none';
+  if (billsContainer) billsContainer.style.display = subTab === 'bills' ? 'block' : 'none';
+  if (transfersContainer) transfersContainer.style.display = subTab === 'transfers' ? 'block' : 'none';
+}
+
+/**
+ * Filter granular card bills by a specific trip and switch to bills sub-tab
+ */
+function filterCardBillsByTrip(tripId) {
+  _cardBillTripFilter = tripId || null;
+  switchCreditCardSubTab('bills');
+  renderCreditCardScreen();
+}
+
+/**
+ * Clear the trip filter in granular card bills
+ */
+function clearCardBillTripFilter() {
+  _cardBillTripFilter = null;
+  renderCreditCardScreen();
+}
+
+/**
+ * Quick transfer helper for a specific trip
+ */
+function quickTransferForTrip(tripId, remainingAmt) {
+  ensureCreditCardState();
+  const trip = (S.trips || []).find(t => String(t.id) === String(tripId));
+  const weekLabel = trip && typeof getTripWeekLabel === 'function' ? getTripWeekLabel(trip.date, trip.dateEnd) : '';
+  const plantName = trip ? trip.plant : 'Trip';
+
+  openTransferBackModal(); // opens new modal
+
+  const tripSel = document.getElementById('cc-transfer-trip');
+  const amtInput = document.getElementById('cc-transfer-amount');
+  const noteInput = document.getElementById('cc-transfer-note');
+
+  if (tripSel) tripSel.value = tripId || '';
+  if (amtInput) amtInput.value = (remainingAmt > 0) ? remainingAmt : '';
+  if (noteInput) noteInput.value = `Reimbursement for ${plantName}${weekLabel ? ' ' + weekLabel : ''}`;
+
+  updateCardTransferHint();
 }
 
 /**
@@ -1242,6 +1280,7 @@ function renderCreditCardScreen() {
   const monthBillCountEl = document.getElementById('cc-month-bill-count');
   const monthSpentEl = document.getElementById('cc-month-spent');
   const monthReimbursedEl = document.getElementById('cc-month-reimbursed');
+  const tripBadgeEl = document.getElementById('cc-trip-bills-badge');
   const billsBadgeEl = document.getElementById('cc-bills-badge');
   const transfersBadgeEl = document.getElementById('cc-transfers-badge');
 
@@ -1275,19 +1314,189 @@ function renderCreditCardScreen() {
   if (billsBadgeEl) billsBadgeEl.textContent = String(filteredBills.length);
   if (transfersBadgeEl) transfersBadgeEl.textContent = String(filteredTransfers.length);
 
-  // 4. Render Bills List
+  // 4. Render Trip Card Bills (Grouped Summary by Trip)
+  const tripBillsContainer = document.getElementById('cc-trip-bills-list-container');
+  const cardBillsByTrip = {};
+  filteredBills.forEach(b => {
+    const tId = b.tripId || 'unassigned';
+    if (!cardBillsByTrip[tId]) cardBillsByTrip[tId] = [];
+    cardBillsByTrip[tId].push(b);
+  });
+
+  const tripGroups = [];
+  const sortedTrips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])];
+
+  sortedTrips.forEach(tr => {
+    const tBills = cardBillsByTrip[String(tr.id)] || [];
+    if (!tBills.length) return;
+
+    const totalSpent = tBills.reduce((sum, b) => {
+      if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
+      return sum + (parseFloat(b.vndAmount) || 0);
+    }, 0);
+
+    const linkedTransfers = (S.creditCard.transfers || []).filter(t => String(t.tripId) === String(tr.id));
+    const totalTransferred = linkedTransfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const remainingDue = Math.max(0, totalSpent - totalTransferred);
+
+    let status = 'unsettled';
+    let statusText = '🔴 Unsettled';
+    if (totalTransferred >= totalSpent && totalSpent > 0) {
+      status = 'settled';
+      statusText = '🟢 Settled';
+    } else if (totalTransferred > 0) {
+      status = 'partial';
+      statusText = '🟡 Partially Paid';
+    }
+
+    const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
+
+    tripGroups.push({
+      tripId: tr.id,
+      plant: tr.plant,
+      date: tr.date,
+      dateEnd: tr.dateEnd,
+      location: tr.location || '',
+      weekLabel,
+      billsCount: tBills.length,
+      totalSpent,
+      totalTransferred,
+      remainingDue,
+      status,
+      statusText
+    });
+  });
+
+  // Handle unassigned bills
+  if (cardBillsByTrip['unassigned'] && cardBillsByTrip['unassigned'].length) {
+    const uBills = cardBillsByTrip['unassigned'];
+    const totalSpent = uBills.reduce((sum, b) => {
+      if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
+      return sum + (parseFloat(b.vndAmount) || 0);
+    }, 0);
+    const linkedTransfers = (S.creditCard.transfers || []).filter(t => !t.tripId);
+    const totalTransferred = linkedTransfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const remainingDue = Math.max(0, totalSpent - totalTransferred);
+    let status = remainingDue === 0 ? 'settled' : (totalTransferred > 0 ? 'partial' : 'unsettled');
+    let statusText = status === 'settled' ? '🟢 Settled' : (status === 'partial' ? '🟡 Partially Paid' : '🔴 Unsettled');
+    tripGroups.push({
+      tripId: '',
+      plant: 'General Card Expenses',
+      date: '',
+      dateEnd: '',
+      location: 'No linked trip',
+      weekLabel: 'General',
+      billsCount: uBills.length,
+      totalSpent,
+      totalTransferred,
+      remainingDue,
+      status,
+      statusText
+    });
+  }
+
+  if (tripBadgeEl) tripBadgeEl.textContent = String(tripGroups.length);
+
+  if (tripBillsContainer) {
+    if (!tripGroups.length) {
+      tripBillsContainer.innerHTML = `
+        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+          <div class="ei">✈️</div>
+          <div class="et">No trip card expenses</div>
+          <div class="es">Trips with bills paid via "3-Credit card" in this period will appear here.</div>
+        </div>`;
+    } else {
+      let tgHtml = '';
+      tripGroups.forEach(tg => {
+        const dateRangeStr = (tg.dateEnd && tg.dateEnd !== tg.date)
+          ? `${fmtDate(tg.date)} ➔ ${fmtDate(tg.dateEnd)}`
+          : (tg.date ? fmtDate(tg.date) : '—');
+
+        tgHtml += `
+          <div class="cc-trip-card ${tg.status}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px;">
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
+                  <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🏭 ${tg.plant}</span>
+                  ${tg.weekLabel ? `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--g100);color:var(--green);font-weight:700;">${tg.weekLabel}</span>` : ''}
+                </div>
+                <div style="font-size:11px;color:var(--n500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  📅 ${dateRangeStr} ${tg.location ? '• ' + tg.location : ''}
+                </div>
+              </div>
+              <span class="badge" style="font-size:10px;padding:2px 7px;font-weight:700;background:#fff;border:1px solid var(--n200);flex-shrink:0;">
+                ${tg.statusText}
+              </span>
+            </div>
+
+            <!-- 3-Column Reconciliation Matrix -->
+            <div class="cc-trip-reconcile-grid">
+              <div class="cc-reconcile-box">
+                <div class="cc-reconcile-label">Card Spent</div>
+                <div class="cc-reconcile-val" style="color:#DC2626;">-${fmtAmt(tg.totalSpent, 'VND')} ₫</div>
+                <div style="font-size:9.5px;color:var(--n400);">${tg.billsCount} bill${tg.billsCount !== 1 ? 's' : ''}</div>
+              </div>
+              <div class="cc-reconcile-box">
+                <div class="cc-reconcile-label">Transferred</div>
+                <div class="cc-reconcile-val" style="color:#166534;">+${fmtAmt(tg.totalTransferred, 'VND')} ₫</div>
+                <div style="font-size:9.5px;color:var(--n400);">${tg.totalTransferred > 0 ? 'Reimbursed' : 'None yet'}</div>
+              </div>
+              <div class="cc-reconcile-box">
+                <div class="cc-reconcile-label">Remaining Due</div>
+                <div class="cc-reconcile-val" style="color:${tg.remainingDue > 0 ? '#B45309' : '#166534'};">
+                  ${fmtAmt(tg.remainingDue, 'VND')} ₫
+                </div>
+                <div style="font-size:9.5px;color:var(--n400);">${tg.remainingDue === 0 ? '✓ Cleared' : 'To transfer'}</div>
+              </div>
+            </div>
+
+            <!-- Action Buttons Strip -->
+            <div style="display:flex;gap:6px;margin-top:8px;">
+              ${tg.remainingDue > 0 ? `
+                <button type="button" class="btn btn-sm btn-p" onclick="quickTransferForTrip('${tg.tripId}', ${tg.remainingDue})" style="flex:1;font-size:11px;padding:6px 10px;display:flex;align-items:center;justify-content:center;gap:4px;">
+                  ➕ Transfer ${fmtAmt(tg.remainingDue, 'VND')} ₫
+                </button>
+              ` : `
+                <div style="flex:1;font-size:11px;color:var(--green);font-weight:700;display:flex;align-items:center;padding:6px 2px;">
+                  ✓ Fully Reimbursed
+                </div>
+              `}
+              <button type="button" class="btn btn-sm btn-o" onclick="filterCardBillsByTrip('${tg.tripId}')" style="font-size:11px;padding:6px 10px;white-space:nowrap;">
+                🧾 View Bills (${tg.billsCount})
+              </button>
+            </div>
+          </div>`;
+      });
+      tripBillsContainer.innerHTML = tgHtml;
+    }
+  }
+
+  // 5. Render Granular Bills List
   const billsContainer = document.getElementById('cc-bills-list-container');
   if (billsContainer) {
-    if (!filteredBills.length) {
-      billsContainer.innerHTML = `
+    let displayedGranularBills = filteredBills;
+    let filterBannerHtml = '';
+    if (_cardBillTripFilter) {
+      const filterTrip = (S.trips || []).find(t => String(t.id) === String(_cardBillTripFilter));
+      const filterTripName = filterTrip ? filterTrip.plant : 'Selected Trip';
+      displayedGranularBills = displayedGranularBills.filter(b => String(b.tripId) === String(_cardBillTripFilter));
+      filterBannerHtml = `
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
+          <span>Filtered by: <strong>🏭 ${filterTripName}</strong> (${displayedGranularBills.length} bills)</span>
+          <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
+        </div>`;
+    }
+
+    if (!displayedGranularBills.length) {
+      billsContainer.innerHTML = filterBannerHtml + `
         <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
           <div class="ei">💳</div>
           <div class="et">No card expenses found</div>
           <div class="es">Bills paid via "3-Credit card" in this period will appear here.</div>
         </div>`;
     } else {
-      let bHtml = '';
-      filteredBills.forEach(b => {
+      let bHtml = filterBannerHtml;
+      displayedGranularBills.forEach(b => {
         const trip = (S.trips || []).find(t => String(t.id) === String(b.tripId));
         const plantStr = trip ? trip.plant : 'General Expense';
         const amtVND = (b.currency || 'VND').toUpperCase() === 'VND' ? (parseFloat(b.amount) || 0) : (parseFloat(b.vndAmount) || 0);
@@ -1315,7 +1524,7 @@ function renderCreditCardScreen() {
     }
   }
 
-  // 5. Render Transfers List
+  // 6. Render Transfers List
   const transfersContainer = document.getElementById('cc-transfers-list-container');
   if (transfersContainer) {
     if (!filteredTransfers.length) {

@@ -414,6 +414,47 @@ Các hạng mục cải tiến được đánh giá và phân loại dựa trên
 
 ---
 
+### 🟡 IMP-30: Tinh Chỉnh Cân Đối Nút View All 2 Hàng Trong Quick Notes (2-Line Balanced Layout)
+* **Mức độ ưu tiên:** 🟡 **P3 (Cải thiện UX)**
+* **Tính cần thiết:** Khắc phục lỗi vỡ chữ trên màn hình hẹp, đảm bảo nút View All luôn cân đối, chuyên nghiệp.
+* **Giải pháp kỹ thuật:**
+  1. Chuyển nút sang flexbox dạng cột (`flex-direction: column; align-items: center; justify-content: center; min-width: 76px;`).
+  2. Dòng 1: `📂 View All` (chữ đậm 11px, `white-space: nowrap`).
+  3. Dòng 2: `(<span id="scratch-modal-count">N</span>)` căn giữa bên dưới.
+
+---
+
+### 🔴 IMP-31: Bảng Tổng Hợp Chuyến Đi & Theo Dõi Thanh Toán Công Tác Phí (Trip Claims Tracker)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao / Rất cần thiết)**
+* **Tính cần thiết:** Quản lý tập trung công tác phí theo chuyến đi, theo dõi tiến độ phê duyệt và hoàn ứng 4 bước từ kế toán.
+* **Giải pháp kỹ thuật:**
+  1. Smart Accordion Row 1 dòng (~50px), bộ lọc Tháng/Năm/Trạng thái thanh toán (All Status, Not yet, Processing, Done).
+  2. Tự động cộng dồn toàn bộ hóa đơn thuộc chuyến đi để tính `Total claim` (VND).
+  3. Tiến độ thanh toán 4 bước chuẩn tiếng Anh: Request ➔ Approved ➔ Process ➔ Done.
+  4. Phân cấp thị giác: làm mờ các chuyến đi chưa active (`Planned`), làm nổi bật chuyến đi đang diễn ra (`Active`).
+  5. Sắp xếp tuần tự thời gian từ Week 1 (trên cùng) tới Week 53 (dưới cùng) trên cả giao diện và Google Sheet `TripClaims`.
+  6. Cơ chế chỉ đồng bộ vi mô khi có thay đổi (`change-only sync`) và nút đồng bộ hàng loạt `Sync All Trip Claims`.
+
+---
+
+### 🔴 IMP-32: Quản Lý Thẻ Tín Dụng & Hoàn Ứng Công Tác Phí (Credit Card Budget & Tracker)
+* **Mức độ ưu tiên:** 🔴 **P1 (Ưu tiên cao / Rất cần thiết)**
+* **Tính cần thiết:** Kiểm soát hạn mức chi tiêu thẻ tín dụng khi đi công tác, tự động trừ nợ khi quẹt thẻ, đối soát chi phí quẹt thẻ theo từng chuyến đi và hoàn trả nợ thẻ khi công ty thanh toán.
+* **Giải pháp kỹ thuật:**
+  1. Bổ sung tab `💳 Credit Card` trên màn hình Bills, thẻ KPI Gradient hiển thị Available Limit và Balance Due.
+  2. Cài đặt Hạn mức thẻ (`budget`) và Ngân hàng phát hành (`cardName`).
+  3. Tự động lọc hóa đơn có phương thức thanh toán `3-Credit card`, trừ hạn mức khả dụng và cộng dồn dư nợ.
+  4. Bộ lọc Năm/Tháng thống kê tổng chi tiêu thẻ và tổng hoàn trả trong kỳ.
+  5. **Sub-tab chuyên dụng `✈️ Trip Card Bills`:**
+     - Tổng hợp chi phí quẹt thẻ theo từng chuyến đi (Trip Groups).
+     - Ma trận đối soát 3 cột: `Card Spent` (-VND), `Transferred` (+VND), `Remaining Due` (VND).
+     - Badge trạng thái trực quan: `🟢 Settled`, `🟡 Partially Paid`, `🔴 Unsettled`.
+     - Nút chuyển trả nhanh 1-chạm `➕ Transfer <Remaining Due> ₫` tự động điền form hoàn ứng.
+     - Nút `🧾 View Bills` tự động lọc danh sách trong sub-tab `Card Bills` kèm banner lọc và nút `✕ Show All`.
+  6. Tính năng `Transfer Back to Card` ghi nhận tiền công ty thanh toán, tự động bù lại hạn mức khả dụng của thẻ và lưu lịch sử.
+
+---
+
 ## 3. 📅 LỘ TRÌNH TRIỂN KHAI THEO GIAI ĐOẠN (ROADMAP)
 
 ```mermaid
@@ -478,7 +519,7 @@ gantt
   - [x] Tích hợp chọn Ghi chú Hiện trường vào Báo cáo Kỹ thuật (bước 5 Tasks & Notes) và xuất bản tự động vào tệp PDF (Đã xong - IMP-29)
   - [x] Tinh chỉnh cân đối nút View All 2 hàng trong Quick Note modal: Tách (N) xuống dòng dưới View All, chống co vỡ giao diện trên di động (Đã xong - IMP-30)
   - [x] Bảng tổng hợp chuyến đi & Theo dõi thanh toán công tác phí: Smart Accordion Row 1 dòng, bộ lọc Tháng/Năm/Status, tiến độ 4 bước (Req/Appr/Proc/Done), nút đồng bộ 1 chạm All Claims, tự động sắp xếp chuẩn thời gian từ Week 1 (trên cùng) tới Week 53 (dưới cùng), phân cấp thị giác làm mờ chuyến đi chưa active (Planned) và làm nổi bật chuyến đi Active khi xem cả năm/tháng, cơ chế chỉ đồng bộ vi mô khi có thay đổi (change-only sync) và đồng bộ phẳng Google Sheet TripClaims chuyên dụng (Đã xong - IMP-31)
-  - [x] Quản lý thẻ tín dụng & Hoàn ứng công tác phí: Tab Credit Card trên màn hình Bills, cài đặt hạn mức thẻ/ngân sách, tự động trừ khi có bill thanh toán bằng thẻ, tổng hợp chi tiêu theo tháng, tính năng Transfer back to Card khi nhận tiền trả từ công ty và cập nhật hạn mức khả dụng (Đã xong - IMP-32)
+  - [x] Quản lý thẻ tín dụng & Hoàn ứng công tác phí: Tab Credit Card trên màn hình Bills, cài đặt hạn mức thẻ/ngân sách, tự động trừ khi có bill quẹt thẻ, tổng hợp chi tiêu theo tháng, sub-tab Trip Card Bills tổng hợp chi phí thẻ theo từng chuyến đi kèm ma trận đối soát 3 cột (Card Spent / Transferred / Remaining Due) và nút chuyển trả nhanh 1-chạm Quick Transfer, xem chi tiết hóa đơn theo trip trong Card Bills, tính năng Transfer back to Card khi nhận tiền trả từ công ty và cập nhật hạn mức khả dụng (Đã xong - IMP-32)
   - [x] Tinh chỉnh cân đối bảng Daily Service Tickets trên PDF (chống ngắt trang lửng lơ, sửa lỗi ký tự font checkmark sang [Signed]) và chuyển chữ ký về thẳng hàng ngay dưới nhãn Signature: (Đã xong)
 
 ---

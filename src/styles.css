@@ -1210,6 +1210,52 @@ input, textarea, select, button { font-family: var(--font); }
   border-left: 3.5px solid #7C3AED;
 }
 
+/* ── Trip Card Bills (Reconciliation by Trip) ── */
+.cc-trip-card {
+  background: var(--surface);
+  border: 1px solid var(--n200);
+  border-radius: var(--rs);
+  padding: 12px;
+  margin-bottom: 10px;
+  box-shadow: var(--sh);
+  transition: all 0.15s ease;
+}
+.cc-trip-card.settled {
+  border-left: 4px solid var(--green);
+}
+.cc-trip-card.partial {
+  border-left: 4px solid #F59E0B;
+}
+.cc-trip-card.unsettled {
+  border-left: 4px solid #EF4444;
+}
+.cc-trip-reconcile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin: 8px 0;
+  padding: 8px;
+  background: var(--n50);
+  border-radius: 6px;
+  border: 1px solid var(--n150);
+}
+.cc-reconcile-box {
+  text-align: center;
+}
+.cc-reconcile-label {
+  font-size: 9.5px;
+  color: var(--n500);
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.cc-reconcile-val {
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+
 
 
 
