@@ -5421,8 +5421,9 @@ function loadIndustryTemplate(ind){
 // ═══════ CHECKLIST TEMPLATES ═══════
 function renderTemplates(){
   const el=document.getElementById('template-list');if(!el)return;
-  el.innerHTML=S.templates.length
-    ?S.templates.map((tmpl,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--g100);"><div style="flex:1;font-size:13px;">${tmpl}</div><button class="db" onclick="rmTemplate(${i})">×</button></div>`).join('')
+  const tmpls = Array.isArray(S.templates) ? S.templates : [];
+  el.innerHTML=tmpls.length
+    ?tmpls.map((tmpl,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--g100);"><div style="flex:1;font-size:13px;">${tmpl}</div><button class="db" onclick="rmTemplate(${i})">×</button></div>`).join('')
     :`<div style="font-size:12px;color:var(--g500);padding:8px 0;">No templates. Add below or use Industry Templates.</div>`;
 }
 function addTemplate(){const v=document.getElementById('tmpl-new').value.trim();if(!v)return;S.templates.push(v);sv();document.getElementById('tmpl-new').value='';renderTemplates();}
@@ -5951,7 +5952,8 @@ async function quickSyncFromHome() {
   }
 }
 
-init();
+// Note: init() is invoked at the end of the final bundled module (sync.js)
+// so all module-level let/const declarations are initialized first.
 
 // ====== auth.js ======
 // =====================================================
@@ -7015,8 +7017,6 @@ function renderDash(){
     htt.innerHTML=out;
   }
 
-  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
-
   const upcoming=S.trips.filter(tr=>tr.status!=='completed').sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);
   const upEl=document.getElementById('upcoming-trips');
   upEl.innerHTML=upcoming.length?upcoming.map(tr=>{
@@ -7047,6 +7047,12 @@ function renderDash(){
       <div class="cs">${fmtDate(tr.date)}</div>
     </div>`;
   }).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noReports')}</div>`;
+
+  try {
+    if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
+  } catch (err) {
+    console.warn('[renderDash] Home finance widget error:', err);
+  }
 }
 
 // ═════════════════════════════════════════════════════
@@ -15472,12 +15478,12 @@ function renderHomeFinanceWidget() {
 
   ensureCreditCardState();
   const budget = parseFloat(S.creditCard.budget) || 50000000;
-  const allCardBills = (S.bills || []).filter(isCardBill_);
+  const allCardBills = (S.bills || []).filter(isCreditCardBill);
   const cardSpent = allCardBills.reduce((s, b) => {
     if ((b.currency || 'VND').toUpperCase() === 'VND') return s + (parseFloat(b.amount) || 0);
     return s + (parseFloat(b.vndAmount) || 0);
   }, 0);
-  const cardRepaid = (S.creditCard.transfers || []).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const cardRepaid = ((S.creditCard && S.creditCard.transfers) || []).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   const cardDebt = Math.max(0, cardSpent - cardRepaid);
   const cardAvail = budget - cardDebt;
   const availColor = cardAvail <= 0 ? 'var(--red)' : (cardAvail < budget * 0.2 ? 'var(--amber)' : 'var(--green)');
@@ -17217,6 +17223,11 @@ if (typeof window !== 'undefined') {
     console.log('[PlantLog] Network back online, checking pending media queue…');
     setTimeout(flushPendingMedia, 2500);
   });
+}
+
+// Boot app after all bundled modules have evaluated
+if (typeof init === 'function') {
+  init();
 }
 
 </script>

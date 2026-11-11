@@ -973,8 +973,9 @@ function loadIndustryTemplate(ind){
 // ═══════ CHECKLIST TEMPLATES ═══════
 function renderTemplates(){
   const el=document.getElementById('template-list');if(!el)return;
-  el.innerHTML=S.templates.length
-    ?S.templates.map((tmpl,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--g100);"><div style="flex:1;font-size:13px;">${tmpl}</div><button class="db" onclick="rmTemplate(${i})">×</button></div>`).join('')
+  const tmpls = Array.isArray(S.templates) ? S.templates : [];
+  el.innerHTML=tmpls.length
+    ?tmpls.map((tmpl,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--g100);"><div style="flex:1;font-size:13px;">${tmpl}</div><button class="db" onclick="rmTemplate(${i})">×</button></div>`).join('')
     :`<div style="font-size:12px;color:var(--g500);padding:8px 0;">No templates. Add below or use Industry Templates.</div>`;
 }
 function addTemplate(){const v=document.getElementById('tmpl-new').value.trim();if(!v)return;S.templates.push(v);sv();document.getElementById('tmpl-new').value='';renderTemplates();}
@@ -1503,5 +1504,6 @@ async function quickSyncFromHome() {
   }
 }
 
-init();
+// Note: init() is invoked at the end of the final bundled module (sync.js)
+// so all module-level let/const declarations are initialized first.
 

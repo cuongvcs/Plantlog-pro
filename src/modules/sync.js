@@ -1700,5 +1700,10 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// Boot app after all bundled modules have evaluated
+if (typeof init === 'function') {
+  init();
+}
+
 
 

@@ -677,8 +677,6 @@ function renderDash(){
     htt.innerHTML=out;
   }
 
-  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
-
   const upcoming=S.trips.filter(tr=>tr.status!=='completed').sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);
   const upEl=document.getElementById('upcoming-trips');
   upEl.innerHTML=upcoming.length?upcoming.map(tr=>{
@@ -709,6 +707,12 @@ function renderDash(){
       <div class="cs">${fmtDate(tr.date)}</div>
     </div>`;
   }).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noReports')}</div>`;
+
+  try {
+    if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
+  } catch (err) {
+    console.warn('[renderDash] Home finance widget error:', err);
+  }
 }
 
 // ═════════════════════════════════════════════════════

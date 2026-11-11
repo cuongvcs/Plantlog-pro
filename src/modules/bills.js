@@ -1809,12 +1809,12 @@ function renderHomeFinanceWidget() {
 
   ensureCreditCardState();
   const budget = parseFloat(S.creditCard.budget) || 50000000;
-  const allCardBills = (S.bills || []).filter(isCardBill_);
+  const allCardBills = (S.bills || []).filter(isCreditCardBill);
   const cardSpent = allCardBills.reduce((s, b) => {
     if ((b.currency || 'VND').toUpperCase() === 'VND') return s + (parseFloat(b.amount) || 0);
     return s + (parseFloat(b.vndAmount) || 0);
   }, 0);
-  const cardRepaid = (S.creditCard.transfers || []).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const cardRepaid = ((S.creditCard && S.creditCard.transfers) || []).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
   const cardDebt = Math.max(0, cardSpent - cardRepaid);
   const cardAvail = budget - cardDebt;
   const availColor = cardAvail <= 0 ? 'var(--red)' : (cardAvail < budget * 0.2 ? 'var(--amber)' : 'var(--green)');
