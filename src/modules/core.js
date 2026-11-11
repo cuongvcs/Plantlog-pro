@@ -105,6 +105,7 @@ const IND={
 // ═══════ STATE ═══════
 let S={
   profile:{name:'',title:'',company:'',empid:'',signature:''},
+  gsUrl:'',gsApiKey:'',
   trips:[],reports:{},tasks:[],leaveData:{},
   machines:[],plans:[],bills:[],
   inspections:[],
@@ -117,7 +118,8 @@ let S={
   telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
   calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
   reminders:[],  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
-  tripClaims:[]  // [{tripId, dateRequest, dateApproved, processDate, doneDate, paymentStatus, comment, updatedAt}] (IMP-31)
+  tripClaims:[], // [{tripId, dateRequest, dateApproved, processDate, doneDate, paymentStatus, comment, updatedAt}] (IMP-31)
+  creditCard:{budget:50000000,cardName:'Corporate Credit Card',transfers:[]}
 };
 let curTrip=null,curReport=null,sigCanvas,sigCtx,isDrw=false;
 let calY,calM,selDay=null,signoffRes='Completed';
@@ -208,6 +210,42 @@ function ld(){
   applyTheme();
 }
 function t(k){return T[S.lang][k]||T.en[k]||k;}
+
+/**
+ * Local calendar YYYY-MM-DD (avoids UTC midnight shift before 7AM in UTC+7)
+ */
+function localDateStr(d){
+  const dt=(d instanceof Date)?d:(d?new Date(d):new Date());
+  if(isNaN(dt.getTime())) return '';
+  const y=dt.getFullYear();
+  const m=String(dt.getMonth()+1).padStart(2,'0');
+  const day=String(dt.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Escape HTML special chars before interpolating untrusted strings into innerHTML / attributes
+ */
+function escHtml(v){
+  if(v===null||v===undefined) return '';
+  return String(v)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function sanitizeJsonKeys_(obj){
+  if(!obj||typeof obj!=='object') return obj;
+  if(Array.isArray(obj)) return obj.map(sanitizeJsonKeys_);
+  const clean={};
+  for(const [k,v] of Object.entries(obj)){
+    if(k==='__proto__'||k==='constructor'||k==='prototype') continue;
+    clean[k]=sanitizeJsonKeys_(v);
+  }
+  return clean;
+}
 
 // ═══════ STORAGE & IMAGE OPTIMIZATION (IMP-01) ═══════
 function getStorageUsage(){
@@ -330,7 +368,7 @@ function exportDataBackupJSON() {
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const dateStr = new Date().toISOString().slice(0, 10);
+    const dateStr = localDateStr();
     a.href = url;
     a.download = `PlantLog_Backup_${dateStr}.json`;
     document.body.appendChild(a);
@@ -360,8 +398,9 @@ function handleBackupFileSelect(e) {
   reader.onload = async (ev) => {
     try {
       const parsed = JSON.parse(ev.target.result);
-      const incomingData = parsed.data || parsed;
-      if (!incomingData || typeof incomingData !== 'object' || (!incomingData.trips && !incomingData.tasks && !incomingData.profile)) {
+      const rawData = parsed && typeof parsed === 'object' ? (parsed.data || parsed) : null;
+      const incomingData = sanitizeJsonKeys_(rawData);
+      if (!incomingData || typeof incomingData !== 'object' || Array.isArray(incomingData) || (!incomingData.trips && !incomingData.tasks && !incomingData.profile)) {
         if(typeof showToast === 'function') showToast('❌ Invalid PlantLog Pro backup file!');
         return;
       }
@@ -374,6 +413,12 @@ function handleBackupFileSelect(e) {
       if (!ok) return;
 
       S = { ...S, ...incomingData };
+      if (!Array.isArray(S.trips)) S.trips = [];
+      if (!Array.isArray(S.tasks)) S.tasks = [];
+      if (!Array.isArray(S.bills)) S.bills = [];
+      if (!Array.isArray(S.assets)) S.assets = [];
+      if (!Array.isArray(S.scratchpad)) S.scratchpad = [];
+      if (!Array.isArray(S.tripClaims)) S.tripClaims = [];
       sv();
       if(typeof showToast === 'function') showToast('✅ Data restored successfully!');
 
@@ -416,10 +461,10 @@ if(typeof window !== 'undefined'){
 
 // ═══════ PWA ═══════
 function setupPWA(){
-  // ── Clear old PlantLog v4 caches on every load ─────
+  // ── Clear legacy pre-v10 caches only (sw.js activate handles current cache rotation) ─────
   if('caches' in window){
     caches.keys().then(keys=>keys.forEach(k=>{
-      if(k!=='plantlog-pro-v9'){
+      if(!k.startsWith('plantlog-pro-') || /^plantlog-pro-v\d$/.test(k)){
         console.log('[PlantLog] Deleting old cache:',k);
         caches.delete(k);
       }
@@ -545,8 +590,8 @@ async function requestNotifications(){
 function scheduleNotifications(){
   if(Notification.permission!=='granted')return;
   const now=new Date();
-  const today=now.toISOString().slice(0,10);
-  const tomorrow=new Date(now.getTime()+86400000).toISOString().slice(0,10);
+  const today=localDateStr(now);
+  const tomorrow=localDateStr(new Date(now.getTime()+86400000));
   // Check upcoming trips
   S.trips.filter(tr=>tr.status!=='completed'&&(tr.date===today||tr.date===tomorrow)).forEach(tr=>{
     const msg=tr.date===today?`🏭 Trip today: ${tr.plant}`:`🏭 Trip tomorrow: ${tr.plant} (${tr.location||''})`;
@@ -679,6 +724,8 @@ function showScreen(n){
   if(n==='bills') {
     if(typeof currentBillsView!=='undefined' && currentBillsView==='claims') {
       if(typeof renderTripClaimsScreen==='function') renderTripClaimsScreen();
+    } else if(typeof currentBillsView!=='undefined' && currentBillsView==='card') {
+      if(typeof renderCreditCardScreen==='function') renderCreditCardScreen();
     } else {
       renderBillsScreen();
     }
@@ -690,11 +737,6 @@ function showScreen(n){
   if(n==='inspection')renderInspectionScreen();
   if(n==='toolbox') { if(typeof switchToolboxTab==='function') switchToolboxTab(curToolboxTab||'pressure'); }
   if(n==='assets') { if(typeof renderAssetList==='function') renderAssetList(); }
-  if(n==='settings'&&hasPIN()&&!_settingsUnlocked){
-    _pendingScreen='settings';
-    openModal('modal-pin');
-    return; // Don't navigate yet — openModal will navigate after PIN
-  }
   if(n==='bill-export')buildBillPDFPreview();
 }
 
@@ -994,7 +1036,7 @@ function getSortedTrips(){
 }
 // ── Auto-start trips and tasks whose date has arrived ────────
 function autoStartTodayItems(){
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateStr();
   let changed = false;
 
   // ── Trips: planned → in_progress if start date reached ──
@@ -1049,8 +1091,22 @@ async function clearAllData(){
     icon: '⚠️'
   });
   if(!ok) return;
-  S={profile:{name:'',title:'',company:'',empid:'',signature:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],inspections:[],library:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang,theme:S.theme||'auto'};
-  sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();showToast('All data cleared');
+  S={
+    profile:{name:'',title:'',company:'',empid:'',signature:''},
+    gsUrl:'',gsApiKey:'',
+    trips:[],reports:{},tasks:[],leaveData:{},
+    machines:[],plans:[],bills:[],inspections:[],
+    assets:[],scratchpad:[],deletedIds:{},library:[],
+    reminders:[],tripClaims:[],
+    creditCard:{budget:50000000,cardName:'Corporate Credit Card',transfers:[]},
+    telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
+    calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
+    templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],
+    defaultTeam:[],lang:S.lang,theme:S.theme||'auto'
+  };
+  sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();
+  if(typeof updateGSStatus==='function')updateGSStatus();
+  showToast('All data cleared');
 }
 
 
@@ -1079,7 +1135,15 @@ Store.on('trip:save',    () => { renderTripList(); renderDash(); });
 Store.on('trip:delete',  () => { renderTripList(); renderDash(); });
 Store.on('task:save',    () => { renderTasks(); renderDash(); renderCalendar(); });
 Store.on('task:status',  () => { renderTasks(); renderDash(); });
-Store.on('bill:save',    () => { renderBillsScreen(); renderDash(); });
+Store.on('bill:save',    () => {
+  renderBillsScreen();
+  renderDash();
+  if (typeof currentBillsView !== 'undefined' && currentBillsView === 'card' && typeof renderCreditCardScreen === 'function') {
+    renderCreditCardScreen();
+  } else if (typeof currentBillsView !== 'undefined' && currentBillsView === 'claims' && typeof renderTripClaimsScreen === 'function') {
+    renderTripClaimsScreen();
+  }
+});
 Store.on('leave:save',   () => { renderCalendar(); renderDash(); });
 Store.on('*',            ({ action }) => {
   // Auto-sync to Google Sheets on any commit

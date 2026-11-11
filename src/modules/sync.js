@@ -6,9 +6,34 @@
 
 // ═══════ GOOGLE SHEETS SYNC ═══════
 function getGSUrl() { return S.gsUrl || ''; }
+function getGSApiKey() { return S.gsApiKey || ''; }
+
+function toggleGSApiKeyVisibility() {
+  const inp = document.getElementById('gs-api-key');
+  const btn = document.getElementById('gs-api-key-toggle');
+  if (!inp) return;
+  const isPwd = inp.type === 'password';
+  inp.type = isPwd ? 'text' : 'password';
+  if (btn) btn.textContent = isPwd ? '🙈' : '👁️';
+}
+
+function syncGSInputsToState_() {
+  const urlEl = document.getElementById('gs-url');
+  const keyEl = document.getElementById('gs-api-key');
+  let changed = false;
+  if (urlEl && urlEl.value.trim() && urlEl.value.trim() !== S.gsUrl) {
+    S.gsUrl = urlEl.value.trim();
+    changed = true;
+  }
+  if (keyEl && keyEl.value.trim() !== (S.gsApiKey || '')) {
+    S.gsApiKey = keyEl.value.trim();
+    changed = true;
+  }
+  if (changed) sv();
+}
 
 function gsUrlChanged() {
-  const url = document.getElementById('gs-url').value.trim();
+  syncGSInputsToState_();
   // Hide old result when user types
   const res = document.getElementById('gs-test-result');
   if (res) res.style.display = 'none';
@@ -33,20 +58,23 @@ function showGSResult(msg, type) {
 function updateGSStatus() {
   const el = document.getElementById('gsheet-status');
   const urlEl = document.getElementById('gs-url');
+  const keyEl = document.getElementById('gs-api-key');
   const bar = document.getElementById('gs-status-bar');
+  if (keyEl) keyEl.value = S.gsApiKey || '';
   if (S.gsUrl) {
-    if (el) el.textContent = S.lastSync ? 'Last sync: ' + new Date(S.lastSync).toLocaleString() : 'Connected — not synced yet';
+    const keyBadge = S.gsApiKey ? '🔐 Key set' : '⚠ No API Key';
+    if (el) el.textContent = S.lastSync ? `Last sync: ${new Date(S.lastSync).toLocaleString()} · ${keyBadge}` : `Connected (${keyBadge}) — not synced yet`;
     if (urlEl) urlEl.value = S.gsUrl;
     if (bar) {
       bar.style.display = 'flex';
-      bar.style.background = S.lastSync ? 'var(--gl)' : 'var(--al)';
+      bar.style.background = (S.lastSync && S.gsApiKey) ? 'var(--gl)' : 'var(--al)';
       const icon = document.getElementById('gs-status-icon');
       const title = document.getElementById('gs-status-title');
       const sub = document.getElementById('gs-status-sub');
-      if (icon) icon.textContent = S.lastSync ? '✅' : '⚠️';
-      if (title) title.style.color = S.lastSync ? 'var(--gd)' : '#92400E';
-      if (title) title.textContent = S.lastSync ? 'Connected & synced' : 'URL saved — sync to verify';
-      if (sub) sub.style.color = S.lastSync ? 'var(--gd)' : '#92400E';
+      if (icon) icon.textContent = (S.lastSync && S.gsApiKey) ? '✅' : '⚠️';
+      if (title) title.style.color = (S.lastSync && S.gsApiKey) ? 'var(--gd)' : '#92400E';
+      if (title) title.textContent = S.lastSync ? (S.gsApiKey ? 'Connected & synced' : 'Synced — add API Secret Key') : 'URL saved — sync to verify';
+      if (sub) sub.style.color = (S.lastSync && S.gsApiKey) ? 'var(--gd)' : '#92400E';
       if (sub) sub.textContent = S.lastSync ? 'Last sync: ' + new Date(S.lastSync).toLocaleString() : S.gsUrl.substring(0, 45) + '...';
     }
   } else {
@@ -57,15 +85,16 @@ function updateGSStatus() {
 
 // Google Apps Script CORS fix:
 // GET requests work fine (GAS handles CORS for GET)
-// POST must use no-cors mode OR form-encoded via iframe trick
-// Best approach: use fetch with mode:'cors' — GAS doPost supports it when deployed as "Anyone"
+// POST must use text/plain to avoid CORS preflight, carrying apiKey in JSON body
 async function gsPost(url, body) {
-  // Primary: direct fetch (works when GAS is deployed as "Anyone" access)
   try {
+    const apiKey = getGSApiKey();
+    const reqBody = { ...(body || {}) };
+    if (apiKey && !reqBody.apiKey) reqBody.apiKey = apiKey;
     const r = await fetch(url, {
       method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain avoids preflight CORS
+      body: JSON.stringify(reqBody),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     });
     return await r.json();
   } catch (e) {
@@ -74,34 +103,46 @@ async function gsPost(url, body) {
 }
 
 async function gsGet(url, params) {
-  const qs = Object.entries(params || {}).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+  const apiKey = getGSApiKey();
+  const fullParams = { ...(params || {}) };
+  if (apiKey && !fullParams.apiKey) fullParams.apiKey = apiKey;
+  const qs = Object.entries(fullParams).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
   const fullUrl = url + (qs ? '?' + qs : '');
   const r = await fetch(fullUrl, { method: 'GET', mode: 'cors' });
   return await r.json();
 }
 
 async function testGSConnection() {
-  const url = document.getElementById('gs-url').value.trim();
+  const url = (document.getElementById('gs-url').value || '').trim();
+  const keyEl = document.getElementById('gs-api-key');
+  const apiKey = keyEl ? keyEl.value.trim() : getGSApiKey();
+
   if (!url) { showGSResult('⚠ Paste your Apps Script URL first', 'warn'); return; }
   if (!url.includes('script.google.com')) { showGSResult('❌ URL must be a script.google.com address', 'error'); return; }
-  if (!url.endsWith('/exec') && !url.includes('/exec?')) { showGSResult('⚠ URL should end with /exec — check your deployment URL', 'warn'); S.gsUrl = url; sv(); updateGSStatus(); return; }
 
-  showGSResult('Testing connection...', 'warn');
-  // Save URL immediately regardless of test result
-  S.gsUrl = url; sv(); updateGSStatus();
+  S.gsUrl = url;
+  S.gsApiKey = apiKey;
+  sv();
+  updateGSStatus();
+
+  if (!url.endsWith('/exec') && !url.includes('/exec?')) { showGSResult('⚠ URL should end with /exec — check your deployment URL', 'warn'); return; }
+
+  showGSResult('Testing connection & verifying API Key...', 'warn');
 
   try {
     const data = await gsGet(url, { action: 'ping' });
-    if (data.ok) {
-      showGSResult('✅ Connected! Google Sheet is ready.', 'ok');
+    if (data && data.ok) {
+      showGSResult('✅ Authorized & Connected! Google Sheet is ready.', 'ok');
       S.lastSync = null; sv(); updateGSStatus();
+    } else if (data && data.code === 401) {
+      showGSResult('❌ Unauthorized: Invalid API Secret Key. Check Sheet "Settings" -> api_secret.', 'error');
     } else {
-      showGSResult('⚠ Received response but got error: ' + (data.error || 'unknown'), 'warn');
+      showGSResult('⚠ Received response but got error: ' + ((data && data.error) || 'unknown'), 'warn');
     }
   } catch (e) {
     // CORS blocks GET test from some browsers — this is expected
     // The sync (POST with text/plain) usually works even when GET test fails
-    showGSResult('⚠ Browser CORS blocked the test (this is normal). Tap "Sync all data" to verify the connection actually works.', 'warn');
+    showGSResult('⚠ Browser CORS blocked GET test (normal). Tap "Sync all data" to verify URL & API Key.', 'warn');
     const btn = document.getElementById('gs-sync-btn');
     if (btn) { btn.style.background = 'var(--amber)'; btn.textContent = '⬆ Try sync to verify'; }
     setTimeout(() => { if (btn) { btn.style.background = ''; btn.textContent = '⬆ Sync all data'; } }, 4000);
@@ -392,6 +433,7 @@ async function deleteSingleQuickSnap(id) {
 }
 
 async function syncToSheets() {
+  syncGSInputsToState_();
   const url = getGSUrl();
   if (!url) { updateGSStatus(); openModal('modal-gsheet'); showGSResult('⚠ Paste your Apps Script URL first', 'warn'); return; }
 
@@ -752,6 +794,7 @@ function mergeCollectionByTimestamp(localList, remoteList, idKey = 'id') {
 }
 
 async function loadFromSheets(silent) {
+  syncGSInputsToState_();
   const url = getGSUrl();
   if (!url) { if (!silent) { showToast('Set your Google Sheet URL first'); openModal('modal-gsheet'); } return; }
   if (!silent) showToast('Loading from Google Sheets…');
@@ -1087,6 +1130,27 @@ async function loadFromSheets(silent) {
         S.tripClaims = mergeCollectionByTimestamp(existingClaims, remoteClaims, 'tripId');
       }
 
+      // Sync Reminders from cloud
+      if (d.reminders && Array.isArray(d.reminders)) {
+        const existingRem = S.reminders || [];
+        const remoteRem = d.reminders.map(r => ({
+          id: ss(r.ID),
+          title: ss(r.Title),
+          freq: ss(r.Freq) || 'monthly',
+          weekday: ss(r.Weekday) || '1',
+          monthday: ss(r.Monthday) || '1',
+          yearMonth: ss(r.YearMonth) || '01',
+          yearDay: ss(r.YearDay) || '1',
+          time: safeTime(r.Time) || '08:00',
+          note: ss(r.Note),
+          notifyTele: String(r.NotifyTele).toLowerCase() !== 'false',
+          notifyCalendar: String(r.NotifyCalendar).toLowerCase() !== 'false',
+          status: ss(r.Status) || 'active',
+          createdAt: ss(r.CreatedAt)
+        }));
+        S.reminders = mergeCollectionByTimestamp(existingRem, remoteRem, 'id');
+      }
+
       sv();
       try { if (typeof autoStartTodayItems === 'function') autoStartTodayItems(); } catch (e) { }
       renderDash(); renderTripList(); renderTasks(); renderCalendar();
@@ -1243,7 +1307,7 @@ function openAddBill(tripId) {
   document.getElementById('bill-edit-id').textContent = '';
   document.getElementById('bill-save-btn').textContent = '💾 Save Bill';
   ['bill-detail', 'bill-number', 'bill-amount', 'bill-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  document.getElementById('bill-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('bill-date').value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
   document.getElementById('bill-currency').value = 'VND';
   document.getElementById('bill-category').value = 'other';
   const vndElR = document.getElementById('bill-vnd'); if (vndElR) vndElR.value = '';
@@ -1428,6 +1492,10 @@ async function deleteBill(id) {
   S.bills = S.bills.filter(b => b.id !== id);
   sv();
   if (curTrip) renderTripBills(curTrip);
+  if (typeof renderBillsScreen === 'function') renderBillsScreen();
+  if (typeof currentBillsView !== 'undefined' && currentBillsView === 'card' && typeof renderCreditCardScreen === 'function') {
+    renderCreditCardScreen();
+  }
 
   // IMP-31: Single-row Trip Claim update when bill is deleted
   if (tripIdOfDeleted && typeof calculateTripTotalClaim === 'function') {
@@ -1519,15 +1587,11 @@ async function uploadBillPhotoToDrive(src, billId, tripId) {
   const fileName = `bill_${(billId || 'x').slice(-8)}_${Date.now()}.${ext}`;
 
   try {
-    const resp = await fetch(gsUrl, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'uploadFile', taskId: 'bill_' + billId,
-        fileName, mimeType, dataBase64: base64,
-        folder: 'Bills Images/' + folderName
-      })
+    const data = await gsPost(gsUrl, {
+      action: 'uploadFile', taskId: 'bill_' + billId,
+      fileName, mimeType, dataBase64: base64,
+      folder: 'Bills Images/' + folderName
     });
-    const data = await resp.json();
     if (data && data.ok) return { src: data.fileUrl, driveUrl: data.fileUrl, fileId: data.fileId };
   } catch (e) { console.warn('[Bill photo]', e.message); }
   return null;

@@ -594,7 +594,7 @@ function updateLeaveSummary(){
 
 // ═══════ DASHBOARD ═══════
 function renderDash(){
-  const now=new Date();const today=now.toISOString().slice(0,10);
+  const now=new Date();const today=typeof localDateStr === 'function' ? localDateStr(now) : now.toISOString().slice(0,10);
   const thisM=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('stat-trips').textContent=S.trips.filter(tr=>tr.date&&tr.date.startsWith(thisM)).length;
   const todayTasks=S.tasks.filter(tk=>tk.date===today&&tk.status!=='done');

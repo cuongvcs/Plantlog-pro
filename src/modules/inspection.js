@@ -18,7 +18,7 @@ function openInspectionScreen(){
   document.getElementById('insp-screen-title').textContent = tr.plant + ' — Inspections';
   document.getElementById('insp-screen-sub').textContent = fmtDate(tr.date) + (tr.dateEnd&&tr.dateEnd!==tr.date?' → '+fmtDate(tr.dateEnd):'');
   // Default date filter to today if within trip range
-  const today = new Date().toISOString().slice(0,10);
+  const today = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
   const inTrip = today >= (tr.date||'') && today <= (tr.dateEnd||tr.date||'');
   const df = document.getElementById('insp-date-filter');
   if(df) df.value = inTrip ? today : (tr.date||'');
@@ -164,7 +164,7 @@ function openAddInspectionItem(){
   editingInspId = null;
   document.getElementById('insp-modal-title').textContent = 'Add Inspection Item';
   document.getElementById('insp-save-btn').textContent = '💾 Save';
-  document.getElementById('insp-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('insp-date').value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
   setInspType('check');
   // Clear all fields
   ['insp-check-name','insp-check-note','insp-rd-name','insp-rd-tag',

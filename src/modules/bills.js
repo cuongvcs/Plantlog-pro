@@ -142,7 +142,7 @@ function openAddBillFromScreen() {
   ['bill-detail','bill-number','bill-amount','bill-notes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  document.getElementById('bill-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('bill-date').value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
   document.getElementById('bill-currency').value = 'VND';
   document.getElementById('bill-category').value = 'other';
   const pmEl = document.getElementById('bill-payment-method'); if (pmEl) pmEl.value = '1-Cash';
@@ -334,6 +334,9 @@ async function deleteBillFromScreen(id) {
   S.deletedIds[id] = Date.now();
   S.bills = S.bills.filter(b => b.id !== id);
   sv(); renderBillsScreen(); renderDash();
+  if (typeof currentBillsView !== 'undefined' && currentBillsView === 'card' && typeof renderCreditCardScreen === 'function') {
+    renderCreditCardScreen();
+  }
 
   // IMP-31: Single-row Trip Claim update when bill is deleted
   if(tripIdOfDeleted && typeof calculateTripTotalClaim === 'function'){
@@ -503,9 +506,8 @@ function exportBillsPDF() {
   });
   doc.setDrawColor(0,132,61);doc.line(mg,y,W-mg,y);y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text('GRAND TOTAL',mg+2,y+1);rtxt(fmtAmt(grandVND,'VND')+' VND',y+1,[146,64,14]);y+=7;doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(120,120,120);const brkAll=Object.entries(allByCur).map(([c,t])=>fmtAmt(t,c)+' '+c).join('  ·  ');if(brkAll){doc.text(brkAll,mg+2,y);y+=5;}
   addPN();
-  const safeName=reportTitle.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,40);
   const safeName2=reportTitle.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,40);
-  const bFileName=`Bills_${safeName2}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.pdf`;
+  const bFileName=`Bills_${safeName2}_${(typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10)).replace(/-/g,'')}.pdf`;
   // Pass tripId so the Drive upload links to correct trip
   const billsTripId = (tripFilter && tripFilter !== 'all') ? tripFilter : (curTrip||null);
   showPdfSaveOptions(doc, bFileName, 'bills', billsTripId);
@@ -1009,7 +1011,7 @@ function setTripClaimEditStatus(status) {
 function setClaimTodayDate(fieldId) {
   const el = document.getElementById(fieldId);
   if (el) {
-    el.value = new Date().toISOString().slice(0, 10);
+    el.value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
   }
 }
 
@@ -1191,7 +1193,7 @@ function quickTransferForTrip(tripId, remainingAmt) {
   ensureCreditCardState();
   const trip = (S.trips || []).find(t => String(t.id) === String(tripId));
   const weekLabel = trip && typeof getTripWeekLabel === 'function' ? getTripWeekLabel(trip.date, trip.dateEnd) : '';
-  const plantName = trip ? trip.plant : 'Trip';
+  const plantName = trip ? trip.plant : (tripId === '__unassigned__' ? 'General Card Expenses' : 'Trip');
 
   openTransferBackModal(); // opens new modal
 
@@ -1199,7 +1201,7 @@ function quickTransferForTrip(tripId, remainingAmt) {
   const amtInput = document.getElementById('cc-transfer-amount');
   const noteInput = document.getElementById('cc-transfer-note');
 
-  if (tripSel) tripSel.value = tripId || '';
+  if (tripSel) tripSel.value = (tripId && tripId !== '__unassigned__') ? tripId : '';
   if (amtInput) amtInput.value = (remainingAmt > 0) ? remainingAmt : '';
   if (noteInput) noteInput.value = `Reimbursement for ${plantName}${weekLabel ? ' ' + weekLabel : ''}`;
 
@@ -1367,26 +1369,29 @@ function renderCreditCardScreen() {
     });
   });
 
-  // Handle unassigned bills
-  if (cardBillsByTrip['unassigned'] && cardBillsByTrip['unassigned'].length) {
-    const uBills = cardBillsByTrip['unassigned'];
-    const totalSpent = uBills.reduce((sum, b) => {
+  const tripIdsSet = new Set(sortedTrips.map(t => String(t.id)));
+  // Handle unassigned & orphaned trip bills cleanly
+  const orphanBills = Object.entries(cardBillsByTrip)
+    .filter(([k]) => k === 'unassigned' || !tripIdsSet.has(String(k)))
+    .flatMap(([, list]) => list);
+  if (orphanBills.length) {
+    const totalSpent = orphanBills.reduce((sum, b) => {
       if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
       return sum + (parseFloat(b.vndAmount) || 0);
     }, 0);
-    const linkedTransfers = (S.creditCard.transfers || []).filter(t => !t.tripId);
+    const linkedTransfers = (S.creditCard.transfers || []).filter(t => !t.tripId || !tripIdsSet.has(String(t.tripId)));
     const totalTransferred = linkedTransfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     const remainingDue = Math.max(0, totalSpent - totalTransferred);
     let status = remainingDue === 0 ? 'settled' : (totalTransferred > 0 ? 'partial' : 'unsettled');
     let statusText = status === 'settled' ? '🟢 Settled' : (status === 'partial' ? '🟡 Partially Paid' : '🔴 Unsettled');
     tripGroups.push({
-      tripId: '',
+      tripId: '__unassigned__',
       plant: 'General Card Expenses',
       date: '',
       dateEnd: '',
       location: 'No linked trip',
       weekLabel: 'General',
-      billsCount: uBills.length,
+      billsCount: orphanBills.length,
       totalSpent,
       totalTransferred,
       remainingDue,
@@ -1477,14 +1482,24 @@ function renderCreditCardScreen() {
     let displayedGranularBills = filteredBills;
     let filterBannerHtml = '';
     if (_cardBillTripFilter) {
-      const filterTrip = (S.trips || []).find(t => String(t.id) === String(_cardBillTripFilter));
-      const filterTripName = filterTrip ? filterTrip.plant : 'Selected Trip';
-      displayedGranularBills = displayedGranularBills.filter(b => String(b.tripId) === String(_cardBillTripFilter));
-      filterBannerHtml = `
-        <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
-          <span>Filtered by: <strong>🏭 ${filterTripName}</strong> (${displayedGranularBills.length} bills)</span>
-          <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
-        </div>`;
+      if (_cardBillTripFilter === '__unassigned__') {
+        const activeTripIds = new Set((S.trips || []).map(t => String(t.id)));
+        displayedGranularBills = displayedGranularBills.filter(b => !b.tripId || !activeTripIds.has(String(b.tripId)));
+        filterBannerHtml = `
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
+            <span>Filtered by: <strong>General Card Expenses</strong> (${displayedGranularBills.length} bills)</span>
+            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
+          </div>`;
+      } else {
+        const filterTrip = (S.trips || []).find(t => String(t.id) === String(_cardBillTripFilter));
+        const filterTripName = filterTrip ? filterTrip.plant : 'Selected Trip';
+        displayedGranularBills = displayedGranularBills.filter(b => String(b.tripId) === String(_cardBillTripFilter));
+        filterBannerHtml = `
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
+            <span>Filtered by: <strong>🏭 ${typeof escHtml === 'function' ? escHtml(filterTripName) : filterTripName}</strong> (${displayedGranularBills.length} bills)</span>
+            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
+          </div>`;
+      }
     }
 
     if (!displayedGranularBills.length) {
@@ -1501,7 +1516,7 @@ function renderCreditCardScreen() {
         const plantStr = trip ? trip.plant : 'General Expense';
         const amtVND = (b.currency || 'VND').toUpperCase() === 'VND' ? (parseFloat(b.amount) || 0) : (parseFloat(b.vndAmount) || 0);
         bHtml += `
-          <div class="cc-item-row expense" onclick="openEditBillFromScreen('${b.id}')" style="cursor:pointer;">
+          <div class="cc-item-row expense" onclick="openEditBill('${b.id}')" style="cursor:pointer;">
             <div style="flex:1;min-width:0;padding-right:8px;">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
                 <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.detail || 'Bill'}</span>
@@ -1650,7 +1665,7 @@ function openTransferBackModal(transferId) {
   } else {
     if (idInput) idInput.value = '';
     if (amtInput) amtInput.value = '';
-    if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+    if (dateInput) dateInput.value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
     if (tripSel) tripSel.value = '';
     if (noteInput) noteInput.value = '';
     if (titleEl) titleEl.textContent = '➕ Transfer Back to Card';
@@ -1665,7 +1680,7 @@ function openTransferBackModal(transferId) {
  */
 function setCardTransferToday() {
   const el = document.getElementById('cc-transfer-date');
-  if (el) el.value = new Date().toISOString().slice(0, 10);
+  if (el) el.value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
 }
 
 /**

@@ -1512,19 +1512,14 @@ async function savePdfToDrive(doc, fileName, type, overrideTripId){
 
     const tripId = overrideTripId || curTrip;
     const trip = S.trips.find(t => t.id === tripId);
-    const resp = await fetch(gsUrl, {
-      method: 'POST',
-      headers: {'Content-Type':'text/plain'},
-      body: JSON.stringify({
-        action:    'uploadFile',
-        taskId:    'report_' + (tripId||''),
-        fileName:  fileName,
-        mimeType:  'application/pdf',
-        dataBase64: base64,
-        folder:    'Reports'
-      })
+    const data = await gsPost(gsUrl, {
+      action:    'uploadFile',
+      taskId:    'report_' + (tripId||''),
+      fileName:  fileName,
+      mimeType:  'application/pdf',
+      dataBase64: base64,
+      folder:    'Reports'
     });
-    const data = await resp.json();
     if(data && data.ok){
       showToast('Saved to Google Drive ✓');
       // Save file reference to trip — persist to BOTH localStorage AND Google Sheets
@@ -1607,10 +1602,11 @@ function markCompleted(){
     svAndSync('trip_complete');
     showScreen('trip-detail');
     if(typeof renderTripSavedReports==='function') renderTripSavedReports();
-    // Auto-send trip report summary to Telegram if configured
+    // Auto-send trip report summary to Telegram if configured (via GAS Settings or local config)
     if(typeof sendTripToTelegram === 'function'){
       const cfg = S.telegramConfig || {};
-      if(cfg.token && cfg.chatId){
+      const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
+      if((gsUrl && gsUrl.includes('/exec')) || (cfg.token && cfg.chatId)){
         sendTripToTelegram(curTrip).catch(e => console.warn('[Telegram Auto-Send] Error:', e));
       }
     }

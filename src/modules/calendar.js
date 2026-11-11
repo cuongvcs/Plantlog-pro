@@ -62,11 +62,7 @@ async function syncToGoogleCalendar(){
   showToast('Syncing to Google Calendar…');
 
   try{
-    const resp = await fetch(gsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({action:'syncToCalendar', calId:cfg.calId})
-    });
-    const data = await resp.json();
+    const data = await gsPost(gsUrl, {action:'syncToCalendar', calId:cfg.calId});
     if(data && data.ok){
       const r = data.result || data;
       showCalResult(
@@ -92,15 +88,11 @@ async function syncFromGoogleCalendar(){
   showCalResult('⟳ Pulling events from Google Calendar…', 'info');
 
   try{
-    const resp = await fetch(gsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({
-        action: 'syncFromCalendar',
-        from: new Date(Date.now() - 7*24*60*60*1000).toISOString().slice(0,10),
-        to:   new Date(Date.now() + 90*24*60*60*1000).toISOString().slice(0,10)
-      })
+    const data = await gsPost(gsUrl, {
+      action: 'syncFromCalendar',
+      from: typeof localDateStr === 'function' ? localDateStr(new Date(Date.now() - 7*24*60*60*1000)) : new Date(Date.now() - 7*24*60*60*1000).toISOString().slice(0,10),
+      to:   typeof localDateStr === 'function' ? localDateStr(new Date(Date.now() + 90*24*60*60*1000)) : new Date(Date.now() + 90*24*60*60*1000).toISOString().slice(0,10)
     });
-    const data = await resp.json();
     if(data && data.ok){
       externalCalEvents = data.events || [];
       showCalResult(
@@ -133,11 +125,7 @@ async function autoSyncCalendar(){
   const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
   if(!gsUrl) return;
   try{
-    const resp = await fetch(gsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({action:'getCalendarEvents'})
-    });
-    const data = await resp.json();
+    const data = await gsPost(gsUrl, {action:'getCalendarEvents'});
     if(data && data.ok && data.events){
       externalCalEvents = data.events;
       if(typeof renderCalendar === 'function') renderCalendar();

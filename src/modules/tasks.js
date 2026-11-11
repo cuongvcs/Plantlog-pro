@@ -47,7 +47,7 @@ async function addNewPlan(){
 }
 let taskCat='all', taskStatusFilter='all';
 // Global helper — always returns today's date string
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+function todayStr(){ return typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10); }
 
 let editingTaskId=null;
 let editingTripId=null;
@@ -338,7 +338,7 @@ function periodLabel(p){return{daily:'Day',weekly:'Week',monthly:'Month',yearly:
 function renderTasks(){
   const body=document.getElementById('task-list-body');
   if(!body)return;
-  const today=new Date().toISOString().slice(0,10);
+  const today=todayStr();
 
   if(taskCat==='kanban'){
     renderKanban(body, today);return;
@@ -626,7 +626,7 @@ function toggleDetailCheck(taskId, checkId){
 
 function openTaskDetail(id){
   const tk=S.tasks.find(t=>t.id===id);if(!tk)return;
-  const today=new Date().toISOString().slice(0,10);
+  const today=todayStr();
   const isOver=(tk.dateEnd||tk.date||tk.dateStart||'')<today&&tk.status!=='done';
   const cat=tk.category||'work';const cc=catConfig(cat);
   const dur=calcDuration(tk);

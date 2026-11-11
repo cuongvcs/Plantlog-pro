@@ -1698,19 +1698,17 @@ input, textarea, select, button { font-family: var(--font); }
       Get notified on Telegram for upcoming trips, tasks, and leave. Send trip reports directly to your Telegram.
     </p>
     <div style="background:var(--bl);border-radius:var(--r-sm);padding:12px;margin-bottom:14px;font-size:12px;color:var(--bd);line-height:1.7;">
-      <strong>Setup:</strong><br>
-      1. Message <strong>@BotFather</strong> on Telegram → /newbot → copy token<br>
-      2. Message your bot, then visit:<br>
-      <code style="font-size:11px;word-break:break-all;">https://api.telegram.org/bot<b>TOKEN</b>/getUpdates</code><br>
-      3. Copy your <strong>chat_id</strong> from the response
+      <strong>Recommended Secure Setup (Google Sheet):</strong><br>
+      Store <code>tele_token</code> and <code>tele_chatid</code> in the <strong>Settings</strong> tab of your Google Sheet (<code>PlantLog Pro Database</code>).<br>
+      You can leave the inputs below blank — notifications will be sent securely through your Apps Script backend without storing your Bot Token on this browser.
     </div>
     <div class="fg">
-      <label class="fl">Bot Token</label>
-      <input class="fi" id="tele-token" placeholder="1234567890:ABCdef..." style="font-family:var(--mono);font-size:12px;">
+      <label class="fl">Bot Token (Optional override if no Google Sheet)</label>
+      <input type="password" class="fi" id="tele-token" placeholder="Stored in Google Sheet Settings (recommended)" style="font-family:var(--mono);font-size:12px;">
     </div>
     <div class="fg">
-      <label class="fl">Your Chat ID</label>
-      <input class="fi" id="tele-chatid" placeholder="123456789" style="font-family:var(--mono);">
+      <label class="fl">Your Chat ID (Optional override)</label>
+      <input class="fi" id="tele-chatid" placeholder="Stored in Google Sheet Settings (recommended)" style="font-family:var(--mono);">
     </div>
     <!-- Notification preferences -->
     <div class="form-section" style="margin-bottom:12px;">
@@ -3565,6 +3563,15 @@ input, textarea, select, button { font-family: var(--font); }
     <div style="font-size:11px;color:var(--g500);margin-top:4px;">Paste your deployed Web App URL here. Must end in <code>/exec</code></div>
   </div>
 
+  <div class="fg">
+    <label class="fl">API Secret Key 🔐</label>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <input type="password" class="fi" id="gs-api-key" placeholder="Matches Sheet 'Settings' tab → api_secret" style="font-size:12px;font-family:var(--mono);flex:1;" oninput="gsUrlChanged()">
+      <button type="button" class="btn btn-o btn-sm" id="gs-api-key-toggle" onclick="toggleGSApiKeyVisibility()" style="padding:8px 10px;flex-shrink:0;" title="Show / Hide API Key">👁️</button>
+    </div>
+    <div style="font-size:11px;color:var(--g500);margin-top:4px;">Protects your Google Sheet &amp; Apps Script endpoint. Stored locally on this device only.</div>
+  </div>
+
   <div id="gs-test-result" style="font-size:12px;margin-bottom:10px;padding:8px;border-radius:var(--rs);display:none;"></div>
 
   <div class="brow" style="margin-bottom:12px;">
@@ -3590,7 +3597,7 @@ input, textarea, select, button { font-family: var(--font); }
       <b>Step 5</b> — Click <b>Deploy → New deployment</b><br>
       <b>Step 6</b> — Type: <b>Web app</b> · Execute as: <b>Me</b> · Access: <b>Anyone</b><br>
       <b>Step 7</b> — Click <b>Deploy</b> → approve permissions<br>
-      <b>Step 8</b> — Copy the URL ending in <code>/exec</code> → paste above<br>
+      <b>Step 8</b> — Copy the URL ending in <code>/exec</code> &amp; copy <code>api_secret</code> from Sheet <b>Settings</b> tab → paste both above<br>
       <b>Step 9</b> — Tap <b>Sync all data</b> ✓
     </div>
   </div>
@@ -4290,6 +4297,7 @@ const IND={
 // ═══════ STATE ═══════
 let S={
   profile:{name:'',title:'',company:'',empid:'',signature:''},
+  gsUrl:'',gsApiKey:'',
   trips:[],reports:{},tasks:[],leaveData:{},
   machines:[],plans:[],bills:[],
   inspections:[],
@@ -4302,7 +4310,8 @@ let S={
   telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
   calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
   reminders:[],  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
-  tripClaims:[]  // [{tripId, dateRequest, dateApproved, processDate, doneDate, paymentStatus, comment, updatedAt}] (IMP-31)
+  tripClaims:[], // [{tripId, dateRequest, dateApproved, processDate, doneDate, paymentStatus, comment, updatedAt}] (IMP-31)
+  creditCard:{budget:50000000,cardName:'Corporate Credit Card',transfers:[]}
 };
 let curTrip=null,curReport=null,sigCanvas,sigCtx,isDrw=false;
 let calY,calM,selDay=null,signoffRes='Completed';
@@ -4393,6 +4402,42 @@ function ld(){
   applyTheme();
 }
 function t(k){return T[S.lang][k]||T.en[k]||k;}
+
+/**
+ * Local calendar YYYY-MM-DD (avoids UTC midnight shift before 7AM in UTC+7)
+ */
+function localDateStr(d){
+  const dt=(d instanceof Date)?d:(d?new Date(d):new Date());
+  if(isNaN(dt.getTime())) return '';
+  const y=dt.getFullYear();
+  const m=String(dt.getMonth()+1).padStart(2,'0');
+  const day=String(dt.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Escape HTML special chars before interpolating untrusted strings into innerHTML / attributes
+ */
+function escHtml(v){
+  if(v===null||v===undefined) return '';
+  return String(v)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function sanitizeJsonKeys_(obj){
+  if(!obj||typeof obj!=='object') return obj;
+  if(Array.isArray(obj)) return obj.map(sanitizeJsonKeys_);
+  const clean={};
+  for(const [k,v] of Object.entries(obj)){
+    if(k==='__proto__'||k==='constructor'||k==='prototype') continue;
+    clean[k]=sanitizeJsonKeys_(v);
+  }
+  return clean;
+}
 
 // ═══════ STORAGE & IMAGE OPTIMIZATION (IMP-01) ═══════
 function getStorageUsage(){
@@ -4515,7 +4560,7 @@ function exportDataBackupJSON() {
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const dateStr = new Date().toISOString().slice(0, 10);
+    const dateStr = localDateStr();
     a.href = url;
     a.download = `PlantLog_Backup_${dateStr}.json`;
     document.body.appendChild(a);
@@ -4545,8 +4590,9 @@ function handleBackupFileSelect(e) {
   reader.onload = async (ev) => {
     try {
       const parsed = JSON.parse(ev.target.result);
-      const incomingData = parsed.data || parsed;
-      if (!incomingData || typeof incomingData !== 'object' || (!incomingData.trips && !incomingData.tasks && !incomingData.profile)) {
+      const rawData = parsed && typeof parsed === 'object' ? (parsed.data || parsed) : null;
+      const incomingData = sanitizeJsonKeys_(rawData);
+      if (!incomingData || typeof incomingData !== 'object' || Array.isArray(incomingData) || (!incomingData.trips && !incomingData.tasks && !incomingData.profile)) {
         if(typeof showToast === 'function') showToast('❌ Invalid PlantLog Pro backup file!');
         return;
       }
@@ -4559,6 +4605,12 @@ function handleBackupFileSelect(e) {
       if (!ok) return;
 
       S = { ...S, ...incomingData };
+      if (!Array.isArray(S.trips)) S.trips = [];
+      if (!Array.isArray(S.tasks)) S.tasks = [];
+      if (!Array.isArray(S.bills)) S.bills = [];
+      if (!Array.isArray(S.assets)) S.assets = [];
+      if (!Array.isArray(S.scratchpad)) S.scratchpad = [];
+      if (!Array.isArray(S.tripClaims)) S.tripClaims = [];
       sv();
       if(typeof showToast === 'function') showToast('✅ Data restored successfully!');
 
@@ -4601,10 +4653,10 @@ if(typeof window !== 'undefined'){
 
 // ═══════ PWA ═══════
 function setupPWA(){
-  // ── Clear old PlantLog v4 caches on every load ─────
+  // ── Clear legacy pre-v10 caches only (sw.js activate handles current cache rotation) ─────
   if('caches' in window){
     caches.keys().then(keys=>keys.forEach(k=>{
-      if(k!=='plantlog-pro-v9'){
+      if(!k.startsWith('plantlog-pro-') || /^plantlog-pro-v\d$/.test(k)){
         console.log('[PlantLog] Deleting old cache:',k);
         caches.delete(k);
       }
@@ -4730,8 +4782,8 @@ async function requestNotifications(){
 function scheduleNotifications(){
   if(Notification.permission!=='granted')return;
   const now=new Date();
-  const today=now.toISOString().slice(0,10);
-  const tomorrow=new Date(now.getTime()+86400000).toISOString().slice(0,10);
+  const today=localDateStr(now);
+  const tomorrow=localDateStr(new Date(now.getTime()+86400000));
   // Check upcoming trips
   S.trips.filter(tr=>tr.status!=='completed'&&(tr.date===today||tr.date===tomorrow)).forEach(tr=>{
     const msg=tr.date===today?`🏭 Trip today: ${tr.plant}`:`🏭 Trip tomorrow: ${tr.plant} (${tr.location||''})`;
@@ -4864,6 +4916,8 @@ function showScreen(n){
   if(n==='bills') {
     if(typeof currentBillsView!=='undefined' && currentBillsView==='claims') {
       if(typeof renderTripClaimsScreen==='function') renderTripClaimsScreen();
+    } else if(typeof currentBillsView!=='undefined' && currentBillsView==='card') {
+      if(typeof renderCreditCardScreen==='function') renderCreditCardScreen();
     } else {
       renderBillsScreen();
     }
@@ -4875,11 +4929,6 @@ function showScreen(n){
   if(n==='inspection')renderInspectionScreen();
   if(n==='toolbox') { if(typeof switchToolboxTab==='function') switchToolboxTab(curToolboxTab||'pressure'); }
   if(n==='assets') { if(typeof renderAssetList==='function') renderAssetList(); }
-  if(n==='settings'&&hasPIN()&&!_settingsUnlocked){
-    _pendingScreen='settings';
-    openModal('modal-pin');
-    return; // Don't navigate yet — openModal will navigate after PIN
-  }
   if(n==='bill-export')buildBillPDFPreview();
 }
 
@@ -5179,7 +5228,7 @@ function getSortedTrips(){
 }
 // ── Auto-start trips and tasks whose date has arrived ────────
 function autoStartTodayItems(){
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDateStr();
   let changed = false;
 
   // ── Trips: planned → in_progress if start date reached ──
@@ -5234,8 +5283,22 @@ async function clearAllData(){
     icon: '⚠️'
   });
   if(!ok) return;
-  S={profile:{name:'',title:'',company:'',empid:'',signature:''},trips:[],reports:{},tasks:[],leaveData:{},machines:[],plans:[],bills:[],inspections:[],library:[],templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],defaultTeam:[],lang:S.lang,theme:S.theme||'auto'};
-  sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();showToast('All data cleared');
+  S={
+    profile:{name:'',title:'',company:'',empid:'',signature:''},
+    gsUrl:'',gsApiKey:'',
+    trips:[],reports:{},tasks:[],leaveData:{},
+    machines:[],plans:[],bills:[],inspections:[],
+    assets:[],scratchpad:[],deletedIds:{},library:[],
+    reminders:[],tripClaims:[],
+    creditCard:{budget:50000000,cardName:'Corporate Credit Card',transfers:[]},
+    telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
+    calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
+    templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],
+    defaultTeam:[],lang:S.lang,theme:S.theme||'auto'
+  };
+  sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();
+  if(typeof updateGSStatus==='function')updateGSStatus();
+  showToast('All data cleared');
 }
 
 
@@ -5264,7 +5327,15 @@ Store.on('trip:save',    () => { renderTripList(); renderDash(); });
 Store.on('trip:delete',  () => { renderTripList(); renderDash(); });
 Store.on('task:save',    () => { renderTasks(); renderDash(); renderCalendar(); });
 Store.on('task:status',  () => { renderTasks(); renderDash(); });
-Store.on('bill:save',    () => { renderBillsScreen(); renderDash(); });
+Store.on('bill:save',    () => {
+  renderBillsScreen();
+  renderDash();
+  if (typeof currentBillsView !== 'undefined' && currentBillsView === 'card' && typeof renderCreditCardScreen === 'function') {
+    renderCreditCardScreen();
+  } else if (typeof currentBillsView !== 'undefined' && currentBillsView === 'claims' && typeof renderTripClaimsScreen === 'function') {
+    renderTripClaimsScreen();
+  }
+});
 Store.on('leave:save',   () => { renderCalendar(); renderDash(); });
 Store.on('*',            ({ action }) => {
   // Auto-sync to Google Sheets on any commit
@@ -6460,7 +6531,7 @@ function updateLeaveSummary(){
 
 // ═══════ DASHBOARD ═══════
 function renderDash(){
-  const now=new Date();const today=now.toISOString().slice(0,10);
+  const now=new Date();const today=typeof localDateStr === 'function' ? localDateStr(now) : now.toISOString().slice(0,10);
   const thisM=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('stat-trips').textContent=S.trips.filter(tr=>tr.date&&tr.date.startsWith(thisM)).length;
   const todayTasks=S.tasks.filter(tk=>tk.date===today&&tk.status!=='done');
@@ -7219,7 +7290,7 @@ async function addNewPlan(){
 }
 let taskCat='all', taskStatusFilter='all';
 // Global helper — always returns today's date string
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+function todayStr(){ return typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10); }
 
 let editingTaskId=null;
 let editingTripId=null;
@@ -7510,7 +7581,7 @@ function periodLabel(p){return{daily:'Day',weekly:'Week',monthly:'Month',yearly:
 function renderTasks(){
   const body=document.getElementById('task-list-body');
   if(!body)return;
-  const today=new Date().toISOString().slice(0,10);
+  const today=todayStr();
 
   if(taskCat==='kanban'){
     renderKanban(body, today);return;
@@ -7798,7 +7869,7 @@ function toggleDetailCheck(taskId, checkId){
 
 function openTaskDetail(id){
   const tk=S.tasks.find(t=>t.id===id);if(!tk)return;
-  const today=new Date().toISOString().slice(0,10);
+  const today=todayStr();
   const isOver=(tk.dateEnd||tk.date||tk.dateStart||'')<today&&tk.status!=='done';
   const cat=tk.category||'work';const cc=catConfig(cat);
   const dur=calcDuration(tk);
@@ -9949,19 +10020,14 @@ async function savePdfToDrive(doc, fileName, type, overrideTripId){
 
     const tripId = overrideTripId || curTrip;
     const trip = S.trips.find(t => t.id === tripId);
-    const resp = await fetch(gsUrl, {
-      method: 'POST',
-      headers: {'Content-Type':'text/plain'},
-      body: JSON.stringify({
-        action:    'uploadFile',
-        taskId:    'report_' + (tripId||''),
-        fileName:  fileName,
-        mimeType:  'application/pdf',
-        dataBase64: base64,
-        folder:    'Reports'
-      })
+    const data = await gsPost(gsUrl, {
+      action:    'uploadFile',
+      taskId:    'report_' + (tripId||''),
+      fileName:  fileName,
+      mimeType:  'application/pdf',
+      dataBase64: base64,
+      folder:    'Reports'
     });
-    const data = await resp.json();
     if(data && data.ok){
       showToast('Saved to Google Drive ✓');
       // Save file reference to trip — persist to BOTH localStorage AND Google Sheets
@@ -10044,10 +10110,11 @@ function markCompleted(){
     svAndSync('trip_complete');
     showScreen('trip-detail');
     if(typeof renderTripSavedReports==='function') renderTripSavedReports();
-    // Auto-send trip report summary to Telegram if configured
+    // Auto-send trip report summary to Telegram if configured (via GAS Settings or local config)
     if(typeof sendTripToTelegram === 'function'){
       const cfg = S.telegramConfig || {};
-      if(cfg.token && cfg.chatId){
+      const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
+      if((gsUrl && gsUrl.includes('/exec')) || (cfg.token && cfg.chatId)){
         sendTripToTelegram(curTrip).catch(e => console.warn('[Telegram Auto-Send] Error:', e));
       }
     }
@@ -10347,7 +10414,7 @@ function openInspectionScreen(){
   document.getElementById('insp-screen-title').textContent = tr.plant + ' — Inspections';
   document.getElementById('insp-screen-sub').textContent = fmtDate(tr.date) + (tr.dateEnd&&tr.dateEnd!==tr.date?' → '+fmtDate(tr.dateEnd):'');
   // Default date filter to today if within trip range
-  const today = new Date().toISOString().slice(0,10);
+  const today = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
   const inTrip = today >= (tr.date||'') && today <= (tr.dateEnd||tr.date||'');
   const df = document.getElementById('insp-date-filter');
   if(df) df.value = inTrip ? today : (tr.date||'');
@@ -10493,7 +10560,7 @@ function openAddInspectionItem(){
   editingInspId = null;
   document.getElementById('insp-modal-title').textContent = 'Add Inspection Item';
   document.getElementById('insp-save-btn').textContent = '💾 Save';
-  document.getElementById('insp-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('insp-date').value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
   setInspType('check');
   // Clear all fields
   ['insp-check-name','insp-check-note','insp-rd-name','insp-rd-tag',
@@ -12393,9 +12460,18 @@ function updateTelegramStatusLabel(){
   const el = document.getElementById('tele-status');
   if(!el) return;
   const cfg = S.telegramConfig || {};
-  el.textContent = cfg.token && cfg.chatId
-    ? '✓ Connected · notifications active'
-    : 'Not configured';
+  const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
+  if(cfg.token && cfg.chatId){
+    el.textContent = '✓ Connected · notifications active';
+  } else if(gsUrl && gsUrl.includes('/exec')){
+    el.textContent = '☁️ Active via Google Sheet Settings';
+  } else {
+    el.textContent = 'Not configured';
+  }
+}
+
+function escTeleHtml_(v){
+  return typeof escHtml === 'function' ? escHtml(v) : String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // ═══════ SEND MESSAGE ═══════
@@ -12403,28 +12479,30 @@ async function sendTelegramMessage(text){
   const cfg = S.telegramConfig || {};
   const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
 
-  // 1. Ưu tiên gửi qua Apps Script Backend (IMP-03: an toàn bảo mật, tránh lỗi CORS)
+  // 1. Ưu tiên gửi qua Apps Script Backend (IMP-03: an toàn bảo mật + đính kèm API_SECRET qua gsPost)
   if(gsUrl && gsUrl.includes('/exec')){
     try {
-      const resp = await fetch(gsUrl, {
-        method: 'POST',
-        headers: {'Content-Type': 'text/plain'},
-        body: JSON.stringify({
-          action: 'sendTelegram',
-          text: text,
-          parseMode: 'HTML',
-          token: cfg.token || '',
-          chatId: cfg.chatId || ''
-        })
-      });
-      const data = await resp.json();
+      const reqBody = {
+        action: 'sendTelegram',
+        text: text,
+        parseMode: 'HTML'
+      };
+      if(cfg.token) reqBody.token = cfg.token;
+      if(cfg.chatId) reqBody.chatId = cfg.chatId;
+      const data = typeof gsPost === 'function'
+        ? await gsPost(gsUrl, reqBody)
+        : await (await fetch(gsUrl, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify(reqBody) })).json();
       if(data && data.ok) return true;
+      if(data && data.code === 401) {
+        console.warn('[Telegram] Unauthorized API Key on GAS proxy');
+        return false;
+      }
     } catch(e) {
       console.warn('[Telegram] Backend dispatch error, fallback to direct:', e.message);
     }
   }
 
-  // 2. Fallback gửi trực tiếp nếu client có lưu token và chatId
+  // 2. Fallback gửi trực tiếp chỉ khi client có lưu token và chatId cục bộ (không có GAS)
   if(!cfg.token || !cfg.chatId) return false;
   try{
     const url = `https://api.telegram.org/bot${cfg.token}/sendMessage`;
@@ -12446,11 +12524,14 @@ async function sendTelegramMessage(text){
 }
 
 async function testTelegram(){
-  const token  = (document.getElementById('tele-token')  || {}).value || '';
-  const chatId = (document.getElementById('tele-chatid') || {}).value || '';
+  const token  = ((document.getElementById('tele-token')  || {}).value || '').trim();
+  const chatId = ((document.getElementById('tele-chatid') || {}).value || '').trim();
   const res = document.getElementById('tele-result');
-  if(!token || !chatId){
-    if(res){ res.style.display=''; res.style.background='var(--rl)'; res.style.color='var(--rd)'; res.textContent='Please enter both Bot Token and Chat ID first.'; }
+  const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
+  const hasGas = gsUrl && gsUrl.includes('/exec');
+
+  if(!hasGas && (!token || !chatId)){
+    if(res){ res.style.display=''; res.style.background='var(--rl)'; res.style.color='var(--rd)'; res.textContent='Connect Google Sheets (with Settings -> tele_token/tele_chatid) or enter Bot Token & Chat ID.'; }
     return;
   }
   if(res){ res.style.display=''; res.style.background='var(--n100)'; res.style.color='var(--n600)'; res.textContent='Sending test message…'; }
@@ -12459,12 +12540,27 @@ async function testTelegram(){
 
 ✅ Your Telegram notifications are working!
 
-<b>Engineer:</b> ${p.name||'—'}
-<b>Company:</b>  ${p.company||'—'}
+<b>Engineer:</b> ${escTeleHtml_(p.name||'—')}
+<b>Company:</b>  ${escTeleHtml_(p.company||'—')}
 <b>App:</b> VCS PlantLog Pro
 <b>Time:</b> ${new Date().toLocaleString('en-GB')}`;
 
   try{
+    if(hasGas){
+      const reqBody = { action:'sendTelegram', text:msg, parseMode:'HTML' };
+      if(token) reqBody.token = token;
+      if(chatId) reqBody.chatId = chatId;
+      const data = typeof gsPost === 'function'
+        ? await gsPost(gsUrl, reqBody)
+        : await (await fetch(gsUrl, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(reqBody) })).json();
+      if(data && data.ok){
+        if(res){ res.style.background='var(--brand-light)'; res.style.color='var(--brand-dark)'; res.textContent='✓ Test message sent via Google Sheet backend! Check Telegram.'; }
+      } else {
+        if(res){ res.style.background='var(--rl)'; res.style.color='var(--rd)'; res.textContent='Error: '+((data && (data.error || (data.result && data.result.description))) || 'Check Sheet Settings (tele_token, tele_chatid, api_secret)'); }
+      }
+      return;
+    }
+
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
     const resp = await fetch(url,{
       method:'POST',
@@ -12486,10 +12582,12 @@ async function testTelegram(){
 // Called on app start — checks for upcoming events and notifies
 async function checkAndSendDailyNotifications(){
   const cfg = S.telegramConfig || {};
-  if(!cfg.token || !cfg.chatId) return;
+  const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
+  const canSend = (gsUrl && gsUrl.includes('/exec')) || (cfg.token && cfg.chatId);
+  if(!canSend) return;
 
-  const today     = new Date().toISOString().slice(0,10);
-  const tomorrow  = new Date(Date.now() + 86400000).toISOString().slice(0,10);
+  const today     = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
+  const tomorrow  = typeof localDateStr === 'function' ? localDateStr(new Date(Date.now() + 86400000)) : new Date(Date.now() + 86400000).toISOString().slice(0,10);
   const p         = S.profile || {};
 
   // Avoid sending twice in same day
@@ -12575,8 +12673,10 @@ async function checkAndSendDailyNotifications(){
 // ═══════ SEND TRIP REPORT TO TELEGRAM ═══════
 async function sendTripToTelegram(tripId){
   const cfg = S.telegramConfig || {};
-  if(!cfg.token || !cfg.chatId){
-    showToast('Configure Telegram in Settings first');
+  const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
+  const canSend = (gsUrl && gsUrl.includes('/exec')) || (cfg.token && cfg.chatId);
+  if(!canSend){
+    showToast('Configure Google Sheets or Telegram in Settings first');
     openTelegramSettings();
     return;
   }
@@ -12588,12 +12688,12 @@ async function sendTripToTelegram(tripId){
   const tripTasks = (S.tasks||[]).filter(t => t.tripId === tripId);
   const tripBills = (S.bills||[]).filter(b => b.tripId === tripId);
 
-  let msg = `🏭 <b>Trip Report — ${trip.plant}</b>\n`;
+  let msg = `🏭 <b>Trip Report — ${escTeleHtml_(trip.plant)}</b>\n`;
   msg += `━━━━━━━━━━━━━━━━━━━\n\n`;
 
   msg += `📋 <b>TRIP INFO</b>\n`;
-  msg += `<b>Plant:</b>     ${trip.plant}\n`;
-  if(trip.location)  msg += `<b>Location:</b>  ${trip.location}\n`;
+  msg += `<b>Plant:</b>     ${escTeleHtml_(trip.plant)}\n`;
+  if(trip.location)  msg += `<b>Location:</b>  ${escTeleHtml_(trip.location)}\n`;
   msg += `<b>Date:</b>      ${fmtDate(trip.date)}`;
   if(trip.dateEnd && trip.dateEnd !== trip.date) msg += ` → ${fmtDate(trip.dateEnd)}`;
   msg += '\n';
@@ -12741,11 +12841,7 @@ async function syncToGoogleCalendar(){
   showToast('Syncing to Google Calendar…');
 
   try{
-    const resp = await fetch(gsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({action:'syncToCalendar', calId:cfg.calId})
-    });
-    const data = await resp.json();
+    const data = await gsPost(gsUrl, {action:'syncToCalendar', calId:cfg.calId});
     if(data && data.ok){
       const r = data.result || data;
       showCalResult(
@@ -12771,15 +12867,11 @@ async function syncFromGoogleCalendar(){
   showCalResult('⟳ Pulling events from Google Calendar…', 'info');
 
   try{
-    const resp = await fetch(gsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({
-        action: 'syncFromCalendar',
-        from: new Date(Date.now() - 7*24*60*60*1000).toISOString().slice(0,10),
-        to:   new Date(Date.now() + 90*24*60*60*1000).toISOString().slice(0,10)
-      })
+    const data = await gsPost(gsUrl, {
+      action: 'syncFromCalendar',
+      from: typeof localDateStr === 'function' ? localDateStr(new Date(Date.now() - 7*24*60*60*1000)) : new Date(Date.now() - 7*24*60*60*1000).toISOString().slice(0,10),
+      to:   typeof localDateStr === 'function' ? localDateStr(new Date(Date.now() + 90*24*60*60*1000)) : new Date(Date.now() + 90*24*60*60*1000).toISOString().slice(0,10)
     });
-    const data = await resp.json();
     if(data && data.ok){
       externalCalEvents = data.events || [];
       showCalResult(
@@ -12812,11 +12904,7 @@ async function autoSyncCalendar(){
   const gsUrl = getGSUrl ? getGSUrl() : (S&&S.gsUrl||'');
   if(!gsUrl) return;
   try{
-    const resp = await fetch(gsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({action:'getCalendarEvents'})
-    });
-    const data = await resp.json();
+    const data = await gsPost(gsUrl, {action:'getCalendarEvents'});
     if(data && data.ok && data.events){
       externalCalEvents = data.events;
       if(typeof renderCalendar === 'function') renderCalendar();
@@ -13113,11 +13201,12 @@ function saveReminder(){
 
 // ═══════ IN-APP CHECK (runs on startup) ═══════
 function checkRemindersToday(){
-  const today = new Date().toISOString().slice(0,10);
+  const today = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
   const dueToday = (S.reminders||[]).filter(r => {
     if(r.status === 'paused') return false;
     const next = getNextReminderDate(r);
-    return next && next.toISOString().slice(0,10) === today;
+    const nextStr = next ? (typeof localDateStr === 'function' ? localDateStr(next) : next.toISOString().slice(0,10)) : '';
+    return nextStr === today;
   });
   if(!dueToday.length) return;
 
@@ -13126,25 +13215,23 @@ function checkRemindersToday(){
     dueToday.forEach(r => showToast('🔔 ' + r.title));
   }, 2000);
 
-  // Send via Telegram if configured
+  // Route via secure sendTelegramMessage (uses GAS Proxy + Google Sheet Settings)
   const cfg = S.telegramConfig || {};
-  if(cfg.token && cfg.chatId){
+  const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
+  if((gsUrl && gsUrl.includes('/exec')) || (cfg.token && cfg.chatId)){
     const p = S.profile || {};
+    const esc = v => typeof escHtml === 'function' ? escHtml(v) : String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     dueToday.forEach(async r => {
       if(!r.notifyTele) return;
       const freqLabel = {daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'}[r.freq]||r.freq;
       const msg = '🔔 <b>Reminder — PlantLog</b>\n\n'
-        + '<b>' + r.title + '</b>\n'
-        + 'Repeat: ' + freqLabel + '\n'
-        + (r.time ? 'Time: ' + r.time + '\n' : '')
-        + (r.note ? '\n' + r.note + '\n' : '')
-        + '\n— ' + (p.name||'PlantLog Pro');
+        + '<b>' + esc(r.title) + '</b>\n'
+        + 'Repeat: ' + esc(freqLabel) + '\n'
+        + (r.time ? 'Time: ' + esc(r.time) + '\n' : '')
+        + (r.note ? '\n' + esc(r.note) + '\n' : '')
+        + '\n— ' + esc(p.name||'PlantLog Pro');
       try{
-        await fetch('https://api.telegram.org/bot'+cfg.token+'/sendMessage',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({chat_id:cfg.chatId, text:msg, parse_mode:'HTML'})
-        });
+        if(typeof sendTelegramMessage === 'function') await sendTelegramMessage(msg);
       }catch(e){ console.warn('Reminder Telegram error:',e.message); }
     });
   }
@@ -13312,7 +13399,7 @@ function openAddBillFromScreen() {
   ['bill-detail','bill-number','bill-amount','bill-notes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  document.getElementById('bill-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('bill-date').value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
   document.getElementById('bill-currency').value = 'VND';
   document.getElementById('bill-category').value = 'other';
   const pmEl = document.getElementById('bill-payment-method'); if (pmEl) pmEl.value = '1-Cash';
@@ -13504,6 +13591,9 @@ async function deleteBillFromScreen(id) {
   S.deletedIds[id] = Date.now();
   S.bills = S.bills.filter(b => b.id !== id);
   sv(); renderBillsScreen(); renderDash();
+  if (typeof currentBillsView !== 'undefined' && currentBillsView === 'card' && typeof renderCreditCardScreen === 'function') {
+    renderCreditCardScreen();
+  }
 
   // IMP-31: Single-row Trip Claim update when bill is deleted
   if(tripIdOfDeleted && typeof calculateTripTotalClaim === 'function'){
@@ -13673,9 +13763,8 @@ function exportBillsPDF() {
   });
   doc.setDrawColor(0,132,61);doc.line(mg,y,W-mg,y);y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text('GRAND TOTAL',mg+2,y+1);rtxt(fmtAmt(grandVND,'VND')+' VND',y+1,[146,64,14]);y+=7;doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(120,120,120);const brkAll=Object.entries(allByCur).map(([c,t])=>fmtAmt(t,c)+' '+c).join('  ·  ');if(brkAll){doc.text(brkAll,mg+2,y);y+=5;}
   addPN();
-  const safeName=reportTitle.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,40);
   const safeName2=reportTitle.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,40);
-  const bFileName=`Bills_${safeName2}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.pdf`;
+  const bFileName=`Bills_${safeName2}_${(typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10)).replace(/-/g,'')}.pdf`;
   // Pass tripId so the Drive upload links to correct trip
   const billsTripId = (tripFilter && tripFilter !== 'all') ? tripFilter : (curTrip||null);
   showPdfSaveOptions(doc, bFileName, 'bills', billsTripId);
@@ -14179,7 +14268,7 @@ function setTripClaimEditStatus(status) {
 function setClaimTodayDate(fieldId) {
   const el = document.getElementById(fieldId);
   if (el) {
-    el.value = new Date().toISOString().slice(0, 10);
+    el.value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
   }
 }
 
@@ -14361,7 +14450,7 @@ function quickTransferForTrip(tripId, remainingAmt) {
   ensureCreditCardState();
   const trip = (S.trips || []).find(t => String(t.id) === String(tripId));
   const weekLabel = trip && typeof getTripWeekLabel === 'function' ? getTripWeekLabel(trip.date, trip.dateEnd) : '';
-  const plantName = trip ? trip.plant : 'Trip';
+  const plantName = trip ? trip.plant : (tripId === '__unassigned__' ? 'General Card Expenses' : 'Trip');
 
   openTransferBackModal(); // opens new modal
 
@@ -14369,7 +14458,7 @@ function quickTransferForTrip(tripId, remainingAmt) {
   const amtInput = document.getElementById('cc-transfer-amount');
   const noteInput = document.getElementById('cc-transfer-note');
 
-  if (tripSel) tripSel.value = tripId || '';
+  if (tripSel) tripSel.value = (tripId && tripId !== '__unassigned__') ? tripId : '';
   if (amtInput) amtInput.value = (remainingAmt > 0) ? remainingAmt : '';
   if (noteInput) noteInput.value = `Reimbursement for ${plantName}${weekLabel ? ' ' + weekLabel : ''}`;
 
@@ -14537,26 +14626,29 @@ function renderCreditCardScreen() {
     });
   });
 
-  // Handle unassigned bills
-  if (cardBillsByTrip['unassigned'] && cardBillsByTrip['unassigned'].length) {
-    const uBills = cardBillsByTrip['unassigned'];
-    const totalSpent = uBills.reduce((sum, b) => {
+  const tripIdsSet = new Set(sortedTrips.map(t => String(t.id)));
+  // Handle unassigned & orphaned trip bills cleanly
+  const orphanBills = Object.entries(cardBillsByTrip)
+    .filter(([k]) => k === 'unassigned' || !tripIdsSet.has(String(k)))
+    .flatMap(([, list]) => list);
+  if (orphanBills.length) {
+    const totalSpent = orphanBills.reduce((sum, b) => {
       if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
       return sum + (parseFloat(b.vndAmount) || 0);
     }, 0);
-    const linkedTransfers = (S.creditCard.transfers || []).filter(t => !t.tripId);
+    const linkedTransfers = (S.creditCard.transfers || []).filter(t => !t.tripId || !tripIdsSet.has(String(t.tripId)));
     const totalTransferred = linkedTransfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     const remainingDue = Math.max(0, totalSpent - totalTransferred);
     let status = remainingDue === 0 ? 'settled' : (totalTransferred > 0 ? 'partial' : 'unsettled');
     let statusText = status === 'settled' ? '🟢 Settled' : (status === 'partial' ? '🟡 Partially Paid' : '🔴 Unsettled');
     tripGroups.push({
-      tripId: '',
+      tripId: '__unassigned__',
       plant: 'General Card Expenses',
       date: '',
       dateEnd: '',
       location: 'No linked trip',
       weekLabel: 'General',
-      billsCount: uBills.length,
+      billsCount: orphanBills.length,
       totalSpent,
       totalTransferred,
       remainingDue,
@@ -14647,14 +14739,24 @@ function renderCreditCardScreen() {
     let displayedGranularBills = filteredBills;
     let filterBannerHtml = '';
     if (_cardBillTripFilter) {
-      const filterTrip = (S.trips || []).find(t => String(t.id) === String(_cardBillTripFilter));
-      const filterTripName = filterTrip ? filterTrip.plant : 'Selected Trip';
-      displayedGranularBills = displayedGranularBills.filter(b => String(b.tripId) === String(_cardBillTripFilter));
-      filterBannerHtml = `
-        <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
-          <span>Filtered by: <strong>🏭 ${filterTripName}</strong> (${displayedGranularBills.length} bills)</span>
-          <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
-        </div>`;
+      if (_cardBillTripFilter === '__unassigned__') {
+        const activeTripIds = new Set((S.trips || []).map(t => String(t.id)));
+        displayedGranularBills = displayedGranularBills.filter(b => !b.tripId || !activeTripIds.has(String(b.tripId)));
+        filterBannerHtml = `
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
+            <span>Filtered by: <strong>General Card Expenses</strong> (${displayedGranularBills.length} bills)</span>
+            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
+          </div>`;
+      } else {
+        const filterTrip = (S.trips || []).find(t => String(t.id) === String(_cardBillTripFilter));
+        const filterTripName = filterTrip ? filterTrip.plant : 'Selected Trip';
+        displayedGranularBills = displayedGranularBills.filter(b => String(b.tripId) === String(_cardBillTripFilter));
+        filterBannerHtml = `
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
+            <span>Filtered by: <strong>🏭 ${typeof escHtml === 'function' ? escHtml(filterTripName) : filterTripName}</strong> (${displayedGranularBills.length} bills)</span>
+            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
+          </div>`;
+      }
     }
 
     if (!displayedGranularBills.length) {
@@ -14671,7 +14773,7 @@ function renderCreditCardScreen() {
         const plantStr = trip ? trip.plant : 'General Expense';
         const amtVND = (b.currency || 'VND').toUpperCase() === 'VND' ? (parseFloat(b.amount) || 0) : (parseFloat(b.vndAmount) || 0);
         bHtml += `
-          <div class="cc-item-row expense" onclick="openEditBillFromScreen('${b.id}')" style="cursor:pointer;">
+          <div class="cc-item-row expense" onclick="openEditBill('${b.id}')" style="cursor:pointer;">
             <div style="flex:1;min-width:0;padding-right:8px;">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
                 <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.detail || 'Bill'}</span>
@@ -14820,7 +14922,7 @@ function openTransferBackModal(transferId) {
   } else {
     if (idInput) idInput.value = '';
     if (amtInput) amtInput.value = '';
-    if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+    if (dateInput) dateInput.value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
     if (tripSel) tripSel.value = '';
     if (noteInput) noteInput.value = '';
     if (titleEl) titleEl.textContent = '➕ Transfer Back to Card';
@@ -14835,7 +14937,7 @@ function openTransferBackModal(transferId) {
  */
 function setCardTransferToday() {
   const el = document.getElementById('cc-transfer-date');
-  if (el) el.value = new Date().toISOString().slice(0, 10);
+  if (el) el.value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
 }
 
 /**
@@ -14928,9 +15030,34 @@ async function deleteTransferBack(transferId) {
 
 // ═══════ GOOGLE SHEETS SYNC ═══════
 function getGSUrl() { return S.gsUrl || ''; }
+function getGSApiKey() { return S.gsApiKey || ''; }
+
+function toggleGSApiKeyVisibility() {
+  const inp = document.getElementById('gs-api-key');
+  const btn = document.getElementById('gs-api-key-toggle');
+  if (!inp) return;
+  const isPwd = inp.type === 'password';
+  inp.type = isPwd ? 'text' : 'password';
+  if (btn) btn.textContent = isPwd ? '🙈' : '👁️';
+}
+
+function syncGSInputsToState_() {
+  const urlEl = document.getElementById('gs-url');
+  const keyEl = document.getElementById('gs-api-key');
+  let changed = false;
+  if (urlEl && urlEl.value.trim() && urlEl.value.trim() !== S.gsUrl) {
+    S.gsUrl = urlEl.value.trim();
+    changed = true;
+  }
+  if (keyEl && keyEl.value.trim() !== (S.gsApiKey || '')) {
+    S.gsApiKey = keyEl.value.trim();
+    changed = true;
+  }
+  if (changed) sv();
+}
 
 function gsUrlChanged() {
-  const url = document.getElementById('gs-url').value.trim();
+  syncGSInputsToState_();
   // Hide old result when user types
   const res = document.getElementById('gs-test-result');
   if (res) res.style.display = 'none';
@@ -14955,20 +15082,23 @@ function showGSResult(msg, type) {
 function updateGSStatus() {
   const el = document.getElementById('gsheet-status');
   const urlEl = document.getElementById('gs-url');
+  const keyEl = document.getElementById('gs-api-key');
   const bar = document.getElementById('gs-status-bar');
+  if (keyEl) keyEl.value = S.gsApiKey || '';
   if (S.gsUrl) {
-    if (el) el.textContent = S.lastSync ? 'Last sync: ' + new Date(S.lastSync).toLocaleString() : 'Connected — not synced yet';
+    const keyBadge = S.gsApiKey ? '🔐 Key set' : '⚠ No API Key';
+    if (el) el.textContent = S.lastSync ? `Last sync: ${new Date(S.lastSync).toLocaleString()} · ${keyBadge}` : `Connected (${keyBadge}) — not synced yet`;
     if (urlEl) urlEl.value = S.gsUrl;
     if (bar) {
       bar.style.display = 'flex';
-      bar.style.background = S.lastSync ? 'var(--gl)' : 'var(--al)';
+      bar.style.background = (S.lastSync && S.gsApiKey) ? 'var(--gl)' : 'var(--al)';
       const icon = document.getElementById('gs-status-icon');
       const title = document.getElementById('gs-status-title');
       const sub = document.getElementById('gs-status-sub');
-      if (icon) icon.textContent = S.lastSync ? '✅' : '⚠️';
-      if (title) title.style.color = S.lastSync ? 'var(--gd)' : '#92400E';
-      if (title) title.textContent = S.lastSync ? 'Connected & synced' : 'URL saved — sync to verify';
-      if (sub) sub.style.color = S.lastSync ? 'var(--gd)' : '#92400E';
+      if (icon) icon.textContent = (S.lastSync && S.gsApiKey) ? '✅' : '⚠️';
+      if (title) title.style.color = (S.lastSync && S.gsApiKey) ? 'var(--gd)' : '#92400E';
+      if (title) title.textContent = S.lastSync ? (S.gsApiKey ? 'Connected & synced' : 'Synced — add API Secret Key') : 'URL saved — sync to verify';
+      if (sub) sub.style.color = (S.lastSync && S.gsApiKey) ? 'var(--gd)' : '#92400E';
       if (sub) sub.textContent = S.lastSync ? 'Last sync: ' + new Date(S.lastSync).toLocaleString() : S.gsUrl.substring(0, 45) + '...';
     }
   } else {
@@ -14979,15 +15109,16 @@ function updateGSStatus() {
 
 // Google Apps Script CORS fix:
 // GET requests work fine (GAS handles CORS for GET)
-// POST must use no-cors mode OR form-encoded via iframe trick
-// Best approach: use fetch with mode:'cors' — GAS doPost supports it when deployed as "Anyone"
+// POST must use text/plain to avoid CORS preflight, carrying apiKey in JSON body
 async function gsPost(url, body) {
-  // Primary: direct fetch (works when GAS is deployed as "Anyone" access)
   try {
+    const apiKey = getGSApiKey();
+    const reqBody = { ...(body || {}) };
+    if (apiKey && !reqBody.apiKey) reqBody.apiKey = apiKey;
     const r = await fetch(url, {
       method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain avoids preflight CORS
+      body: JSON.stringify(reqBody),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     });
     return await r.json();
   } catch (e) {
@@ -14996,34 +15127,46 @@ async function gsPost(url, body) {
 }
 
 async function gsGet(url, params) {
-  const qs = Object.entries(params || {}).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+  const apiKey = getGSApiKey();
+  const fullParams = { ...(params || {}) };
+  if (apiKey && !fullParams.apiKey) fullParams.apiKey = apiKey;
+  const qs = Object.entries(fullParams).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
   const fullUrl = url + (qs ? '?' + qs : '');
   const r = await fetch(fullUrl, { method: 'GET', mode: 'cors' });
   return await r.json();
 }
 
 async function testGSConnection() {
-  const url = document.getElementById('gs-url').value.trim();
+  const url = (document.getElementById('gs-url').value || '').trim();
+  const keyEl = document.getElementById('gs-api-key');
+  const apiKey = keyEl ? keyEl.value.trim() : getGSApiKey();
+
   if (!url) { showGSResult('⚠ Paste your Apps Script URL first', 'warn'); return; }
   if (!url.includes('script.google.com')) { showGSResult('❌ URL must be a script.google.com address', 'error'); return; }
-  if (!url.endsWith('/exec') && !url.includes('/exec?')) { showGSResult('⚠ URL should end with /exec — check your deployment URL', 'warn'); S.gsUrl = url; sv(); updateGSStatus(); return; }
 
-  showGSResult('Testing connection...', 'warn');
-  // Save URL immediately regardless of test result
-  S.gsUrl = url; sv(); updateGSStatus();
+  S.gsUrl = url;
+  S.gsApiKey = apiKey;
+  sv();
+  updateGSStatus();
+
+  if (!url.endsWith('/exec') && !url.includes('/exec?')) { showGSResult('⚠ URL should end with /exec — check your deployment URL', 'warn'); return; }
+
+  showGSResult('Testing connection & verifying API Key...', 'warn');
 
   try {
     const data = await gsGet(url, { action: 'ping' });
-    if (data.ok) {
-      showGSResult('✅ Connected! Google Sheet is ready.', 'ok');
+    if (data && data.ok) {
+      showGSResult('✅ Authorized & Connected! Google Sheet is ready.', 'ok');
       S.lastSync = null; sv(); updateGSStatus();
+    } else if (data && data.code === 401) {
+      showGSResult('❌ Unauthorized: Invalid API Secret Key. Check Sheet "Settings" -> api_secret.', 'error');
     } else {
-      showGSResult('⚠ Received response but got error: ' + (data.error || 'unknown'), 'warn');
+      showGSResult('⚠ Received response but got error: ' + ((data && data.error) || 'unknown'), 'warn');
     }
   } catch (e) {
     // CORS blocks GET test from some browsers — this is expected
     // The sync (POST with text/plain) usually works even when GET test fails
-    showGSResult('⚠ Browser CORS blocked the test (this is normal). Tap "Sync all data" to verify the connection actually works.', 'warn');
+    showGSResult('⚠ Browser CORS blocked GET test (normal). Tap "Sync all data" to verify URL & API Key.', 'warn');
     const btn = document.getElementById('gs-sync-btn');
     if (btn) { btn.style.background = 'var(--amber)'; btn.textContent = '⬆ Try sync to verify'; }
     setTimeout(() => { if (btn) { btn.style.background = ''; btn.textContent = '⬆ Sync all data'; } }, 4000);
@@ -15314,6 +15457,7 @@ async function deleteSingleQuickSnap(id) {
 }
 
 async function syncToSheets() {
+  syncGSInputsToState_();
   const url = getGSUrl();
   if (!url) { updateGSStatus(); openModal('modal-gsheet'); showGSResult('⚠ Paste your Apps Script URL first', 'warn'); return; }
 
@@ -15674,6 +15818,7 @@ function mergeCollectionByTimestamp(localList, remoteList, idKey = 'id') {
 }
 
 async function loadFromSheets(silent) {
+  syncGSInputsToState_();
   const url = getGSUrl();
   if (!url) { if (!silent) { showToast('Set your Google Sheet URL first'); openModal('modal-gsheet'); } return; }
   if (!silent) showToast('Loading from Google Sheets…');
@@ -16009,6 +16154,27 @@ async function loadFromSheets(silent) {
         S.tripClaims = mergeCollectionByTimestamp(existingClaims, remoteClaims, 'tripId');
       }
 
+      // Sync Reminders from cloud
+      if (d.reminders && Array.isArray(d.reminders)) {
+        const existingRem = S.reminders || [];
+        const remoteRem = d.reminders.map(r => ({
+          id: ss(r.ID),
+          title: ss(r.Title),
+          freq: ss(r.Freq) || 'monthly',
+          weekday: ss(r.Weekday) || '1',
+          monthday: ss(r.Monthday) || '1',
+          yearMonth: ss(r.YearMonth) || '01',
+          yearDay: ss(r.YearDay) || '1',
+          time: safeTime(r.Time) || '08:00',
+          note: ss(r.Note),
+          notifyTele: String(r.NotifyTele).toLowerCase() !== 'false',
+          notifyCalendar: String(r.NotifyCalendar).toLowerCase() !== 'false',
+          status: ss(r.Status) || 'active',
+          createdAt: ss(r.CreatedAt)
+        }));
+        S.reminders = mergeCollectionByTimestamp(existingRem, remoteRem, 'id');
+      }
+
       sv();
       try { if (typeof autoStartTodayItems === 'function') autoStartTodayItems(); } catch (e) { }
       renderDash(); renderTripList(); renderTasks(); renderCalendar();
@@ -16165,7 +16331,7 @@ function openAddBill(tripId) {
   document.getElementById('bill-edit-id').textContent = '';
   document.getElementById('bill-save-btn').textContent = '💾 Save Bill';
   ['bill-detail', 'bill-number', 'bill-amount', 'bill-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  document.getElementById('bill-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('bill-date').value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
   document.getElementById('bill-currency').value = 'VND';
   document.getElementById('bill-category').value = 'other';
   const vndElR = document.getElementById('bill-vnd'); if (vndElR) vndElR.value = '';
@@ -16350,6 +16516,10 @@ async function deleteBill(id) {
   S.bills = S.bills.filter(b => b.id !== id);
   sv();
   if (curTrip) renderTripBills(curTrip);
+  if (typeof renderBillsScreen === 'function') renderBillsScreen();
+  if (typeof currentBillsView !== 'undefined' && currentBillsView === 'card' && typeof renderCreditCardScreen === 'function') {
+    renderCreditCardScreen();
+  }
 
   // IMP-31: Single-row Trip Claim update when bill is deleted
   if (tripIdOfDeleted && typeof calculateTripTotalClaim === 'function') {
@@ -16441,15 +16611,11 @@ async function uploadBillPhotoToDrive(src, billId, tripId) {
   const fileName = `bill_${(billId || 'x').slice(-8)}_${Date.now()}.${ext}`;
 
   try {
-    const resp = await fetch(gsUrl, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'uploadFile', taskId: 'bill_' + billId,
-        fileName, mimeType, dataBase64: base64,
-        folder: 'Bills Images/' + folderName
-      })
+    const data = await gsPost(gsUrl, {
+      action: 'uploadFile', taskId: 'bill_' + billId,
+      fileName, mimeType, dataBase64: base64,
+      folder: 'Bills Images/' + folderName
     });
-    const data = await resp.json();
     if (data && data.ok) return { src: data.fileUrl, driveUrl: data.fileUrl, fileId: data.fileId };
   } catch (e) { console.warn('[Bill photo]', e.message); }
   return null;

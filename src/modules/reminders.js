@@ -277,11 +277,12 @@ function saveReminder(){
 
 // ═══════ IN-APP CHECK (runs on startup) ═══════
 function checkRemindersToday(){
-  const today = new Date().toISOString().slice(0,10);
+  const today = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
   const dueToday = (S.reminders||[]).filter(r => {
     if(r.status === 'paused') return false;
     const next = getNextReminderDate(r);
-    return next && next.toISOString().slice(0,10) === today;
+    const nextStr = next ? (typeof localDateStr === 'function' ? localDateStr(next) : next.toISOString().slice(0,10)) : '';
+    return nextStr === today;
   });
   if(!dueToday.length) return;
 
@@ -290,25 +291,23 @@ function checkRemindersToday(){
     dueToday.forEach(r => showToast('🔔 ' + r.title));
   }, 2000);
 
-  // Send via Telegram if configured
+  // Route via secure sendTelegramMessage (uses GAS Proxy + Google Sheet Settings)
   const cfg = S.telegramConfig || {};
-  if(cfg.token && cfg.chatId){
+  const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
+  if((gsUrl && gsUrl.includes('/exec')) || (cfg.token && cfg.chatId)){
     const p = S.profile || {};
+    const esc = v => typeof escHtml === 'function' ? escHtml(v) : String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     dueToday.forEach(async r => {
       if(!r.notifyTele) return;
       const freqLabel = {daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'}[r.freq]||r.freq;
       const msg = '🔔 <b>Reminder — PlantLog</b>\n\n'
-        + '<b>' + r.title + '</b>\n'
-        + 'Repeat: ' + freqLabel + '\n'
-        + (r.time ? 'Time: ' + r.time + '\n' : '')
-        + (r.note ? '\n' + r.note + '\n' : '')
-        + '\n— ' + (p.name||'PlantLog Pro');
+        + '<b>' + esc(r.title) + '</b>\n'
+        + 'Repeat: ' + esc(freqLabel) + '\n'
+        + (r.time ? 'Time: ' + esc(r.time) + '\n' : '')
+        + (r.note ? '\n' + esc(r.note) + '\n' : '')
+        + '\n— ' + esc(p.name||'PlantLog Pro');
       try{
-        await fetch('https://api.telegram.org/bot'+cfg.token+'/sendMessage',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({chat_id:cfg.chatId, text:msg, parse_mode:'HTML'})
-        });
+        if(typeof sendTelegramMessage === 'function') await sendTelegramMessage(msg);
       }catch(e){ console.warn('Reminder Telegram error:',e.message); }
     });
   }
