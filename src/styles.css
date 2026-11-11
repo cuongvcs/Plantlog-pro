@@ -310,13 +310,21 @@ input, textarea, select, button { font-family: var(--font); }
 }
 
 /* ── STAT MINI-CARDS ───────────────────────────────────── */
-.ss { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+.ss { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:6px; }
 .sb2 {
-  background:var(--surface); border-radius:var(--r);
-  box-shadow:var(--sh); padding:12px 10px; text-align:center;
+  background:var(--surface); border-radius:var(--rs);
+  border:1px solid var(--n200); box-shadow:var(--sh-xs, var(--sh));
+  padding:6px 6px; text-align:center;
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  min-width:0; min-height:34px;
 }
-.sn { font-family:var(--font-hd); font-size:26px; font-weight:800; color:var(--brand); line-height:1; }
-.sl { font-size:9px; color:var(--n400); margin-top:3px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; }
+.sn { font-family:var(--font-hd); font-size:15px; font-weight:800; color:var(--brand); line-height:1; flex-shrink:0; }
+.sl {
+  font-size:9.5px; color:var(--n500); margin-top:0; font-weight:700;
+  letter-spacing:0.02em; text-transform:uppercase; line-height:1.1;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+#screen-home .sec { margin:8px 0 5px; }
 
 /* ── TRIP CARDS — Trello board-list style ──────────────── */
 .tc {
@@ -1330,24 +1338,24 @@ input, textarea, select, button { font-family: var(--font); }
 
 /* Home Finance Summary Widget (UX-03) */
 .home-finance-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;
 }
 .home-fin-card {
   background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
-  padding: 10px 12px; box-shadow: var(--sh); cursor: pointer;
+  padding: 7px 10px; box-shadow: var(--sh); cursor: pointer;
   transition: transform 0.12s, border-color 0.15s;
 }
 .home-fin-card:active { transform: scale(0.98); }
 .home-fin-label {
-  font-size: 10.5px; font-weight: 700; color: var(--n500);
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;
+  font-size: 10px; font-weight: 700; color: var(--n500);
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 1px;
 }
 .home-fin-val {
-  font-size: 14px; font-weight: 800; font-family: var(--mono); color: var(--n900);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 13px; font-weight: 800; font-family: var(--mono); color: var(--n900);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25;
 }
 .home-fin-sub {
-  font-size: 10px; color: var(--n500); margin-top: 2px;
+  font-size: 9.5px; color: var(--n500); margin-top: 1px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 

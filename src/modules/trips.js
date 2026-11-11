@@ -618,10 +618,9 @@ function renderDash(){
   document.getElementById('stat-tasks').textContent=allTodayWork.length;
 
   if(!allTodayWork.length){
-    htt.innerHTML=`<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);padding:20px;text-align:center;margin-bottom:10px;">
-      <div style="font-size:28px;margin-bottom:6px;">✅</div>
-      <div style="font-size:13px;color:var(--g400);">No work tasks scheduled for today.</div>
-      <button onclick="openNewTaskModal(todayStr(),'work')" style="margin-top:10px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">＋ Add today's task</button>
+    htt.innerHTML=`<div style="background:var(--surface);border-radius:var(--rs);box-shadow:var(--sh);border:1px solid var(--n200);padding:12px;text-align:center;margin-bottom:6px;">
+      <div style="font-size:12px;color:var(--g500);">✅ No work tasks scheduled for today.</div>
+      <button onclick="openNewTaskModal(todayStr(),'work')" style="margin-top:8px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);padding:6px 14px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:var(--font);">＋ Add today's task</button>
     </div>`;
   } else {
     // Group into 3 status buckets

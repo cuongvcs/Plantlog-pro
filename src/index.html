@@ -332,13 +332,21 @@ input, textarea, select, button { font-family: var(--font); }
 }
 
 /* ── STAT MINI-CARDS ───────────────────────────────────── */
-.ss { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+.ss { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:6px; }
 .sb2 {
-  background:var(--surface); border-radius:var(--r);
-  box-shadow:var(--sh); padding:12px 10px; text-align:center;
+  background:var(--surface); border-radius:var(--rs);
+  border:1px solid var(--n200); box-shadow:var(--sh-xs, var(--sh));
+  padding:6px 6px; text-align:center;
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  min-width:0; min-height:34px;
 }
-.sn { font-family:var(--font-hd); font-size:26px; font-weight:800; color:var(--brand); line-height:1; }
-.sl { font-size:9px; color:var(--n400); margin-top:3px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; }
+.sn { font-family:var(--font-hd); font-size:15px; font-weight:800; color:var(--brand); line-height:1; flex-shrink:0; }
+.sl {
+  font-size:9.5px; color:var(--n500); margin-top:0; font-weight:700;
+  letter-spacing:0.02em; text-transform:uppercase; line-height:1.1;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+#screen-home .sec { margin:8px 0 5px; }
 
 /* ── TRIP CARDS — Trello board-list style ──────────────── */
 .tc {
@@ -1352,24 +1360,24 @@ input, textarea, select, button { font-family: var(--font); }
 
 /* Home Finance Summary Widget (UX-03) */
 .home-finance-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;
 }
 .home-fin-card {
   background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
-  padding: 10px 12px; box-shadow: var(--sh); cursor: pointer;
+  padding: 7px 10px; box-shadow: var(--sh); cursor: pointer;
   transition: transform 0.12s, border-color 0.15s;
 }
 .home-fin-card:active { transform: scale(0.98); }
 .home-fin-label {
-  font-size: 10.5px; font-weight: 700; color: var(--n500);
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;
+  font-size: 10px; font-weight: 700; color: var(--n500);
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 1px;
 }
 .home-fin-val {
-  font-size: 14px; font-weight: 800; font-family: var(--mono); color: var(--n900);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 13px; font-weight: 800; font-family: var(--mono); color: var(--n900);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25;
 }
 .home-fin-sub {
-  font-size: 10px; color: var(--n500); margin-top: 2px;
+  font-size: 9.5px; color: var(--n500); margin-top: 1px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -1501,7 +1509,7 @@ input, textarea, select, button { font-family: var(--font); }
       <div id="home-av" class="av" style="width:34px;height:34px;font-size:13px;cursor:pointer;" onclick="showScreen('settings')"></div>
     </div>
   </div>
-  <div class="sb">
+  <div class="sb" style="padding-top:10px;">
     <div id="notif-prompt" style="display:none;" class="notif-banner" onclick="requestNotifications()">
       <span style="font-size:20px;">🔔</span>
       <div><div class="nb2" data-t="enableNotif">Enable notifications</div><div class="nb3" data-t="notifDesc">Get reminders for trips, tasks & leave</div></div>
@@ -1513,19 +1521,19 @@ input, textarea, select, button { font-family: var(--font); }
       <div class="sb2 clickable" onclick="showScreen('leave')" title="Open Leave & Calendar Planner"><div class="sn" id="stat-leave" style="color:var(--blue);">0</div><div class="sl" data-t="leaveDays">Leave days</div></div>
     </div>
     <!-- Field Tools Quick Row (IMP-21, IMP-22, IMP-24) -->
-    <div style="display:flex;gap:8px;margin-top:10px;margin-bottom:6px;">
-      <button type="button" onclick="openToolboxScreen()" class="btn btn-sm btn-o" style="flex:1;padding:8px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);background:var(--surface);" title="Engineering Toolbox & Unit Converters">
+    <div style="display:flex;gap:8px;margin-top:0;margin-bottom:6px;">
+      <button type="button" onclick="openToolboxScreen()" class="btn btn-sm btn-o" style="flex:1;min-height:34px;padding:6px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);background:var(--surface);" title="Engineering Toolbox & Unit Converters">
         <span>🧮</span> Toolbox
       </button>
-      <button type="button" onclick="openQuickScratchModal()" class="btn btn-sm btn-p" style="flex:1;padding:8px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);" title="Quick Field Scratchpad & Nameplate Camera">
+      <button type="button" onclick="openQuickScratchModal()" class="btn btn-sm btn-p" style="flex:1;min-height:34px;padding:6px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);" title="Quick Field Scratchpad & Nameplate Camera">
         <span>⚡</span> Quick Snap
       </button>
-      <button type="button" onclick="openAssetsScreen()" class="btn btn-sm btn-o" style="flex:1;padding:8px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);background:var(--surface);" title="Equipment & Machine Passport Registry">
+      <button type="button" onclick="openAssetsScreen()" class="btn btn-sm btn-o" style="flex:1;min-height:34px;padding:6px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);background:var(--surface);" title="Equipment & Machine Passport Registry">
         <span>🏭</span> Assets
       </button>
     </div>
     <div id="home-finance-widget"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 5px;">
       <div class="sec" style="margin:0;">Today's Tasks</div>
       <div id="today-date-label" style="font-size:11px;color:var(--g500);"></div>
     </div>
@@ -6958,10 +6966,9 @@ function renderDash(){
   document.getElementById('stat-tasks').textContent=allTodayWork.length;
 
   if(!allTodayWork.length){
-    htt.innerHTML=`<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);padding:20px;text-align:center;margin-bottom:10px;">
-      <div style="font-size:28px;margin-bottom:6px;">✅</div>
-      <div style="font-size:13px;color:var(--g400);">No work tasks scheduled for today.</div>
-      <button onclick="openNewTaskModal(todayStr(),'work')" style="margin-top:10px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">＋ Add today's task</button>
+    htt.innerHTML=`<div style="background:var(--surface);border-radius:var(--rs);box-shadow:var(--sh);border:1px solid var(--n200);padding:12px;text-align:center;margin-bottom:6px;">
+      <div style="font-size:12px;color:var(--g500);">✅ No work tasks scheduled for today.</div>
+      <button onclick="openNewTaskModal(todayStr(),'work')" style="margin-top:8px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);padding:6px 14px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:var(--font);">＋ Add today's task</button>
     </div>`;
   } else {
     // Group into 3 status buckets
