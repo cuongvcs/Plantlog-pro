@@ -61,7 +61,7 @@ function renderLibrary(){
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
             <button onclick="editLibraryItem('${item.id}')"
-              style="padding:5px 10px;border:1px solid var(--n200);border-radius:var(--rs);background:#fff;font-size:11px;font-weight:600;color:var(--n600);cursor:pointer;">✏️ Edit</button>
+              style="padding:5px 10px;border:1px solid var(--n200);border-radius:var(--rs);background:var(--surface);font-size:11px;font-weight:600;color:var(--n600);cursor:pointer;">✏️ Edit</button>
             <button onclick="deleteLibraryItem('${item.id}')"
               style="padding:5px 10px;border:1px solid rgba(192,57,43,0.2);border-radius:var(--rs);background:var(--rl);font-size:11px;font-weight:600;color:var(--rd);cursor:pointer;">🗑 Delete</button>
           </div>

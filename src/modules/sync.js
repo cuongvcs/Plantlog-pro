@@ -81,6 +81,7 @@ function updateGSStatus() {
     if (bar) bar.style.display = 'none';
     if (el) el.textContent = 'Not connected';
   }
+  if (typeof renderSettingsAbout === 'function') renderSettingsAbout();
 }
 
 // Google Apps Script CORS fix:
@@ -1254,7 +1255,7 @@ function renderTripBills(tripId) {
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;margin-left:10px;">
               <div class="bill-amount">${amt} ${b.currency || ''}</div>
               <div style="display:flex;gap:4px;">
-                <button onclick="openEditBill('${b.id}')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--g200);background:#fff;cursor:pointer;font-size:13px;" title="Edit">✏️</button>
+                <button onclick="openEditBill('${b.id}')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--g200);background:var(--surface);cursor:pointer;font-size:13px;" title="Edit">✏️</button>
                 <button onclick="deleteBill('${b.id}')" class="db" title="Delete">×</button>
               </div>
             </div>

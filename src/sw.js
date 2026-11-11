@@ -1,11 +1,11 @@
-// PlantLog Pro Service Worker v88
+// PlantLog Pro Service Worker v89
 // Single-file architecture — only index.html needs caching
-const CACHE = 'plantlog-pro-v88';
+const CACHE = 'plantlog-pro-v89';
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(['./index.html', './manifest.json', './icon-192.png', './icon-512.png']))
+      .then(c => c.addAll(['./index.html', './manifest.json', './icon-192.png', './icon-512.png', './vendor/jspdf.umd.min.js']))
       .then(() => self.skipWaiting())
   );
 });

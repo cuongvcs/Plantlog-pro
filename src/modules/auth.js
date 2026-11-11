@@ -232,6 +232,8 @@ function processModalPIN() {
           document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
           document.getElementById('screen-settings').classList.add('active');
           updatePINStatusLabel();
+          if (typeof updateBottomNav === 'function') updateBottomNav('settings');
+          if (typeof renderSettingsAbout === 'function') renderSettingsAbout();
           return;
         }
         modalPinBuffer = ''; modalPinStep = 'new'; updatePinDots('modal');

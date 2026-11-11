@@ -45,7 +45,7 @@ function renderRemindersScreen(){
       ? 'var(--red)' : daysUntil !== null && daysUntil <= 7
       ? 'var(--am)' : 'var(--n300)';
 
-    return `<div style="background:#fff;border-radius:var(--r);box-shadow:var(--sh);
+    return `<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);
               border:1px solid var(--n150);border-left:3px solid ${urgency};
               padding:12px 14px;margin-bottom:8px;opacity:${isActive?1:0.6};">
       <div style="display:flex;align-items:flex-start;gap:10px;">
@@ -73,7 +73,7 @@ function renderRemindersScreen(){
           </button>
           <button onclick="editReminder('${r.id}')"
             style="padding:4px 10px;border-radius:var(--rs);border:1px solid var(--n200);
-                   background:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);color:var(--n600);">
+                   background:var(--surface);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);color:var(--n600);">
             ✏️ Edit
           </button>
           <button onclick="deleteReminder('${r.id}')"

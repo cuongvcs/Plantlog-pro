@@ -192,11 +192,21 @@ function renderBillsScreen() {
     bills = bills.filter(b => (b.paymentMethod || '').includes('Card') || (b.paymentMethod || '').includes('Credit') || (b.paymentMethod || '').includes('3-'));
   }
 
+  // Search filter by detail, receipt number, notes, or category (UX-02)
+  const searchEl = document.getElementById('bill-search');
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  if (q) {
+    bills = bills.filter(b => {
+      const hay = `${b.detail || ''} ${b.billNumber || ''} ${b.notes || ''} ${b.category || ''}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
   bills.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
   if (!bills.length) {
     body.innerHTML = `<div class="empty"><div class="ei">💳</div>
-      <div class="et">No bills yet.<br>Tap + to add your first expense.</div></div>`;
+      <div class="et">${q ? 'No matching bills found.' : 'No bills yet.<br>Tap + to add your first expense.'}</div></div>`;
     return;
   }
 
@@ -254,7 +264,7 @@ function renderBillsScreen() {
         </div>
         <div style="font-size:13px;font-weight:700;">${totalStr}</div>
       </div>
-      <div style="background:#fff;border-radius:0 0 var(--rs) var(--rs);box-shadow:var(--sh);margin-bottom:12px;">
+      <div style="background:var(--surface);border-radius:0 0 var(--rs) var(--rs);box-shadow:var(--sh);margin-bottom:12px;">
         ${tripBills.sort((a,b)=>b.date.localeCompare(a.date)).map(b => renderBillRow(b)).join('')}
       </div>`;
     });
@@ -278,7 +288,7 @@ function renderBillsScreen() {
         </div>
         <div class="bill-day-total">${dTotalStr}</div>
       </div>
-      <div style="background:#fff;border-radius:0 0 var(--rs) var(--rs);box-shadow:var(--sh);margin-bottom:10px;">
+      <div style="background:var(--surface);border-radius:0 0 var(--rs) var(--rs);box-shadow:var(--sh);margin-bottom:10px;">
         ${dayBills.map(b => renderBillRow(b)).join('')}
       </div>`;
     });
@@ -312,7 +322,7 @@ function renderBillRow(b) {
         <div class="bill-amount">${amt} ${b.currency||''}</div>
         ${vndAmt?`<div style="font-size:11px;color:var(--g500);text-align:right;margin-top:1px;">= ${vndAmt} ₫</div>`:''}
         <div style="display:flex;gap:4px;">
-          <button onclick="openEditBill('${b.id}');event.stopPropagation()" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--g200);background:#fff;cursor:pointer;font-size:13px;" title="Edit">✏️</button>
+          <button onclick="openEditBill('${b.id}');event.stopPropagation()" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--g200);background:var(--surface);cursor:pointer;font-size:13px;" title="Edit">✏️</button>
           <button onclick="deleteBillFromScreen('${b.id}')" class="db" title="Delete">×</button>
         </div>
       </div>
@@ -467,6 +477,7 @@ function exportBillsPDF() {
   bills.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   if(!bills.length){showToast('No bills to export');return;}
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+  if(typeof attachPdfTextNormalizer==='function') attachPdfTextNormalizer(doc);
   const W=210,mg=16;let y=20,pageNum=1;const R=W-mg;
   const rtxt=(str,yy,col)=>{if(col)doc.setTextColor(...col);const tw=doc.getTextWidth(String(str));doc.text(String(str),R-tw,yy);if(col)doc.setTextColor(33,37,41);};
   const chk=()=>{if(y>265){doc.addPage();y=20;pageNum++;addPN();}};
@@ -486,7 +497,7 @@ function exportBillsPDF() {
   sec('BILL DETAILS');
   Object.entries(byTrip).forEach(([tid,tripBills])=>{
     const trip=S.trips.find(t=>t.id===tid);const{byCur:tCur,vndTotal:tVND}=computeTotals(tripBills);
-    if(tripCount>1){doc.setFillColor(0,132,61);doc.rect(mg,y-3,W-mg*2,8,'F');doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('🏭 '+(trip?trip.plant:'No trip'),mg+3,y+1);rtxt(fmtAmt(tVND,'VND')+' VND',y+1,[255,220,150]);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=10;chk();}
+    if(tripCount>1){doc.setFillColor(0,132,61);doc.rect(mg,y-3,W-mg*2,8,'F');doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text((trip?trip.plant:'No trip'),mg+3,y+1);rtxt(fmtAmt(tVND,'VND')+' VND',y+1,[255,220,150]);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=10;chk();}
     const byDate={};tripBills.forEach(b=>{const d=b.date||'';if(!byDate[d])byDate[d]=[];byDate[d].push(b);});
     Object.entries(byDate).forEach(([dk,dayBills])=>{
       const{byCur:dCur,vndTotal:dVND}=computeTotals(dayBills);const dtStr=Object.entries(dCur).map(([c,t])=>fmtAmt(t,c)+' '+c).join(' + ');
@@ -867,7 +878,7 @@ function renderTripClaimsScreen() {
             <span style="font-size:10px;color:var(--n400);">${bodyTripSubText}</span>
           </div>
 
-          ${t.purpose ? `<div style="font-size:11px;color:var(--n700);margin-bottom:8px;background:#fff;padding:6px 8px;border-radius:4px;border:1px solid var(--n200);"><strong>Purpose:</strong> ${t.purpose}</div>` : ''}
+          ${t.purpose ? `<div style="font-size:11px;color:var(--n700);margin-bottom:8px;background:var(--surface);padding:6px 8px;border-radius:4px;border:1px solid var(--n200);"><strong>Purpose:</strong> ${t.purpose}</div>` : ''}
 
           <!-- 4-Step Payment Timeline Matrix -->
           <div style="font-size:10px;font-weight:700;color:var(--g500);letter-spacing:0.04em;margin-bottom:4px;">PAYMENT TIMELINE</div>
@@ -896,7 +907,7 @@ function renderTripClaimsScreen() {
 
           <!-- Comment Display -->
           ${claim.comment ? `
-            <div style="font-size:11px;color:var(--n700);background:#fff;padding:6px 8px;border-radius:4px;border:1px solid var(--n200);margin-top:6px;">
+            <div style="font-size:11px;color:var(--n700);background:var(--surface);padding:6px 8px;border-radius:4px;border:1px solid var(--n200);margin-top:6px;">
               💬 <strong>Comment:</strong> ${claim.comment}
             </div>` : ''}
 
@@ -1073,6 +1084,16 @@ function saveTripClaim() {
 
 let _currentCreditCardSubTab = 'trip-bills'; // 'trip-bills' | 'bills' | 'transfers'
 let _cardBillTripFilter = null; // optional tripId to filter granular bills
+let _tripCardStatusFilter = 'all'; // 'all' | 'unsettled' | 'partial' | 'settled'
+
+function setTripCardStatusFilter(status) {
+  _tripCardStatusFilter = status || 'all';
+  ['all', 'unsettled', 'partial', 'settled'].forEach(k => {
+    const btn = document.getElementById('cc-tf-' + k);
+    if (btn) btn.classList.toggle('active', k === _tripCardStatusFilter);
+  });
+  renderCreditCardScreen();
+}
 
 /**
  * Ensure S.creditCard state exists with default values
@@ -1156,6 +1177,7 @@ function switchCreditCardSubTab(subTab) {
   const tabTripBills = document.getElementById('cc-tab-trip-bills');
   const tabBills = document.getElementById('cc-tab-bills');
   const tabTransfers = document.getElementById('cc-tab-transfers');
+  const tripFilterBar = document.getElementById('cc-trip-filter-bar');
   const tripBillsContainer = document.getElementById('cc-trip-bills-list-container');
   const billsContainer = document.getElementById('cc-bills-list-container');
   const transfersContainer = document.getElementById('cc-transfers-list-container');
@@ -1164,6 +1186,7 @@ function switchCreditCardSubTab(subTab) {
   if (tabBills) tabBills.classList.toggle('active', subTab === 'bills');
   if (tabTransfers) tabTransfers.classList.toggle('active', subTab === 'transfers');
 
+  if (tripFilterBar) tripFilterBar.style.display = subTab === 'trip-bills' ? 'flex' : 'none';
   if (tripBillsContainer) tripBillsContainer.style.display = subTab === 'trip-bills' ? 'block' : 'none';
   if (billsContainer) billsContainer.style.display = subTab === 'bills' ? 'block' : 'none';
   if (transfersContainer) transfersContainer.style.display = subTab === 'transfers' ? 'block' : 'none';
@@ -1402,17 +1425,29 @@ function renderCreditCardScreen() {
 
   if (tripBadgeEl) tripBadgeEl.textContent = String(tripGroups.length);
 
+  const shownTripGroups = (_tripCardStatusFilter === 'all')
+    ? tripGroups
+    : tripGroups.filter(tg => tg.status === _tripCardStatusFilter);
+
   if (tripBillsContainer) {
     if (!tripGroups.length) {
       tripBillsContainer.innerHTML = `
-        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+        <div class="empty" style="padding:24px 12px;background:var(--surface);border-radius:var(--rs);border:1px dashed var(--n200);">
           <div class="ei">✈️</div>
           <div class="et">No trip card expenses</div>
           <div class="es">Trips with bills paid via "3-Credit card" in this period will appear here.</div>
         </div>`;
+    } else if (!shownTripGroups.length) {
+      tripBillsContainer.innerHTML = `
+        <div class="empty" style="padding:24px 12px;background:var(--surface);border-radius:var(--rs);border:1px dashed var(--n200);">
+          <div class="ei">🔍</div>
+          <div class="et">No ${_tripCardStatusFilter} trips</div>
+          <div class="es">All ${tripGroups.length} trip(s) in this period have another reimbursement status.</div>
+          <button type="button" class="btn btn-sm btn-o" onclick="setTripCardStatusFilter('all')" style="margin-top:8px;">Show All Trips</button>
+        </div>`;
     } else {
       let tgHtml = '';
-      tripGroups.forEach(tg => {
+      shownTripGroups.forEach(tg => {
         const dateRangeStr = (tg.dateEnd && tg.dateEnd !== tg.date)
           ? `${fmtDate(tg.date)} ➔ ${fmtDate(tg.dateEnd)}`
           : (tg.date ? fmtDate(tg.date) : '—');
@@ -1429,7 +1464,7 @@ function renderCreditCardScreen() {
                   📅 ${dateRangeStr} ${tg.location ? '• ' + tg.location : ''}
                 </div>
               </div>
-              <span class="badge" style="font-size:10px;padding:2px 7px;font-weight:700;background:#fff;border:1px solid var(--n200);flex-shrink:0;">
+              <span class="badge" style="font-size:10px;padding:2px 7px;font-weight:700;background:var(--surface);border:1px solid var(--n200);flex-shrink:0;">
                 ${tg.statusText}
               </span>
             </div>
@@ -1488,7 +1523,7 @@ function renderCreditCardScreen() {
         filterBannerHtml = `
           <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
             <span>Filtered by: <strong>General Card Expenses</strong> (${displayedGranularBills.length} bills)</span>
-            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
+            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:var(--surface);">✕ Show All</button>
           </div>`;
       } else {
         const filterTrip = (S.trips || []).find(t => String(t.id) === String(_cardBillTripFilter));
@@ -1497,14 +1532,14 @@ function renderCreditCardScreen() {
         filterBannerHtml = `
           <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
             <span>Filtered by: <strong>🏭 ${typeof escHtml === 'function' ? escHtml(filterTripName) : filterTripName}</strong> (${displayedGranularBills.length} bills)</span>
-            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
+            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:var(--surface);">✕ Show All</button>
           </div>`;
       }
     }
 
     if (!displayedGranularBills.length) {
       billsContainer.innerHTML = filterBannerHtml + `
-        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+        <div class="empty" style="padding:24px 12px;background:var(--surface);border-radius:var(--rs);border:1px dashed var(--n200);">
           <div class="ei">💳</div>
           <div class="et">No card expenses found</div>
           <div class="es">Bills paid via "3-Credit card" in this period will appear here.</div>
@@ -1544,7 +1579,7 @@ function renderCreditCardScreen() {
   if (transfersContainer) {
     if (!filteredTransfers.length) {
       transfersContainer.innerHTML = `
-        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+        <div class="empty" style="padding:24px 12px;background:var(--surface);border-radius:var(--rs);border:1px dashed var(--n200);">
           <div class="ei">🏦</div>
           <div class="et">No transfers recorded</div>
           <div class="es">When the company pays your travel claim, click "Transfer Back to Card" above to clear the card debt.</div>
@@ -1764,6 +1799,61 @@ async function deleteTransferBack(transferId) {
   renderCreditCardScreen();
   showToast('✓ Transfer record deleted');
 }
+
+/**
+ * Render Home Dashboard Finance Summary Widget (UX-03)
+ */
+function renderHomeFinanceWidget() {
+  const el = document.getElementById('home-finance-widget');
+  if (!el) return;
+
+  ensureCreditCardState();
+  const budget = parseFloat(S.creditCard.budget) || 50000000;
+  const allCardBills = (S.bills || []).filter(isCardBill_);
+  const cardSpent = allCardBills.reduce((s, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') return s + (parseFloat(b.amount) || 0);
+    return s + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+  const cardRepaid = (S.creditCard.transfers || []).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const cardDebt = Math.max(0, cardSpent - cardRepaid);
+  const cardAvail = budget - cardDebt;
+  const availColor = cardAvail <= 0 ? 'var(--red)' : (cardAvail < budget * 0.2 ? 'var(--amber)' : 'var(--green)');
+
+  let unsettledCount = 0;
+  let unsettledVND = 0;
+  (S.trips || []).forEach(t => {
+    if (t.status === 'planned') return;
+    const claim = getTripClaimData(t.id);
+    if (claim.paymentStatus !== 'Done') {
+      const amt = calculateTripTotalClaim(t.id);
+      if (amt > 0) {
+        unsettledCount++;
+        unsettledVND += amt;
+      }
+    }
+  });
+
+  el.innerHTML = `
+    <div class="home-finance-grid">
+      <div class="home-fin-card" onclick="showScreen('bills');if(typeof switchBillsView==='function')switchBillsView('card');" title="Open Corporate Credit Card Tracker">
+        <div class="home-fin-label">
+          <span>💳 Card Available</span>
+          <span style="color:var(--n400);">›</span>
+        </div>
+        <div class="home-fin-val" style="color:${availColor};">${fmtAmt(cardAvail, 'VND')} ₫</div>
+        <div class="home-fin-sub">Debt: ${fmtAmt(cardDebt, 'VND')} ₫</div>
+      </div>
+      <div class="home-fin-card" onclick="showScreen('bills');if(typeof switchBillsView==='function')switchBillsView('claims');" title="Open Trip Claims & Reimbursement">
+        <div class="home-fin-label">
+          <span>✈️ Pending Claims</span>
+          <span style="color:var(--n400);">›</span>
+        </div>
+        <div class="home-fin-val" style="color:${unsettledCount ? 'var(--amber)' : 'var(--green)'};">${fmtAmt(unsettledVND, 'VND')} ₫</div>
+        <div class="home-fin-sub">${unsettledCount ? unsettledCount + ' unsettled trip' + (unsettledCount > 1 ? 's' : '') : 'All claims settled ✓'}</div>
+      </div>
+    </div>`;
+}
+
 
 
 

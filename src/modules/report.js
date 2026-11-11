@@ -1242,6 +1242,7 @@ async function exportPDF(){
   const trip=S.trips.find(tr=>tr.id===curTrip);const r=curReport;const p=S.profile;
   if(!trip||!r)return;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+  if(typeof attachPdfTextNormalizer==='function') attachPdfTextNormalizer(doc);
   const W=210,mg=16;let y=20,pageNum=1;
   const R=W-mg;
   const reportTitle=(document.getElementById('report-name-input')&&document.getElementById('report-name-input').value.trim())||`Plant Visit Report — ${trip.plant}`;
@@ -1564,7 +1565,7 @@ function renderTripSavedReports(){
       const icon = r.type==='bills' ? '💰' : r.type==='ta' ? '🛫' : '📋';
       const label = r.type==='bills' ? 'Expense Report' : r.type==='ta' ? 'Travel Authorization' : 'Trip Report';
       const date = r.createdAt ? fmtDate(r.createdAt.slice(0,10)) : '';
-      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:var(--r-sm);border:1px solid var(--n150);margin-bottom:6px;">
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border-radius:var(--r-sm);border:1px solid var(--n150);margin-bottom:6px;">
         <span style="font-size:20px;">${icon}</span>
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:600;color:var(--n800);">${label}</div>
@@ -1647,6 +1648,7 @@ async function generateTAPdf(tripId){
   const spFlt = n   => (n||'').replace(/^([A-Za-z]+)(\d+)$/,'$1 $2');
 
   const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
+  if(typeof attachPdfTextNormalizer==='function') attachPdfTextNormalizer(doc);
   const PW=297, PH=210, ML=10, MR=10;
   const TW = PW-ML-MR;
 

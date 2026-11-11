@@ -738,6 +738,7 @@ function showScreen(n){
   if(n==='toolbox') { if(typeof switchToolboxTab==='function') switchToolboxTab(curToolboxTab||'pressure'); }
   if(n==='assets') { if(typeof renderAssetList==='function') renderAssetList(); }
   if(n==='bill-export')buildBillPDFPreview();
+  if(n==='settings') { if(typeof renderSettingsAbout==='function') renderSettingsAbout(); }
 }
 
 // ── Unified Bottom Nav synchronization (IMP-10) ──
@@ -892,6 +893,7 @@ function loadProfile(){
   document.getElementById('pref-company').value=S.profile.company||'';
   document.getElementById('pref-empid').value=S.profile.empid||'';
   updateProfileDisplay();
+  if(typeof renderSettingsAbout==='function') renderSettingsAbout();
 }
 function saveProfile(){
   S.profile.name=document.getElementById('pref-name').value;
@@ -1358,6 +1360,147 @@ function applyVoiceResultToInput() {
 
   if (typeof closeModal === 'function') closeModal('modal-voice-input');
   if (typeof showToast === 'function') showToast('🎙️ English notes inserted & saved! ✓');
+}
+
+// ── App Version, PDF Text Normalizer & Settings About (IMP-34) ──
+const APP_VERSION = 'v4.14';
+
+function pdfSafeText(v) {
+  if (v === null || v === undefined) return '';
+  const raw = String(v);
+  const leadMatch = raw.match(/^[ ]*/);
+  const lead = leadMatch ? leadMatch[0] : '';
+  let s = raw.slice(lead.length);
+  s = s.replace(/[Đ]/g, 'D').replace(/[đ]/g, 'd');
+  if (typeof s.normalize === 'function') {
+    s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+  s = s.replace(/[→➔➜]/g, '->')
+       .replace(/[←]/g, '<-')
+       .replace(/[—–]/g, '-')
+       .replace(/[‘’]/g, "'")
+       .replace(/[“”]/g, '"')
+       .replace(/[•·]/g, '-')
+       .replace(/[…]/g, '...')
+       .replace(/[✓✔]/g, 'OK')
+       .replace(/[✗✘✕]/g, 'X');
+  // Strip emojis, pictographs & unsupported glyphs while preserving ASCII + degree sign (°)
+  s = s.replace(/[^\x09\x0A\x0D\x20-\x7E\xB0]+ ?/g, '');
+  s = s.replace(/ +\n/g, '\n').replace(/\s+$/, '');
+  if (!s) return '';
+  return lead + s;
+}
+
+function attachPdfTextNormalizer(doc) {
+  if (!doc || doc._pdfSafeWrapped) return doc;
+  doc._pdfSafeWrapped = true;
+  if (typeof doc.splitTextToSize === 'function') {
+    const origSplit = doc.splitTextToSize.bind(doc);
+    doc.splitTextToSize = function(text, maxWidth, options) {
+      const clean = Array.isArray(text) ? text.map(pdfSafeText) : pdfSafeText(text);
+      return origSplit(clean, maxWidth, options);
+    };
+  }
+  if (typeof doc.getTextWidth === 'function') {
+    const origWidth = doc.getTextWidth.bind(doc);
+    doc.getTextWidth = function(text) {
+      return origWidth(pdfSafeText(text));
+    };
+  }
+  if (typeof doc.text === 'function') {
+    const origText = doc.text.bind(doc);
+    doc.text = function(text, x, y, options, transform) {
+      const clean = Array.isArray(text) ? text.map(pdfSafeText) : pdfSafeText(text);
+      return origText(clean, x, y, options, transform);
+    };
+  }
+  return doc;
+}
+
+function renderSettingsAbout() {
+  const verEl = document.getElementById('about-app-version');
+  if (verEl) verEl.textContent = APP_VERSION;
+
+  const swEl = document.getElementById('about-sw-badge');
+  if (swEl) {
+    const hasCtrl = (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller);
+    const hasSW = (typeof navigator !== 'undefined' && 'serviceWorker' in navigator);
+    swEl.textContent = hasCtrl ? 'Offline Ready ✓' : (hasSW ? 'PWA Ready' : 'Web App');
+  }
+
+  const secEl = document.getElementById('about-sec-badge');
+  if (secEl) {
+    const hasKey = !!(S && S.gsApiKey && String(S.gsApiKey).trim());
+    const hasPin = (typeof hasPIN === 'function' && hasPIN());
+    secEl.textContent = hasKey ? 'API Key Protected ✓' : (hasPin ? 'PIN Protected ✓' : 'Local Only');
+  }
+
+  const counts = {
+    'about-cnt-trips': (S.trips || []).length,
+    'about-cnt-tasks': (S.tasks || []).length,
+    'about-cnt-bills': (S.bills || []).length,
+    'about-cnt-assets': (S.assets || []).length,
+    'about-cnt-notes': (S.quickSnaps || []).length
+  };
+  Object.entries(counts).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(val);
+  });
+
+  if (typeof getStorageUsage === 'function') {
+    const u = getStorageUsage();
+    const txtEl = document.getElementById('about-storage-text');
+    const barEl = document.getElementById('about-storage-bar');
+    if (txtEl) txtEl.textContent = `${u.usedMB} MB / 5.00 MB (${u.percent}%)`;
+    if (barEl) {
+      barEl.style.width = `${Math.min(100, Math.max(2, u.percent))}%`;
+      barEl.style.background = u.percent > 85 ? 'var(--red)' : (u.percent > 70 ? 'var(--amber)' : 'var(--green)');
+    }
+  }
+
+  const syncEl = document.getElementById('about-last-sync');
+  if (syncEl) {
+    syncEl.textContent = S.lastSync ? new Date(S.lastSync).toLocaleString() : 'Not synced yet';
+  }
+
+  const gsEl = document.getElementById('about-gs-status');
+  if (gsEl) {
+    gsEl.textContent = S.gsUrl ? (S.gsApiKey ? 'GAS Secured (Key OK)' : 'GAS Connected (No Key)') : 'Offline / Local';
+  }
+
+  const jsPdfEl = document.getElementById('about-pdf-mode');
+  if (jsPdfEl) {
+    jsPdfEl.textContent = typeof window.jspdf !== 'undefined' ? 'Offline Vendor Loaded ✓' : 'Waiting / Fallback';
+  }
+}
+
+function openAboutModal() {
+  const modalVerEl = document.getElementById('about-modal-version');
+  if (modalVerEl) modalVerEl.textContent = APP_VERSION;
+  renderSettingsAbout();
+  if (typeof openModal === 'function') openModal('modal-about-app');
+}
+
+async function quickSyncFromHome() {
+  if (!S.gsUrl) {
+    if (typeof showToast === 'function') showToast('Configure Cloud Sync URL in Settings first');
+    showScreen('settings');
+    return;
+  }
+  const btn = document.getElementById('home-sync-btn');
+  if (btn && btn.classList.contains('syncing')) return;
+  if (btn) { btn.classList.add('syncing'); btn.disabled = true; }
+  try {
+    if (typeof syncToSheets === 'function') {
+      await syncToSheets();
+    }
+  } catch(e) {
+    console.warn('[quickSyncFromHome] Error:', e);
+  } finally {
+    if (btn) { btn.classList.remove('syncing'); btn.disabled = false; }
+    if (typeof renderDash === 'function') renderDash();
+    renderSettingsAbout();
+  }
 }
 
 init();

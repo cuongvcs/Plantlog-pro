@@ -19,7 +19,7 @@
 
   <!-- ── Third-party libs ───────────────────────────── -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="./vendor/jspdf.umd.min.js"></script>
 <style>/* ═══════════════════════════════════════════════════════════
    PlantLog Pro — Professional UI v2
    Inspired by Trello/Linear/Notion: clean, confident, fast
@@ -941,7 +941,7 @@ input, textarea, select, button { font-family: var(--font); }
 .sig-btn {
   padding: 8px 12px; border-radius: var(--rs);
   font-family: var(--font); font-size: 12px; font-weight: 600;
-  cursor: pointer; border: 1.5px solid var(--n200); background: #fff;
+  cursor: pointer; border: 1.5px solid var(--n200); background: var(--surface);
   color: var(--n700); transition: all var(--dur-fast);
   display: inline-flex; align-items: center; gap: 4px;
 }
@@ -1277,6 +1277,171 @@ input, textarea, select, button { font-family: var(--font); }
   font-family: var(--mono);
 }
 
+/* ── Wave 1 Dark Mode Fixes & UI Upgrades (IMP-34) ── */
+[data-theme="dark"] .claim-step-box.done {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(52, 211, 153, 0.45);
+}
+[data-theme="dark"] .claim-status-notyet {
+  background: rgba(239, 68, 68, 0.18);
+  color: #FCA5A5;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+[data-theme="dark"] .claim-status-proc {
+  background: rgba(245, 158, 11, 0.18);
+  color: #FCD34D;
+  border-color: rgba(251, 191, 36, 0.4);
+}
+[data-theme="dark"] .claim-status-done {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6EE7B7;
+  border-color: rgba(52, 211, 153, 0.4);
+}
+[data-theme="dark"] .cc-trip-reconcile-grid {
+  background: var(--surface-2);
+  border-color: var(--n200);
+}
+[data-theme="dark"] .tce-status-btn[data-status="Not yet"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #FCA5A5 !important;
+  border-color: rgba(248, 113, 113, 0.45) !important;
+}
+[data-theme="dark"] .tce-status-btn[data-status="Processing"] {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #FCD34D !important;
+  border-color: rgba(251, 191, 36, 0.45) !important;
+}
+[data-theme="dark"] .tce-status-btn[data-status="Done"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #6EE7B7 !important;
+  border-color: rgba(52, 211, 153, 0.45) !important;
+}
+
+.btn-trip-telegram {
+  width: 100%; margin-top: 6px; padding: 10px;
+  border: 1.5px solid #0088CC; border-radius: var(--rs);
+  background: #E3F2FD; color: #0066AA;
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+[data-theme="dark"] .btn-trip-telegram {
+  background: rgba(0, 136, 204, 0.16); color: #38BDF8; border-color: rgba(56, 189, 248, 0.45);
+}
+.btn-trip-ta {
+  width: 100%; margin-top: 6px; padding: 10px;
+  border: 1.5px solid #D97706; border-radius: var(--rs);
+  background: #FFFBEB; color: #92400E;
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+[data-theme="dark"] .btn-trip-ta {
+  background: rgba(217, 119, 6, 0.16); color: #FCD34D; border-color: rgba(251, 191, 36, 0.45);
+}
+
+/* Home Topbar Quick Sync Button */
+.home-sync-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.16); color: #fff;
+  font-size: 14px; cursor: pointer; transition: transform 0.15s, background 0.15s;
+}
+.home-sync-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.28); }
+.home-sync-btn.syncing { animation: spinSlow 1s linear infinite; opacity: 0.85; }
+@keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Home Finance Summary Widget (UX-03) */
+.home-finance-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+}
+.home-fin-card {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
+  padding: 10px 12px; box-shadow: var(--sh); cursor: pointer;
+  transition: transform 0.12s, border-color 0.15s;
+}
+.home-fin-card:active { transform: scale(0.98); }
+.home-fin-label {
+  font-size: 10.5px; font-weight: 700; color: var(--n500);
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;
+}
+.home-fin-val {
+  font-size: 14px; font-weight: 800; font-family: var(--mono); color: var(--n900);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.home-fin-sub {
+  font-size: 10px; color: var(--n500); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Trip Card Bills Status Filter Chips */
+.trip-card-chips {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px;
+  scrollbar-width: none;
+}
+.trip-card-chips::-webkit-scrollbar { display: none; }
+.trip-card-chip {
+  padding: 5px 10px; border-radius: 16px; border: 1px solid var(--n200);
+  background: var(--surface); font-size: 11px; font-weight: 600; color: var(--n600);
+  cursor: pointer; white-space: nowrap; transition: all var(--dur-fast);
+}
+.trip-card-chip.active {
+  background: #7C3AED; color: #fff; border-color: #7C3AED;
+}
+
+/* Settings About Card (UX-06) */
+.about-card {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--r);
+  padding: 14px; margin-top: 4px; box-shadow: var(--sh);
+}
+.about-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.about-logo {
+  width: 44px; height: 44px; border-radius: 11px; object-fit: cover;
+  border: 1px solid var(--n200); background: var(--n50); flex-shrink: 0;
+}
+.about-badges {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px;
+}
+.about-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+  background: var(--brand-light); color: var(--brand-dark);
+}
+.about-badge.offline { background: var(--bl); color: var(--bd); }
+.about-badge.sec { background: #F3E8FF; color: #6B21A8; }
+[data-theme="dark"] .about-badge.sec { background: rgba(124, 58, 237, 0.22); color: #D8B4FE; }
+.about-stats-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;
+  margin: 10px 0; padding: 8px 6px;
+  background: var(--n50); border: 1px solid var(--n150); border-radius: var(--rs);
+  text-align: center;
+}
+.about-stat-num {
+  font-size: 13px; font-weight: 800; color: var(--n900); font-family: var(--mono);
+}
+.about-stat-lbl {
+  font-size: 9px; font-weight: 600; color: var(--n500); margin-top: 1px;
+}
+.storage-bar-track {
+  width: 100%; height: 7px; border-radius: 4px; background: var(--n150); overflow: hidden;
+  margin: 5px 0 4px;
+}
+.storage-bar-fill {
+  height: 100%; border-radius: 4px; background: var(--green);
+  transition: width 0.3s ease, background 0.3s ease;
+}
+.about-meta-list {
+  font-size: 11px; color: var(--n600); border-top: 1px solid var(--n150);
+  padding-top: 8px; margin-top: 8px; display: flex; flex-direction: column; gap: 4px;
+}
+.about-meta-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.about-meta-row span:last-child {
+  font-weight: 600; color: var(--n800); text-align: right;
+}
+
+
 
 
 
@@ -1323,7 +1488,8 @@ input, textarea, select, button { font-family: var(--font); }
       <div id="greeting" style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Good morning</div>
       <div id="today-date" style="font-size:11px;opacity:0.78;margin-top:1px;"></div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+      <button type="button" id="home-sync-btn" class="home-sync-btn" onclick="quickSyncFromHome()" title="Quick Cloud Sync">☁️</button>
       <div id="net-status-badge" style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;background:rgba(255,255,255,0.18);font-size:11px;font-weight:600;color:#fff;">
         <span id="net-dot" style="width:7px;height:7px;border-radius:50%;background:#4ADE80;"></span>
         <span id="net-text">Online</span>
@@ -1358,6 +1524,7 @@ input, textarea, select, button { font-family: var(--font); }
         <span>🏭</span> Assets
       </button>
     </div>
+    <div id="home-finance-widget"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px;">
       <div class="sec" style="margin:0;">Today's Tasks</div>
       <div id="today-date-label" style="font-size:11px;color:var(--g500);"></div>
@@ -1408,7 +1575,7 @@ input, textarea, select, button { font-family: var(--font); }
     </div>
   </div>
   <!-- Search + filter bar (fixed, outside scroll) -->
-  <div style="background:#fff;flex-shrink:0;border-bottom:1px solid var(--g200);padding:8px 12px 0;">
+  <div style="background:var(--surface);flex-shrink:0;border-bottom:1px solid var(--g200);padding:8px 12px 0;">
     <!-- Status pills -->
     <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px;">
       <button id="trip-f-all"      class="tf-btn active" onclick="filterTrips('all')">All</button>
@@ -1440,7 +1607,7 @@ input, textarea, select, button { font-family: var(--font); }
     <!-- Active filter label -->
     <div id="trip-active-filter" style="font-size:11px;color:var(--green);font-weight:600;padding-bottom:6px;display:none;"></div>
   </div>
-    <div id="trip-filter-summary" style="display:none;padding:0 0 6px 12px;font-size:11px;color:var(--green);font-weight:600;background:#fff;"></div>
+    <div id="trip-filter-summary" style="display:none;padding:0 0 6px 12px;font-size:11px;color:var(--green);font-weight:600;background:var(--surface);"></div>
   <div class="sb">
     <div id="trip-list"></div>
   </div>
@@ -1476,7 +1643,7 @@ input, textarea, select, button { font-family: var(--font); }
         placeholder="Add notes for this trip — observations, reminders, contacts, special instructions…"
         style="width:100%;min-height:100px;padding:10px 12px;border:1.5px solid var(--g200);border-radius:var(--rs);font-family:var(--font);font-size:13px;color:var(--g800);background:var(--g50);outline:none;resize:vertical;line-height:1.6;transition:border-color 0.15s;"
         oninput="saveTripNote()"
-        onfocus="this.style.borderColor='var(--green)';this.style.background='#fff';"
+        onfocus="this.style.borderColor='var(--green)';this.style.background='var(--surface)';"
         onblur="this.style.borderColor='var(--g200)';this.style.background='var(--g50)';"></textarea>
     </div>
 
@@ -1505,16 +1672,10 @@ input, textarea, select, button { font-family: var(--font); }
       <button class="btn btn-o btn-sm" onclick="openEditTrip()">✏️ Edit</button>
       <button class="btn btn-p" style="flex:1;" onclick="openReport()">📄 <span data-t="openReport">Report PDF</span></button>
     </div>
-    <button onclick="sendTripToTelegram(curTrip)"
-      style="width:100%;margin-top:6px;padding:10px;border:1.5px solid #0088CC;border-radius:var(--rs);
-             background:#E3F2FD;color:#0066AA;font-family:var(--font);font-size:13px;font-weight:700;
-             cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+    <button onclick="sendTripToTelegram(curTrip)" class="btn-trip-telegram">
       ✈️ Send Trip to Telegram
     </button>
-    <button onclick="generateTAPdf(curTrip)"
-      style="width:100%;margin-top:6px;padding:10px;border:1.5px solid #D97706;border-radius:var(--rs);
-             background:#FFFBEB;color:#92400E;font-family:var(--font);font-size:13px;font-weight:700;
-             cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+    <button onclick="generateTAPdf(curTrip)" class="btn-trip-ta">
       📋 Generate TA PDF
     </button>
   </div>
@@ -1529,7 +1690,7 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="tb-action" onclick="openAddInspectionItem()" title="Add">＋</button>
   </div>
   <!-- Type filter tabs -->
-  <div style="background:#fff;padding:6px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
+  <div style="background:var(--surface);padding:6px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
     <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px;">
       <button class="tf-btn active" id="insp-tab-all"      onclick="setInspTab('all')">All</button>
       <button class="tf-btn"        id="insp-tab-check"    onclick="setInspTab('check')">☑ Checklist</button>
@@ -1540,7 +1701,7 @@ input, textarea, select, button { font-family: var(--font); }
     <div style="display:flex;gap:6px;padding-bottom:6px;align-items:center;">
       <input type="date" id="insp-date-filter" class="fi" style="flex:1;height:32px;font-size:12px;" oninput="renderInspectionScreen()">
       <button onclick="document.getElementById('insp-date-filter').value='';renderInspectionScreen()"
-        style="height:32px;padding:0 10px;border:1px solid var(--n200);border-radius:var(--rs);background:#fff;font-size:11px;color:var(--n500);cursor:pointer;font-family:var(--font);">All dates</button>
+        style="height:32px;padding:0 10px;border:1px solid var(--n200);border-radius:var(--rs);background:var(--surface);font-size:11px;color:var(--n500);cursor:pointer;font-family:var(--font);">All dates</button>
     </div>
     <div id="insp-summary-bar" style="font-size:11px;color:var(--n400);padding:0 2px 6px;"></div>
   </div>
@@ -1793,7 +1954,7 @@ input, textarea, select, button { font-family: var(--font); }
     <div class="tb-title">📚 Inspection Library</div>
     <button class="tb-action" onclick="openAddLibraryItem()" title="Add">＋</button>
   </div>
-  <div style="background:#fff;padding:6px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
+  <div style="background:var(--surface);padding:6px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
     <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px;">
       <button class="tf-btn active" id="lib-tab-checklist"  onclick="setLibTab('checklist')">☑ Checklists</button>
       <button class="tf-btn"        id="lib-tab-readings"   onclick="setLibTab('readings')">📊 Readings</button>
@@ -1909,13 +2070,13 @@ input, textarea, select, button { font-family: var(--font); }
 <!-- ═══════════════ REMINDERS SCREEN ═══════════════ -->
 <div id="screen-reminders" class="screen">
   <div class="topbar">
-    <button class="tb-back" onclick="showScreen('leave')">←</button>
+    <button class="tb-back" onclick="showScreen(window._prevScreen||'leave')">←</button>
     <div><div class="tb-title">🔔 Reminders</div>
     <div class="tb-sub">Recurring events</div></div>
     <button class="tb-action" onclick="openAddReminder()">＋</button>
   </div>
   <!-- Filter tabs -->
-  <div style="background:#fff;padding:6px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
+  <div style="background:var(--surface);padding:6px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
     <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px;">
       <button class="tf-btn active" id="rem-tab-all"   onclick="setReminderTab('all')">All</button>
       <button class="tf-btn"        id="rem-tab-daily"  onclick="setReminderTab('daily')">Daily</button>
@@ -2043,7 +2204,7 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="tb-back" onclick="showScreen('trip-detail')">←</button>
     <div><div class="tb-title" id="report-plant-name">Report</div><div class="tb-sub" id="report-date"></div></div>
   </div>
-  <div style="background:#fff;padding:10px 14px 6px;flex-shrink:0;border-bottom:1px solid var(--g200);">
+  <div style="background:var(--surface);padding:10px 14px 6px;flex-shrink:0;border-bottom:1px solid var(--g200);">
     <div class="stabs" id="step-tabs">
       <button class="stab active" onclick="gotoStep(0)" data-t="tab1">1 Checklist</button>
       <button class="stab" onclick="gotoStep(1)" data-t="tab2">2 Readings</button>
@@ -2242,7 +2403,7 @@ input, textarea, select, button { font-family: var(--font); }
       <button class="tb-action" onclick="openNewTaskModal()">＋</button>
     </div>
   </div>
-  <div style="background:#fff;padding:8px 12px 0;flex-shrink:0;border-bottom:1px solid var(--g200);">
+  <div style="background:var(--surface);padding:8px 12px 0;flex-shrink:0;border-bottom:1px solid var(--g200);">
     <!-- Category tabs -->
     <div class="cat-tabs" id="cat-tabs">
       <button class="cat-tab active" onclick="setTaskCat('all')">All</button>
@@ -2304,26 +2465,31 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 
   <!-- Top View Switcher (IMP-31, IMP-32) -->
-  <div style="background:#fff;padding:8px 12px 6px;border-bottom:1px solid var(--n150);display:flex;gap:6px;flex-shrink:0;">
+  <div style="background:var(--surface);padding:8px 12px 6px;border-bottom:1px solid var(--n150);display:flex;gap:6px;flex-shrink:0;">
     <button type="button" class="btn btn-sm btn-p" id="view-tab-bills" onclick="switchBillsView('bills')" style="flex:1;font-size:11px;font-weight:700;padding:6px 4px;border-radius:var(--rs);white-space:nowrap;">🧾 Expense Bills</button>
     <button type="button" class="btn btn-sm btn-o" id="view-tab-claims" onclick="switchBillsView('claims')" style="flex:1;font-size:11px;font-weight:700;padding:6px 4px;border-radius:var(--rs);white-space:nowrap;">✈️ Trip Claims</button>
     <button type="button" class="btn btn-sm btn-o" id="view-tab-card" onclick="switchBillsView('card')" style="flex:1;font-size:11px;font-weight:700;padding:6px 4px;border-radius:var(--rs);white-space:nowrap;">💳 Credit Card</button>
   </div>
 
   <!-- Filter bar for Expense Bills -->
-  <div id="bills-filter-bar" style="background:#fff;padding:8px 12px 0;flex-shrink:0;border-bottom:1px solid var(--n150);">
+  <div id="bills-filter-bar" style="background:var(--surface);padding:6px 12px 2px;flex-shrink:0;border-bottom:1px solid var(--n150);">
     <!-- View tabs -->
-    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px;">
+    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px;">
       <button class="tf-btn active" id="bf-all"   onclick="setBillFilter('all')">All</button>
       <button class="tf-btn"        id="bf-trip"  onclick="setBillFilter('trip')">By Trip</button>
       <button class="tf-btn"        id="bf-month" onclick="setBillFilter('month')">By Month</button>
     </div>
     <!-- Payment method tabs (IMP-07) -->
-    <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px;">
+    <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px;">
       <button class="tf-btn active" id="bpf-all"  onclick="setBillPaymentFilter('all')"  style="font-size:11px;padding:3px 9px;">All PM</button>
       <button class="tf-btn"        id="bpf-cash" onclick="setBillPaymentFilter('cash')" style="font-size:11px;padding:3px 9px;">💵 Cash</button>
       <button class="tf-btn"        id="bpf-bank" onclick="setBillPaymentFilter('bank')" style="font-size:11px;padding:3px 9px;">🏦 Bank</button>
       <button class="tf-btn"        id="bpf-card" onclick="setBillPaymentFilter('card')" style="font-size:11px;padding:3px 9px;">💳 Card</button>
+    </div>
+    <!-- Search bills input (UX-02) -->
+    <div style="position:relative;padding-bottom:6px;">
+      <span style="position:absolute;left:9px;top:43%;transform:translateY(-50%);font-size:12px;pointer-events:none;color:var(--g400);">🔍</span>
+      <input type="search" class="fi" id="bill-search" placeholder="Search bill detail, receipt #, notes..." style="padding-left:28px;height:33px;font-size:12px;" oninput="renderBillsScreen()">
     </div>
     <!-- Trip selector (shown for 'trip' view) -->
     <div id="bf-trip-selector" style="display:none;padding-bottom:8px;">
@@ -2347,7 +2513,7 @@ input, textarea, select, button { font-family: var(--font); }
   <!-- TRIP CLAIMS VIEW (IMP-31) -->
   <div id="claims-view-container" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
     <!-- Filter Bar -->
-    <div style="background:#fff;padding:8px 12px 6px;flex-shrink:0;border-bottom:1px solid var(--n150);">
+    <div style="background:var(--surface);padding:8px 12px 6px;flex-shrink:0;border-bottom:1px solid var(--n150);">
       <!-- Year & Month Selectors -->
       <div style="display:flex;gap:6px;margin-bottom:6px;">
         <select class="fsel" id="tc-year-select" style="width:105px;font-size:12px;height:34px;font-weight:600;" onchange="renderTripClaimsScreen()">
@@ -2367,14 +2533,14 @@ input, textarea, select, button { font-family: var(--font); }
     <!-- Scrollable Body with Summary Strip & Accordion Rows -->
     <div class="sb" style="flex:1;overflow-y:auto;padding:10px 12px 24px;">
       <!-- Summary Strip -->
-      <div id="tc-summary-strip" style="background:#fff;border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;box-shadow:var(--sh);">
+      <div id="tc-summary-strip" style="background:var(--surface);border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;box-shadow:var(--sh);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
           <span style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.05em;" id="tc-count-label">TRIP CLAIMS</span>
           <span style="font-size:15px;font-weight:800;color:var(--brand-dark);" id="tc-grand-total">0 ₫</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--n600);border-top:1px dashed var(--n200);padding-top:4px;margin-top:4px;">
-          <span>Received: <strong style="color:#166534;" id="tc-received-total">0 ₫</strong></span>
-          <span>Pending: <strong style="color:#92400E;" id="tc-pending-total">0 ₫</strong></span>
+          <span>Received: <strong style="color:var(--green);" id="tc-received-total">0 ₫</strong></span>
+          <span>Pending: <strong style="color:var(--amber);" id="tc-pending-total">0 ₫</strong></span>
         </div>
         <button type="button" class="btn btn-sm btn-p" onclick="syncAllTripClaims()" id="btn-sync-all-claims" style="font-size:11px;padding:6px 12px;margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;">☁️ Sync All Trip Claims to Google Sheet</button>
       </div>
@@ -2387,7 +2553,7 @@ input, textarea, select, button { font-family: var(--font); }
   <!-- CREDIT CARD TRACKER VIEW (IMP-32) -->
   <div id="card-view-container" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
     <!-- Filter Bar (Year & Month) -->
-    <div style="background:#fff;padding:8px 12px 6px;flex-shrink:0;border-bottom:1px solid var(--n150);">
+    <div style="background:var(--surface);padding:8px 12px 6px;flex-shrink:0;border-bottom:1px solid var(--n150);">
       <div style="display:flex;gap:6px;">
         <select class="fsel" id="cc-year-select" style="width:105px;font-size:12px;height:34px;font-weight:600;" onchange="renderCreditCardScreen()">
         </select>
@@ -2430,7 +2596,7 @@ input, textarea, select, button { font-family: var(--font); }
       </div>
 
       <!-- Monthly Summary Strip -->
-      <div style="background:#fff;border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;box-shadow:var(--sh);">
+      <div style="background:var(--surface);border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;box-shadow:var(--sh);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <span style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.04em;" id="cc-month-label">MONTHLY ACTIVITY</span>
           <span style="font-size:11px;color:var(--n500);" id="cc-month-bill-count">0 bills</span>
@@ -2438,11 +2604,11 @@ input, textarea, select, button { font-family: var(--font); }
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px;">
           <div style="background:var(--n50);border-radius:6px;padding:7px 9px;">
             <div style="font-size:10px;color:var(--n500);">🔴 Spent via Card</div>
-            <div style="font-size:13px;font-weight:700;color:#DC2626;margin-top:2px;" id="cc-month-spent">0 ₫</div>
+            <div style="font-size:13px;font-weight:700;color:var(--red);margin-top:2px;" id="cc-month-spent">0 ₫</div>
           </div>
           <div style="background:var(--n50);border-radius:6px;padding:7px 9px;">
             <div style="font-size:10px;color:var(--n500);">🟢 Transferred Back</div>
-            <div style="font-size:13px;font-weight:700;color:#166534;margin-top:2px;" id="cc-month-reimbursed">0 ₫</div>
+            <div style="font-size:13px;font-weight:700;color:var(--green);margin-top:2px;" id="cc-month-reimbursed">0 ₫</div>
           </div>
         </div>
       </div>
@@ -2452,6 +2618,14 @@ input, textarea, select, button { font-family: var(--font); }
         <button type="button" class="tf-btn active" id="cc-tab-trip-bills" onclick="switchCreditCardSubTab('trip-bills')" style="flex:1;font-size:11px;padding:6px 4px;text-align:center;white-space:nowrap;">✈️ Trip Card Bills (<span id="cc-trip-bills-badge">0</span>)</button>
         <button type="button" class="tf-btn" id="cc-tab-bills" onclick="switchCreditCardSubTab('bills')" style="flex:1;font-size:11px;padding:6px 4px;text-align:center;white-space:nowrap;">🧾 Card Bills (<span id="cc-bills-badge">0</span>)</button>
         <button type="button" class="tf-btn" id="cc-tab-transfers" onclick="switchCreditCardSubTab('transfers')" style="flex:1;font-size:11px;padding:6px 4px;text-align:center;white-space:nowrap;">🏦 Transfer History (<span id="cc-transfers-badge">0</span>)</button>
+      </div>
+
+      <!-- Trip Card Status Filter Chips (UX-02) -->
+      <div id="cc-trip-filter-bar" class="trip-card-chips">
+        <button type="button" class="trip-card-chip active" id="cc-tf-all" onclick="setTripCardStatusFilter('all')">All</button>
+        <button type="button" class="trip-card-chip" id="cc-tf-unsettled" onclick="setTripCardStatusFilter('unsettled')">🔴 Unsettled</button>
+        <button type="button" class="trip-card-chip" id="cc-tf-partial" onclick="setTripCardStatusFilter('partial')">🟡 Partial</button>
+        <button type="button" class="trip-card-chip" id="cc-tf-settled" onclick="setTripCardStatusFilter('settled')">🟢 Settled</button>
       </div>
 
       <!-- Trip Card Bills Grouped List -->
@@ -2681,9 +2855,14 @@ input, textarea, select, button { font-family: var(--font); }
         <div class="sin"><div class="sil">Equipment &amp; Asset Passports</div><div class="sis">Machine registry, tags, specs &amp; service timelines</div></div>
         <div style="color:var(--g400);">›</div>
       </div>
-      <div class="si" onclick="openScratchpadManagerModal()" style="border-bottom:none;">
+      <div class="si" onclick="openScratchpadManagerModal()">
         <div class="sic" style="background:var(--al);color:#92400E;">📝</div>
         <div class="sin"><div class="sil">Field Scratchpad Notes</div><div class="sis">Manage quick notes, nameplates &amp; photos</div></div>
+        <div style="color:var(--g400);">›</div>
+      </div>
+      <div class="si" onclick="showScreen('reminders')" style="border-bottom:none;">
+        <div class="sic" style="background:#FCE7F3;color:#BE185D;">🔔</div>
+        <div class="sin"><div class="sil">Recurring Reminders</div><div class="sis">Daily, weekly &amp; monthly site checklists</div></div>
         <div style="color:var(--g400);">›</div>
       </div>
     </div>
@@ -2705,7 +2884,51 @@ input, textarea, select, button { font-family: var(--font); }
         <div style="color:var(--g400);">›</div>
       </div>
     </div>
-    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--g400);">PlantLog v4.0 · PWA Ready</div>
+    <div id="settings-about-card" class="about-card">
+      <div class="about-header">
+        <img src="./icon-192.png" alt="PlantLog" class="about-logo" onerror="this.style.display='none'">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:14px;font-weight:800;color:var(--n900);">VCS PlantLog Pro</span>
+            <span class="about-badge" id="about-app-version">v4.14</span>
+          </div>
+          <div style="font-size:11px;color:var(--n500);margin-top:1px;">Field Visit &amp; Service Operations PWA</div>
+          <div class="about-badges">
+            <span class="about-badge offline" id="about-sw-badge">PWA Ready</span>
+            <span class="about-badge sec" id="about-sec-badge">Local Only</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-stats-grid">
+        <div><div class="about-stat-num" id="about-cnt-trips">0</div><div class="about-stat-lbl">Trips</div></div>
+        <div><div class="about-stat-num" id="about-cnt-tasks">0</div><div class="about-stat-lbl">Tasks</div></div>
+        <div><div class="about-stat-num" id="about-cnt-bills">0</div><div class="about-stat-lbl">Bills</div></div>
+        <div><div class="about-stat-num" id="about-cnt-assets">0</div><div class="about-stat-lbl">Assets</div></div>
+        <div><div class="about-stat-num" id="about-cnt-notes">0</div><div class="about-stat-lbl">Notes</div></div>
+      </div>
+
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;">
+          <span style="font-weight:700;color:var(--n700);">💾 Offline Storage Usage</span>
+          <span style="font-family:var(--mono);font-size:10.5px;color:var(--n600);" id="about-storage-text">0.00 MB / 5.00 MB (0%)</span>
+        </div>
+        <div class="storage-bar-track">
+          <div class="storage-bar-fill" id="about-storage-bar" style="width:2%;"></div>
+        </div>
+      </div>
+
+      <div class="about-meta-list">
+        <div class="about-meta-row"><span>Developer / Org</span><span>VCS Automation · Field Service</span></div>
+        <div class="about-meta-row"><span>Cloud Backend</span><span id="about-gs-status">Offline / Local</span></div>
+        <div class="about-meta-row"><span>Last Cloud Sync</span><span id="about-last-sync">Not synced yet</span></div>
+        <div class="about-meta-row"><span>PDF Engine</span><span id="about-pdf-mode">Offline Vendor Loaded ✓</span></div>
+      </div>
+
+      <button type="button" class="btn btn-sm btn-o btn-full" onclick="openAboutModal()" style="margin-top:10px;font-size:11.5px;font-weight:700;">
+        ℹ️ Release Info &amp; Tech Stack
+      </button>
+    </div>
   </div>
   <div class="bnav">
     <button class="nb" onclick="showScreen('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span data-t="home">Home</span></button>
@@ -2744,31 +2967,31 @@ input, textarea, select, button { font-family: var(--font); }
 
         <label class="fl">Bar</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="press-bar" class="calc-input" placeholder="0.0" oninput="onPressureInput('bar')">
+          <input type="number" step="any" inputmode="decimal" id="press-bar" class="calc-input" placeholder="0.0" oninput="onPressureInput('bar')">
           <div class="calc-unit-addon">bar</div>
         </div>
 
         <label class="fl">PSI (Pounds per Square Inch)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="press-psi" class="calc-input" placeholder="0.0" oninput="onPressureInput('psi')">
+          <input type="number" step="any" inputmode="decimal" id="press-psi" class="calc-input" placeholder="0.0" oninput="onPressureInput('psi')">
           <div class="calc-unit-addon">psi</div>
         </div>
 
         <label class="fl">Kilopascal (kPa)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="press-kpa" class="calc-input" placeholder="0.0" oninput="onPressureInput('kpa')">
+          <input type="number" step="any" inputmode="decimal" id="press-kpa" class="calc-input" placeholder="0.0" oninput="onPressureInput('kpa')">
           <div class="calc-unit-addon">kPa</div>
         </div>
 
         <label class="fl">Megapascal (MPa)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="press-mpa" class="calc-input" placeholder="0.0" oninput="onPressureInput('mpa')">
+          <input type="number" step="any" inputmode="decimal" id="press-mpa" class="calc-input" placeholder="0.0" oninput="onPressureInput('mpa')">
           <div class="calc-unit-addon">MPa</div>
         </div>
 
         <label class="fl">kg/cm² (Technical Atmosphere at)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="press-kgcm2" class="calc-input" placeholder="0.0" oninput="onPressureInput('kgcm2')">
+          <input type="number" step="any" inputmode="decimal" id="press-kgcm2" class="calc-input" placeholder="0.0" oninput="onPressureInput('kgcm2')">
           <div class="calc-unit-addon">kg/cm²</div>
         </div>
       </div>
@@ -2781,17 +3004,17 @@ input, textarea, select, button { font-family: var(--font); }
         <div style="font-size:12px;font-weight:700;color:var(--n800);margin-bottom:10px;">Temperature Converter</div>
         <label class="fl">Celsius (°C)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="temp-c" class="calc-input" placeholder="0.0" oninput="onTempInput('c')">
+          <input type="number" step="any" inputmode="decimal" id="temp-c" class="calc-input" placeholder="0.0" oninput="onTempInput('c')">
           <div class="calc-unit-addon">°C</div>
         </div>
         <label class="fl">Fahrenheit (°F)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="temp-f" class="calc-input" placeholder="32.0" oninput="onTempInput('f')">
+          <input type="number" step="any" inputmode="decimal" id="temp-f" class="calc-input" placeholder="32.0" oninput="onTempInput('f')">
           <div class="calc-unit-addon">°F</div>
         </div>
         <label class="fl">Kelvin (K)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="temp-k" class="calc-input" placeholder="273.15" oninput="onTempInput('k')">
+          <input type="number" step="any" inputmode="decimal" id="temp-k" class="calc-input" placeholder="273.15" oninput="onTempInput('k')">
           <div class="calc-unit-addon">K</div>
         </div>
       </div>
@@ -2801,17 +3024,17 @@ input, textarea, select, button { font-family: var(--font); }
         <div style="font-size:12px;font-weight:700;color:var(--n800);margin-bottom:10px;">Volumetric Flow Rate</div>
         <label class="fl">Cubic Meters per Hour (m³/h)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="flow-m3h" class="calc-input" placeholder="0.0" oninput="onFlowInput('m3h')">
+          <input type="number" step="any" inputmode="decimal" id="flow-m3h" class="calc-input" placeholder="0.0" oninput="onFlowInput('m3h')">
           <div class="calc-unit-addon">m³/h</div>
         </div>
         <label class="fl">Liters per Minute (L/min)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="flow-lmin" class="calc-input" placeholder="0.0" oninput="onFlowInput('lmin')">
+          <input type="number" step="any" inputmode="decimal" id="flow-lmin" class="calc-input" placeholder="0.0" oninput="onFlowInput('lmin')">
           <div class="calc-unit-addon">L/min</div>
         </div>
         <label class="fl">US Gallons per Minute (GPM)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="flow-gpm" class="calc-input" placeholder="0.0" oninput="onFlowInput('gpm')">
+          <input type="number" step="any" inputmode="decimal" id="flow-gpm" class="calc-input" placeholder="0.0" oninput="onFlowInput('gpm')">
           <div class="calc-unit-addon">GPM</div>
         </div>
       </div>
@@ -2830,25 +3053,25 @@ input, textarea, select, button { font-family: var(--font); }
           </div>
         </div>
         <div class="calc-input-group">
-          <input type="number" step="any" id="motor-kw" class="calc-input" placeholder="e.g. 37" oninput="calc3PhaseMotor()">
+          <input type="number" step="any" inputmode="decimal" id="motor-kw" class="calc-input" placeholder="e.g. 37" oninput="calc3PhaseMotor()">
           <div class="calc-unit-addon" id="motor-unit-addon">kW</div>
         </div>
 
         <label class="fl">Line Voltage (V)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="motor-volt" class="calc-input" value="380" oninput="calc3PhaseMotor()">
+          <input type="number" step="any" inputmode="decimal" id="motor-volt" class="calc-input" value="380" oninput="calc3PhaseMotor()">
           <div class="calc-unit-addon">V</div>
         </div>
 
         <label class="fl">Power Factor (cos φ)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="motor-pf" class="calc-input" value="0.85" oninput="calc3PhaseMotor()">
+          <input type="number" step="any" inputmode="decimal" id="motor-pf" class="calc-input" value="0.85" oninput="calc3PhaseMotor()">
           <div class="calc-unit-addon">PF</div>
         </div>
 
         <label class="fl">Efficiency (η)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="motor-eff" class="calc-input" value="0.90" oninput="calc3PhaseMotor()">
+          <input type="number" step="any" inputmode="decimal" id="motor-eff" class="calc-input" value="0.90" oninput="calc3PhaseMotor()">
           <div class="calc-unit-addon">eff</div>
         </div>
 
@@ -2882,29 +3105,29 @@ input, textarea, select, button { font-family: var(--font); }
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
           <div>
             <label class="fl">Process Min (0%)</label>
-            <input type="number" step="any" id="sig-min" class="fi" value="0" oninput="onSignalInput('ma')">
+            <input type="number" step="any" inputmode="decimal" id="sig-min" class="fi" value="0" oninput="onSignalInput('ma')">
           </div>
           <div>
             <label class="fl">Process Max (100%)</label>
-            <input type="number" step="any" id="sig-max" class="fi" value="100" oninput="onSignalInput('ma')">
+            <input type="number" step="any" inputmode="decimal" id="sig-max" class="fi" value="100" oninput="onSignalInput('ma')">
           </div>
         </div>
 
         <label class="fl">Current Loop (mA)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="sig-ma" class="calc-input" placeholder="4.00 to 20.00" oninput="onSignalInput('ma')">
+          <input type="number" step="any" inputmode="decimal" id="sig-ma" class="calc-input" placeholder="4.00 to 20.00" oninput="onSignalInput('ma')">
           <div class="calc-unit-addon">mA</div>
         </div>
 
         <label class="fl">Percentage (%)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="sig-pct" class="calc-input" placeholder="0 to 100" oninput="onSignalInput('pct')">
+          <input type="number" step="any" inputmode="decimal" id="sig-pct" class="calc-input" placeholder="0 to 100" oninput="onSignalInput('pct')">
           <div class="calc-unit-addon">%</div>
         </div>
 
         <label class="fl">Engineering Process Value (PV)</label>
         <div class="calc-input-group">
-          <input type="number" step="any" id="sig-pv" class="calc-input" placeholder="Engineering Unit" oninput="onSignalInput('pv')">
+          <input type="number" step="any" inputmode="decimal" id="sig-pv" class="calc-input" placeholder="Engineering Unit" oninput="onSignalInput('pv')">
           <div class="calc-unit-addon">PV</div>
         </div>
       </div>
@@ -2931,7 +3154,7 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="tb-action" onclick="openAddAssetModal()">＋</button>
   </div>
 
-  <div style="background:#fff;padding:8px 12px;border-bottom:1px solid var(--g200);flex-shrink:0;">
+  <div style="background:var(--surface);padding:8px 12px;border-bottom:1px solid var(--g200);flex-shrink:0;">
     <div style="position:relative;">
       <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;color:var(--g400);">🔍</span>
       <input id="asset-search-input" class="fi" placeholder="Search Tag, name, model, plant…"
@@ -3328,7 +3551,7 @@ input, textarea, select, button { font-family: var(--font); }
     <label class="fl">Reading type</label>
     <div style="display:flex;gap:8px;">
       <button id="rd-type-cond" onclick="setReadingType('condition')" style="flex:1;padding:9px;border-radius:var(--rs);border:1.5px solid var(--green);background:var(--gl);color:var(--gd);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;">🔍 Condition</button>
-      <button id="rd-type-meas" onclick="setReadingType('measurement')" style="flex:1;padding:9px;border-radius:var(--rs);border:1.5px solid var(--g300);background:#fff;color:var(--g600);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;">📏 Measurement</button>
+      <button id="rd-type-meas" onclick="setReadingType('measurement')" style="flex:1;padding:9px;border-radius:var(--rs);border:1.5px solid var(--g300);background:var(--surface);color:var(--g600);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;">📏 Measurement</button>
     </div>
   </div>
   <div class="fg"><label class="fl">Equipment name *</label><input class="fi" id="rd-name" placeholder="e.g. Pump P-101"></div>
@@ -3438,7 +3661,7 @@ input, textarea, select, button { font-family: var(--font); }
   <div class="frow">
     <div class="fg">
       <label class="fl">Amount *</label>
-      <input class="fi" type="number" id="bill-amount" placeholder="0.00" step="0.01" oninput="updateVNDHint()">
+      <input class="fi" type="number" inputmode="decimal" id="bill-amount" placeholder="0.00" step="0.01" oninput="updateVNDHint()">
     </div>
     <div class="fg">
       <label class="fl">Currency</label>
@@ -3455,7 +3678,7 @@ input, textarea, select, button { font-family: var(--font); }
   <div id="bill-vnd-row" class="fg" style="display:none;">
     <label class="fl">VND equivalent <span style="font-weight:400;color:var(--g400);">(from credit card)</span></label>
     <div style="display:flex;align-items:center;gap:8px;">
-      <input class="fi" type="number" id="bill-vnd" placeholder="Enter VND amount from bank" step="1" style="flex:1;">
+      <input class="fi" type="number" inputmode="numeric" id="bill-vnd" placeholder="Enter VND amount from bank" step="1" style="flex:1;">
       <div style="font-size:12px;font-weight:600;color:var(--g500);white-space:nowrap;">₫ VND</div>
     </div>
     <div id="bill-vnd-hint" style="font-size:11px;color:var(--g400);margin-top:3px;"></div>
@@ -3623,14 +3846,14 @@ input, textarea, select, button { font-family: var(--font); }
         <span style="font-size:11px;color:var(--gd);opacity:0.7;">Take a new photo</span>
       </button>
       <button id="photo-btn-gallery" onclick="pickPhotoSource('gallery')"
-        style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;border:2px solid var(--g200);border-radius:var(--r);background:#fff;cursor:pointer;font-family:var(--font);transition:all 0.15s;">
+        style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;border:2px solid var(--g200);border-radius:var(--r);background:var(--surface);cursor:pointer;font-family:var(--font);transition:all 0.15s;">
         <span style="font-size:32px;">🖼️</span>
         <span style="font-size:13px;font-weight:700;color:var(--g700);">Gallery</span>
         <span style="font-size:11px;color:var(--g500);">Choose existing photo</span>
       </button>
     </div>
     <button onclick="closeModal('photo-source-sheet')"
-      style="width:100%;padding:11px;border:1.5px solid var(--g200);border-radius:var(--rs);background:#fff;font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;color:var(--g600);">Cancel</button>
+      style="width:100%;padding:11px;border:1.5px solid var(--g200);border-radius:var(--rs);background:var(--surface);font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;color:var(--g600);">Cancel</button>
   </div>
 </div>
 
@@ -4064,7 +4287,7 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 
   <!-- 4 Date Fields with Today helper buttons -->
-  <div style="background:#fff;border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;">
+  <div style="background:var(--surface);border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;">
     <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.05em;margin-bottom:8px;">PAYMENT TIMELINE DATES</div>
     
     <div class="fg" style="margin-bottom:8px;">
@@ -4128,7 +4351,7 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
   <div class="fg" style="margin-bottom:12px;">
     <label class="fl">Credit Card Limit / Budget (VND) *</label>
-    <input type="number" class="fi" id="cc-input-budget" placeholder="50000000" style="font-size:15px;font-weight:700;height:40px;" oninput="updateCardBudgetHint()">
+    <input type="number" inputmode="numeric" class="fi" id="cc-input-budget" placeholder="50000000" style="font-size:15px;font-weight:700;height:40px;" oninput="updateCardBudgetHint()">
     <div style="font-size:11px;color:var(--n500);margin-top:4px;" id="cc-input-budget-hint"></div>
   </div>
   <div class="brow">
@@ -4150,7 +4373,7 @@ input, textarea, select, button { font-family: var(--font); }
   <input type="hidden" id="cc-transfer-id" value="">
   <div class="fg" style="margin-bottom:8px;">
     <label class="fl">Amount Received from Company (VND) *</label>
-    <input type="number" class="fi" id="cc-transfer-amount" placeholder="e.g. 15000000" style="font-size:15px;font-weight:700;height:40px;" oninput="updateCardTransferHint()">
+    <input type="number" inputmode="numeric" class="fi" id="cc-transfer-amount" placeholder="e.g. 15000000" style="font-size:15px;font-weight:700;height:40px;" oninput="updateCardTransferHint()">
     <div style="font-size:11px;color:var(--n500);margin-top:4px;" id="cc-transfer-amount-hint"></div>
   </div>
   <div class="fg" style="margin-bottom:8px;">
@@ -4174,6 +4397,39 @@ input, textarea, select, button { font-family: var(--font); }
     <button type="button" class="btn btn-o" onclick="closeModal('modal-card-transfer')">Cancel</button>
     <button type="button" class="btn btn-p" style="flex:1;" onclick="saveTransferBack()">💾 Update Credit Card</button>
   </div>
+</div></div>
+
+<!-- MODAL: ABOUT APP & RELEASE INFO (UX-06) -->
+<div id="modal-about-app" class="mo"><div class="modal">
+  <div class="mh"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="./icon-192.png" alt="PlantLog" style="width:36px;height:36px;border-radius:9px;border:1px solid var(--n200);" onerror="this.style.display='none'">
+      <div>
+        <div class="mt" style="margin-bottom:0;">VCS PlantLog Pro</div>
+        <div style="font-size:11px;color:var(--n500);">Release <strong id="about-modal-version">v4.14</strong> · PWA Field Platform</div>
+      </div>
+    </div>
+    <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-about-app')" style="font-size:12px;padding:3px 8px;">✕</button>
+  </div>
+
+  <div style="background:var(--n50);border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.55;color:var(--n700);">
+    <div style="font-weight:700;color:var(--n900);margin-bottom:4px;">🆕 Highlights in v4.14 (Wave 1 + Security Hardening)</div>
+    <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:3px;">
+      <li><strong>Offline PDF Engine:</strong> Bundled local jsPDF + auto ASCII/Vietnamese normalizer (<code>pdfSafeText</code>) with emoji cleanup.</li>
+      <li><strong>Home Finance &amp; Quick Sync:</strong> 1-tap Cloud Sync button &amp; live Credit Card / Pending Claims cards on Home.</li>
+      <li><strong>Bills Search &amp; Card Status Filters:</strong> Instant receipt search &amp; <code>Unsettled / Partial / Settled</code> Trip Card chips.</li>
+      <li><strong>Full Dark Mode &amp; Mobile Keypad:</strong> Adaptive surface contrast &amp; <code>inputmode</code> numeric keypads.</li>
+      <li><strong>Zero-Secret Cloud Architecture:</strong> Protected via <code>API_SECRET</code> headerless auth, Drive &amp; Telegram GAS proxy.</li>
+    </ul>
+  </div>
+
+  <div style="font-size:11px;color:var(--n500);line-height:1.5;margin-bottom:12px;">
+    <div><strong>Tech Stack:</strong> Vanilla HTML5 PWA · Service Worker Offline Cache · Google Sheets &amp; Apps Script Backend · LocalStorage State</div>
+    <div><strong>License:</strong> Internal Field Service Edition (MIT Base)</div>
+  </div>
+
+  <button type="button" class="btn btn-p btn-full" onclick="closeModal('modal-about-app')">Got it ✓</button>
 </div></div>
 
 <div id="toast" class="toast"></div>
@@ -4930,6 +5186,7 @@ function showScreen(n){
   if(n==='toolbox') { if(typeof switchToolboxTab==='function') switchToolboxTab(curToolboxTab||'pressure'); }
   if(n==='assets') { if(typeof renderAssetList==='function') renderAssetList(); }
   if(n==='bill-export')buildBillPDFPreview();
+  if(n==='settings') { if(typeof renderSettingsAbout==='function') renderSettingsAbout(); }
 }
 
 // ── Unified Bottom Nav synchronization (IMP-10) ──
@@ -5084,6 +5341,7 @@ function loadProfile(){
   document.getElementById('pref-company').value=S.profile.company||'';
   document.getElementById('pref-empid').value=S.profile.empid||'';
   updateProfileDisplay();
+  if(typeof renderSettingsAbout==='function') renderSettingsAbout();
 }
 function saveProfile(){
   S.profile.name=document.getElementById('pref-name').value;
@@ -5552,6 +5810,147 @@ function applyVoiceResultToInput() {
   if (typeof showToast === 'function') showToast('🎙️ English notes inserted & saved! ✓');
 }
 
+// ── App Version, PDF Text Normalizer & Settings About (IMP-34) ──
+const APP_VERSION = 'v4.14';
+
+function pdfSafeText(v) {
+  if (v === null || v === undefined) return '';
+  const raw = String(v);
+  const leadMatch = raw.match(/^[ ]*/);
+  const lead = leadMatch ? leadMatch[0] : '';
+  let s = raw.slice(lead.length);
+  s = s.replace(/[Đ]/g, 'D').replace(/[đ]/g, 'd');
+  if (typeof s.normalize === 'function') {
+    s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+  s = s.replace(/[→➔➜]/g, '->')
+       .replace(/[←]/g, '<-')
+       .replace(/[—–]/g, '-')
+       .replace(/[‘’]/g, "'")
+       .replace(/[“”]/g, '"')
+       .replace(/[•·]/g, '-')
+       .replace(/[…]/g, '...')
+       .replace(/[✓✔]/g, 'OK')
+       .replace(/[✗✘✕]/g, 'X');
+  // Strip emojis, pictographs & unsupported glyphs while preserving ASCII + degree sign (°)
+  s = s.replace(/[^\x09\x0A\x0D\x20-\x7E\xB0]+ ?/g, '');
+  s = s.replace(/ +\n/g, '\n').replace(/\s+$/, '');
+  if (!s) return '';
+  return lead + s;
+}
+
+function attachPdfTextNormalizer(doc) {
+  if (!doc || doc._pdfSafeWrapped) return doc;
+  doc._pdfSafeWrapped = true;
+  if (typeof doc.splitTextToSize === 'function') {
+    const origSplit = doc.splitTextToSize.bind(doc);
+    doc.splitTextToSize = function(text, maxWidth, options) {
+      const clean = Array.isArray(text) ? text.map(pdfSafeText) : pdfSafeText(text);
+      return origSplit(clean, maxWidth, options);
+    };
+  }
+  if (typeof doc.getTextWidth === 'function') {
+    const origWidth = doc.getTextWidth.bind(doc);
+    doc.getTextWidth = function(text) {
+      return origWidth(pdfSafeText(text));
+    };
+  }
+  if (typeof doc.text === 'function') {
+    const origText = doc.text.bind(doc);
+    doc.text = function(text, x, y, options, transform) {
+      const clean = Array.isArray(text) ? text.map(pdfSafeText) : pdfSafeText(text);
+      return origText(clean, x, y, options, transform);
+    };
+  }
+  return doc;
+}
+
+function renderSettingsAbout() {
+  const verEl = document.getElementById('about-app-version');
+  if (verEl) verEl.textContent = APP_VERSION;
+
+  const swEl = document.getElementById('about-sw-badge');
+  if (swEl) {
+    const hasCtrl = (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.controller);
+    const hasSW = (typeof navigator !== 'undefined' && 'serviceWorker' in navigator);
+    swEl.textContent = hasCtrl ? 'Offline Ready ✓' : (hasSW ? 'PWA Ready' : 'Web App');
+  }
+
+  const secEl = document.getElementById('about-sec-badge');
+  if (secEl) {
+    const hasKey = !!(S && S.gsApiKey && String(S.gsApiKey).trim());
+    const hasPin = (typeof hasPIN === 'function' && hasPIN());
+    secEl.textContent = hasKey ? 'API Key Protected ✓' : (hasPin ? 'PIN Protected ✓' : 'Local Only');
+  }
+
+  const counts = {
+    'about-cnt-trips': (S.trips || []).length,
+    'about-cnt-tasks': (S.tasks || []).length,
+    'about-cnt-bills': (S.bills || []).length,
+    'about-cnt-assets': (S.assets || []).length,
+    'about-cnt-notes': (S.quickSnaps || []).length
+  };
+  Object.entries(counts).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(val);
+  });
+
+  if (typeof getStorageUsage === 'function') {
+    const u = getStorageUsage();
+    const txtEl = document.getElementById('about-storage-text');
+    const barEl = document.getElementById('about-storage-bar');
+    if (txtEl) txtEl.textContent = `${u.usedMB} MB / 5.00 MB (${u.percent}%)`;
+    if (barEl) {
+      barEl.style.width = `${Math.min(100, Math.max(2, u.percent))}%`;
+      barEl.style.background = u.percent > 85 ? 'var(--red)' : (u.percent > 70 ? 'var(--amber)' : 'var(--green)');
+    }
+  }
+
+  const syncEl = document.getElementById('about-last-sync');
+  if (syncEl) {
+    syncEl.textContent = S.lastSync ? new Date(S.lastSync).toLocaleString() : 'Not synced yet';
+  }
+
+  const gsEl = document.getElementById('about-gs-status');
+  if (gsEl) {
+    gsEl.textContent = S.gsUrl ? (S.gsApiKey ? 'GAS Secured (Key OK)' : 'GAS Connected (No Key)') : 'Offline / Local';
+  }
+
+  const jsPdfEl = document.getElementById('about-pdf-mode');
+  if (jsPdfEl) {
+    jsPdfEl.textContent = typeof window.jspdf !== 'undefined' ? 'Offline Vendor Loaded ✓' : 'Waiting / Fallback';
+  }
+}
+
+function openAboutModal() {
+  const modalVerEl = document.getElementById('about-modal-version');
+  if (modalVerEl) modalVerEl.textContent = APP_VERSION;
+  renderSettingsAbout();
+  if (typeof openModal === 'function') openModal('modal-about-app');
+}
+
+async function quickSyncFromHome() {
+  if (!S.gsUrl) {
+    if (typeof showToast === 'function') showToast('Configure Cloud Sync URL in Settings first');
+    showScreen('settings');
+    return;
+  }
+  const btn = document.getElementById('home-sync-btn');
+  if (btn && btn.classList.contains('syncing')) return;
+  if (btn) { btn.classList.add('syncing'); btn.disabled = true; }
+  try {
+    if (typeof syncToSheets === 'function') {
+      await syncToSheets();
+    }
+  } catch(e) {
+    console.warn('[quickSyncFromHome] Error:', e);
+  } finally {
+    if (btn) { btn.classList.remove('syncing'); btn.disabled = false; }
+    if (typeof renderDash === 'function') renderDash();
+    renderSettingsAbout();
+  }
+}
+
 init();
 
 // ====== auth.js ======
@@ -5788,6 +6187,8 @@ function processModalPIN() {
           document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
           document.getElementById('screen-settings').classList.add('active');
           updatePINStatusLabel();
+          if (typeof updateBottomNav === 'function') updateBottomNav('settings');
+          if (typeof renderSettingsAbout === 'function') renderSettingsAbout();
           return;
         }
         modalPinBuffer = ''; modalPinStep = 'new'; updatePinDots('modal');
@@ -6503,7 +6904,7 @@ function selCalDay(key,d){
           </div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
             <span style="font-size:14px;">${statusIcon}</span>
-            <button onclick="setTaskStatus('${tk.id}','${nextStatus}');selCalDay('${key}',${d})" style="font-size:10px;padding:3px 8px;border-radius:12px;border:1px solid var(--g300);background:#fff;cursor:pointer;font-family:var(--font);color:var(--g600);">→</button>
+            <button onclick="setTaskStatus('${tk.id}','${nextStatus}');selCalDay('${key}',${d})" style="font-size:10px;padding:3px 8px;border-radius:12px;border:1px solid var(--g300);background:var(--surface);cursor:pointer;font-family:var(--font);color:var(--g600);">→</button>
           </div>
         </div>
       </div>`;
@@ -6555,7 +6956,7 @@ function renderDash(){
   document.getElementById('stat-tasks').textContent=allTodayWork.length;
 
   if(!allTodayWork.length){
-    htt.innerHTML=`<div style="background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);padding:20px;text-align:center;margin-bottom:10px;">
+    htt.innerHTML=`<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);padding:20px;text-align:center;margin-bottom:10px;">
       <div style="font-size:28px;margin-bottom:6px;">✅</div>
       <div style="font-size:13px;color:var(--g400);">No work tasks scheduled for today.</div>
       <button onclick="openNewTaskModal(todayStr(),'work')" style="margin-top:10px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">＋ Add today's task</button>
@@ -6579,7 +6980,7 @@ function renderDash(){
           <span style="font-size:12px;font-weight:700;color:${g.txtColor};">${g.label}</span>
           <span style="font-size:10px;font-weight:600;color:${g.txtColor};opacity:0.7;">${items.length} task${items.length>1?'s':''}</span>
         </div>
-        <div style="background:#fff;border-radius:0 0 var(--r) var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);border-top:none;">
+        <div style="background:var(--surface);border-radius:0 0 var(--r) var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);border-top:none;">
           ${items.map(tk=>{
             const dur=calcDuration(tk);
             const timeStr=tk.timeStart?(tk.timeEnd?`${tk.timeStart}–${tk.timeEnd}`:tk.timeStart):'';
@@ -6613,6 +7014,8 @@ function renderDash(){
     });
     htt.innerHTML=out;
   }
+
+  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
 
   const upcoming=S.trips.filter(tr=>tr.status!=='completed').sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);
   const upEl=document.getElementById('upcoming-trips');
@@ -7621,19 +8024,19 @@ function renderTasks(){
   const over=tasks.filter(t=>(t.dateEnd||t.date||t.dateStart||'')< today&&t.status!=='done').length;
 
   let html=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;">
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+    <div style="background:var(--surface);border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
       <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--n700);line-height:1;">${total}</div>
       <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Total</div>
     </div>
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+    <div style="background:var(--surface);border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
       <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--n500);line-height:1;">${pend}</div>
       <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Pending</div>
     </div>
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+    <div style="background:var(--surface);border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
       <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--amber);line-height:1;">${inp}</div>
       <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Active</div>
     </div>
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+    <div style="background:var(--surface);border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
       <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--brand);line-height:1;">${done}</div>
       <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Done</div>
     </div>
@@ -7923,7 +8326,7 @@ function openTaskDetail(id){
       ${tk.checklist.map(ci=>`<div style="display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--g200);">
         <span style="width:16px;height:16px;border-radius:50%;background:${ci.done?'var(--green)':'var(--g300)'};display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0;">${ci.done?'✓':''}</span>
         <span style="font-size:12px;${ci.done?'text-decoration:line-through;color:var(--g400);':''}">${ci.text}</span>
-        <button onclick="toggleDetailCheck('${tk.id}','${ci.id}');openTaskDetail('${tk.id}')" style="margin-left:auto;font-size:10px;border:1px solid var(--g300);background:#fff;border-radius:4px;padding:2px 7px;cursor:pointer;color:var(--g600);">${ci.done?'Undo':'Done'}</button>
+        <button onclick="toggleDetailCheck('${tk.id}','${ci.id}');openTaskDetail('${tk.id}')" style="margin-left:auto;font-size:10px;border:1px solid var(--g300);background:var(--surface);border-radius:4px;padding:2px 7px;cursor:pointer;color:var(--g600);">${ci.done?'Undo':'Done'}</button>
       </div>`).join('')}
     </div>`:''
     }
@@ -8103,7 +8506,7 @@ function renderPartRows(){
     const sc = SC[p.status] || SC.notyet;
     const num = idx + 1;
     return `
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--sh);">
+    <div style="background:var(--surface);border:1px solid var(--n150);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--sh);">
       <!-- Card header: part number + status + delete -->
       <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--n50);border-bottom:1px solid var(--n150);">
         <div style="background:var(--brand);color:#fff;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;flex-shrink:0;">#${num}</div>
@@ -8408,6 +8811,7 @@ function exportPartsPDF(){
   if(!parts.length){ showToast('No parts data found'); return; }
 
   const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
+  if(typeof attachPdfTextNormalizer==='function') attachPdfTextNormalizer(doc);
   const W=297, mg=12;
   const p = S.profile;
   let y = 20;
@@ -8427,9 +8831,9 @@ function exportPartsPDF(){
   const onOrder  = parts.filter(p=>p.status==='On Order').length;
   const notYet   = parts.filter(p=>p.status==='Not Yet').length;
   doc.setFont('helvetica','bold'); doc.setFontSize(9);
-  doc.setTextColor(10,122,58);  doc.text(`✓ Ready: ${ready}`, mg, y);
-  doc.setTextColor(27,95,180);  doc.text(`⊙ On Order: ${onOrder}`, mg+40, y);
-  doc.setTextColor(192,57,43);  doc.text(`✗ Not Yet: ${notYet}`, mg+90, y);
+  doc.setTextColor(10,122,58);  doc.text(`Ready: ${ready}`, mg, y);
+  doc.setTextColor(27,95,180);  doc.text(`On Order: ${onOrder}`, mg+40, y);
+  doc.setTextColor(192,57,43);  doc.text(`Not Yet: ${notYet}`, mg+90, y);
   doc.setTextColor(33,37,41); y += 6;
 
   // Table headers
@@ -9750,6 +10154,7 @@ async function exportPDF(){
   const trip=S.trips.find(tr=>tr.id===curTrip);const r=curReport;const p=S.profile;
   if(!trip||!r)return;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+  if(typeof attachPdfTextNormalizer==='function') attachPdfTextNormalizer(doc);
   const W=210,mg=16;let y=20,pageNum=1;
   const R=W-mg;
   const reportTitle=(document.getElementById('report-name-input')&&document.getElementById('report-name-input').value.trim())||`Plant Visit Report — ${trip.plant}`;
@@ -10072,7 +10477,7 @@ function renderTripSavedReports(){
       const icon = r.type==='bills' ? '💰' : r.type==='ta' ? '🛫' : '📋';
       const label = r.type==='bills' ? 'Expense Report' : r.type==='ta' ? 'Travel Authorization' : 'Trip Report';
       const date = r.createdAt ? fmtDate(r.createdAt.slice(0,10)) : '';
-      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:var(--r-sm);border:1px solid var(--n150);margin-bottom:6px;">
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border-radius:var(--r-sm);border:1px solid var(--n150);margin-bottom:6px;">
         <span style="font-size:20px;">${icon}</span>
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:600;color:var(--n800);">${label}</div>
@@ -10155,6 +10560,7 @@ async function generateTAPdf(tripId){
   const spFlt = n   => (n||'').replace(/^([A-Za-z]+)(\d+)$/,'$1 $2');
 
   const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
+  if(typeof attachPdfTextNormalizer==='function') attachPdfTextNormalizer(doc);
   const PW=297, PH=210, ML=10, MR=10;
   const TW = PW-ML-MR;
 
@@ -10495,14 +10901,14 @@ function renderInspCard(item){
     const res = item.result;
     const resColor = res==='pass'?'var(--brand)':res==='fail'?'var(--red)':res==='na'?'var(--n400)':'var(--n300)';
     const resLabel = res==='pass'?'✅ Pass':res==='fail'?'❌ Fail':res==='na'?'— N/A':'⬜ Pending';
-    return `<div style="background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${resColor};padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
+    return `<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${resColor};padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:var(--n800);">${item.name}</div>
         ${item.note?`<div style="font-size:11px;color:var(--n500);margin-top:2px;">${item.note}</div>`:''}
       </div>
       <span style="color:${resColor};font-size:12px;font-weight:700;flex-shrink:0;">${resLabel}</span>
       <div style="display:flex;gap:4px;flex-shrink:0;">
-        <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:#fff;cursor:pointer;font-size:12px;">✏️</button>
+        <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:var(--surface);cursor:pointer;font-size:12px;">✏️</button>
         <button onclick="deleteInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid rgba(192,57,43,0.2);background:var(--rl);cursor:pointer;font-size:12px;color:var(--rd);">×</button>
       </div>
     </div>`;
@@ -10515,7 +10921,7 @@ function renderInspCard(item){
     const valText = isCond
       ? (item.condition==='ok'?'✅ OK':item.condition==='notok'?'❌ Not OK':'⚠ Other')
       : ((item.value||'?')+' '+(item.unit||''));
-    return `<div style="background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${valColor};padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
+    return `<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${valColor};padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:var(--n800);">${item.name}
           ${item.tag?`<span style="font-family:var(--mono);font-size:10px;color:var(--brand);margin-left:6px;">[${item.tag}]</span>`:''}
@@ -10524,7 +10930,7 @@ function renderInspCard(item){
       </div>
       <span style="color:${valColor};font-family:var(--mono);font-size:13px;font-weight:700;flex-shrink:0;">${valText}</span>
       <div style="display:flex;gap:4px;flex-shrink:0;">
-        <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:#fff;cursor:pointer;font-size:12px;">✏️</button>
+        <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:var(--surface);cursor:pointer;font-size:12px;">✏️</button>
         <button onclick="deleteInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid rgba(192,57,43,0.2);background:var(--rl);cursor:pointer;font-size:12px;color:var(--rd);">×</button>
       </div>
     </div>`;
@@ -10532,7 +10938,7 @@ function renderInspCard(item){
   if(item.type === 'issue'){
     const sevColor = {critical:'var(--purple)',high:'var(--red)',medium:'var(--amber)',low:'var(--blue)'}[item.severity]||'var(--n400)';
     const statusLabel = {pending:'⏳',waiting_part:'🔧',processing:'🔄',done:'✅'}[item.istatus||'pending']||'⏳';
-    return `<div style="background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${sevColor};padding:10px 12px;margin-bottom:6px;">
+    return `<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${sevColor};padding:10px 12px;margin-bottom:6px;">
       <div style="display:flex;align-items:flex-start;gap:8px;">
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
@@ -10545,7 +10951,7 @@ function renderInspCard(item){
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
           <span style="font-size:16px;">${statusLabel}</span>
           <div style="display:flex;gap:4px;">
-            <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:#fff;cursor:pointer;font-size:12px;">✏️</button>
+            <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:var(--surface);cursor:pointer;font-size:12px;">✏️</button>
             <button onclick="deleteInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid rgba(192,57,43,0.2);background:var(--rl);cursor:pointer;font-size:12px;color:var(--rd);">×</button>
           </div>
         </div>
@@ -12090,7 +12496,7 @@ function renderLibrary(){
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
             <button onclick="editLibraryItem('${item.id}')"
-              style="padding:5px 10px;border:1px solid var(--n200);border-radius:var(--rs);background:#fff;font-size:11px;font-weight:600;color:var(--n600);cursor:pointer;">✏️ Edit</button>
+              style="padding:5px 10px;border:1px solid var(--n200);border-radius:var(--rs);background:var(--surface);font-size:11px;font-weight:600;color:var(--n600);cursor:pointer;">✏️ Edit</button>
             <button onclick="deleteLibraryItem('${item.id}')"
               style="padding:5px 10px;border:1px solid rgba(192,57,43,0.2);border-radius:var(--rs);background:var(--rl);font-size:11px;font-weight:600;color:var(--rd);cursor:pointer;">🗑 Delete</button>
           </div>
@@ -12426,29 +12832,29 @@ function openReportDirect(step){
 // =====================================================
 
 // ═══════ SETTINGS ═══════
-function openTelegramSettings(){
+function openTelegramSettings() {
   const cfg = S.telegramConfig || {};
   const el = id => document.getElementById(id);
-  if(el('tele-token'))   el('tele-token').value   = cfg.token   || '';
-  if(el('tele-chatid'))  el('tele-chatid').value  = cfg.chatId  || '';
-  if(el('tele-notify-trips'))  el('tele-notify-trips').checked  = cfg.notifyTrips  !== false;
-  if(el('tele-notify-tasks'))  el('tele-notify-tasks').checked  = cfg.notifyTasks  !== false;
-  if(el('tele-notify-leave'))  el('tele-notify-leave').checked  = cfg.notifyLeave  !== false;
+  if (el('tele-token')) el('tele-token').value = cfg.token || '';
+  if (el('tele-chatid')) el('tele-chatid').value = cfg.chatId || '';
+  if (el('tele-notify-trips')) el('tele-notify-trips').checked = cfg.notifyTrips !== false;
+  if (el('tele-notify-tasks')) el('tele-notify-tasks').checked = cfg.notifyTasks !== false;
+  if (el('tele-notify-leave')) el('tele-notify-leave').checked = cfg.notifyLeave !== false;
   const res = document.getElementById('tele-result');
-  if(res) res.style.display = 'none';
+  if (res) res.style.display = 'none';
   openModal('modal-telegram');
 }
 
-function saveTelegramSettings(){
-  const token  = (document.getElementById('tele-token')  || {}).value || '';
+function saveTelegramSettings() {
+  const token = (document.getElementById('tele-token') || {}).value || '';
   const chatId = (document.getElementById('tele-chatid') || {}).value || '';
-  if(!S.telegramConfig) S.telegramConfig = {};
+  if (!S.telegramConfig) S.telegramConfig = {};
   S.telegramConfig = {
-    token:        token.trim(),
-    chatId:       chatId.trim(),
-    notifyTrips:  document.getElementById('tele-notify-trips')  ? document.getElementById('tele-notify-trips').checked  : true,
-    notifyTasks:  document.getElementById('tele-notify-tasks')  ? document.getElementById('tele-notify-tasks').checked  : true,
-    notifyLeave:  document.getElementById('tele-notify-leave')  ? document.getElementById('tele-notify-leave').checked  : true,
+    token: token.trim(),
+    chatId: chatId.trim(),
+    notifyTrips: document.getElementById('tele-notify-trips') ? document.getElementById('tele-notify-trips').checked : true,
+    notifyTasks: document.getElementById('tele-notify-tasks') ? document.getElementById('tele-notify-tasks').checked : true,
+    notifyLeave: document.getElementById('tele-notify-leave') ? document.getElementById('tele-notify-leave').checked : true,
   };
   sv();
   updateTelegramStatusLabel();
@@ -12456,321 +12862,321 @@ function saveTelegramSettings(){
   showToast(token ? '✓ Telegram configured' : 'Telegram settings cleared');
 }
 
-function updateTelegramStatusLabel(){
+function updateTelegramStatusLabel() {
   const el = document.getElementById('tele-status');
-  if(!el) return;
+  if (!el) return;
   const cfg = S.telegramConfig || {};
   const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
-  if(cfg.token && cfg.chatId){
+  if (cfg.token && cfg.chatId) {
     el.textContent = '✓ Connected · notifications active';
-  } else if(gsUrl && gsUrl.includes('/exec')){
+  } else if (gsUrl && gsUrl.includes('/exec')) {
     el.textContent = '☁️ Active via Google Sheet Settings';
   } else {
     el.textContent = 'Not configured';
   }
 }
 
-function escTeleHtml_(v){
-  return typeof escHtml === 'function' ? escHtml(v) : String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function escTeleHtml_(v) {
+  return typeof escHtml === 'function' ? escHtml(v) : String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // ═══════ SEND MESSAGE ═══════
-async function sendTelegramMessage(text){
+async function sendTelegramMessage(text) {
   const cfg = S.telegramConfig || {};
   const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
 
   // 1. Ưu tiên gửi qua Apps Script Backend (IMP-03: an toàn bảo mật + đính kèm API_SECRET qua gsPost)
-  if(gsUrl && gsUrl.includes('/exec')){
+  if (gsUrl && gsUrl.includes('/exec')) {
     try {
       const reqBody = {
         action: 'sendTelegram',
         text: text,
         parseMode: 'HTML'
       };
-      if(cfg.token) reqBody.token = cfg.token;
-      if(cfg.chatId) reqBody.chatId = cfg.chatId;
+      if (cfg.token) reqBody.token = cfg.token;
+      if (cfg.chatId) reqBody.chatId = cfg.chatId;
       const data = typeof gsPost === 'function'
         ? await gsPost(gsUrl, reqBody)
-        : await (await fetch(gsUrl, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify(reqBody) })).json();
-      if(data && data.ok) return true;
-      if(data && data.code === 401) {
+        : await (await fetch(gsUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(reqBody) })).json();
+      if (data && data.ok) return true;
+      if (data && data.code === 401) {
         console.warn('[Telegram] Unauthorized API Key on GAS proxy');
         return false;
       }
-    } catch(e) {
+    } catch (e) {
       console.warn('[Telegram] Backend dispatch error, fallback to direct:', e.message);
     }
   }
 
   // 2. Fallback gửi trực tiếp chỉ khi client có lưu token và chatId cục bộ (không có GAS)
-  if(!cfg.token || !cfg.chatId) return false;
-  try{
+  if (!cfg.token || !cfg.chatId) return false;
+  try {
     const url = `https://api.telegram.org/bot${cfg.token}/sendMessage`;
     const resp = await fetch(url, {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        chat_id:    cfg.chatId,
-        text:       text,
+        chat_id: cfg.chatId,
+        text: text,
         parse_mode: 'HTML'
       })
     });
     const data = await resp.json();
     return data.ok === true;
-  }catch(e){
+  } catch (e) {
     console.warn('[Telegram] Send error:', e.message);
     return false;
   }
 }
 
-async function testTelegram(){
-  const token  = ((document.getElementById('tele-token')  || {}).value || '').trim();
+async function testTelegram() {
+  const token = ((document.getElementById('tele-token') || {}).value || '').trim();
   const chatId = ((document.getElementById('tele-chatid') || {}).value || '').trim();
   const res = document.getElementById('tele-result');
   const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
   const hasGas = gsUrl && gsUrl.includes('/exec');
 
-  if(!hasGas && (!token || !chatId)){
-    if(res){ res.style.display=''; res.style.background='var(--rl)'; res.style.color='var(--rd)'; res.textContent='Connect Google Sheets (with Settings -> tele_token/tele_chatid) or enter Bot Token & Chat ID.'; }
+  if (!hasGas && (!token || !chatId)) {
+    if (res) { res.style.display = ''; res.style.background = 'var(--rl)'; res.style.color = 'var(--rd)'; res.textContent = 'Connect Google Sheets (with Settings -> tele_token/tele_chatid) or enter Bot Token & Chat ID.'; }
     return;
   }
-  if(res){ res.style.display=''; res.style.background='var(--n100)'; res.style.color='var(--n600)'; res.textContent='Sending test message…'; }
+  if (res) { res.style.display = ''; res.style.background = 'var(--n100)'; res.style.color = 'var(--n600)'; res.textContent = 'Sending test message…'; }
   const p = S.profile || {};
   const msg = `🏭 <b>PlantLog Pro — Test Message</b>
 
 ✅ Your Telegram notifications are working!
 
-<b>Engineer:</b> ${escTeleHtml_(p.name||'—')}
-<b>Company:</b>  ${escTeleHtml_(p.company||'—')}
+<b>Engineer:</b> ${escTeleHtml_(p.name || '—')}
+<b>Company:</b>  ${escTeleHtml_(p.company || '—')}
 <b>App:</b> VCS PlantLog Pro
 <b>Time:</b> ${new Date().toLocaleString('en-GB')}`;
 
-  try{
-    if(hasGas){
-      const reqBody = { action:'sendTelegram', text:msg, parseMode:'HTML' };
-      if(token) reqBody.token = token;
-      if(chatId) reqBody.chatId = chatId;
+  try {
+    if (hasGas) {
+      const reqBody = { action: 'sendTelegram', text: msg, parseMode: 'HTML' };
+      if (token) reqBody.token = token;
+      if (chatId) reqBody.chatId = chatId;
       const data = typeof gsPost === 'function'
         ? await gsPost(gsUrl, reqBody)
-        : await (await fetch(gsUrl, { method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(reqBody) })).json();
-      if(data && data.ok){
-        if(res){ res.style.background='var(--brand-light)'; res.style.color='var(--brand-dark)'; res.textContent='✓ Test message sent via Google Sheet backend! Check Telegram.'; }
+        : await (await fetch(gsUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(reqBody) })).json();
+      if (data && data.ok) {
+        if (res) { res.style.background = 'var(--brand-light)'; res.style.color = 'var(--brand-dark)'; res.textContent = '✓ Test message sent via Google Sheet backend! Check Telegram.'; }
       } else {
-        if(res){ res.style.background='var(--rl)'; res.style.color='var(--rd)'; res.textContent='Error: '+((data && (data.error || (data.result && data.result.description))) || 'Check Sheet Settings (tele_token, tele_chatid, api_secret)'); }
+        if (res) { res.style.background = 'var(--rl)'; res.style.color = 'var(--rd)'; res.textContent = 'Error: ' + ((data && (data.error || (data.result && data.result.description))) || 'Check Sheet Settings (tele_token, tele_chatid, api_secret)'); }
       }
       return;
     }
 
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const resp = await fetch(url,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({chat_id:chatId, text:msg, parse_mode:'HTML'})
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' })
     });
     const data = await resp.json();
-    if(data.ok){
-      if(res){ res.style.background='var(--brand-light)'; res.style.color='var(--brand-dark)'; res.textContent='✓ Test message sent! Check your Telegram.'; }
+    if (data.ok) {
+      if (res) { res.style.background = 'var(--brand-light)'; res.style.color = 'var(--brand-dark)'; res.textContent = '✓ Test message sent! Check your Telegram.'; }
     } else {
-      if(res){ res.style.background='var(--rl)'; res.style.color='var(--rd)'; res.textContent='Error: '+(data.description||'Unknown error'); }
+      if (res) { res.style.background = 'var(--rl)'; res.style.color = 'var(--rd)'; res.textContent = 'Error: ' + (data.description || 'Unknown error'); }
     }
-  }catch(e){
-    if(res){ res.style.background='var(--rl)'; res.style.color='var(--rd)'; res.textContent='Network error: '+e.message; }
+  } catch (e) {
+    if (res) { res.style.background = 'var(--rl)'; res.style.color = 'var(--rd)'; res.textContent = 'Network error: ' + e.message; }
   }
 }
 
 // ═══════ DAILY NOTIFICATIONS ═══════
 // Called on app start — checks for upcoming events and notifies
-async function checkAndSendDailyNotifications(){
+async function checkAndSendDailyNotifications() {
   const cfg = S.telegramConfig || {};
   const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
   const canSend = (gsUrl && gsUrl.includes('/exec')) || (cfg.token && cfg.chatId);
-  if(!canSend) return;
+  if (!canSend) return;
 
-  const today     = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
-  const tomorrow  = typeof localDateStr === 'function' ? localDateStr(new Date(Date.now() + 86400000)) : new Date(Date.now() + 86400000).toISOString().slice(0,10);
-  const p         = S.profile || {};
+  const today = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
+  const tomorrow = typeof localDateStr === 'function' ? localDateStr(new Date(Date.now() + 86400000)) : new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  const p = S.profile || {};
 
   // Avoid sending twice in same day
   const lastSent = localStorage.getItem('plpro_tele_last');
-  if(lastSent === today) return;
+  if (lastSent === today) return;
 
   const messages = [];
 
   // ── Upcoming trips (starting tomorrow) ──
-  if(cfg.notifyTrips !== false){
-    const upcomingTrips = (S.trips||[]).filter(t =>
+  if (cfg.notifyTrips !== false) {
+    const upcomingTrips = (S.trips || []).filter(t =>
       t.date === tomorrow && t.status !== 'completed'
     );
-    if(upcomingTrips.length){
+    if (upcomingTrips.length) {
       let msg = `🏭 <b>Trip Tomorrow — PlantLog Reminder</b>\n\n`;
       upcomingTrips.forEach(t => {
         msg += `<b>Plant:</b> ${t.plant}\n`;
         msg += `<b>Date:</b> ${fmtDate(t.date)}\n`;
-        if(t.location) msg += `<b>Location:</b> ${t.location}\n`;
-        if(t.purpose)  msg += `<b>Purpose:</b> ${t.purpose}\n`;
-        if(t.contact)  msg += `<b>Contact:</b> ${t.contact}\n`;
-        if(t.transport)msg += `<b>Transport:</b> ${t.transport}\n`;
+        if (t.location) msg += `<b>Location:</b> ${t.location}\n`;
+        if (t.purpose) msg += `<b>Purpose:</b> ${t.purpose}\n`;
+        if (t.contact) msg += `<b>Contact:</b> ${t.contact}\n`;
+        if (t.transport) msg += `<b>Transport:</b> ${t.transport}\n`;
         msg += '\n';
       });
-      msg += `— ${p.name||'PlantLog Pro'}`;
+      msg += `— ${p.name || 'PlantLog Pro'}`;
       messages.push(msg);
     }
   }
 
   // ── Tasks due today ──
-  if(cfg.notifyTasks !== false){
-    const todayTasks = (S.tasks||[]).filter(t =>
-      (t.dateStart||t.date||'') === today && t.status !== 'done'
+  if (cfg.notifyTasks !== false) {
+    const todayTasks = (S.tasks || []).filter(t =>
+      (t.dateStart || t.date || '') === today && t.status !== 'done'
     );
-    if(todayTasks.length){
+    if (todayTasks.length) {
       let msg = `✅ <b>Tasks Due Today — PlantLog</b>\n\n`;
-      todayTasks.slice(0,8).forEach(t => {
-        const cat = t.category||'work';
-        const icon = cat==='leave'?'🌴':cat==='travel'?'✈️':'🔧';
+      todayTasks.slice(0, 8).forEach(t => {
+        const cat = t.category || 'work';
+        const icon = cat === 'leave' ? '🌴' : cat === 'travel' ? '✈️' : '🔧';
         msg += `${icon} <b>${t.title}</b>\n`;
-        if(t.timeStart) msg += `   ⏰ ${t.timeStart}${t.timeEnd?' – '+t.timeEnd:''}\n`;
-        if(t.machine)   msg += `   ⚙️ ${t.machine}\n`;
+        if (t.timeStart) msg += `   ⏰ ${t.timeStart}${t.timeEnd ? ' – ' + t.timeEnd : ''}\n`;
+        if (t.machine) msg += `   ⚙️ ${t.machine}\n`;
       });
-      if(todayTasks.length > 8) msg += `   ...and ${todayTasks.length-8} more\n`;
-      msg += `\n— ${p.name||'PlantLog Pro'}`;
+      if (todayTasks.length > 8) msg += `   ...and ${todayTasks.length - 8} more\n`;
+      msg += `\n— ${p.name || 'PlantLog Pro'}`;
       messages.push(msg);
     }
   }
 
   // ── Leave / Travel starting today ──
-  if(cfg.notifyLeave !== false){
-    const todayLeave  = Object.entries(S.leaveData||{}).find(([d,t]) => d===today && t!=='work');
-    const todayTravel = (S.tasks||[]).filter(t =>
-      t.category==='travel' && (t.dateStart||t.date||'')===today
+  if (cfg.notifyLeave !== false) {
+    const todayLeave = Object.entries(S.leaveData || {}).find(([d, t]) => d === today && t !== 'work');
+    const todayTravel = (S.tasks || []).filter(t =>
+      t.category === 'travel' && (t.dateStart || t.date || '') === today
     );
-    if(todayLeave || todayTravel.length){
+    if (todayLeave || todayTravel.length) {
       let msg = `📅 <b>Schedule Today — PlantLog</b>\n\n`;
-      if(todayLeave){
-        const lbl = {leave:'🌴 Annual Leave',wfh:'🏠 Work From Home',holiday:'🎉 Holiday'}[todayLeave[1]]||todayLeave[1];
+      if (todayLeave) {
+        const lbl = { leave: '🌴 Annual Leave', wfh: '🏠 Work From Home', holiday: '🎉 Holiday' }[todayLeave[1]] || todayLeave[1];
         msg += `${lbl}\n`;
       }
       todayTravel.forEach(t => {
         msg += `✈️ <b>Travel:</b> ${t.title}\n`;
-        const trip = t.tripId ? (S.trips||[]).find(tr=>tr.id===t.tripId) : null;
-        if(trip) msg += `   🏭 ${trip.plant}\n`;
+        const trip = t.tripId ? (S.trips || []).find(tr => tr.id === t.tripId) : null;
+        if (trip) msg += `   🏭 ${trip.plant}\n`;
       });
-      msg += `\n— ${p.name||'PlantLog Pro'}`;
+      msg += `\n— ${p.name || 'PlantLog Pro'}`;
       messages.push(msg);
     }
   }
 
   // Send all messages
-  if(messages.length){
+  if (messages.length) {
     let allSent = true;
-    for(const m of messages){
+    for (const m of messages) {
       const ok = await sendTelegramMessage(m);
-      if(!ok) allSent = false;
+      if (!ok) allSent = false;
     }
-    if(allSent) localStorage.setItem('plpro_tele_last', today);
+    if (allSent) localStorage.setItem('plpro_tele_last', today);
   }
 }
 
 // ═══════ SEND TRIP REPORT TO TELEGRAM ═══════
-async function sendTripToTelegram(tripId){
+async function sendTripToTelegram(tripId) {
   const cfg = S.telegramConfig || {};
   const gsUrl = typeof getGSUrl === 'function' ? getGSUrl() : (S && S.gsUrl || '');
   const canSend = (gsUrl && gsUrl.includes('/exec')) || (cfg.token && cfg.chatId);
-  if(!canSend){
+  if (!canSend) {
     showToast('Configure Google Sheets or Telegram in Settings first');
     openTelegramSettings();
     return;
   }
-  const trip = (S.trips||[]).find(t => t.id === tripId);
-  if(!trip){ showToast('Trip not found'); return; }
+  const trip = (S.trips || []).find(t => t.id === tripId);
+  if (!trip) { showToast('Trip not found'); return; }
 
   const p = S.profile || {};
   const report = S.reports && S.reports[tripId];
-  const tripTasks = (S.tasks||[]).filter(t => t.tripId === tripId);
-  const tripBills = (S.bills||[]).filter(b => b.tripId === tripId);
+  const tripTasks = (S.tasks || []).filter(t => t.tripId === tripId);
+  const tripBills = (S.bills || []).filter(b => b.tripId === tripId);
 
   let msg = `🏭 <b>Trip Report — ${escTeleHtml_(trip.plant)}</b>\n`;
   msg += `━━━━━━━━━━━━━━━━━━━\n\n`;
 
   msg += `📋 <b>TRIP INFO</b>\n`;
   msg += `<b>Plant:</b>     ${escTeleHtml_(trip.plant)}\n`;
-  if(trip.location)  msg += `<b>Location:</b>  ${escTeleHtml_(trip.location)}\n`;
+  if (trip.location) msg += `<b>Location:</b>  ${escTeleHtml_(trip.location)}\n`;
   msg += `<b>Date:</b>      ${fmtDate(trip.date)}`;
-  if(trip.dateEnd && trip.dateEnd !== trip.date) msg += ` → ${fmtDate(trip.dateEnd)}`;
+  if (trip.dateEnd && trip.dateEnd !== trip.date) msg += ` → ${fmtDate(trip.dateEnd)}`;
   msg += '\n';
-  if(trip.purpose)   msg += `<b>Purpose:</b>   ${trip.purpose}\n`;
-  if(trip.contact)   msg += `<b>Contact:</b>   ${trip.contact}\n`;
-  if(trip.transport) msg += `<b>Transport:</b> ${trip.transport}\n`;
-  const statusLabel = {planned:'📋 Planned',in_progress:'🔄 In Progress',completed:'✅ Completed'}[trip.status]||trip.status;
+  if (trip.purpose) msg += `<b>Purpose:</b>   ${trip.purpose}\n`;
+  if (trip.contact) msg += `<b>Contact:</b>   ${trip.contact}\n`;
+  if (trip.transport) msg += `<b>Transport:</b> ${trip.transport}\n`;
+  const statusLabel = { planned: '📋 Planned', in_progress: '🔄 In Progress', completed: '✅ Completed' }[trip.status] || trip.status;
   msg += `<b>Status:</b>    ${statusLabel}\n\n`;
 
   // Tasks summary
-  if(tripTasks.length){
+  if (tripTasks.length) {
     msg += `✅ <b>TASKS (${tripTasks.length})</b>\n`;
-    const done = tripTasks.filter(t=>t.status==='done').length;
-    const inP  = tripTasks.filter(t=>t.status==='in_progress').length;
-    const pend = tripTasks.filter(t=>t.status==='pending').length;
+    const done = tripTasks.filter(t => t.status === 'done').length;
+    const inP = tripTasks.filter(t => t.status === 'in_progress').length;
+    const pend = tripTasks.filter(t => t.status === 'pending').length;
     msg += `Done: ${done}  ·  Active: ${inP}  ·  Pending: ${pend}\n`;
-    tripTasks.slice(0,5).forEach(t => {
-      const icon = t.status==='done'?'✅':t.status==='in_progress'?'🔄':'⏳';
+    tripTasks.slice(0, 5).forEach(t => {
+      const icon = t.status === 'done' ? '✅' : t.status === 'in_progress' ? '🔄' : '⏳';
       msg += `${icon} ${t.title}\n`;
     });
-    if(tripTasks.length > 5) msg += `... +${tripTasks.length-5} more tasks\n`;
+    if (tripTasks.length > 5) msg += `... +${tripTasks.length - 5} more tasks\n`;
     msg += '\n';
   }
 
   // Report summary
-  if(report){
-    if(report.checklist && report.checklist.length){
-      const passed = report.checklist.filter(c=>c.result==='pass').length;
-      const failed = report.checklist.filter(c=>c.result==='fail').length;
+  if (report) {
+    if (report.checklist && report.checklist.length) {
+      const passed = report.checklist.filter(c => c.result === 'pass').length;
+      const failed = report.checklist.filter(c => c.result === 'fail').length;
       msg += `☑️ <b>CHECKLIST:</b> ${passed} pass · ${failed} fail · ${report.checklist.length} total\n`;
     }
-    if(report.readings && report.readings.length){
+    if (report.readings && report.readings.length) {
       msg += `📊 <b>READINGS:</b> ${report.readings.length} recorded\n`;
     }
-    if(report.issues && report.issues.length){
-      const crit = report.issues.filter(i=>i.severity==='critical'||i.severity==='high').length;
+    if (report.issues && report.issues.length) {
+      const crit = report.issues.filter(i => i.severity === 'critical' || i.severity === 'high').length;
       msg += `⚠️ <b>ISSUES:</b> ${report.issues.length} total`;
-      if(crit) msg += ` · ${crit} high/critical`;
+      if (crit) msg += ` · ${crit} high/critical`;
       msg += '\n';
     }
-    if(report.signoff && report.signoff.result){
+    if (report.signoff && report.signoff.result) {
       msg += `📝 <b>Result:</b> ${report.signoff.result}\n`;
     }
     msg += '\n';
   }
 
   // Bills summary
-  if(tripBills.length){
-    const totalVND = tripBills.reduce((s,b)=>{
-      if((b.currency||'VND')==='VND') return s+(parseFloat(b.amount)||0);
-      return s+(parseFloat(b.vndAmount)||0);
-    },0);
+  if (tripBills.length) {
+    const totalVND = tripBills.reduce((s, b) => {
+      if ((b.currency || 'VND') === 'VND') return s + (parseFloat(b.amount) || 0);
+      return s + (parseFloat(b.vndAmount) || 0);
+    }, 0);
     const byCur = {};
-    tripBills.forEach(b=>{ const c=b.currency||'VND'; byCur[c]=(byCur[c]||0)+(parseFloat(b.amount)||0); });
+    tripBills.forEach(b => { const c = b.currency || 'VND'; byCur[c] = (byCur[c] || 0) + (parseFloat(b.amount) || 0); });
     msg += `💰 <b>EXPENSES (${tripBills.length} bills)</b>\n`;
-    Object.entries(byCur).forEach(([c,t])=>{ msg += `   ${c}: ${fmtAmt(t,c)}\n`; });
-    if(totalVND) msg += `   <b>Total ≈ ${fmtAmt(totalVND,'VND')} VND</b>\n`;
+    Object.entries(byCur).forEach(([c, t]) => { msg += `   ${c}: ${fmtAmt(t, c)}\n`; });
+    if (totalVND) msg += `   <b>Total ≈ ${fmtAmt(totalVND, 'VND')} VND</b>\n`;
     msg += '\n';
   }
 
   // Saved reports links
-  if(trip.savedReports && trip.savedReports.length){
+  if (trip.savedReports && trip.savedReports.length) {
     msg += `📁 <b>SAVED REPORTS</b>\n`;
-    trip.savedReports.forEach(r=>{
-      const icon = r.type==='bills'?'💰':'📋';
+    trip.savedReports.forEach(r => {
+      const icon = r.type === 'bills' ? '💰' : '📋';
       msg += `${icon} <a href="${r.fileUrl}">${r.name}</a>\n`;
     });
     msg += '\n';
   }
 
   msg += `━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `— ${p.name||'Engineer'}${p.company?' · '+p.company:''}`;
+  msg += `— ${p.name || 'Engineer'}${p.company ? ' · ' + p.company : ''}`;
   msg += `\nSent from VCS PlantLog Pro`;
 
   showToast('Sending to Telegram…');
   const ok = await sendTelegramMessage(msg);
-  if(ok){
+  if (ok) {
     showToast('✓ Trip report sent to Telegram!');
   } else {
     showToast('❌ Send failed — check Telegram settings');
@@ -12969,7 +13375,7 @@ function renderRemindersScreen(){
       ? 'var(--red)' : daysUntil !== null && daysUntil <= 7
       ? 'var(--am)' : 'var(--n300)';
 
-    return `<div style="background:#fff;border-radius:var(--r);box-shadow:var(--sh);
+    return `<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);
               border:1px solid var(--n150);border-left:3px solid ${urgency};
               padding:12px 14px;margin-bottom:8px;opacity:${isActive?1:0.6};">
       <div style="display:flex;align-items:flex-start;gap:10px;">
@@ -12997,7 +13403,7 @@ function renderRemindersScreen(){
           </button>
           <button onclick="editReminder('${r.id}')"
             style="padding:4px 10px;border-radius:var(--rs);border:1px solid var(--n200);
-                   background:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);color:var(--n600);">
+                   background:var(--surface);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);color:var(--n600);">
             ✏️ Edit
           </button>
           <button onclick="deleteReminder('${r.id}')"
@@ -13449,11 +13855,21 @@ function renderBillsScreen() {
     bills = bills.filter(b => (b.paymentMethod || '').includes('Card') || (b.paymentMethod || '').includes('Credit') || (b.paymentMethod || '').includes('3-'));
   }
 
+  // Search filter by detail, receipt number, notes, or category (UX-02)
+  const searchEl = document.getElementById('bill-search');
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  if (q) {
+    bills = bills.filter(b => {
+      const hay = `${b.detail || ''} ${b.billNumber || ''} ${b.notes || ''} ${b.category || ''}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
   bills.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
   if (!bills.length) {
     body.innerHTML = `<div class="empty"><div class="ei">💳</div>
-      <div class="et">No bills yet.<br>Tap + to add your first expense.</div></div>`;
+      <div class="et">${q ? 'No matching bills found.' : 'No bills yet.<br>Tap + to add your first expense.'}</div></div>`;
     return;
   }
 
@@ -13511,7 +13927,7 @@ function renderBillsScreen() {
         </div>
         <div style="font-size:13px;font-weight:700;">${totalStr}</div>
       </div>
-      <div style="background:#fff;border-radius:0 0 var(--rs) var(--rs);box-shadow:var(--sh);margin-bottom:12px;">
+      <div style="background:var(--surface);border-radius:0 0 var(--rs) var(--rs);box-shadow:var(--sh);margin-bottom:12px;">
         ${tripBills.sort((a,b)=>b.date.localeCompare(a.date)).map(b => renderBillRow(b)).join('')}
       </div>`;
     });
@@ -13535,7 +13951,7 @@ function renderBillsScreen() {
         </div>
         <div class="bill-day-total">${dTotalStr}</div>
       </div>
-      <div style="background:#fff;border-radius:0 0 var(--rs) var(--rs);box-shadow:var(--sh);margin-bottom:10px;">
+      <div style="background:var(--surface);border-radius:0 0 var(--rs) var(--rs);box-shadow:var(--sh);margin-bottom:10px;">
         ${dayBills.map(b => renderBillRow(b)).join('')}
       </div>`;
     });
@@ -13569,7 +13985,7 @@ function renderBillRow(b) {
         <div class="bill-amount">${amt} ${b.currency||''}</div>
         ${vndAmt?`<div style="font-size:11px;color:var(--g500);text-align:right;margin-top:1px;">= ${vndAmt} ₫</div>`:''}
         <div style="display:flex;gap:4px;">
-          <button onclick="openEditBill('${b.id}');event.stopPropagation()" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--g200);background:#fff;cursor:pointer;font-size:13px;" title="Edit">✏️</button>
+          <button onclick="openEditBill('${b.id}');event.stopPropagation()" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--g200);background:var(--surface);cursor:pointer;font-size:13px;" title="Edit">✏️</button>
           <button onclick="deleteBillFromScreen('${b.id}')" class="db" title="Delete">×</button>
         </div>
       </div>
@@ -13724,6 +14140,7 @@ function exportBillsPDF() {
   bills.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   if(!bills.length){showToast('No bills to export');return;}
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+  if(typeof attachPdfTextNormalizer==='function') attachPdfTextNormalizer(doc);
   const W=210,mg=16;let y=20,pageNum=1;const R=W-mg;
   const rtxt=(str,yy,col)=>{if(col)doc.setTextColor(...col);const tw=doc.getTextWidth(String(str));doc.text(String(str),R-tw,yy);if(col)doc.setTextColor(33,37,41);};
   const chk=()=>{if(y>265){doc.addPage();y=20;pageNum++;addPN();}};
@@ -13743,7 +14160,7 @@ function exportBillsPDF() {
   sec('BILL DETAILS');
   Object.entries(byTrip).forEach(([tid,tripBills])=>{
     const trip=S.trips.find(t=>t.id===tid);const{byCur:tCur,vndTotal:tVND}=computeTotals(tripBills);
-    if(tripCount>1){doc.setFillColor(0,132,61);doc.rect(mg,y-3,W-mg*2,8,'F');doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('🏭 '+(trip?trip.plant:'No trip'),mg+3,y+1);rtxt(fmtAmt(tVND,'VND')+' VND',y+1,[255,220,150]);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=10;chk();}
+    if(tripCount>1){doc.setFillColor(0,132,61);doc.rect(mg,y-3,W-mg*2,8,'F');doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text((trip?trip.plant:'No trip'),mg+3,y+1);rtxt(fmtAmt(tVND,'VND')+' VND',y+1,[255,220,150]);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=10;chk();}
     const byDate={};tripBills.forEach(b=>{const d=b.date||'';if(!byDate[d])byDate[d]=[];byDate[d].push(b);});
     Object.entries(byDate).forEach(([dk,dayBills])=>{
       const{byCur:dCur,vndTotal:dVND}=computeTotals(dayBills);const dtStr=Object.entries(dCur).map(([c,t])=>fmtAmt(t,c)+' '+c).join(' + ');
@@ -14124,7 +14541,7 @@ function renderTripClaimsScreen() {
             <span style="font-size:10px;color:var(--n400);">${bodyTripSubText}</span>
           </div>
 
-          ${t.purpose ? `<div style="font-size:11px;color:var(--n700);margin-bottom:8px;background:#fff;padding:6px 8px;border-radius:4px;border:1px solid var(--n200);"><strong>Purpose:</strong> ${t.purpose}</div>` : ''}
+          ${t.purpose ? `<div style="font-size:11px;color:var(--n700);margin-bottom:8px;background:var(--surface);padding:6px 8px;border-radius:4px;border:1px solid var(--n200);"><strong>Purpose:</strong> ${t.purpose}</div>` : ''}
 
           <!-- 4-Step Payment Timeline Matrix -->
           <div style="font-size:10px;font-weight:700;color:var(--g500);letter-spacing:0.04em;margin-bottom:4px;">PAYMENT TIMELINE</div>
@@ -14153,7 +14570,7 @@ function renderTripClaimsScreen() {
 
           <!-- Comment Display -->
           ${claim.comment ? `
-            <div style="font-size:11px;color:var(--n700);background:#fff;padding:6px 8px;border-radius:4px;border:1px solid var(--n200);margin-top:6px;">
+            <div style="font-size:11px;color:var(--n700);background:var(--surface);padding:6px 8px;border-radius:4px;border:1px solid var(--n200);margin-top:6px;">
               💬 <strong>Comment:</strong> ${claim.comment}
             </div>` : ''}
 
@@ -14330,6 +14747,16 @@ function saveTripClaim() {
 
 let _currentCreditCardSubTab = 'trip-bills'; // 'trip-bills' | 'bills' | 'transfers'
 let _cardBillTripFilter = null; // optional tripId to filter granular bills
+let _tripCardStatusFilter = 'all'; // 'all' | 'unsettled' | 'partial' | 'settled'
+
+function setTripCardStatusFilter(status) {
+  _tripCardStatusFilter = status || 'all';
+  ['all', 'unsettled', 'partial', 'settled'].forEach(k => {
+    const btn = document.getElementById('cc-tf-' + k);
+    if (btn) btn.classList.toggle('active', k === _tripCardStatusFilter);
+  });
+  renderCreditCardScreen();
+}
 
 /**
  * Ensure S.creditCard state exists with default values
@@ -14413,6 +14840,7 @@ function switchCreditCardSubTab(subTab) {
   const tabTripBills = document.getElementById('cc-tab-trip-bills');
   const tabBills = document.getElementById('cc-tab-bills');
   const tabTransfers = document.getElementById('cc-tab-transfers');
+  const tripFilterBar = document.getElementById('cc-trip-filter-bar');
   const tripBillsContainer = document.getElementById('cc-trip-bills-list-container');
   const billsContainer = document.getElementById('cc-bills-list-container');
   const transfersContainer = document.getElementById('cc-transfers-list-container');
@@ -14421,6 +14849,7 @@ function switchCreditCardSubTab(subTab) {
   if (tabBills) tabBills.classList.toggle('active', subTab === 'bills');
   if (tabTransfers) tabTransfers.classList.toggle('active', subTab === 'transfers');
 
+  if (tripFilterBar) tripFilterBar.style.display = subTab === 'trip-bills' ? 'flex' : 'none';
   if (tripBillsContainer) tripBillsContainer.style.display = subTab === 'trip-bills' ? 'block' : 'none';
   if (billsContainer) billsContainer.style.display = subTab === 'bills' ? 'block' : 'none';
   if (transfersContainer) transfersContainer.style.display = subTab === 'transfers' ? 'block' : 'none';
@@ -14659,17 +15088,29 @@ function renderCreditCardScreen() {
 
   if (tripBadgeEl) tripBadgeEl.textContent = String(tripGroups.length);
 
+  const shownTripGroups = (_tripCardStatusFilter === 'all')
+    ? tripGroups
+    : tripGroups.filter(tg => tg.status === _tripCardStatusFilter);
+
   if (tripBillsContainer) {
     if (!tripGroups.length) {
       tripBillsContainer.innerHTML = `
-        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+        <div class="empty" style="padding:24px 12px;background:var(--surface);border-radius:var(--rs);border:1px dashed var(--n200);">
           <div class="ei">✈️</div>
           <div class="et">No trip card expenses</div>
           <div class="es">Trips with bills paid via "3-Credit card" in this period will appear here.</div>
         </div>`;
+    } else if (!shownTripGroups.length) {
+      tripBillsContainer.innerHTML = `
+        <div class="empty" style="padding:24px 12px;background:var(--surface);border-radius:var(--rs);border:1px dashed var(--n200);">
+          <div class="ei">🔍</div>
+          <div class="et">No ${_tripCardStatusFilter} trips</div>
+          <div class="es">All ${tripGroups.length} trip(s) in this period have another reimbursement status.</div>
+          <button type="button" class="btn btn-sm btn-o" onclick="setTripCardStatusFilter('all')" style="margin-top:8px;">Show All Trips</button>
+        </div>`;
     } else {
       let tgHtml = '';
-      tripGroups.forEach(tg => {
+      shownTripGroups.forEach(tg => {
         const dateRangeStr = (tg.dateEnd && tg.dateEnd !== tg.date)
           ? `${fmtDate(tg.date)} ➔ ${fmtDate(tg.dateEnd)}`
           : (tg.date ? fmtDate(tg.date) : '—');
@@ -14686,7 +15127,7 @@ function renderCreditCardScreen() {
                   📅 ${dateRangeStr} ${tg.location ? '• ' + tg.location : ''}
                 </div>
               </div>
-              <span class="badge" style="font-size:10px;padding:2px 7px;font-weight:700;background:#fff;border:1px solid var(--n200);flex-shrink:0;">
+              <span class="badge" style="font-size:10px;padding:2px 7px;font-weight:700;background:var(--surface);border:1px solid var(--n200);flex-shrink:0;">
                 ${tg.statusText}
               </span>
             </div>
@@ -14745,7 +15186,7 @@ function renderCreditCardScreen() {
         filterBannerHtml = `
           <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
             <span>Filtered by: <strong>General Card Expenses</strong> (${displayedGranularBills.length} bills)</span>
-            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
+            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:var(--surface);">✕ Show All</button>
           </div>`;
       } else {
         const filterTrip = (S.trips || []).find(t => String(t.id) === String(_cardBillTripFilter));
@@ -14754,14 +15195,14 @@ function renderCreditCardScreen() {
         filterBannerHtml = `
           <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
             <span>Filtered by: <strong>🏭 ${typeof escHtml === 'function' ? escHtml(filterTripName) : filterTripName}</strong> (${displayedGranularBills.length} bills)</span>
-            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:#fff;">✕ Show All</button>
+            <button type="button" class="btn btn-sm btn-o" onclick="clearCardBillTripFilter()" style="font-size:10px;padding:2px 7px;background:var(--surface);">✕ Show All</button>
           </div>`;
       }
     }
 
     if (!displayedGranularBills.length) {
       billsContainer.innerHTML = filterBannerHtml + `
-        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+        <div class="empty" style="padding:24px 12px;background:var(--surface);border-radius:var(--rs);border:1px dashed var(--n200);">
           <div class="ei">💳</div>
           <div class="et">No card expenses found</div>
           <div class="es">Bills paid via "3-Credit card" in this period will appear here.</div>
@@ -14801,7 +15242,7 @@ function renderCreditCardScreen() {
   if (transfersContainer) {
     if (!filteredTransfers.length) {
       transfersContainer.innerHTML = `
-        <div class="empty" style="padding:24px 12px;background:#fff;border-radius:var(--rs);border:1px dashed var(--n200);">
+        <div class="empty" style="padding:24px 12px;background:var(--surface);border-radius:var(--rs);border:1px dashed var(--n200);">
           <div class="ei">🏦</div>
           <div class="et">No transfers recorded</div>
           <div class="es">When the company pays your travel claim, click "Transfer Back to Card" above to clear the card debt.</div>
@@ -15022,6 +15463,60 @@ async function deleteTransferBack(transferId) {
   showToast('✓ Transfer record deleted');
 }
 
+/**
+ * Render Home Dashboard Finance Summary Widget (UX-03)
+ */
+function renderHomeFinanceWidget() {
+  const el = document.getElementById('home-finance-widget');
+  if (!el) return;
+
+  ensureCreditCardState();
+  const budget = parseFloat(S.creditCard.budget) || 50000000;
+  const allCardBills = (S.bills || []).filter(isCardBill_);
+  const cardSpent = allCardBills.reduce((s, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') return s + (parseFloat(b.amount) || 0);
+    return s + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+  const cardRepaid = (S.creditCard.transfers || []).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const cardDebt = Math.max(0, cardSpent - cardRepaid);
+  const cardAvail = budget - cardDebt;
+  const availColor = cardAvail <= 0 ? 'var(--red)' : (cardAvail < budget * 0.2 ? 'var(--amber)' : 'var(--green)');
+
+  let unsettledCount = 0;
+  let unsettledVND = 0;
+  (S.trips || []).forEach(t => {
+    if (t.status === 'planned') return;
+    const claim = getTripClaimData(t.id);
+    if (claim.paymentStatus !== 'Done') {
+      const amt = calculateTripTotalClaim(t.id);
+      if (amt > 0) {
+        unsettledCount++;
+        unsettledVND += amt;
+      }
+    }
+  });
+
+  el.innerHTML = `
+    <div class="home-finance-grid">
+      <div class="home-fin-card" onclick="showScreen('bills');if(typeof switchBillsView==='function')switchBillsView('card');" title="Open Corporate Credit Card Tracker">
+        <div class="home-fin-label">
+          <span>💳 Card Available</span>
+          <span style="color:var(--n400);">›</span>
+        </div>
+        <div class="home-fin-val" style="color:${availColor};">${fmtAmt(cardAvail, 'VND')} ₫</div>
+        <div class="home-fin-sub">Debt: ${fmtAmt(cardDebt, 'VND')} ₫</div>
+      </div>
+      <div class="home-fin-card" onclick="showScreen('bills');if(typeof switchBillsView==='function')switchBillsView('claims');" title="Open Trip Claims & Reimbursement">
+        <div class="home-fin-label">
+          <span>✈️ Pending Claims</span>
+          <span style="color:var(--n400);">›</span>
+        </div>
+        <div class="home-fin-val" style="color:${unsettledCount ? 'var(--amber)' : 'var(--green)'};">${fmtAmt(unsettledVND, 'VND')} ₫</div>
+        <div class="home-fin-sub">${unsettledCount ? unsettledCount + ' unsettled trip' + (unsettledCount > 1 ? 's' : '') : 'All claims settled ✓'}</div>
+      </div>
+    </div>`;
+}
+
 // ====== sync.js ======
 // =====================================================
 // PlantLog — sync.js
@@ -15105,6 +15600,7 @@ function updateGSStatus() {
     if (bar) bar.style.display = 'none';
     if (el) el.textContent = 'Not connected';
   }
+  if (typeof renderSettingsAbout === 'function') renderSettingsAbout();
 }
 
 // Google Apps Script CORS fix:
@@ -16278,7 +16774,7 @@ function renderTripBills(tripId) {
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;margin-left:10px;">
               <div class="bill-amount">${amt} ${b.currency || ''}</div>
               <div style="display:flex;gap:4px;">
-                <button onclick="openEditBill('${b.id}')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--g200);background:#fff;cursor:pointer;font-size:13px;" title="Edit">✏️</button>
+                <button onclick="openEditBill('${b.id}')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--g200);background:var(--surface);cursor:pointer;font-size:13px;" title="Edit">✏️</button>
                 <button onclick="deleteBill('${b.id}')" class="db" title="Delete">×</button>
               </div>
             </div>

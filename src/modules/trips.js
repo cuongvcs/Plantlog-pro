@@ -566,7 +566,7 @@ function selCalDay(key,d){
           </div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
             <span style="font-size:14px;">${statusIcon}</span>
-            <button onclick="setTaskStatus('${tk.id}','${nextStatus}');selCalDay('${key}',${d})" style="font-size:10px;padding:3px 8px;border-radius:12px;border:1px solid var(--g300);background:#fff;cursor:pointer;font-family:var(--font);color:var(--g600);">→</button>
+            <button onclick="setTaskStatus('${tk.id}','${nextStatus}');selCalDay('${key}',${d})" style="font-size:10px;padding:3px 8px;border-radius:12px;border:1px solid var(--g300);background:var(--surface);cursor:pointer;font-family:var(--font);color:var(--g600);">→</button>
           </div>
         </div>
       </div>`;
@@ -618,7 +618,7 @@ function renderDash(){
   document.getElementById('stat-tasks').textContent=allTodayWork.length;
 
   if(!allTodayWork.length){
-    htt.innerHTML=`<div style="background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);padding:20px;text-align:center;margin-bottom:10px;">
+    htt.innerHTML=`<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);padding:20px;text-align:center;margin-bottom:10px;">
       <div style="font-size:28px;margin-bottom:6px;">✅</div>
       <div style="font-size:13px;color:var(--g400);">No work tasks scheduled for today.</div>
       <button onclick="openNewTaskModal(todayStr(),'work')" style="margin-top:10px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">＋ Add today's task</button>
@@ -642,7 +642,7 @@ function renderDash(){
           <span style="font-size:12px;font-weight:700;color:${g.txtColor};">${g.label}</span>
           <span style="font-size:10px;font-weight:600;color:${g.txtColor};opacity:0.7;">${items.length} task${items.length>1?'s':''}</span>
         </div>
-        <div style="background:#fff;border-radius:0 0 var(--r) var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);border-top:none;">
+        <div style="background:var(--surface);border-radius:0 0 var(--r) var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);border-top:none;">
           ${items.map(tk=>{
             const dur=calcDuration(tk);
             const timeStr=tk.timeStart?(tk.timeEnd?`${tk.timeStart}–${tk.timeEnd}`:tk.timeStart):'';
@@ -676,6 +676,8 @@ function renderDash(){
     });
     htt.innerHTML=out;
   }
+
+  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
 
   const upcoming=S.trips.filter(tr=>tr.status!=='completed').sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);
   const upEl=document.getElementById('upcoming-trips');

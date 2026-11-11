@@ -919,7 +919,7 @@ input, textarea, select, button { font-family: var(--font); }
 .sig-btn {
   padding: 8px 12px; border-radius: var(--rs);
   font-family: var(--font); font-size: 12px; font-weight: 600;
-  cursor: pointer; border: 1.5px solid var(--n200); background: #fff;
+  cursor: pointer; border: 1.5px solid var(--n200); background: var(--surface);
   color: var(--n700); transition: all var(--dur-fast);
   display: inline-flex; align-items: center; gap: 4px;
 }
@@ -1254,6 +1254,171 @@ input, textarea, select, button { font-family: var(--font); }
   font-weight: 700;
   font-family: var(--mono);
 }
+
+/* ── Wave 1 Dark Mode Fixes & UI Upgrades (IMP-34) ── */
+[data-theme="dark"] .claim-step-box.done {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(52, 211, 153, 0.45);
+}
+[data-theme="dark"] .claim-status-notyet {
+  background: rgba(239, 68, 68, 0.18);
+  color: #FCA5A5;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+[data-theme="dark"] .claim-status-proc {
+  background: rgba(245, 158, 11, 0.18);
+  color: #FCD34D;
+  border-color: rgba(251, 191, 36, 0.4);
+}
+[data-theme="dark"] .claim-status-done {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6EE7B7;
+  border-color: rgba(52, 211, 153, 0.4);
+}
+[data-theme="dark"] .cc-trip-reconcile-grid {
+  background: var(--surface-2);
+  border-color: var(--n200);
+}
+[data-theme="dark"] .tce-status-btn[data-status="Not yet"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #FCA5A5 !important;
+  border-color: rgba(248, 113, 113, 0.45) !important;
+}
+[data-theme="dark"] .tce-status-btn[data-status="Processing"] {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #FCD34D !important;
+  border-color: rgba(251, 191, 36, 0.45) !important;
+}
+[data-theme="dark"] .tce-status-btn[data-status="Done"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #6EE7B7 !important;
+  border-color: rgba(52, 211, 153, 0.45) !important;
+}
+
+.btn-trip-telegram {
+  width: 100%; margin-top: 6px; padding: 10px;
+  border: 1.5px solid #0088CC; border-radius: var(--rs);
+  background: #E3F2FD; color: #0066AA;
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+[data-theme="dark"] .btn-trip-telegram {
+  background: rgba(0, 136, 204, 0.16); color: #38BDF8; border-color: rgba(56, 189, 248, 0.45);
+}
+.btn-trip-ta {
+  width: 100%; margin-top: 6px; padding: 10px;
+  border: 1.5px solid #D97706; border-radius: var(--rs);
+  background: #FFFBEB; color: #92400E;
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+[data-theme="dark"] .btn-trip-ta {
+  background: rgba(217, 119, 6, 0.16); color: #FCD34D; border-color: rgba(251, 191, 36, 0.45);
+}
+
+/* Home Topbar Quick Sync Button */
+.home-sync-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.16); color: #fff;
+  font-size: 14px; cursor: pointer; transition: transform 0.15s, background 0.15s;
+}
+.home-sync-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.28); }
+.home-sync-btn.syncing { animation: spinSlow 1s linear infinite; opacity: 0.85; }
+@keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Home Finance Summary Widget (UX-03) */
+.home-finance-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+}
+.home-fin-card {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--rs);
+  padding: 10px 12px; box-shadow: var(--sh); cursor: pointer;
+  transition: transform 0.12s, border-color 0.15s;
+}
+.home-fin-card:active { transform: scale(0.98); }
+.home-fin-label {
+  font-size: 10.5px; font-weight: 700; color: var(--n500);
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;
+}
+.home-fin-val {
+  font-size: 14px; font-weight: 800; font-family: var(--mono); color: var(--n900);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.home-fin-sub {
+  font-size: 10px; color: var(--n500); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Trip Card Bills Status Filter Chips */
+.trip-card-chips {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px;
+  scrollbar-width: none;
+}
+.trip-card-chips::-webkit-scrollbar { display: none; }
+.trip-card-chip {
+  padding: 5px 10px; border-radius: 16px; border: 1px solid var(--n200);
+  background: var(--surface); font-size: 11px; font-weight: 600; color: var(--n600);
+  cursor: pointer; white-space: nowrap; transition: all var(--dur-fast);
+}
+.trip-card-chip.active {
+  background: #7C3AED; color: #fff; border-color: #7C3AED;
+}
+
+/* Settings About Card (UX-06) */
+.about-card {
+  background: var(--surface); border: 1px solid var(--n200); border-radius: var(--r);
+  padding: 14px; margin-top: 4px; box-shadow: var(--sh);
+}
+.about-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.about-logo {
+  width: 44px; height: 44px; border-radius: 11px; object-fit: cover;
+  border: 1px solid var(--n200); background: var(--n50); flex-shrink: 0;
+}
+.about-badges {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px;
+}
+.about-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+  background: var(--brand-light); color: var(--brand-dark);
+}
+.about-badge.offline { background: var(--bl); color: var(--bd); }
+.about-badge.sec { background: #F3E8FF; color: #6B21A8; }
+[data-theme="dark"] .about-badge.sec { background: rgba(124, 58, 237, 0.22); color: #D8B4FE; }
+.about-stats-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;
+  margin: 10px 0; padding: 8px 6px;
+  background: var(--n50); border: 1px solid var(--n150); border-radius: var(--rs);
+  text-align: center;
+}
+.about-stat-num {
+  font-size: 13px; font-weight: 800; color: var(--n900); font-family: var(--mono);
+}
+.about-stat-lbl {
+  font-size: 9px; font-weight: 600; color: var(--n500); margin-top: 1px;
+}
+.storage-bar-track {
+  width: 100%; height: 7px; border-radius: 4px; background: var(--n150); overflow: hidden;
+  margin: 5px 0 4px;
+}
+.storage-bar-fill {
+  height: 100%; border-radius: 4px; background: var(--green);
+  transition: width 0.3s ease, background 0.3s ease;
+}
+.about-meta-list {
+  font-size: 11px; color: var(--n600); border-top: 1px solid var(--n150);
+  padding-top: 8px; margin-top: 8px; display: flex; flex-direction: column; gap: 4px;
+}
+.about-meta-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.about-meta-row span:last-child {
+  font-weight: 600; color: var(--n800); text-align: right;
+}
+
 
 
 

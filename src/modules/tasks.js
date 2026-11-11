@@ -378,19 +378,19 @@ function renderTasks(){
   const over=tasks.filter(t=>(t.dateEnd||t.date||t.dateStart||'')< today&&t.status!=='done').length;
 
   let html=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;">
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+    <div style="background:var(--surface);border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
       <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--n700);line-height:1;">${total}</div>
       <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Total</div>
     </div>
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+    <div style="background:var(--surface);border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
       <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--n500);line-height:1;">${pend}</div>
       <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Pending</div>
     </div>
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+    <div style="background:var(--surface);border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
       <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--amber);line-height:1;">${inp}</div>
       <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Active</div>
     </div>
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
+    <div style="background:var(--surface);border:1px solid var(--n150);border-radius:var(--r);padding:10px 6px;text-align:center;box-shadow:var(--sh);">
       <div style="font-family:var(--font-hd);font-size:20px;font-weight:700;color:var(--brand);line-height:1;">${done}</div>
       <div style="font-size:10px;color:var(--n400);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Done</div>
     </div>
@@ -680,7 +680,7 @@ function openTaskDetail(id){
       ${tk.checklist.map(ci=>`<div style="display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--g200);">
         <span style="width:16px;height:16px;border-radius:50%;background:${ci.done?'var(--green)':'var(--g300)'};display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0;">${ci.done?'✓':''}</span>
         <span style="font-size:12px;${ci.done?'text-decoration:line-through;color:var(--g400);':''}">${ci.text}</span>
-        <button onclick="toggleDetailCheck('${tk.id}','${ci.id}');openTaskDetail('${tk.id}')" style="margin-left:auto;font-size:10px;border:1px solid var(--g300);background:#fff;border-radius:4px;padding:2px 7px;cursor:pointer;color:var(--g600);">${ci.done?'Undo':'Done'}</button>
+        <button onclick="toggleDetailCheck('${tk.id}','${ci.id}');openTaskDetail('${tk.id}')" style="margin-left:auto;font-size:10px;border:1px solid var(--g300);background:var(--surface);border-radius:4px;padding:2px 7px;cursor:pointer;color:var(--g600);">${ci.done?'Undo':'Done'}</button>
       </div>`).join('')}
     </div>`:''
     }
@@ -860,7 +860,7 @@ function renderPartRows(){
     const sc = SC[p.status] || SC.notyet;
     const num = idx + 1;
     return `
-    <div style="background:#fff;border:1px solid var(--n150);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--sh);">
+    <div style="background:var(--surface);border:1px solid var(--n150);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--sh);">
       <!-- Card header: part number + status + delete -->
       <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--n50);border-bottom:1px solid var(--n150);">
         <div style="background:var(--brand);color:#fff;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;flex-shrink:0;">#${num}</div>
@@ -1165,6 +1165,7 @@ function exportPartsPDF(){
   if(!parts.length){ showToast('No parts data found'); return; }
 
   const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compress:true});
+  if(typeof attachPdfTextNormalizer==='function') attachPdfTextNormalizer(doc);
   const W=297, mg=12;
   const p = S.profile;
   let y = 20;
@@ -1184,9 +1185,9 @@ function exportPartsPDF(){
   const onOrder  = parts.filter(p=>p.status==='On Order').length;
   const notYet   = parts.filter(p=>p.status==='Not Yet').length;
   doc.setFont('helvetica','bold'); doc.setFontSize(9);
-  doc.setTextColor(10,122,58);  doc.text(`✓ Ready: ${ready}`, mg, y);
-  doc.setTextColor(27,95,180);  doc.text(`⊙ On Order: ${onOrder}`, mg+40, y);
-  doc.setTextColor(192,57,43);  doc.text(`✗ Not Yet: ${notYet}`, mg+90, y);
+  doc.setTextColor(10,122,58);  doc.text(`Ready: ${ready}`, mg, y);
+  doc.setTextColor(27,95,180);  doc.text(`On Order: ${onOrder}`, mg+40, y);
+  doc.setTextColor(192,57,43);  doc.text(`Not Yet: ${notYet}`, mg+90, y);
   doc.setTextColor(33,37,41); y += 6;
 
   // Table headers

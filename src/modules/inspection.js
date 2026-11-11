@@ -99,14 +99,14 @@ function renderInspCard(item){
     const res = item.result;
     const resColor = res==='pass'?'var(--brand)':res==='fail'?'var(--red)':res==='na'?'var(--n400)':'var(--n300)';
     const resLabel = res==='pass'?'✅ Pass':res==='fail'?'❌ Fail':res==='na'?'— N/A':'⬜ Pending';
-    return `<div style="background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${resColor};padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
+    return `<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${resColor};padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:var(--n800);">${item.name}</div>
         ${item.note?`<div style="font-size:11px;color:var(--n500);margin-top:2px;">${item.note}</div>`:''}
       </div>
       <span style="color:${resColor};font-size:12px;font-weight:700;flex-shrink:0;">${resLabel}</span>
       <div style="display:flex;gap:4px;flex-shrink:0;">
-        <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:#fff;cursor:pointer;font-size:12px;">✏️</button>
+        <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:var(--surface);cursor:pointer;font-size:12px;">✏️</button>
         <button onclick="deleteInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid rgba(192,57,43,0.2);background:var(--rl);cursor:pointer;font-size:12px;color:var(--rd);">×</button>
       </div>
     </div>`;
@@ -119,7 +119,7 @@ function renderInspCard(item){
     const valText = isCond
       ? (item.condition==='ok'?'✅ OK':item.condition==='notok'?'❌ Not OK':'⚠ Other')
       : ((item.value||'?')+' '+(item.unit||''));
-    return `<div style="background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${valColor};padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
+    return `<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${valColor};padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:var(--n800);">${item.name}
           ${item.tag?`<span style="font-family:var(--mono);font-size:10px;color:var(--brand);margin-left:6px;">[${item.tag}]</span>`:''}
@@ -128,7 +128,7 @@ function renderInspCard(item){
       </div>
       <span style="color:${valColor};font-family:var(--mono);font-size:13px;font-weight:700;flex-shrink:0;">${valText}</span>
       <div style="display:flex;gap:4px;flex-shrink:0;">
-        <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:#fff;cursor:pointer;font-size:12px;">✏️</button>
+        <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:var(--surface);cursor:pointer;font-size:12px;">✏️</button>
         <button onclick="deleteInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid rgba(192,57,43,0.2);background:var(--rl);cursor:pointer;font-size:12px;color:var(--rd);">×</button>
       </div>
     </div>`;
@@ -136,7 +136,7 @@ function renderInspCard(item){
   if(item.type === 'issue'){
     const sevColor = {critical:'var(--purple)',high:'var(--red)',medium:'var(--amber)',low:'var(--blue)'}[item.severity]||'var(--n400)';
     const statusLabel = {pending:'⏳',waiting_part:'🔧',processing:'🔄',done:'✅'}[item.istatus||'pending']||'⏳';
-    return `<div style="background:#fff;border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${sevColor};padding:10px 12px;margin-bottom:6px;">
+    return `<div style="background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--n150);border-left:3px solid ${sevColor};padding:10px 12px;margin-bottom:6px;">
       <div style="display:flex;align-items:flex-start;gap:8px;">
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
@@ -149,7 +149,7 @@ function renderInspCard(item){
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
           <span style="font-size:16px;">${statusLabel}</span>
           <div style="display:flex;gap:4px;">
-            <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:#fff;cursor:pointer;font-size:12px;">✏️</button>
+            <button onclick="editInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--n200);background:var(--surface);cursor:pointer;font-size:12px;">✏️</button>
             <button onclick="deleteInspectionItem('${item.id}')" style="width:26px;height:26px;border-radius:var(--rs);border:1px solid rgba(192,57,43,0.2);background:var(--rl);cursor:pointer;font-size:12px;color:var(--rd);">×</button>
           </div>
         </div>
