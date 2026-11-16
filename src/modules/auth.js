@@ -60,6 +60,23 @@ function resetAutoLock() {
 document.addEventListener('touchstart', resetAutoLock, { passive: true });
 document.addEventListener('click', resetAutoLock);
 
+// UX-08: Auto-lock on app backgrounding / visibility change
+let _hiddenAt = 0;
+const BACKGROUND_LOCK_MS = 60 * 1000; // 1 minute in background locks app
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      _hiddenAt = Date.now();
+    } else if (document.visibilityState === 'visible') {
+      if (hasPIN() && !_isLocked && _hiddenAt && (Date.now() - _hiddenAt >= BACKGROUND_LOCK_MS)) {
+        lockApp();
+      }
+      _hiddenAt = 0;
+      resetAutoLock();
+    }
+  });
+}
+
 function lockApp() {
   if (!hasPIN()) return;
   _isLocked = true;

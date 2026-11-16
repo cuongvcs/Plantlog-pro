@@ -244,7 +244,7 @@ function saveReminder(){
   if(!title){ showToast('Enter a title'); return; }
   const freq  = (document.getElementById('rem-freq')||{}).value || 'monthly';
   const reminder = {
-    id:             editingReminderId || ('rem_'+Date.now()),
+    id:             editingReminderId || (typeof genId === 'function' ? genId('rem_') : ('rem_'+Date.now())),
     title,
     freq,
     weekday:        (document.getElementById('rem-weekday')||{}).value  || '1',

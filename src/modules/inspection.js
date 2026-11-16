@@ -283,7 +283,7 @@ function saveInspectionItem(){
   const date = document.getElementById('insp-date').value;
   if(!date){ showToast('Select a date'); return; }
 
-  let item = { id: editingInspId||('insp_'+Date.now()), tripId: curTrip, type, date };
+  let item = { id: editingInspId || (typeof genId === 'function' ? genId('insp_') : ('insp_'+Date.now())), tripId: curTrip, type, date };
 
   if(type === 'check'){
     const name = document.getElementById('insp-check-name').value.trim();
@@ -440,7 +440,7 @@ function applyInspectionPicker(){
     if(existingInspIds.has(id)) return;
     const item = insp.find(i=>i.id===id);
     if(!item) return;
-    curReport.checklist.push({id:'ci'+Date.now()+'_'+Math.random(), inspId:id, name:item.name, note:item.note||'', result:item.result||''});
+    curReport.checklist.push({id: (typeof genId==='function'?genId('ci'):'ci'+Date.now()+'_'+Math.random()), inspId:id, name:item.name, note:item.note||'', result:item.result||''});
   });
   // Remove unchecked ones that were added from inspections
   curReport.checklist = (curReport.checklist||[]).filter(c => !c.inspId || selChecks.includes(c.inspId));
@@ -452,7 +452,7 @@ function applyInspectionPicker(){
     const item = insp.find(i=>i.id===id);
     if(!item) return;
     curReport.readings.push({
-      id:'rd'+Date.now()+'_'+Math.random(), inspId:id,
+      id: (typeof genId==='function'?genId('rd'):'rd'+Date.now()+'_'+Math.random()), inspId:id,
       name:item.name, tag:item.tag||'', type:item.rdType||'condition',
       value:item.value||'', unit:item.unit||'',
       condition:item.condition||'ok', status:item.measStatus||'ok', notes:item.notes||''
@@ -467,7 +467,7 @@ function applyInspectionPicker(){
     const item = insp.find(i=>i.id===id);
     if(!item) return;
     curReport.issues.push({
-      id:'is'+Date.now()+'_'+Math.random(), inspId:id,
+      id: (typeof genId==='function'?genId('is'):'is'+Date.now()+'_'+Math.random()), inspId:id,
       title:item.title, description:item.description||'',
       severity:item.severity||'medium', action:item.action||'',
       photos:[], istatus:item.istatus||'pending'

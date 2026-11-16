@@ -40,9 +40,10 @@ function saveNewTrip(){
     return;
   }
   const tripTransport=document.getElementById('nt-transport').value;
-  const trip={id:'trip_'+Date.now(),plant,date,dateEnd:document.getElementById('nt-date-end').value||date,location:document.getElementById('nt-location').value,purpose:document.getElementById('nt-purpose').value,contact:document.getElementById('nt-contact').value,transport:tripTransport,flight:tripTransport.toLowerCase().includes('flight')?getTripFlightFields():null,ta:tripTransport.toLowerCase().includes('flight')?getTripTAFields():null,status:'planned',createdAt:new Date().toISOString()};
+  const tripId = typeof genId === 'function' ? genId('trip_') : ('trip_' + Date.now());
+  const trip={id:tripId,plant,date,dateEnd:document.getElementById('nt-date-end').value||date,location:document.getElementById('nt-location').value,purpose:document.getElementById('nt-purpose').value,contact:document.getElementById('nt-contact').value,transport:tripTransport,flight:tripTransport.toLowerCase().includes('flight')?getTripFlightFields():null,ta:tripTransport.toLowerCase().includes('flight')?getTripTAFields():null,status:'planned',createdAt:new Date().toISOString()};
   S.trips.push(trip);
-  S.reports[trip.id]={checklist:S.templates.map((tmpl,i)=>({id:'ci'+i+Date.now(),name:tmpl,result:'',note:''})),readings:[],issues:[],team:[...S.defaultTeam.map(m=>({...m,id:'tm'+Date.now()+Math.random()}))],signoff:{summary:'',result:'Completed',remarks:''},signature:'',reportTasks:[],reportTaskNotes:{}};
+  S.reports[trip.id]={checklist:S.templates.map((tmpl,i)=>({id:(typeof genId==='function'?genId('ci'):'ci'+i+Date.now()),name:tmpl,result:'',note:''})),readings:[],issues:[],team:[...S.defaultTeam.map(m=>({...m,id:(typeof genId==='function'?genId('tm'):'tm'+Date.now()+Math.random())}))],signoff:{summary:'',result:'Completed',remarks:''},signature:'',reportTasks:[],reportTaskNotes:{}};
   sv();closeModal('modal-new-trip');clearForm();
   Store.commit('trip:save');
   showToast(t('saveTrip')+' ✓');
@@ -372,13 +373,17 @@ function openEditTrip(){
   openModal('modal-new-trip');
 }
 async function deleteTripCurrent(){
-  const ok = await appConfirm('Delete this trip and all its associated reports? This cannot be undone.', {
+  const tr = S.trips.find(t=>t.id===curTrip);
+  const tripName = tr ? tr.plant : 'Trip';
+  const ok = await appConfirm(`Delete trip "${tripName}" and all its associated reports?`, {
     title: 'Delete Trip',
     danger: true,
     confirmText: 'Delete Trip',
     icon: '🗑️'
   });
   if(!ok) return;
+  // UX-07: Take snapshot before deletion so the user can undo within 6 seconds
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Trip: ' + tripName);
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[curTrip] = Date.now();
   S.trips=S.trips.filter(tr=>tr.id!==curTrip);
@@ -387,6 +392,7 @@ async function deleteTripCurrent(){
   showScreen('trips');
   renderTripList();
   svAndSync('trip_delete');
+  if (typeof showUndoToast === 'function') showUndoToast(`Trip "${tripName}" deleted`);
 }
 
 function setTripStatus(status){
@@ -1011,7 +1017,7 @@ function saveServiceTicket() {
     }
   } else {
     const newTk = {
-      id: 'tkt_' + Date.now(),
+      id: typeof genId === 'function' ? genId('tkt_') : ('tkt_' + Date.now()),
       date,
       normalHours,
       ot15Hours,

@@ -257,7 +257,7 @@ function saveNewTask(){
   if(!title||!dateStart){showToast('Title and start date are required');return;}
   const now=new Date().toISOString();
   const task={
-    id: editingTaskId||('task_'+Date.now()),
+    id: editingTaskId || (typeof genId === 'function' ? genId('task_') : ('task_' + Date.now())),
     title,
     desc:document.getElementById('task-desc').value,
     category:getSelectedCat(),
@@ -604,17 +604,26 @@ function setTaskStatus(id,status){
   Store.commit('task:status');
 }
 async function deleteTask(id){
-  const ok = await appConfirm('Delete this task? This cannot be undone.', {
+  const tk = S.tasks.find(t=>t.id===id);
+  const title = tk ? tk.title : 'Task';
+  const ok = await appConfirm(`Delete task "${title}"?`, {
     title: 'Delete Task',
     danger: true,
     confirmText: 'Delete Task',
     icon: '🗑️'
   });
   if(!ok) return;
+  // UX-07: Snapshot state before deletion so the user can undo within 6 seconds
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Task: ' + title);
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
-  S.tasks=S.tasks.filter(t=>t.id!==id);sv();renderTasks();renderDash();renderCalendar();
+  S.tasks=S.tasks.filter(t=>t.id!==id);
+  sv();
+  renderTasks();
+  renderDash();
+  renderCalendar();
   svAndSync('task_delete');
+  if (typeof showUndoToast === 'function') showUndoToast(`Task "${title}" deleted`);
 }
 function toggleDetailCheck(taskId, checkId){
   const tk=S.tasks.find(t=>t.id===taskId);
@@ -737,7 +746,7 @@ function renderTaskCheckTemplates(){
 function addTemplateToTaskCheck(idx){
   const tmpl=S.templates[idx];
   if(!tmpl||taskCheckItems.some(ci=>ci.text===tmpl))return;
-  taskCheckItems.push({id:'tci_'+Date.now()+'_'+idx, text:tmpl, done:false});
+  taskCheckItems.push({id: (typeof genId==='function'?genId('tci_'):'tci_'+Date.now()+'_'+idx), text:tmpl, done:false});
   renderTaskCheckTemplates();
   renderTaskCheckItems();
   updateTaskCheckSummary();
@@ -747,7 +756,7 @@ function addTaskCheckItem(){
   const input=document.getElementById('task-cl-input');
   const text=(input.value||'').trim();
   if(!text)return;
-  taskCheckItems.push({id:'tci_'+Date.now(), text, done:false});
+  taskCheckItems.push({id: (typeof genId==='function'?genId('tci_'):'tci_'+Date.now()), text, done:false});
   input.value='';
   renderTaskCheckItems();
   updateTaskCheckSummary();
@@ -1029,7 +1038,7 @@ async function handleTaskFiles(e){
   if(uploading) uploading.style.display = '';
   if(btn) btn.disabled = true;
 
-  const taskId = editingTaskId || ('task_' + Date.now());
+  const taskId = editingTaskId || (typeof genId === 'function' ? genId('task_') : ('task_' + Date.now()));
 
   for(const file of files){
     try{

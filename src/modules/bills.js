@@ -100,6 +100,7 @@ function updateBillMonthOptions(){
 }
 
 function setBillFilter(f) {
+  resetBillsRenderLimit();
   billFilter = f;
   // Update active tab
   ['all','trip','month'].forEach(id => {
@@ -159,6 +160,10 @@ function openAddBillFromScreen() {
   document.getElementById('bill-save-btn').dataset.tripid = '';
   openModal('modal-add-bill');
 }
+
+// UX-09: Progressive rendering limit for large bill datasets (>100 items)
+let _billsRenderLimit = 100;
+function resetBillsRenderLimit() { _billsRenderLimit = 100; }
 
 function renderBillsScreen() {
   const body = document.getElementById('bills-screen-body');
@@ -242,10 +247,14 @@ function renderBillsScreen() {
     </div>
   </div>`;
 
+  const totalBillsCount = bills.length;
+  const isChunked = totalBillsCount > _billsRenderLimit;
+  const displayedBills = isChunked ? bills.slice(0, _billsRenderLimit) : bills;
+
   if (billFilter === 'trip') {
     // Group by trip
     const byTrip = {};
-    bills.forEach(b => {
+    displayedBills.forEach(b => {
       const key = b.tripId || '__none__';
       if (!byTrip[key]) byTrip[key] = [];
       byTrip[key].push(b);
@@ -271,7 +280,7 @@ function renderBillsScreen() {
   } else {
     // Group by date
     const byDate = {};
-    bills.forEach(b => {
+    displayedBills.forEach(b => {
       const d = b.date || '';
       if (!byDate[d]) byDate[d] = [];
       byDate[d].push(b);
@@ -292,6 +301,18 @@ function renderBillsScreen() {
         ${dayBills.map(b => renderBillRow(b)).join('')}
       </div>`;
     });
+  }
+
+  if (isChunked) {
+    html += `<div style="text-align:center;padding:16px 8px;margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--g500);margin-bottom:8px;">
+        Showing ${_billsRenderLimit} of ${totalBillsCount} bills
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-s" onclick="_billsRenderLimit += 100; renderBillsScreen();">📥 Load More (100)</button>
+        <button class="btn btn-s" onclick="_billsRenderLimit = 999999; renderBillsScreen();">Show All</button>
+      </div>
+    </div>`;
   }
 
   body.innerHTML = html;
@@ -331,14 +352,17 @@ function renderBillRow(b) {
 }
 
 async function deleteBillFromScreen(id) {
-  const ok = await appConfirm('Delete this expense bill? This cannot be undone.', {
+  const billToDelete = (S.bills || []).find(b => b.id === id);
+  const billDesc = billToDelete ? (billToDelete.detail || billToDelete.category || 'Bill') : 'Bill';
+  const ok = await appConfirm(`Delete expense "${billDesc}"?`, {
     title: 'Delete Bill',
     danger: true,
     confirmText: 'Delete Bill',
     icon: '🧾'
   });
   if (!ok) return;
-  const billToDelete = (S.bills || []).find(b => b.id === id);
+  // UX-07: Take snapshot before delete
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Bill: ' + billDesc);
   const tripIdOfDeleted = billToDelete ? billToDelete.tripId : '';
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
@@ -361,6 +385,7 @@ async function deleteBillFromScreen(id) {
   }
 
   svAndSync('bill_delete');
+  if (typeof showUndoToast === 'function') showUndoToast(`Bill "${billDesc}" deleted`);
 }
 
 // ── Bill Export PDF ──────────────────────────────────────────
@@ -1763,7 +1788,7 @@ function saveTransferBack() {
     }
   } else {
     const newTransfer = {
-      id: 'cct_' + Date.now(),
+      id: typeof genId === 'function' ? genId('cct_') : ('cct_' + Date.now()),
       amount: amt,
       date: date,
       tripId: tripSel ? tripSel.value : '',
@@ -1833,25 +1858,42 @@ function renderHomeFinanceWidget() {
     }
   });
 
+  const hide = isHomeMoneyHidden();
+  const mask = '•••••• ₫';
+  const availTxt = hide ? mask : `${fmtAmt(cardAvail, 'VND')} ₫`;
+  const debtTxt = hide ? '••••••' : `${fmtAmt(cardDebt, 'VND')} ₫`;
+  const claimTxt = hide ? mask : `${fmtAmt(unsettledVND, 'VND')} ₫`;
+  const eyeBtn = `<button type="button" onclick="toggleHomeMoneyVisibility()" aria-label="${hide ? 'Show amounts' : 'Hide amounts'}" title="${hide ? 'Show amounts' : 'Hide amounts'}" style="position:absolute;right:2px;top:-24px;border:none;background:transparent;font-size:15px;cursor:pointer;padding:2px 6px;line-height:1;">${hide ? '🙈' : '👁️'}</button>`;
+
   el.innerHTML = `
+    <div style="position:relative;">${eyeBtn}</div>
     <div class="home-finance-grid">
       <div class="home-fin-card" onclick="showScreen('bills');if(typeof switchBillsView==='function')switchBillsView('card');" title="Open Corporate Credit Card Tracker">
         <div class="home-fin-label">
           <span>💳 Card Available</span>
           <span style="color:var(--n400);">›</span>
         </div>
-        <div class="home-fin-val" style="color:${availColor};">${fmtAmt(cardAvail, 'VND')} ₫</div>
-        <div class="home-fin-sub">Debt: ${fmtAmt(cardDebt, 'VND')} ₫</div>
+        <div class="home-fin-val" style="color:${availColor};">${availTxt}</div>
+        <div class="home-fin-sub">Debt: ${debtTxt}</div>
       </div>
       <div class="home-fin-card" onclick="showScreen('bills');if(typeof switchBillsView==='function')switchBillsView('claims');" title="Open Trip Claims & Reimbursement">
         <div class="home-fin-label">
           <span>✈️ Pending Claims</span>
           <span style="color:var(--n400);">›</span>
         </div>
-        <div class="home-fin-val" style="color:${unsettledCount ? 'var(--amber)' : 'var(--green)'};">${fmtAmt(unsettledVND, 'VND')} ₫</div>
+        <div class="home-fin-val" style="color:${unsettledCount ? 'var(--amber)' : 'var(--green)'};">${claimTxt}</div>
         <div class="home-fin-sub">${unsettledCount ? unsettledCount + ' unsettled trip' + (unsettledCount > 1 ? 's' : '') : 'All claims settled ✓'}</div>
       </div>
     </div>`;
+}
+
+function isHomeMoneyHidden() {
+  try { return localStorage.getItem('plpro_hide_money') === '1'; } catch (e) { return false; }
+}
+
+function toggleHomeMoneyVisibility() {
+  try { localStorage.setItem('plpro_hide_money', isHomeMoneyHidden() ? '0' : '1'); } catch (e) {}
+  renderHomeFinanceWidget();
 }
 
 

@@ -110,10 +110,10 @@ function editLibraryItem(id){
   document.getElementById('lib-item-type').disabled = true; // can't change type when editing
   // Load existing items
   if(item.type==='checklist'){
-    libClItems = (item.items||[]).map(i => typeof i==='string'?{id:'lci_'+Date.now()+'_'+Math.random(),text:i}:{...i});
+    libClItems = (item.items||[]).map(i => typeof i==='string'?{id:(typeof genId==='function'?genId('lci_'):'lci_'+Date.now()+'_'+Math.random()),text:i}:{...i});
     libRdItems = [];
   } else if(item.type==='readings'){
-    libRdItems = (item.items||[]).map(i => ({...i, id:i.id||'lrd_'+Date.now()+'_'+Math.random()}));
+    libRdItems = (item.items||[]).map(i => ({...i, id:i.id||(typeof genId==='function'?genId('lrd_'):'lrd_'+Date.now()+'_'+Math.random())}));
     libClItems = [];
   } else {
     // issues — single template item
@@ -141,7 +141,7 @@ function addLibClItem(){
   const inp = document.getElementById('lib-cl-input');
   const val = inp.value.trim();
   if(!val) return;
-  libClItems.push({id:'lci_'+Date.now(), text:val});
+  libClItems.push({id: (typeof genId==='function'?genId('lci_'):'lci_'+Date.now()), text:val});
   inp.value='';
   renderLibClItems();
   inp.focus();
@@ -164,7 +164,7 @@ function addLibRdItem(){
   const tag  = document.getElementById('lib-rd-tag').value.trim();
   const type = document.getElementById('lib-rd-type').value;
   const unit = document.getElementById('lib-rd-unit').value.trim();
-  libRdItems.push({id:'lrd_'+Date.now(), name, tag, type, unit});
+  libRdItems.push({id: (typeof genId==='function'?genId('lrd_'):'lrd_'+Date.now()), name, tag, type, unit});
   ['lib-rd-name','lib-rd-tag','lib-rd-unit'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   renderLibRdItems();
 }
@@ -209,7 +209,7 @@ function saveLibraryItem(){
     const idx = S.library.findIndex(i=>i.id===editingLibId);
     if(idx>=0) S.library[idx]={...S.library[idx], name, items, updatedAt:new Date().toISOString()};
   } else {
-    S.library.push({id:'lib_'+Date.now(), name, type, items, createdAt:new Date().toISOString()});
+    S.library.push({id: (typeof genId==='function'?genId('lib_'):'lib_'+Date.now()), name, type, items, createdAt:new Date().toISOString()});
   }
   sv();
   closeModal('modal-add-library');

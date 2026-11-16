@@ -346,7 +346,7 @@ function setCheck(i,r){if(!curReport||!curReport.checklist[i])return;curReport.c
 function delCheck(i){curReport.checklist.splice(i,1);sv();renderChecklist();}
 function addCheckItem(){
   const name=document.getElementById('ci-name').value.trim();if(!name){showToast('Name required');return;}
-  curReport.checklist.push({id:'ci'+Date.now(),name,note:document.getElementById('ci-note').value,result:''});
+  curReport.checklist.push({id:(typeof genId==='function'?genId('ci'):'ci'+Date.now()),name,note:document.getElementById('ci-note').value,result:''});
   sv();closeModal('modal-add-check');document.getElementById('ci-name').value='';document.getElementById('ci-note').value='';renderChecklist();
 }
 
@@ -607,7 +607,7 @@ function renderTeam(){
 function addTeamMember(){
   const name=document.getElementById('tm-name').value.trim();if(!name){showToast('Name required');return;}
   if(!curReport.team)curReport.team=[];
-  curReport.team.push({id:'tm'+Date.now(),name,role:document.getElementById('tm-role').value,org:document.getElementById('tm-org').value,signoff:document.getElementById('tm-signoff').value});
+  curReport.team.push({id:(typeof genId==='function'?genId('tm'):'tm'+Date.now()),name,role:document.getElementById('tm-role').value,org:document.getElementById('tm-org').value,signoff:document.getElementById('tm-signoff').value});
   sv();closeModal('modal-add-member');['tm-name','tm-role','tm-org'].forEach(id=>document.getElementById(id).value='');document.getElementById('tm-signoff').value='yes';renderTeam();
 }
 function delMember(i){curReport.team.splice(i,1);sv();renderTeam();}
@@ -766,7 +766,7 @@ function saveReportSparePart() {
   }
 
   curReport.spareParts.push({
-    id: 'part_' + Date.now(),
+    id: typeof genId === 'function' ? genId('part_') : ('part_' + Date.now()),
     partNo, desc, qty, unit, priority, notes
   });
 

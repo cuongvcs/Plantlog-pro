@@ -1387,7 +1387,7 @@ async function saveBill() {
     const vndAmt = cur === 'VND' ? parseFloat(amount) || 0 : (vndEl && vndEl.value ? parseFloat(vndEl.value) || 0 : 0);
 
     // Lock billId at start — never changes even during async uploads
-    const billId = editingBillId || ('bill_' + Date.now());
+    const billId = editingBillId || (typeof genId === 'function' ? genId('bill_') : ('bill_' + Date.now()));
 
     // Upload local photos to Drive now (at save time — reliable, no race conditions)
     const gsUrl = getGSUrl ? getGSUrl() : (S && S.gsUrl || '');
@@ -1479,14 +1479,17 @@ async function saveBill() {
 }
 
 async function deleteBill(id) {
-  const ok = await appConfirm('Delete this expense bill? This cannot be undone.', {
+  const billToDelete = (S.bills || []).find(b => b.id === id);
+  const billDesc = billToDelete ? (billToDelete.detail || billToDelete.category || 'Bill') : 'Bill';
+  const ok = await appConfirm(`Delete expense "${billDesc}"?`, {
     title: 'Delete Bill',
     danger: true,
     confirmText: 'Delete Bill',
     icon: '🧾'
   });
   if (!ok) return;
-  const billToDelete = (S.bills || []).find(b => b.id === id);
+  // UX-07: Take snapshot before deletion
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Bill: ' + billDesc);
   const tripIdOfDeleted = billToDelete ? billToDelete.tripId : '';
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
@@ -1511,6 +1514,7 @@ async function deleteBill(id) {
   }
 
   svAndSync('bill_delete');
+  if (typeof showUndoToast === 'function') showUndoToast(`Bill "${billDesc}" deleted`);
 }
 
 function triggerBillPhoto() {

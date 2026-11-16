@@ -1,13 +1,19 @@
-// PlantLog Pro Service Worker v92
+// PlantLog Pro Service Worker v98
 // Single-file architecture — only index.html needs caching
-const CACHE = 'plantlog-pro-v92';
+const CACHE = 'plantlog-pro-v98';
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
       .then(c => c.addAll(['./index.html', './manifest.json', './icon-192.png', './icon-512.png', './vendor/jspdf.umd.min.js']))
-      .then(() => self.skipWaiting())
   );
+});
+
+// REL-04: Controlled activation via user prompt (no mid-session cache swap)
+self.addEventListener('message', e => {
+  if (e.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', e => {

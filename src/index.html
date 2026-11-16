@@ -1449,6 +1449,96 @@ input, textarea, select, button { font-family: var(--font); }
   font-weight: 600; color: var(--n800); text-align: right;
 }
 
+/* ═══════ RELIABILITY & UX TOASTS (Đợt 3 & 4) ═══════ */
+/* UX-07: Undo Delete Toast */
+.undo-toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 16px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #111827;
+  color: #F9FAFB;
+  padding: 10px 16px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 90vw;
+}
+.undo-toast.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.undo-toast button {
+  background: var(--amber);
+  color: #78350F;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+.undo-toast button:active {
+  transform: scale(0.96);
+}
+
+/* REL-04: Service Worker Update Notification Banner */
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #064E3B;
+  color: #ECFDF5;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 10001;
+  animation: slideDownBanner 0.25s ease-out;
+}
+@keyframes slideDownBanner {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+.update-banner button {
+  background: #10B981;
+  color: #064E3B;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.update-banner button.ub-later {
+  background: transparent;
+  color: #A7F3D0;
+  padding: 6px 8px;
+  font-weight: 500;
+}
+
+/* UX-10: Accessible focus & tap targets */
+[role="button"]:focus-visible, button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
 
 
 
@@ -2885,6 +2975,14 @@ input, textarea, select, button { font-family: var(--font); }
         <div class="sin"><div class="sil">Restore from Backup (.json)</div><div class="sis">Import JSON data when switching devices</div></div>
         <div style="color:var(--g400);">↑</div>
       </div>
+      <div class="si" onclick="openAutoBackupRestore()">
+        <div class="sic" style="background:#ECFDF5;color:#059669;">🛟</div>
+        <div class="sin">
+          <div class="sil">Device Mirror &amp; Auto-Backup</div>
+          <div class="sis" id="auto-backup-status">Checking backup status…</div>
+        </div>
+        <div style="color:var(--g400);">›</div>
+      </div>
       <input type="file" id="backup-json-input" accept=".json,application/json" style="display:none;" onchange="handleBackupFileSelect(event)">
       <div class="si" onclick="clearAllData()" style="border-bottom:none;">
         <div class="sic" style="background:var(--rl);color:var(--red);">🗑</div>
@@ -2928,6 +3026,7 @@ input, textarea, select, button { font-family: var(--font); }
 
       <div class="about-meta-list">
         <div class="about-meta-row"><span>Developer / Org</span><span>VCS Automation · Field Service</span></div>
+        <div class="about-meta-row"><span>Device Mirror</span><span id="about-backup-status">Ready</span></div>
         <div class="about-meta-row"><span>Cloud Backend</span><span id="about-gs-status">Offline / Local</span></div>
         <div class="about-meta-row"><span>Last Cloud Sync</span><span id="about-last-sync">Not synced yet</span></div>
         <div class="about-meta-row"><span>PDF Engine</span><span id="about-pdf-mode">Offline Vendor Loaded ✓</span></div>
@@ -4638,21 +4737,44 @@ if (typeof window !== 'undefined' && window.matchMedia) {
 
 function sv(){
   try{
-    localStorage.setItem('plpro1',JSON.stringify(S));
+    S._savedAt = Date.now();
+    const json = JSON.stringify(S);
+    localStorage.setItem('plpro1', json);
+    if (typeof scheduleMirror === 'function') scheduleMirror(json);
   }catch(e){
     console.error('[PlantLog] LocalStorage save error:', e);
+    // Quota error fallback: still mirror to IndexedDB which has no 5MB quota!
+    try {
+      if (typeof scheduleMirror === 'function') scheduleMirror(JSON.stringify(S));
+    } catch(err){}
     if(e.name==='QuotaExceededError'||e.code===22||e.code===1014||(e.message&&e.message.toLowerCase().includes('quota'))){
       if(typeof showToast==='function'){
-        showToast('⚠️ Bộ nhớ máy bị đầy (LocalStorage Quota)! Vui lòng xóa bớt ảnh hoặc đồng bộ dữ liệu.', 6000);
+        showToast('⚠️ Bộ nhớ máy bị đầy (LocalStorage Quota)! Dữ liệu vẫn được lưu an toàn vào bản sao thiết bị.', 6000);
       }
     }
   }
+  if (typeof refreshBackupStatus === 'function') refreshBackupStatus();
 }
 function ld(){
+  let hadLocal = false;
+  let parseError = false;
   try{
     const d=localStorage.getItem('plpro1');
-    if(d)S={...S,...JSON.parse(d)};
-  }catch(e){}
+    hadLocal = !!d;
+    if(d) {
+      const parsed = JSON.parse(d);
+      S={...S,...parsed};
+    }
+  }catch(e){
+    console.error('[PlantLog] LocalStorage load error:', e);
+    parseError = true;
+  }
+  if (typeof _bootInfo !== 'undefined') {
+    _bootInfo.hadLocal = hadLocal;
+    _bootInfo.parseError = parseError;
+  }
+  if (typeof ensureStateShape === 'function') ensureStateShape(S);
+  if (typeof migrateState === 'function') migrateState(S);
   if(!S.assets) S.assets = [];
   if(!S.scratchpad) S.scratchpad = [];
   if(!S.tripClaims) S.tripClaims = [];
@@ -4868,22 +4990,28 @@ function handleBackupFileSelect(e) {
       });
       if (!ok) return;
 
+      // ARC-01: Take safety snapshot into IndexedDB before overwrite
+      try {
+        if (typeof StorageMirror !== 'undefined' && StorageMirror.put) {
+          await StorageMirror.put('pre_restore', { ts: Date.now(), json: JSON.stringify(S) });
+        }
+      } catch (e) {}
+
       S = { ...S, ...incomingData };
-      if (!Array.isArray(S.trips)) S.trips = [];
-      if (!Array.isArray(S.tasks)) S.tasks = [];
-      if (!Array.isArray(S.bills)) S.bills = [];
-      if (!Array.isArray(S.assets)) S.assets = [];
-      if (!Array.isArray(S.scratchpad)) S.scratchpad = [];
-      if (!Array.isArray(S.tripClaims)) S.tripClaims = [];
+      if (typeof ensureStateShape === 'function') ensureStateShape(S);
+      if (typeof migrateState === 'function') migrateState(S);
       sv();
       if(typeof showToast === 'function') showToast('✅ Data restored successfully!');
 
       // Re-render whole interface
-      if (typeof renderDash === 'function') renderDash();
-      if (typeof renderTripList === 'function') renderTripList();
-      if (typeof renderTasks === 'function') renderTasks();
-      if (typeof renderCalendar === 'function') renderCalendar();
-      if (typeof loadProfile === 'function') loadProfile();
+      if (typeof refreshAllViews === 'function') refreshAllViews();
+      else {
+        if (typeof renderDash === 'function') renderDash();
+        if (typeof renderTripList === 'function') renderTripList();
+        if (typeof renderTasks === 'function') renderTasks();
+        if (typeof renderCalendar === 'function') renderCalendar();
+        if (typeof loadProfile === 'function') loadProfile();
+      }
     } catch (err) {
       console.error('[Restore]', err);
       if(typeof showToast === 'function') showToast('❌ Error reading JSON file: ' + err.message);
@@ -4950,6 +5078,10 @@ function setupPWA(){
         // SW registered — check for updates
         reg.update();
         console.log('[PlantLog] SW registered:', reg.scope);
+        // REL-04: Non-disruptive update notification banner
+        if (typeof watchServiceWorkerUpdates === 'function') {
+          watchServiceWorkerUpdates(reg);
+        }
       })
       .catch(err => {
         console.warn('[PlantLog] SW registration failed:', err);
@@ -5086,6 +5218,13 @@ function safeRun(fn, name){
 
 function init(){
   ld(); setupPWA();
+  // ARC-01: Check device mirror for recovery if localStorage was cleared or corrupted
+  if (typeof recoverFromMirror === 'function') {
+    recoverFromMirror().catch(err => console.warn('[Recover]', err));
+  }
+  // UX-10: Accessibility keyboard & label bindings
+  if (typeof initA11y === 'function') safeRun(initA11y, 'initA11y');
+
   // ALWAYS initialize calendar vars first
   const now = new Date();
   calY = now.getFullYear();
@@ -5111,6 +5250,7 @@ function init(){
   safeRun(checkNotifPrompt, 'checkNotifPrompt');
   safeRun(updateGSStatus,   'updateGSStatus');
   safeRun(updateNetworkStatus, 'updateNetworkStatus');
+  safeRun(refreshBackupStatus, 'refreshBackupStatus');
   safeRun(ensureAssetsInitialized, 'ensureAssetsInitialized');
   safeRun(initScratchpadStore, 'initScratchpadStore');
 
@@ -5963,6 +6103,531 @@ async function quickSyncFromHome() {
 // Note: init() is invoked at the end of the final bundled module (sync.js)
 // so all module-level let/const declarations are initialized first.
 
+// ====== reliability.js ======
+// =====================================================
+// PlantLog — reliability.js   (IMP-35 / IMP-36)
+// Reliability & UX infrastructure layer. Loaded right after core.js.
+//   REL-01  Auto-backup: rolling daily snapshots (IndexedDB)
+//   REL-02  genId(): collision-safe record IDs
+//   REL-03  S.schemaVersion + versioned migrations
+//   REL-04  Service-Worker "new version" banner (no silent swap)
+//   ARC-01  IndexedDB mirror, quota-overflow safety net & recovery
+//   UX-07   Undo for deletes (6 s window)
+//   UX-10   Accessibility pass (aria-labels, keyboard activation)
+// All functions are plain globals (single-script bundle) and every
+// browser API is feature-detected so the layer degrades gracefully.
+// =====================================================
+
+var SCHEMA_VERSION = 2;
+var MIRROR_DB = 'PlantLogDB';
+var MIRROR_STORE = 'kv';
+var MIRROR_BACKUP_SLOTS = 3;
+var MIRROR_DEBOUNCE_MS = 800;
+var UNDO_WINDOW_MS = 6000;
+const DEFAULT_CHECK_TEMPLATES = [
+  'Safety pressure valves', 'Fire suppression system', 'Emergency stop buttons',
+  'PPE compliance check', 'Electrical panel condition', 'Pipe insulation condition'
+];
+
+// ═══════ REL-02: collision-safe IDs ═══════
+// Format stays "<prefix><epochMs>_<random>" so existing string handling
+// (slice, includes, sorting by prefix) keeps working.
+function genId(prefix) {
+  let rnd = '';
+  try {
+    if (typeof crypto !== 'undefined' && crypto) {
+      if (typeof crypto.randomUUID === 'function') {
+        rnd = crypto.randomUUID().replace(/-/g, '').slice(0, 8);
+      } else if (typeof crypto.getRandomValues === 'function') {
+        const a = new Uint32Array(1);
+        crypto.getRandomValues(a);
+        rnd = a[0].toString(36);
+      }
+    }
+  } catch (e) { /* fall through to Math.random */ }
+  if (!rnd) rnd = Math.random().toString(36).slice(2, 10);
+  return (prefix || '') + Date.now() + '_' + rnd;
+}
+
+// ═══════ REL-03: schema versioning & migrations ═══════
+function _isObj(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
+
+// Idempotent: guarantees every collection exists with the right type.
+function ensureStateShape(st) {
+  if (!_isObj(st)) return st;
+  ['trips', 'tasks', 'bills', 'machines', 'plans', 'inspections', 'assets', 'scratchpad',
+    'library', 'reminders', 'tripClaims', 'defaultTeam'].forEach(k => {
+    if (!Array.isArray(st[k])) st[k] = [];
+  });
+  ['reports', 'leaveData', 'deletedIds'].forEach(k => {
+    if (!_isObj(st[k])) st[k] = {};
+  });
+  if (!Array.isArray(st.templates)) st.templates = DEFAULT_CHECK_TEMPLATES.slice();
+  if (!_isObj(st.profile)) st.profile = { name: '', title: '', company: '', empid: '', signature: '' };
+  if (!_isObj(st.creditCard)) st.creditCard = { budget: 50000000, cardName: 'Corporate Credit Card', transfers: [] };
+  if (!Array.isArray(st.creditCard.transfers)) st.creditCard.transfers = [];
+  if (!_isObj(st.telegramConfig)) st.telegramConfig = { token: '', chatId: '', notifyTrips: true, notifyTasks: true, notifyLeave: true };
+  if (!_isObj(st.calendarConfig)) st.calendarConfig = { calId: '', pushTrips: true, pushTasks: true, pullEvents: true };
+  return st;
+}
+
+// Remove duplicate ids (keep the most recently updated) and give id-less records one.
+function _dedupeById(list) {
+  const byId = new Map();
+  let changed = false;
+  const stamp = x => new Date(x.updatedAt || x.createdAt || 0).getTime() || 0;
+  list.forEach(item => {
+    if (!_isObj(item)) { changed = true; return; }        // drop null / primitives
+    if (item.id === undefined || item.id === null || item.id === '') {
+      item.id = genId('rec_'); changed = true;
+    }
+    const prev = byId.get(item.id);
+    if (!prev) { byId.set(item.id, item); return; }
+    changed = true;
+    if (stamp(item) >= stamp(prev)) byId.set(item.id, item);
+  });
+  return { list: Array.from(byId.values()), changed };
+}
+
+const STATE_MIGRATIONS = [
+  {
+    to: 1, // baseline: collections must exist (older builds omitted several)
+    run(st) { ensureStateShape(st); }
+  },
+  {
+    to: 2, // v4.14: unique ids for trips/tasks/bills/assets/notes (Date.now() ids could collide)
+    run(st) {
+      ['trips', 'tasks', 'bills', 'assets', 'scratchpad'].forEach(k => {
+        const r = _dedupeById(st[k]);
+        if (r.changed) st[k] = r.list;
+      });
+    }
+  }
+];
+
+// Returns { from, to, migrated }. Never downgrades data written by a newer build.
+function migrateState(st) {
+  const target = st || (typeof S !== 'undefined' ? S : null);
+  if (!_isObj(target)) return { from: 0, to: 0, migrated: false };
+  const from = Number(target.schemaVersion) || 0;
+  ensureStateShape(target);
+  if (from > SCHEMA_VERSION) {
+    console.warn('[Migrate] Data schema v' + from + ' is newer than this app (v' + SCHEMA_VERSION + ') - left untouched');
+    return { from, to: from, migrated: false };
+  }
+  let ran = false;
+  STATE_MIGRATIONS.forEach(m => {
+    if (from < m.to) {
+      try { m.run(target); ran = true; }
+      catch (e) { console.warn('[Migrate] step v' + m.to + ' failed:', e); }
+    }
+  });
+  if (from < SCHEMA_VERSION) target.schemaVersion = SCHEMA_VERSION;
+  return { from, to: target.schemaVersion || from, migrated: ran };
+}
+
+// ═══════ ARC-01 / REL-01: IndexedDB mirror + rolling daily backups ═══════
+// localStorage stays the synchronous primary store. Every sv() is mirrored
+// (debounced) into IndexedDB, which has no 5 MB cap, and the previous day's
+// state is rotated into bak_0..bak_2 once per day. If a localStorage write
+// fails (quota) the mirror still holds the newest state and is restored at
+// the next boot.
+var StorageMirror = {
+  _db: null,
+  _open() {
+    if (this._db) return this._db;
+    const p = new Promise((resolve, reject) => {
+      try {
+        if (typeof indexedDB === 'undefined' || !indexedDB) return reject(new Error('IndexedDB unavailable'));
+        const req = indexedDB.open(MIRROR_DB, 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(MIRROR_STORE)) db.createObjectStore(MIRROR_STORE);
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error || new Error('IndexedDB open failed'));
+        req.onblocked = () => reject(new Error('IndexedDB blocked'));
+      } catch (e) { reject(e); }
+    });
+    p.catch(() => { this._db = null; });
+    this._db = p;
+    return p;
+  },
+  get(key) {
+    return this._open().then(db => new Promise((resolve, reject) => {
+      const r = db.transaction(MIRROR_STORE, 'readonly').objectStore(MIRROR_STORE).get(key);
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error);
+    }));
+  },
+  put(key, val) {
+    return this._open().then(db => new Promise((resolve, reject) => {
+      const tx = db.transaction(MIRROR_STORE, 'readwrite');
+      tx.objectStore(MIRROR_STORE).put(val, key);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('IndexedDB transaction aborted'));
+    }));
+  }
+};
+
+let _mirrorTimer = null;
+let _mirrorPending = null;     // { json, ts }
+let _mirrorBusy = false;
+let _mirrorHold = false;       // true while a boot-time recovery decision is pending
+let _bootInfo = { hadLocal: false, parseError: false };
+
+function _dayKey(ts) { return typeof localDateStr === 'function' ? localDateStr(new Date(ts)) : new Date(ts).toISOString().slice(0, 10); }
+
+function scheduleMirror(json, immediate) {
+  _mirrorPending = { json, ts: (typeof S !== 'undefined' && S && S._savedAt) || Date.now() };
+  clearTimeout(_mirrorTimer);
+  if (immediate) { flushMirror(); return; }
+  _mirrorTimer = setTimeout(flushMirror, MIRROR_DEBOUNCE_MS);
+}
+
+async function flushMirror() {
+  if (_mirrorPending === null || _mirrorHold) return;
+  if (_mirrorBusy) { _mirrorTimer = setTimeout(flushMirror, MIRROR_DEBOUNCE_MS); return; }
+  const job = _mirrorPending;
+  _mirrorPending = null;
+  _mirrorBusy = true;
+  try {
+    const prev = await StorageMirror.get('state');
+    // Rotate: when the stored state belongs to an earlier day, keep it as a daily snapshot.
+    if (prev && prev.json && _dayKey(prev.ts) !== _dayKey(job.ts)) {
+      for (let i = MIRROR_BACKUP_SLOTS - 1; i > 0; i--) {
+        const older = await StorageMirror.get('bak_' + (i - 1));
+        if (older) await StorageMirror.put('bak_' + i, older);
+      }
+      await StorageMirror.put('bak_0', prev);
+    }
+    await StorageMirror.put('state', { ts: job.ts, json: job.json });
+  } catch (e) {
+    console.warn('[Mirror] write skipped:', e && e.message);
+  } finally {
+    _mirrorBusy = false;
+    if (_mirrorPending !== null) _mirrorTimer = setTimeout(flushMirror, MIRROR_DEBOUNCE_MS);
+  }
+}
+
+// Re-render every view after state was replaced (restore / recovery / undo).
+function refreshAllViews() {
+  ['loadProfile', 'renderDash', 'renderTripList', 'renderCalendar', 'renderTasks',
+    'renderTemplates', 'renderDefaultTeam', 'updateGSStatus', 'renderSettingsAbout',
+    'renderBillsScreen', 'renderScratchpadList', 'renderAssetList'].forEach(name => {
+    try { if (typeof window !== 'undefined' && typeof window[name] === 'function') window[name](); }
+    catch (e) { /* a view that is not mounted must never block the others */ }
+  });
+  try {
+    if (typeof currentBillsView !== 'undefined') {
+      if (currentBillsView === 'card' && typeof renderCreditCardScreen === 'function') renderCreditCardScreen();
+      else if (currentBillsView === 'claims' && typeof renderTripClaimsScreen === 'function') renderTripClaimsScreen();
+    }
+  } catch (e) { }
+}
+
+function applyRecoveredState(rec, reason) {
+  let parsed = null;
+  try { parsed = JSON.parse(rec && rec.json); } catch (e) { return false; }
+  if (!_isObj(parsed)) return false;
+  const clean = (typeof sanitizeJsonKeys_ === 'function') ? sanitizeJsonKeys_(parsed) : parsed;
+  S = { ...S, ...clean };
+  migrateState(S);
+  sv();
+  refreshAllViews();
+  return true;
+}
+
+// Called once from init(): decides whether localStorage or the mirror holds the truth.
+async function recoverFromMirror() {
+  try {
+    const rec = await StorageMirror.get('state');
+    const localTs = Number(S._savedAt) || 0;
+    let chosen = null, reason = '';
+
+    if (_bootInfo.parseError || !_bootInfo.hadLocal) {
+      chosen = (rec && rec.json) ? rec : null;
+      if (!chosen) {
+        for (let i = 0; i < MIRROR_BACKUP_SLOTS && !chosen; i++) {
+          const b = await StorageMirror.get('bak_' + i);
+          if (b && b.json) chosen = b;
+        }
+      }
+      reason = _bootInfo.parseError ? 'corrupt' : 'missing';
+    } else if (rec && rec.json && Number(rec.ts) > localTs + 1000) {
+      chosen = rec; reason = 'newer';   // a previous localStorage write failed (quota)
+    }
+
+    if (chosen && applyRecoveredState(chosen, reason)) {
+      if (typeof showToast === 'function') {
+        showToast(reason === 'newer'
+          ? '🛟 Restored latest data from device backup (browser storage was full)'
+          : '🛟 Data restored from automatic backup ✓', 5000);
+      }
+      return true;
+    }
+    // First run after upgrade: seed the mirror from the current state.
+    if (!rec && _bootInfo.hadLocal) scheduleMirror(JSON.stringify(S));
+    return false;
+  } catch (e) {
+    console.warn('[Recover] skipped:', e && e.message);
+    return false;
+  } finally {
+    _mirrorHold = false;
+    if (_mirrorPending !== null) flushMirror();
+  }
+}
+
+async function listAutoBackups() {
+  const slots = [['state', 'Latest'], ['bak_0', 'Daily 1'], ['bak_1', 'Daily 2'], ['bak_2', 'Daily 3'], ['pre_restore', 'Before last restore']];
+  const out = [];
+  for (const [key, label] of slots) {
+    try {
+      const rec = await StorageMirror.get(key);
+      if (!rec || !rec.json) continue;
+      let info = { trips: '?', tasks: '?', bills: '?' };
+      try {
+        const p = JSON.parse(rec.json);
+        info = { trips: (p.trips || []).length, tasks: (p.tasks || []).length, bills: (p.bills || []).length };
+      } catch (e) { }
+      out.push({ key, label, ts: rec.ts, rec, ...info });
+    } catch (e) { break; }
+  }
+  return out;
+}
+
+async function refreshBackupStatus() {
+  const el = document.getElementById('auto-backup-status');
+  const aboutEl = document.getElementById('about-backup-status');
+  let text = 'Not available on this browser';
+  try {
+    const rec = await StorageMirror.get('state');
+    text = rec && rec.ts ? 'Last backup: ' + new Date(rec.ts).toLocaleString() : 'Waiting for first backup…';
+  } catch (e) { }
+  if (el) el.textContent = text;
+  if (aboutEl) aboutEl.textContent = text.replace('Last backup: ', '');
+  return text;
+}
+
+async function openAutoBackupRestore() {
+  const list = await listAutoBackups();
+  if (!list.length) { showToast('No automatic backup found on this device yet'); return; }
+  const lines = list.map((x, i) =>
+    `${i + 1}) ${x.label} — ${new Date(x.ts).toLocaleString()} (${x.trips} trips, ${x.tasks} tasks, ${x.bills} bills)`).join('\n');
+  const ans = await appPrompt('Automatic backups kept on this device:\n' + lines + '\n\nEnter the number to restore:', '1',
+    { title: '🛟 Restore Auto-Backup', placeholder: '1' });
+  if (ans === null || ans === undefined) return;
+  const idx = parseInt(ans, 10) - 1;
+  if (!(idx >= 0 && idx < list.length)) { showToast('Invalid selection'); return; }
+  const pick = list[idx];
+  const ok = await appConfirm('Replace current data with "' + pick.label + '" (' + new Date(pick.ts).toLocaleString() + ')?\nYour current data is saved first as "Before last restore".', {
+    title: 'Restore Backup', confirmText: 'Restore', icon: '🛟'
+  });
+  if (!ok) return;
+  try { await StorageMirror.put('pre_restore', { ts: Date.now(), json: JSON.stringify(S) }); } catch (e) { }
+  if (applyRecoveredState(pick.rec, 'manual')) showToast('✅ Backup restored');
+  else showToast('❌ Could not read that backup');
+}
+
+// ═══════ UX-07: undo for deletes ═══════
+const UNDO_KEYS = ['trips', 'tasks', 'bills', 'assets', 'scratchpad'];
+let _undoSnap = null;
+let _undoTimer = null;
+
+function takeUndoSnapshot(label) {
+  const snap = { label: label || 'item', at: Date.now(), arrays: {}, reports: { ...(S.reports || {}) } };
+  UNDO_KEYS.forEach(k => { snap.arrays[k] = Array.isArray(S[k]) ? S[k].slice() : []; });
+  _undoSnap = snap;
+  return snap;
+}
+
+function hideUndoToast() {
+  const el = typeof document !== 'undefined' ? document.getElementById('undo-toast') : null;
+  if (el) el.classList.remove('show');
+}
+
+function showUndoToast(msg) {
+  if (typeof document === 'undefined') return;
+  let el = document.getElementById('undo-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'undo-toast';
+    el.className = 'undo-toast';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    document.body.appendChild(el);
+  }
+  el.textContent = '';
+  const span = document.createElement('span');
+  span.textContent = msg;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = '↩ Undo';
+  btn.setAttribute('aria-label', 'Undo delete');
+  btn.onclick = () => undoLastDelete();
+  el.appendChild(span);
+  el.appendChild(btn);
+  el.classList.add('show');
+  clearTimeout(_undoTimer);
+  _undoTimer = setTimeout(() => { hideUndoToast(); _undoSnap = null; }, UNDO_WINDOW_MS);
+}
+
+// Merge-style restore: re-adds the deleted records without discarding anything
+// the user created during the undo window.
+function undoLastDelete() {
+  const snap = _undoSnap;
+  if (!snap) return false;
+  clearTimeout(_undoTimer);
+  _undoSnap = null;
+  hideUndoToast();
+
+  const nowIso = new Date().toISOString();
+  const restoredIds = [];
+  const restoredBillTrips = new Set();
+  const restoredNotes = [];
+
+  UNDO_KEYS.forEach(k => {
+    const cur = Array.isArray(S[k]) ? S[k] : [];
+    const have = new Set(cur.map(x => x && x.id));
+    const back = (snap.arrays[k] || []).filter(x => x && x.id !== undefined && !have.has(x.id));
+    back.forEach(x => {
+      x.updatedAt = nowIso;                 // newer than the tombstone -> wins sync merges
+      restoredIds.push(x.id);
+      if (k === 'bills' && x.tripId) restoredBillTrips.add(x.tripId);
+      if (k === 'scratchpad') restoredNotes.push(x);
+    });
+    S[k] = cur.concat(back);
+  });
+
+  if (!_isObj(S.deletedIds)) S.deletedIds = {};
+  if (!_isObj(S.reports)) S.reports = {};
+  restoredIds.forEach(id => {
+    delete S.deletedIds[id];
+    if (snap.reports[id] && !S.reports[id]) S.reports[id] = snap.reports[id];
+  });
+
+  if (restoredBillTrips.size && typeof calculateTripTotalClaim === 'function') {
+    (S.tripClaims || []).forEach(c => {
+      if (restoredBillTrips.has(c.tripId)) {
+        c.totalClaim = calculateTripTotalClaim(c.tripId);
+        c.updatedAt = nowIso;
+      }
+    });
+  }
+
+  sv();
+  refreshAllViews();
+  if (S.gsUrl && typeof syncSingleQuickSnap === 'function') {
+    restoredNotes.forEach(n => { try { syncSingleQuickSnap(n); } catch (e) { } });
+  }
+  if (typeof svAndSync === 'function') svAndSync('undo', { skipSave: true });
+  if (typeof showToast === 'function') showToast('↩ Restored');
+  return restoredIds.length > 0;
+}
+
+// ═══════ REL-04: Service Worker update banner ═══════
+let _swUpdateRequested = false;
+let _swReg = null;
+
+function showUpdateBanner(worker) {
+  if (typeof document === 'undefined' || document.getElementById('update-banner')) return;
+  const bar = document.createElement('div');
+  bar.id = 'update-banner';
+  bar.className = 'update-banner';
+  bar.setAttribute('role', 'alert');
+  const span = document.createElement('span');
+  span.textContent = '🔄 A new version is available';
+  const reloadBtn = document.createElement('button');
+  reloadBtn.type = 'button';
+  reloadBtn.textContent = 'Reload';
+  reloadBtn.onclick = () => {
+    reloadBtn.disabled = true;
+    _swUpdateRequested = true;
+    try { worker.postMessage('SKIP_WAITING'); }
+    catch (e) { location.reload(); }
+  };
+  const laterBtn = document.createElement('button');
+  laterBtn.type = 'button';
+  laterBtn.className = 'ub-later';
+  laterBtn.textContent = 'Later';
+  laterBtn.onclick = () => bar.remove();
+  bar.appendChild(span);
+  bar.appendChild(reloadBtn);
+  bar.appendChild(laterBtn);
+  document.body.appendChild(bar);
+}
+
+function watchServiceWorkerUpdates(reg) {
+  if (!reg || typeof navigator === 'undefined' || !navigator.serviceWorker) return;
+  _swReg = reg;
+  const announce = w => { if (w && navigator.serviceWorker.controller) showUpdateBanner(w); };
+  if (reg.waiting) announce(reg.waiting);
+  reg.addEventListener('updatefound', () => {
+    const nw = reg.installing;
+    if (!nw) return;
+    nw.addEventListener('statechange', () => { if (nw.state === 'installed') announce(nw); });
+  });
+  // Reload exactly once, and only when the user asked for the update.
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!_swUpdateRequested || reloading) return;
+    reloading = true;
+    location.reload();
+  });
+}
+
+// ═══════ UX-10: accessibility pass ═══════
+const A11Y_LABELS = {
+  '✕': 'Close', '✖': 'Close', '×': 'Delete', '←': 'Back', '›': 'Open', '＋': 'Add', '+': 'Add',
+  '✏️': 'Edit', '✏': 'Edit', '🗑': 'Delete', '🗑️': 'Delete', '☁️': 'Sync', '🔔': 'Reminders',
+  '🔍': 'Search', '↓': 'Download', '↑': 'Upload', '📅': 'Calendar', '⚡': 'Quick action'
+};
+const A11Y_CLICKABLE = '.si[onclick], .sb2[onclick], .home-fin-card[onclick], .tc[onclick], .kb-card[onclick], .cc-item-row[onclick]';
+
+function applyA11y(root) {
+  if (typeof document === 'undefined') return;
+  const scope = (root && root.querySelectorAll) ? root : document;
+  scope.querySelectorAll('button:not([aria-label])').forEach(b => {
+    const txt = (b.textContent || '').trim();
+    if (/[A-Za-z\u00C0-\u1EF9]{2,}/.test(txt)) return;      // already has readable text
+    const label = b.getAttribute('title') || A11Y_LABELS[txt];
+    if (label) b.setAttribute('aria-label', label);
+  });
+  scope.querySelectorAll(A11Y_CLICKABLE).forEach(el => {
+    if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+  });
+}
+
+function initA11y() {
+  if (typeof document === 'undefined') return;
+  applyA11y();
+  document.addEventListener('keydown', e => {
+    const t = e.target;
+    if ((e.key === 'Enter' || e.key === ' ') && t && t.getAttribute && t.getAttribute('role') === 'button' && t.tagName !== 'BUTTON') {
+      e.preventDefault();
+      t.click();
+    }
+  });
+  if (typeof MutationObserver !== 'undefined') {
+    const host = document.getElementById('app');
+    if (host) {
+      let timer = null;
+      new MutationObserver(() => { clearTimeout(timer); timer = setTimeout(() => applyA11y(host), 500); })
+        .observe(host, { childList: true, subtree: true });
+    }
+  }
+}
+
+// Flush the mirror when the page is hidden so the last edits are not lost.
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushMirror();
+    else if (_swReg && typeof _swReg.update === 'function') { try { _swReg.update(); } catch (e) { } }
+  });
+}
+
 // ====== auth.js ======
 // =====================================================
 // PlantLog — auth.js
@@ -6024,6 +6689,23 @@ function resetAutoLock() {
 
 document.addEventListener('touchstart', resetAutoLock, { passive: true });
 document.addEventListener('click', resetAutoLock);
+
+// UX-08: Auto-lock on app backgrounding / visibility change
+let _hiddenAt = 0;
+const BACKGROUND_LOCK_MS = 60 * 1000; // 1 minute in background locks app
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      _hiddenAt = Date.now();
+    } else if (document.visibilityState === 'visible') {
+      if (hasPIN() && !_isLocked && _hiddenAt && (Date.now() - _hiddenAt >= BACKGROUND_LOCK_MS)) {
+        lockApp();
+      }
+      _hiddenAt = 0;
+      resetAutoLock();
+    }
+  });
+}
 
 function lockApp() {
   if (!hasPIN()) return;
@@ -6388,9 +7070,10 @@ function saveNewTrip(){
     return;
   }
   const tripTransport=document.getElementById('nt-transport').value;
-  const trip={id:'trip_'+Date.now(),plant,date,dateEnd:document.getElementById('nt-date-end').value||date,location:document.getElementById('nt-location').value,purpose:document.getElementById('nt-purpose').value,contact:document.getElementById('nt-contact').value,transport:tripTransport,flight:tripTransport.toLowerCase().includes('flight')?getTripFlightFields():null,ta:tripTransport.toLowerCase().includes('flight')?getTripTAFields():null,status:'planned',createdAt:new Date().toISOString()};
+  const tripId = typeof genId === 'function' ? genId('trip_') : ('trip_' + Date.now());
+  const trip={id:tripId,plant,date,dateEnd:document.getElementById('nt-date-end').value||date,location:document.getElementById('nt-location').value,purpose:document.getElementById('nt-purpose').value,contact:document.getElementById('nt-contact').value,transport:tripTransport,flight:tripTransport.toLowerCase().includes('flight')?getTripFlightFields():null,ta:tripTransport.toLowerCase().includes('flight')?getTripTAFields():null,status:'planned',createdAt:new Date().toISOString()};
   S.trips.push(trip);
-  S.reports[trip.id]={checklist:S.templates.map((tmpl,i)=>({id:'ci'+i+Date.now(),name:tmpl,result:'',note:''})),readings:[],issues:[],team:[...S.defaultTeam.map(m=>({...m,id:'tm'+Date.now()+Math.random()}))],signoff:{summary:'',result:'Completed',remarks:''},signature:'',reportTasks:[],reportTaskNotes:{}};
+  S.reports[trip.id]={checklist:S.templates.map((tmpl,i)=>({id:(typeof genId==='function'?genId('ci'):'ci'+i+Date.now()),name:tmpl,result:'',note:''})),readings:[],issues:[],team:[...S.defaultTeam.map(m=>({...m,id:(typeof genId==='function'?genId('tm'):'tm'+Date.now()+Math.random())}))],signoff:{summary:'',result:'Completed',remarks:''},signature:'',reportTasks:[],reportTaskNotes:{}};
   sv();closeModal('modal-new-trip');clearForm();
   Store.commit('trip:save');
   showToast(t('saveTrip')+' ✓');
@@ -6720,13 +7403,17 @@ function openEditTrip(){
   openModal('modal-new-trip');
 }
 async function deleteTripCurrent(){
-  const ok = await appConfirm('Delete this trip and all its associated reports? This cannot be undone.', {
+  const tr = S.trips.find(t=>t.id===curTrip);
+  const tripName = tr ? tr.plant : 'Trip';
+  const ok = await appConfirm(`Delete trip "${tripName}" and all its associated reports?`, {
     title: 'Delete Trip',
     danger: true,
     confirmText: 'Delete Trip',
     icon: '🗑️'
   });
   if(!ok) return;
+  // UX-07: Take snapshot before deletion so the user can undo within 6 seconds
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Trip: ' + tripName);
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[curTrip] = Date.now();
   S.trips=S.trips.filter(tr=>tr.id!==curTrip);
@@ -6735,6 +7422,7 @@ async function deleteTripCurrent(){
   showScreen('trips');
   renderTripList();
   svAndSync('trip_delete');
+  if (typeof showUndoToast === 'function') showUndoToast(`Trip "${tripName}" deleted`);
 }
 
 function setTripStatus(status){
@@ -7359,7 +8047,7 @@ function saveServiceTicket() {
     }
   } else {
     const newTk = {
-      id: 'tkt_' + Date.now(),
+      id: typeof genId === 'function' ? genId('tkt_') : ('tkt_' + Date.now()),
       date,
       normalHours,
       ot15Hours,
@@ -7916,7 +8604,7 @@ function saveNewTask(){
   if(!title||!dateStart){showToast('Title and start date are required');return;}
   const now=new Date().toISOString();
   const task={
-    id: editingTaskId||('task_'+Date.now()),
+    id: editingTaskId || (typeof genId === 'function' ? genId('task_') : ('task_' + Date.now())),
     title,
     desc:document.getElementById('task-desc').value,
     category:getSelectedCat(),
@@ -8263,17 +8951,26 @@ function setTaskStatus(id,status){
   Store.commit('task:status');
 }
 async function deleteTask(id){
-  const ok = await appConfirm('Delete this task? This cannot be undone.', {
+  const tk = S.tasks.find(t=>t.id===id);
+  const title = tk ? tk.title : 'Task';
+  const ok = await appConfirm(`Delete task "${title}"?`, {
     title: 'Delete Task',
     danger: true,
     confirmText: 'Delete Task',
     icon: '🗑️'
   });
   if(!ok) return;
+  // UX-07: Snapshot state before deletion so the user can undo within 6 seconds
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Task: ' + title);
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
-  S.tasks=S.tasks.filter(t=>t.id!==id);sv();renderTasks();renderDash();renderCalendar();
+  S.tasks=S.tasks.filter(t=>t.id!==id);
+  sv();
+  renderTasks();
+  renderDash();
+  renderCalendar();
   svAndSync('task_delete');
+  if (typeof showUndoToast === 'function') showUndoToast(`Task "${title}" deleted`);
 }
 function toggleDetailCheck(taskId, checkId){
   const tk=S.tasks.find(t=>t.id===taskId);
@@ -8396,7 +9093,7 @@ function renderTaskCheckTemplates(){
 function addTemplateToTaskCheck(idx){
   const tmpl=S.templates[idx];
   if(!tmpl||taskCheckItems.some(ci=>ci.text===tmpl))return;
-  taskCheckItems.push({id:'tci_'+Date.now()+'_'+idx, text:tmpl, done:false});
+  taskCheckItems.push({id: (typeof genId==='function'?genId('tci_'):'tci_'+Date.now()+'_'+idx), text:tmpl, done:false});
   renderTaskCheckTemplates();
   renderTaskCheckItems();
   updateTaskCheckSummary();
@@ -8406,7 +9103,7 @@ function addTaskCheckItem(){
   const input=document.getElementById('task-cl-input');
   const text=(input.value||'').trim();
   if(!text)return;
-  taskCheckItems.push({id:'tci_'+Date.now(), text, done:false});
+  taskCheckItems.push({id: (typeof genId==='function'?genId('tci_'):'tci_'+Date.now()), text, done:false});
   input.value='';
   renderTaskCheckItems();
   updateTaskCheckSummary();
@@ -8688,7 +9385,7 @@ async function handleTaskFiles(e){
   if(uploading) uploading.style.display = '';
   if(btn) btn.disabled = true;
 
-  const taskId = editingTaskId || ('task_' + Date.now());
+  const taskId = editingTaskId || (typeof genId === 'function' ? genId('task_') : ('task_' + Date.now()));
 
   for(const file of files){
     try{
@@ -9271,7 +9968,7 @@ function setCheck(i,r){if(!curReport||!curReport.checklist[i])return;curReport.c
 function delCheck(i){curReport.checklist.splice(i,1);sv();renderChecklist();}
 function addCheckItem(){
   const name=document.getElementById('ci-name').value.trim();if(!name){showToast('Name required');return;}
-  curReport.checklist.push({id:'ci'+Date.now(),name,note:document.getElementById('ci-note').value,result:''});
+  curReport.checklist.push({id:(typeof genId==='function'?genId('ci'):'ci'+Date.now()),name,note:document.getElementById('ci-note').value,result:''});
   sv();closeModal('modal-add-check');document.getElementById('ci-name').value='';document.getElementById('ci-note').value='';renderChecklist();
 }
 
@@ -9532,7 +10229,7 @@ function renderTeam(){
 function addTeamMember(){
   const name=document.getElementById('tm-name').value.trim();if(!name){showToast('Name required');return;}
   if(!curReport.team)curReport.team=[];
-  curReport.team.push({id:'tm'+Date.now(),name,role:document.getElementById('tm-role').value,org:document.getElementById('tm-org').value,signoff:document.getElementById('tm-signoff').value});
+  curReport.team.push({id:(typeof genId==='function'?genId('tm'):'tm'+Date.now()),name,role:document.getElementById('tm-role').value,org:document.getElementById('tm-org').value,signoff:document.getElementById('tm-signoff').value});
   sv();closeModal('modal-add-member');['tm-name','tm-role','tm-org'].forEach(id=>document.getElementById(id).value='');document.getElementById('tm-signoff').value='yes';renderTeam();
 }
 function delMember(i){curReport.team.splice(i,1);sv();renderTeam();}
@@ -9691,7 +10388,7 @@ function saveReportSparePart() {
   }
 
   curReport.spareParts.push({
-    id: 'part_' + Date.now(),
+    id: typeof genId === 'function' ? genId('part_') : ('part_' + Date.now()),
     partNo, desc, qty, unit, priority, notes
   });
 
@@ -11098,7 +11795,7 @@ function saveInspectionItem(){
   const date = document.getElementById('insp-date').value;
   if(!date){ showToast('Select a date'); return; }
 
-  let item = { id: editingInspId||('insp_'+Date.now()), tripId: curTrip, type, date };
+  let item = { id: editingInspId || (typeof genId === 'function' ? genId('insp_') : ('insp_'+Date.now())), tripId: curTrip, type, date };
 
   if(type === 'check'){
     const name = document.getElementById('insp-check-name').value.trim();
@@ -11255,7 +11952,7 @@ function applyInspectionPicker(){
     if(existingInspIds.has(id)) return;
     const item = insp.find(i=>i.id===id);
     if(!item) return;
-    curReport.checklist.push({id:'ci'+Date.now()+'_'+Math.random(), inspId:id, name:item.name, note:item.note||'', result:item.result||''});
+    curReport.checklist.push({id: (typeof genId==='function'?genId('ci'):'ci'+Date.now()+'_'+Math.random()), inspId:id, name:item.name, note:item.note||'', result:item.result||''});
   });
   // Remove unchecked ones that were added from inspections
   curReport.checklist = (curReport.checklist||[]).filter(c => !c.inspId || selChecks.includes(c.inspId));
@@ -11267,7 +11964,7 @@ function applyInspectionPicker(){
     const item = insp.find(i=>i.id===id);
     if(!item) return;
     curReport.readings.push({
-      id:'rd'+Date.now()+'_'+Math.random(), inspId:id,
+      id: (typeof genId==='function'?genId('rd'):'rd'+Date.now()+'_'+Math.random()), inspId:id,
       name:item.name, tag:item.tag||'', type:item.rdType||'condition',
       value:item.value||'', unit:item.unit||'',
       condition:item.condition||'ok', status:item.measStatus||'ok', notes:item.notes||''
@@ -11282,7 +11979,7 @@ function applyInspectionPicker(){
     const item = insp.find(i=>i.id===id);
     if(!item) return;
     curReport.issues.push({
-      id:'is'+Date.now()+'_'+Math.random(), inspId:id,
+      id: (typeof genId==='function'?genId('is'):'is'+Date.now()+'_'+Math.random()), inspId:id,
       title:item.title, description:item.description||'',
       severity:item.severity||'medium', action:item.action||'',
       photos:[], istatus:item.istatus||'pending'
@@ -11875,7 +12572,7 @@ function saveQuickScratch() {
   }
 
   const item = {
-    id: 'sp_' + Date.now(),
+    id: typeof genId === 'function' ? genId('sp_') : ('sp_' + Date.now()),
     title: title,
     text: text,
     notes: text,
@@ -11978,13 +12675,18 @@ function openScratchpadManagerModal() {
 }
 
 async function deleteScratchItem(id) {
-  const ok = await appConfirm('Delete this scratchpad note?', {
+  const item = (S.scratchpad || []).find(s => s.id === id);
+  const noteTitle = item ? (item.title || 'Note') : 'Note';
+  const ok = await appConfirm(`Delete quick note "${noteTitle}"?`, {
     title: 'Delete Quick Note',
     danger: true,
     confirmText: 'Delete',
     icon: '🗑️'
   });
   if (!ok) return;
+
+  // UX-07: Take snapshot before deletion
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Note: ' + noteTitle);
 
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
@@ -11994,6 +12696,7 @@ async function deleteScratchItem(id) {
   triggerHaptic('light');
   renderScratchpadList();
   showToast('Note deleted');
+  if (typeof showUndoToast === 'function') showUndoToast(`Note "${noteTitle}" deleted`);
 
   // IMP-27: Incremental delete - remove ONLY this note row on Google Sheets
   if (typeof deleteSingleQuickSnap === 'function') {
@@ -12080,7 +12783,7 @@ function ensureAssetsInitialized() {
       const name = (typeof m === 'string') ? m : (m && m.name ? m.name : '');
       if (name && !S.assets.some(a => (a.name || '').toLowerCase() === name.toLowerCase() || (a.tag || '').toLowerCase() === name.toLowerCase())) {
         S.assets.push({
-          id: 'ast_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          id: typeof genId === 'function' ? genId('ast_') : ('ast_' + Date.now() + '_' + Math.floor(Math.random() * 1000)),
           tag: name.toUpperCase().replace(/[^A-Z0-9]/g, '-').slice(0, 12) || 'TAG-01',
           name: name,
           customer: '',
@@ -12249,7 +12952,7 @@ function saveAsset() {
     showToast('Equipment updated ✓');
   } else {
     const newAsset = {
-      id: 'ast_' + Date.now(),
+      id: typeof genId === 'function' ? genId('ast_') : ('ast_' + Date.now()),
       tag, name, customer, model, serial, spec, location, notes,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -12267,7 +12970,9 @@ function saveAsset() {
 }
 
 async function deleteAsset(id) {
-  const ok = await appConfirm('Delete this equipment passport? Historical reports will be preserved.', {
+  const asset = (S.assets || []).find(a => a.id === id);
+  const assetName = asset ? (asset.name || asset.tag || 'Equipment') : 'Equipment';
+  const ok = await appConfirm(`Delete equipment "${assetName}"? Historical reports will be preserved.`, {
     title: 'Delete Equipment',
     danger: true,
     confirmText: 'Delete',
@@ -12275,10 +12980,17 @@ async function deleteAsset(id) {
   });
   if (!ok) return;
 
+  // UX-07: Take snapshot before deletion
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Asset: ' + assetName);
+
+  if (!S.deletedIds) S.deletedIds = {};
+  S.deletedIds[id] = Date.now();
+
   S.assets = (S.assets || []).filter(a => a.id !== id);
   sv();
   renderAssetList();
   showToast('Equipment deleted');
+  if (typeof showUndoToast === 'function') showUndoToast(`Equipment "${assetName}" deleted`);
 }
 
 /**
@@ -12558,10 +13270,10 @@ function editLibraryItem(id){
   document.getElementById('lib-item-type').disabled = true; // can't change type when editing
   // Load existing items
   if(item.type==='checklist'){
-    libClItems = (item.items||[]).map(i => typeof i==='string'?{id:'lci_'+Date.now()+'_'+Math.random(),text:i}:{...i});
+    libClItems = (item.items||[]).map(i => typeof i==='string'?{id:(typeof genId==='function'?genId('lci_'):'lci_'+Date.now()+'_'+Math.random()),text:i}:{...i});
     libRdItems = [];
   } else if(item.type==='readings'){
-    libRdItems = (item.items||[]).map(i => ({...i, id:i.id||'lrd_'+Date.now()+'_'+Math.random()}));
+    libRdItems = (item.items||[]).map(i => ({...i, id:i.id||(typeof genId==='function'?genId('lrd_'):'lrd_'+Date.now()+'_'+Math.random())}));
     libClItems = [];
   } else {
     // issues — single template item
@@ -12589,7 +13301,7 @@ function addLibClItem(){
   const inp = document.getElementById('lib-cl-input');
   const val = inp.value.trim();
   if(!val) return;
-  libClItems.push({id:'lci_'+Date.now(), text:val});
+  libClItems.push({id: (typeof genId==='function'?genId('lci_'):'lci_'+Date.now()), text:val});
   inp.value='';
   renderLibClItems();
   inp.focus();
@@ -12612,7 +13324,7 @@ function addLibRdItem(){
   const tag  = document.getElementById('lib-rd-tag').value.trim();
   const type = document.getElementById('lib-rd-type').value;
   const unit = document.getElementById('lib-rd-unit').value.trim();
-  libRdItems.push({id:'lrd_'+Date.now(), name, tag, type, unit});
+  libRdItems.push({id: (typeof genId==='function'?genId('lrd_'):'lrd_'+Date.now()), name, tag, type, unit});
   ['lib-rd-name','lib-rd-tag','lib-rd-unit'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   renderLibRdItems();
 }
@@ -12657,7 +13369,7 @@ function saveLibraryItem(){
     const idx = S.library.findIndex(i=>i.id===editingLibId);
     if(idx>=0) S.library[idx]={...S.library[idx], name, items, updatedAt:new Date().toISOString()};
   } else {
-    S.library.push({id:'lib_'+Date.now(), name, type, items, createdAt:new Date().toISOString()});
+    S.library.push({id: (typeof genId==='function'?genId('lib_'):'lib_'+Date.now()), name, type, items, createdAt:new Date().toISOString()});
   }
   sv();
   closeModal('modal-add-library');
@@ -13587,7 +14299,7 @@ function saveReminder(){
   if(!title){ showToast('Enter a title'); return; }
   const freq  = (document.getElementById('rem-freq')||{}).value || 'monthly';
   const reminder = {
-    id:             editingReminderId || ('rem_'+Date.now()),
+    id:             editingReminderId || (typeof genId === 'function' ? genId('rem_') : ('rem_'+Date.now())),
     title,
     freq,
     weekday:        (document.getElementById('rem-weekday')||{}).value  || '1',
@@ -13776,6 +14488,7 @@ function updateBillMonthOptions(){
 }
 
 function setBillFilter(f) {
+  resetBillsRenderLimit();
   billFilter = f;
   // Update active tab
   ['all','trip','month'].forEach(id => {
@@ -13835,6 +14548,10 @@ function openAddBillFromScreen() {
   document.getElementById('bill-save-btn').dataset.tripid = '';
   openModal('modal-add-bill');
 }
+
+// UX-09: Progressive rendering limit for large bill datasets (>100 items)
+let _billsRenderLimit = 100;
+function resetBillsRenderLimit() { _billsRenderLimit = 100; }
 
 function renderBillsScreen() {
   const body = document.getElementById('bills-screen-body');
@@ -13918,10 +14635,14 @@ function renderBillsScreen() {
     </div>
   </div>`;
 
+  const totalBillsCount = bills.length;
+  const isChunked = totalBillsCount > _billsRenderLimit;
+  const displayedBills = isChunked ? bills.slice(0, _billsRenderLimit) : bills;
+
   if (billFilter === 'trip') {
     // Group by trip
     const byTrip = {};
-    bills.forEach(b => {
+    displayedBills.forEach(b => {
       const key = b.tripId || '__none__';
       if (!byTrip[key]) byTrip[key] = [];
       byTrip[key].push(b);
@@ -13947,7 +14668,7 @@ function renderBillsScreen() {
   } else {
     // Group by date
     const byDate = {};
-    bills.forEach(b => {
+    displayedBills.forEach(b => {
       const d = b.date || '';
       if (!byDate[d]) byDate[d] = [];
       byDate[d].push(b);
@@ -13968,6 +14689,18 @@ function renderBillsScreen() {
         ${dayBills.map(b => renderBillRow(b)).join('')}
       </div>`;
     });
+  }
+
+  if (isChunked) {
+    html += `<div style="text-align:center;padding:16px 8px;margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--g500);margin-bottom:8px;">
+        Showing ${_billsRenderLimit} of ${totalBillsCount} bills
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-s" onclick="_billsRenderLimit += 100; renderBillsScreen();">📥 Load More (100)</button>
+        <button class="btn btn-s" onclick="_billsRenderLimit = 999999; renderBillsScreen();">Show All</button>
+      </div>
+    </div>`;
   }
 
   body.innerHTML = html;
@@ -14007,14 +14740,17 @@ function renderBillRow(b) {
 }
 
 async function deleteBillFromScreen(id) {
-  const ok = await appConfirm('Delete this expense bill? This cannot be undone.', {
+  const billToDelete = (S.bills || []).find(b => b.id === id);
+  const billDesc = billToDelete ? (billToDelete.detail || billToDelete.category || 'Bill') : 'Bill';
+  const ok = await appConfirm(`Delete expense "${billDesc}"?`, {
     title: 'Delete Bill',
     danger: true,
     confirmText: 'Delete Bill',
     icon: '🧾'
   });
   if (!ok) return;
-  const billToDelete = (S.bills || []).find(b => b.id === id);
+  // UX-07: Take snapshot before delete
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Bill: ' + billDesc);
   const tripIdOfDeleted = billToDelete ? billToDelete.tripId : '';
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
@@ -14037,6 +14773,7 @@ async function deleteBillFromScreen(id) {
   }
 
   svAndSync('bill_delete');
+  if (typeof showUndoToast === 'function') showUndoToast(`Bill "${billDesc}" deleted`);
 }
 
 // ── Bill Export PDF ──────────────────────────────────────────
@@ -15439,7 +16176,7 @@ function saveTransferBack() {
     }
   } else {
     const newTransfer = {
-      id: 'cct_' + Date.now(),
+      id: typeof genId === 'function' ? genId('cct_') : ('cct_' + Date.now()),
       amount: amt,
       date: date,
       tripId: tripSel ? tripSel.value : '',
@@ -15509,25 +16246,42 @@ function renderHomeFinanceWidget() {
     }
   });
 
+  const hide = isHomeMoneyHidden();
+  const mask = '•••••• ₫';
+  const availTxt = hide ? mask : `${fmtAmt(cardAvail, 'VND')} ₫`;
+  const debtTxt = hide ? '••••••' : `${fmtAmt(cardDebt, 'VND')} ₫`;
+  const claimTxt = hide ? mask : `${fmtAmt(unsettledVND, 'VND')} ₫`;
+  const eyeBtn = `<button type="button" onclick="toggleHomeMoneyVisibility()" aria-label="${hide ? 'Show amounts' : 'Hide amounts'}" title="${hide ? 'Show amounts' : 'Hide amounts'}" style="position:absolute;right:2px;top:-24px;border:none;background:transparent;font-size:15px;cursor:pointer;padding:2px 6px;line-height:1;">${hide ? '🙈' : '👁️'}</button>`;
+
   el.innerHTML = `
+    <div style="position:relative;">${eyeBtn}</div>
     <div class="home-finance-grid">
       <div class="home-fin-card" onclick="showScreen('bills');if(typeof switchBillsView==='function')switchBillsView('card');" title="Open Corporate Credit Card Tracker">
         <div class="home-fin-label">
           <span>💳 Card Available</span>
           <span style="color:var(--n400);">›</span>
         </div>
-        <div class="home-fin-val" style="color:${availColor};">${fmtAmt(cardAvail, 'VND')} ₫</div>
-        <div class="home-fin-sub">Debt: ${fmtAmt(cardDebt, 'VND')} ₫</div>
+        <div class="home-fin-val" style="color:${availColor};">${availTxt}</div>
+        <div class="home-fin-sub">Debt: ${debtTxt}</div>
       </div>
       <div class="home-fin-card" onclick="showScreen('bills');if(typeof switchBillsView==='function')switchBillsView('claims');" title="Open Trip Claims & Reimbursement">
         <div class="home-fin-label">
           <span>✈️ Pending Claims</span>
           <span style="color:var(--n400);">›</span>
         </div>
-        <div class="home-fin-val" style="color:${unsettledCount ? 'var(--amber)' : 'var(--green)'};">${fmtAmt(unsettledVND, 'VND')} ₫</div>
+        <div class="home-fin-val" style="color:${unsettledCount ? 'var(--amber)' : 'var(--green)'};">${claimTxt}</div>
         <div class="home-fin-sub">${unsettledCount ? unsettledCount + ' unsettled trip' + (unsettledCount > 1 ? 's' : '') : 'All claims settled ✓'}</div>
       </div>
     </div>`;
+}
+
+function isHomeMoneyHidden() {
+  try { return localStorage.getItem('plpro_hide_money') === '1'; } catch (e) { return false; }
+}
+
+function toggleHomeMoneyVisibility() {
+  try { localStorage.setItem('plpro_hide_money', isHomeMoneyHidden() ? '0' : '1'); } catch (e) {}
+  renderHomeFinanceWidget();
 }
 
 // ====== sync.js ======
@@ -16919,7 +17673,7 @@ async function saveBill() {
     const vndAmt = cur === 'VND' ? parseFloat(amount) || 0 : (vndEl && vndEl.value ? parseFloat(vndEl.value) || 0 : 0);
 
     // Lock billId at start — never changes even during async uploads
-    const billId = editingBillId || ('bill_' + Date.now());
+    const billId = editingBillId || (typeof genId === 'function' ? genId('bill_') : ('bill_' + Date.now()));
 
     // Upload local photos to Drive now (at save time — reliable, no race conditions)
     const gsUrl = getGSUrl ? getGSUrl() : (S && S.gsUrl || '');
@@ -17011,14 +17765,17 @@ async function saveBill() {
 }
 
 async function deleteBill(id) {
-  const ok = await appConfirm('Delete this expense bill? This cannot be undone.', {
+  const billToDelete = (S.bills || []).find(b => b.id === id);
+  const billDesc = billToDelete ? (billToDelete.detail || billToDelete.category || 'Bill') : 'Bill';
+  const ok = await appConfirm(`Delete expense "${billDesc}"?`, {
     title: 'Delete Bill',
     danger: true,
     confirmText: 'Delete Bill',
     icon: '🧾'
   });
   if (!ok) return;
-  const billToDelete = (S.bills || []).find(b => b.id === id);
+  // UX-07: Take snapshot before deletion
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Bill: ' + billDesc);
   const tripIdOfDeleted = billToDelete ? billToDelete.tripId : '';
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
@@ -17043,6 +17800,7 @@ async function deleteBill(id) {
   }
 
   svAndSync('bill_delete');
+  if (typeof showUndoToast === 'function') showUndoToast(`Bill "${billDesc}" deleted`);
 }
 
 function triggerBillPhoto() {

@@ -182,21 +182,44 @@ if (typeof window !== 'undefined' && window.matchMedia) {
 
 function sv(){
   try{
-    localStorage.setItem('plpro1',JSON.stringify(S));
+    S._savedAt = Date.now();
+    const json = JSON.stringify(S);
+    localStorage.setItem('plpro1', json);
+    if (typeof scheduleMirror === 'function') scheduleMirror(json);
   }catch(e){
     console.error('[PlantLog] LocalStorage save error:', e);
+    // Quota error fallback: still mirror to IndexedDB which has no 5MB quota!
+    try {
+      if (typeof scheduleMirror === 'function') scheduleMirror(JSON.stringify(S));
+    } catch(err){}
     if(e.name==='QuotaExceededError'||e.code===22||e.code===1014||(e.message&&e.message.toLowerCase().includes('quota'))){
       if(typeof showToast==='function'){
-        showToast('⚠️ Bộ nhớ máy bị đầy (LocalStorage Quota)! Vui lòng xóa bớt ảnh hoặc đồng bộ dữ liệu.', 6000);
+        showToast('⚠️ Bộ nhớ máy bị đầy (LocalStorage Quota)! Dữ liệu vẫn được lưu an toàn vào bản sao thiết bị.', 6000);
       }
     }
   }
+  if (typeof refreshBackupStatus === 'function') refreshBackupStatus();
 }
 function ld(){
+  let hadLocal = false;
+  let parseError = false;
   try{
     const d=localStorage.getItem('plpro1');
-    if(d)S={...S,...JSON.parse(d)};
-  }catch(e){}
+    hadLocal = !!d;
+    if(d) {
+      const parsed = JSON.parse(d);
+      S={...S,...parsed};
+    }
+  }catch(e){
+    console.error('[PlantLog] LocalStorage load error:', e);
+    parseError = true;
+  }
+  if (typeof _bootInfo !== 'undefined') {
+    _bootInfo.hadLocal = hadLocal;
+    _bootInfo.parseError = parseError;
+  }
+  if (typeof ensureStateShape === 'function') ensureStateShape(S);
+  if (typeof migrateState === 'function') migrateState(S);
   if(!S.assets) S.assets = [];
   if(!S.scratchpad) S.scratchpad = [];
   if(!S.tripClaims) S.tripClaims = [];
@@ -412,22 +435,28 @@ function handleBackupFileSelect(e) {
       });
       if (!ok) return;
 
+      // ARC-01: Take safety snapshot into IndexedDB before overwrite
+      try {
+        if (typeof StorageMirror !== 'undefined' && StorageMirror.put) {
+          await StorageMirror.put('pre_restore', { ts: Date.now(), json: JSON.stringify(S) });
+        }
+      } catch (e) {}
+
       S = { ...S, ...incomingData };
-      if (!Array.isArray(S.trips)) S.trips = [];
-      if (!Array.isArray(S.tasks)) S.tasks = [];
-      if (!Array.isArray(S.bills)) S.bills = [];
-      if (!Array.isArray(S.assets)) S.assets = [];
-      if (!Array.isArray(S.scratchpad)) S.scratchpad = [];
-      if (!Array.isArray(S.tripClaims)) S.tripClaims = [];
+      if (typeof ensureStateShape === 'function') ensureStateShape(S);
+      if (typeof migrateState === 'function') migrateState(S);
       sv();
       if(typeof showToast === 'function') showToast('✅ Data restored successfully!');
 
       // Re-render whole interface
-      if (typeof renderDash === 'function') renderDash();
-      if (typeof renderTripList === 'function') renderTripList();
-      if (typeof renderTasks === 'function') renderTasks();
-      if (typeof renderCalendar === 'function') renderCalendar();
-      if (typeof loadProfile === 'function') loadProfile();
+      if (typeof refreshAllViews === 'function') refreshAllViews();
+      else {
+        if (typeof renderDash === 'function') renderDash();
+        if (typeof renderTripList === 'function') renderTripList();
+        if (typeof renderTasks === 'function') renderTasks();
+        if (typeof renderCalendar === 'function') renderCalendar();
+        if (typeof loadProfile === 'function') loadProfile();
+      }
     } catch (err) {
       console.error('[Restore]', err);
       if(typeof showToast === 'function') showToast('❌ Error reading JSON file: ' + err.message);
@@ -494,6 +523,10 @@ function setupPWA(){
         // SW registered — check for updates
         reg.update();
         console.log('[PlantLog] SW registered:', reg.scope);
+        // REL-04: Non-disruptive update notification banner
+        if (typeof watchServiceWorkerUpdates === 'function') {
+          watchServiceWorkerUpdates(reg);
+        }
       })
       .catch(err => {
         console.warn('[PlantLog] SW registration failed:', err);
@@ -630,6 +663,13 @@ function safeRun(fn, name){
 
 function init(){
   ld(); setupPWA();
+  // ARC-01: Check device mirror for recovery if localStorage was cleared or corrupted
+  if (typeof recoverFromMirror === 'function') {
+    recoverFromMirror().catch(err => console.warn('[Recover]', err));
+  }
+  // UX-10: Accessibility keyboard & label bindings
+  if (typeof initA11y === 'function') safeRun(initA11y, 'initA11y');
+
   // ALWAYS initialize calendar vars first
   const now = new Date();
   calY = now.getFullYear();
@@ -655,6 +695,7 @@ function init(){
   safeRun(checkNotifPrompt, 'checkNotifPrompt');
   safeRun(updateGSStatus,   'updateGSStatus');
   safeRun(updateNetworkStatus, 'updateNetworkStatus');
+  safeRun(refreshBackupStatus, 'refreshBackupStatus');
   safeRun(ensureAssetsInitialized, 'ensureAssetsInitialized');
   safeRun(initScratchpadStore, 'initScratchpadStore');
 

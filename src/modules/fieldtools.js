@@ -574,7 +574,7 @@ function saveQuickScratch() {
   }
 
   const item = {
-    id: 'sp_' + Date.now(),
+    id: typeof genId === 'function' ? genId('sp_') : ('sp_' + Date.now()),
     title: title,
     text: text,
     notes: text,
@@ -677,13 +677,18 @@ function openScratchpadManagerModal() {
 }
 
 async function deleteScratchItem(id) {
-  const ok = await appConfirm('Delete this scratchpad note?', {
+  const item = (S.scratchpad || []).find(s => s.id === id);
+  const noteTitle = item ? (item.title || 'Note') : 'Note';
+  const ok = await appConfirm(`Delete quick note "${noteTitle}"?`, {
     title: 'Delete Quick Note',
     danger: true,
     confirmText: 'Delete',
     icon: '🗑️'
   });
   if (!ok) return;
+
+  // UX-07: Take snapshot before deletion
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Note: ' + noteTitle);
 
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[id] = Date.now();
@@ -693,6 +698,7 @@ async function deleteScratchItem(id) {
   triggerHaptic('light');
   renderScratchpadList();
   showToast('Note deleted');
+  if (typeof showUndoToast === 'function') showUndoToast(`Note "${noteTitle}" deleted`);
 
   // IMP-27: Incremental delete - remove ONLY this note row on Google Sheets
   if (typeof deleteSingleQuickSnap === 'function') {
@@ -779,7 +785,7 @@ function ensureAssetsInitialized() {
       const name = (typeof m === 'string') ? m : (m && m.name ? m.name : '');
       if (name && !S.assets.some(a => (a.name || '').toLowerCase() === name.toLowerCase() || (a.tag || '').toLowerCase() === name.toLowerCase())) {
         S.assets.push({
-          id: 'ast_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          id: typeof genId === 'function' ? genId('ast_') : ('ast_' + Date.now() + '_' + Math.floor(Math.random() * 1000)),
           tag: name.toUpperCase().replace(/[^A-Z0-9]/g, '-').slice(0, 12) || 'TAG-01',
           name: name,
           customer: '',
@@ -948,7 +954,7 @@ function saveAsset() {
     showToast('Equipment updated ✓');
   } else {
     const newAsset = {
-      id: 'ast_' + Date.now(),
+      id: typeof genId === 'function' ? genId('ast_') : ('ast_' + Date.now()),
       tag, name, customer, model, serial, spec, location, notes,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -966,7 +972,9 @@ function saveAsset() {
 }
 
 async function deleteAsset(id) {
-  const ok = await appConfirm('Delete this equipment passport? Historical reports will be preserved.', {
+  const asset = (S.assets || []).find(a => a.id === id);
+  const assetName = asset ? (asset.name || asset.tag || 'Equipment') : 'Equipment';
+  const ok = await appConfirm(`Delete equipment "${assetName}"? Historical reports will be preserved.`, {
     title: 'Delete Equipment',
     danger: true,
     confirmText: 'Delete',
@@ -974,10 +982,17 @@ async function deleteAsset(id) {
   });
   if (!ok) return;
 
+  // UX-07: Take snapshot before deletion
+  if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Asset: ' + assetName);
+
+  if (!S.deletedIds) S.deletedIds = {};
+  S.deletedIds[id] = Date.now();
+
   S.assets = (S.assets || []).filter(a => a.id !== id);
   sv();
   renderAssetList();
   showToast('Equipment deleted');
+  if (typeof showUndoToast === 'function') showUndoToast(`Equipment "${assetName}" deleted`);
 }
 
 /**
