@@ -161,6 +161,18 @@ function openAddBillFromScreen() {
   openModal('modal-add-bill');
 }
 
+function openAddBillForTrip(tripId) {
+  openAddBillFromScreen();
+  const tripSel = document.getElementById('bill-trip-select');
+  if (tripSel && tripId) {
+    tripSel.value = tripId;
+  }
+  const saveBtn = document.getElementById('bill-save-btn');
+  if (saveBtn && tripId) {
+    saveBtn.dataset.tripid = tripId;
+  }
+}
+
 // UX-09: Progressive rendering limit for large bill datasets (>100 items)
 let _billsRenderLimit = 100;
 function resetBillsRenderLimit() { _billsRenderLimit = 100; }
@@ -587,10 +599,11 @@ function switchBillsView(view) {
   const addBtn = document.getElementById('bills-add-btn');
   const topSyncBtn = document.getElementById('claims-sync-btn');
 
+  if (tabBills) tabBills.classList.toggle('active', view === 'bills');
+  if (tabClaims) tabClaims.classList.toggle('active', view === 'claims');
+  if (tabCard) tabCard.classList.toggle('active', view === 'card');
+
   if (view === 'claims') {
-    if (tabBills) { tabBills.className = 'btn btn-sm btn-o'; }
-    if (tabClaims) { tabClaims.className = 'btn btn-sm btn-p'; }
-    if (tabCard) { tabCard.className = 'btn btn-sm btn-o'; }
     if (billsFilterBar) billsFilterBar.style.display = 'none';
     if (billsBody) billsBody.style.display = 'none';
     if (claimsView) claimsView.style.display = 'flex';
@@ -600,9 +613,6 @@ function switchBillsView(view) {
     if (topSyncBtn) topSyncBtn.style.display = 'inline-flex';
     renderTripClaimsScreen();
   } else if (view === 'card') {
-    if (tabBills) { tabBills.className = 'btn btn-sm btn-o'; }
-    if (tabClaims) { tabClaims.className = 'btn btn-sm btn-o'; }
-    if (tabCard) { tabCard.className = 'btn btn-sm btn-p'; }
     if (billsFilterBar) billsFilterBar.style.display = 'none';
     if (billsBody) billsBody.style.display = 'none';
     if (claimsView) claimsView.style.display = 'none';
@@ -612,9 +622,6 @@ function switchBillsView(view) {
     if (topSyncBtn) topSyncBtn.style.display = 'none';
     renderCreditCardScreen();
   } else {
-    if (tabBills) { tabBills.className = 'btn btn-sm btn-p'; }
-    if (tabClaims) { tabClaims.className = 'btn btn-sm btn-o'; }
-    if (tabCard) { tabCard.className = 'btn btn-sm btn-o'; }
     if (billsFilterBar) billsFilterBar.style.display = 'block';
     if (billsBody) billsBody.style.display = 'block';
     if (claimsView) claimsView.style.display = 'none';

@@ -1405,7 +1405,7 @@ function applyVoiceResultToInput() {
 }
 
 // ── App Version, PDF Text Normalizer & Settings About (IMP-34) ──
-const APP_VERSION = 'v4.14';
+const APP_VERSION = 'v4.16';
 
 function pdfSafeText(v) {
   if (v === null || v === undefined) return '';

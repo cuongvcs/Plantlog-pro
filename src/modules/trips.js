@@ -211,7 +211,19 @@ function openTripDetail(id){
   if(typeof renderTripTimesheets==='function') renderTripTimesheets(id);
   if(typeof renderTripSafety==='function') renderTripSafety(id);
   if(typeof renderTripSavedReports==='function') renderTripSavedReports();
+  switchTripDetailTab('overview');
   showScreen('trip-detail');
+}
+
+let _currentTripDetailTab = 'overview';
+function switchTripDetailTab(tab) {
+  _currentTripDetailTab = tab || 'overview';
+  ['overview', 'ops', 'finance'].forEach(t => {
+    const btn = document.getElementById('trip-tab-' + t);
+    const pane = document.getElementById('trip-pane-' + t);
+    if (btn) btn.classList.toggle('active', t === _currentTripDetailTab);
+    if (pane) pane.style.display = (t === _currentTripDetailTab) ? 'block' : 'none';
+  });
 }
 function resetTripFlightFields(){
   const etf0=document.getElementById('nt-fl-num');if(etf0)etf0.value='';
@@ -609,6 +621,41 @@ function renderDash(){
   const h=now.getHours();
   document.getElementById('greeting').textContent=(h<12?t('goodMorning'):h<17?t('goodAfternoon'):t('goodEvening'))+', '+(S.profile.name||'Engineer');
   document.getElementById('today-date').textContent=now.toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // ── Executive Mission Hero Card ──
+  const activeMissionEl = document.getElementById('home-active-mission');
+  if (activeMissionEl) {
+    const activeTrip = (S.trips || []).find(tr => tr.status === 'in_progress') || (S.trips || []).find(tr => tr.status === 'planned');
+    if (activeTrip) {
+      const isAct = activeTrip.status === 'in_progress';
+      const wk = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(activeTrip.date, activeTrip.dateEnd) : '';
+      activeMissionEl.innerHTML = `
+        <div class="active-mission-card ${isAct ? 'live' : 'planned'}" onclick="openTripDetail('${activeTrip.id}')">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="pulse-dot ${isAct ? 'live' : 'planned'}"></span>
+              <span style="font-size:10px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:${isAct ? '#15803D' : '#92400E'};">
+                ${isAct ? 'Active Site Operation' : 'Next Upcoming Trip'}
+              </span>
+            </div>
+            ${wk ? `<span class="badge-week" style="font-size:9.5px;">${wk}</span>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="min-width:0;flex:1;padding-right:8px;">
+              <div style="font-size:14px;font-weight:800;color:var(--n900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${activeTrip.plant}</div>
+              <div style="font-size:11px;color:var(--n500);margin-top:1px;">📅 ${fmtDate(activeTrip.date)}${activeTrip.location ? ' · ' + activeTrip.location : ''}</div>
+            </div>
+            <div style="display:flex;gap:4px;flex-shrink:0;">
+              <button type="button" class="btn-micro" onclick="event.stopPropagation();openTripDetail('${activeTrip.id}');switchTripDetailTab('overview');" title="Notes">📝</button>
+              <button type="button" class="btn-micro" onclick="event.stopPropagation();if(typeof openAddBillForTrip==='function')openAddBillForTrip('${activeTrip.id}');else {openTripDetail('${activeTrip.id}');switchTripDetailTab('finance');}" title="Add Bill">🧾</button>
+              <button type="button" class="btn-micro" onclick="event.stopPropagation();openTripDetail('${activeTrip.id}');switchTripDetailTab('ops');" title="Field Ops">🔧</button>
+            </div>
+          </div>
+        </div>`;
+    } else {
+      activeMissionEl.innerHTML = '';
+    }
+  }
 
   // ── Today's Work — ALL work tasks for today, grouped by status ──
   const allTodayWork=S.tasks.filter(tk=>{

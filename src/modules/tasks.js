@@ -420,7 +420,7 @@ function renderTasks(){
           <div class="tc-title">${tk.title}</div>
           <div class="tc-badges">
             ${periodLabel(tk.period)?`<span class="period-badge">${periodLabel(tk.period)}</span>`:''}
-            <span class="prio-dot ${pc.dot}" style="${pc.extra||''}"></span>
+            <span class="prio-chip prio-${tk.priority || 'medium'}">${pc.label || 'Med'}</span>
           </div>
         </div>
         ${tk.desc?`<div style="font-size:12px;color:var(--g500);margin-bottom:6px;line-height:1.4;">${tk.desc.substring(0,70)}${tk.desc.length>70?'…':''}</div>`:''}
@@ -433,12 +433,18 @@ function renderTasks(){
           ${trip?`<span class="tc-meta-item">🏭 ${trip}</span>`:''}
           ${isOver?`<span class="tc-meta-item" style="color:var(--red);font-weight:600;">⚠ Overdue</span>`:''}
         </div>
-        ${tk.checklist&&tk.checklist.length?`<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
-          <div style="flex:1;height:4px;background:var(--g200);border-radius:2px;overflow:hidden;">
-            <div style="height:100%;border-radius:2px;background:var(--green);width:${Math.round((tk.checklist.filter(c=>c.done).length/tk.checklist.length)*100)}%;transition:width 0.3s;"></div>
-          </div>
-          <span style="font-size:10px;color:var(--g500);flex-shrink:0;">${tk.checklist.filter(c=>c.done).length}/${tk.checklist.length}</span>
-        </div>`:''}
+        ${tk.checklist&&tk.checklist.length?(()=>{
+          const doneC = tk.checklist.filter(c=>c.done).length;
+          const totalC = tk.checklist.length;
+          const pct = Math.round((doneC / totalC) * 100);
+          const barColor = pct === 100 ? 'var(--green)' : pct > 0 ? 'var(--blue)' : 'var(--n300)';
+          return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <div style="flex:1;height:5px;background:var(--n150);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;border-radius:3px;background:${barColor};width:${pct}%;transition:width 0.3s ease;"></div>
+            </div>
+            <span style="font-size:10px;font-weight:700;color:${pct === 100 ? 'var(--green)' : 'var(--n500)'};flex-shrink:0;">${doneC}/${totalC} (${pct}%)</span>
+          </div>`;
+        })():''}
         <div class="tc-footer">
           <span class="badge" style="background:${cc.bg};color:${cc.text};font-size:10px;">${cc.icon} ${cc.label}</span>
           <div style="display:flex;align-items:center;gap:6px;">
