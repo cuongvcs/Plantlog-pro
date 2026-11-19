@@ -48,7 +48,7 @@ let _pendingScreen = null;    // 'login' | 'setup_new' | 'setup_confirm' | 'chan
 let pinFirst = '';        // stores first entry during setup confirm step
 let _lockTimer = null;
 let _isLocked = false;
-const AUTO_LOCK_MS = 2 * 60 * 1000;  // 5 minutes
+const AUTO_LOCK_MS = 2 * 60 * 1000;  // 2 minutes
 
 function resetAutoLock() {
   clearTimeout(_lockTimer);

@@ -156,8 +156,14 @@ function openAddBillFromScreen() {
     const trips = typeof getSortedTrips==='function' ? getSortedTrips() : [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
     tripSel.innerHTML = '<option value="">No trip link</option>' +
       trips.map(t => `<option value="${t.id}">${t.plant} (${fmtDate(t.date)})</option>`).join('');
+    // Auto-select active trip of current week if available
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const activeTrip = trips.find(t => (t.date && t.dateEnd && todayISO >= t.date && todayISO <= t.dateEnd) || t.status === 'in_progress');
+    if (activeTrip) {
+      tripSel.value = activeTrip.id;
+    }
   }
-  document.getElementById('bill-save-btn').dataset.tripid = '';
+  document.getElementById('bill-save-btn').dataset.tripid = tripSel ? tripSel.value : '';
   openModal('modal-add-bill');
 }
 
