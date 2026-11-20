@@ -133,13 +133,84 @@ function openEditTaskModal(id){
   openModal('modal-new-task');
 }
 
-// ── FLIGHT TOGGLE FUNCTIONS ─────────────────────────────
+// ── FLIGHT TOGGLE & AUTO-SUGGEST FUNCTIONS (IMP-44) ─────────────────────────────
+function detectFlightAirline(fNum) {
+  if (!fNum) return '';
+  const fn = String(fNum).trim().toUpperCase();
+  if (fn.startsWith('VN')) return 'VietNam Airline';
+  if (fn.startsWith('VJ')) return 'VietJet Air';
+  if (fn.startsWith('QH')) return 'Bamboo Airways';
+  if (fn.startsWith('VU')) return 'Vietravel Airlines';
+  if (fn.startsWith('TG')) return 'Thai Airways';
+  if (fn.startsWith('SQ')) return 'Singapore Airlines';
+  return '';
+}
+
+function autoSuggestTripFlightCities() {
+  const plantEl = document.getElementById('nt-plant');
+  const plantVal = (plantEl ? plantEl.value : '').toLowerCase();
+  const fromEl = document.getElementById('nt-fl-from');
+  const toEl = document.getElementById('nt-fl-to');
+  const retFromEl = document.getElementById('nt-fl-ret-from');
+  const retToEl = document.getElementById('nt-fl-ret-to');
+
+  let defaultFrom = 'DaNang';
+  let defaultTo = 'Ho Chi Minh';
+
+  if (plantVal.includes('danang') || plantVal.includes('đà nẵng') || plantVal.includes('quangnam')) {
+    defaultFrom = 'Ho Chi Minh';
+    defaultTo = 'DaNang';
+  } else if (plantVal.includes('hanoi') || plantVal.includes('hà nội') || plantVal.includes('bacninh') || plantVal.includes('bacgiang') || plantVal.includes('haiphong')) {
+    defaultFrom = 'DaNang';
+    defaultTo = 'Ha Noi';
+  } else {
+    // DongNai, BinhDuong, LongAn, CanTho, HCM...
+    defaultFrom = 'DaNang';
+    defaultTo = 'Ho Chi Minh';
+  }
+
+  // Auto-fill if currently empty or was previously auto-filled
+  if (fromEl && (!fromEl.value.trim() || fromEl.dataset.autofilled === '1')) {
+    fromEl.value = defaultFrom;
+    fromEl.dataset.autofilled = '1';
+  }
+  if (toEl && (!toEl.value.trim() || toEl.dataset.autofilled === '1')) {
+    toEl.value = defaultTo;
+    toEl.dataset.autofilled = '1';
+  }
+  if (retFromEl && (!retFromEl.value.trim() || retFromEl.dataset.autofilled === '1')) {
+    retFromEl.value = defaultTo;
+    retFromEl.dataset.autofilled = '1';
+  }
+  if (retToEl && (!retToEl.value.trim() || retToEl.dataset.autofilled === '1')) {
+    retToEl.value = defaultFrom;
+    retToEl.dataset.autofilled = '1';
+  }
+}
+
+function onTripFlightNumInput(isReturn) {
+  const numId = isReturn ? 'nt-fl-ret-num' : 'nt-fl-num';
+  const airlineId = isReturn ? 'nt-fl-ret-airline' : 'nt-fl-airline';
+  const numEl = document.getElementById(numId);
+  const airlineEl = document.getElementById(airlineId);
+  if (!numEl || !airlineEl) return;
+
+  const detected = detectFlightAirline(numEl.value);
+  if (detected && (!airlineEl.value || airlineEl.dataset.autofilled === '1')) {
+    airlineEl.value = detected;
+    airlineEl.dataset.autofilled = '1';
+  }
+}
+
 function toggleTripFlight(){
   const sel=document.getElementById('nt-transport');
   const sec=document.getElementById('trip-flight-section');
   if(!sec)return;
   const show=sel&&(sel.value.toLowerCase().includes('flight'));
   sec.style.display=show?'':'none';
+  if (show) {
+    autoSuggestTripFlightCities();
+  }
 }
 function toggleTripReturnFlight(){
   const chk=document.getElementById('nt-fl-has-return');

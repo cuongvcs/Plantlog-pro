@@ -1,6 +1,6 @@
-// PlantLog Pro Service Worker v116
+// PlantLog Pro Service Worker v120
 // Single-file architecture — only index.html needs caching
-const CACHE = 'plantlog-pro-v116';
+const CACHE = 'plantlog-pro-v120';
 
 self.addEventListener('install', e => {
   e.waitUntil(

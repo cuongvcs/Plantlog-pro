@@ -1165,6 +1165,21 @@ function ensureCreditCardState() {
  * Each trip is an isolated financial bucket clamped at 0, preventing personal
  * overpayment/surplus in past trips from swallowing new trip bills.
  */
+function getRecordTimestamp_(rec) {
+  if (!rec) return 0;
+  const dStr = rec.createdAt || rec.CreatedAt || rec.updatedAt || rec.UpdatedAt;
+  if (dStr) {
+    const ts = new Date(dStr).getTime();
+    if (!isNaN(ts) && ts > 0) return ts;
+  }
+  const dateStr = rec.date || rec.Date;
+  if (dateStr) {
+    const ts = new Date(dateStr.length === 10 ? dateStr + 'T23:59:59.999Z' : dateStr).getTime();
+    if (!isNaN(ts) && ts > 0) return ts;
+  }
+  return 0;
+}
+
 function calculateCreditCardBalanceDue() {
   ensureCreditCardState();
 
@@ -1172,12 +1187,13 @@ function calculateCreditCardBalanceDue() {
   if (S.creditCard.manualBalance && typeof S.creditCard.manualBalance.amount === 'number') {
     const baseAmount = S.creditCard.manualBalance.amount;
     const setAt = S.creditCard.manualBalance.setAt || '';
+    const setAtTs = setAt ? new Date(setAt).getTime() : 0;
     const allCardBills = (S.bills || []).filter(isCreditCardBill);
-    const newBillsAmt = allCardBills.filter(b => (b.createdAt || b.date || '') > setAt).reduce((sum, b) => {
+    const newBillsAmt = allCardBills.filter(b => getRecordTimestamp_(b) > setAtTs).reduce((sum, b) => {
       if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
       return sum + (parseFloat(b.vndAmount) || 0);
     }, 0);
-    const newTransfersAmt = (S.creditCard.transfers || []).filter(t => (t.createdAt || t.date || '') > setAt).reduce((sum, t) => {
+    const newTransfersAmt = (S.creditCard.transfers || []).filter(t => getRecordTimestamp_(t) > setAtTs).reduce((sum, t) => {
       return sum + (parseFloat(t.amount) || 0);
     }, 0);
     return Math.max(0, baseAmount + newBillsAmt - newTransfersAmt);
@@ -1457,6 +1473,28 @@ function renderCreditCardScreen() {
     debtEl.style.color = totalBalanceDue > 0 ? '#FCA5A5' : '#E0E7FF';
   }
 
+  // IMP-42: Card Utilization Alert Banner
+  const alertEl = document.getElementById('cc-utilization-alert');
+  if (alertEl) {
+    const utilPct = budget > 0 ? Math.round((totalBalanceDue / budget) * 1000) / 10 : 0;
+    if (utilPct >= 95 || availableLimit <= budget * 0.05) {
+      alertEl.style.display = 'block';
+      alertEl.style.background = 'rgba(239, 68, 68, 0.25)';
+      alertEl.style.border = '1px solid rgba(239, 68, 68, 0.5)';
+      alertEl.style.color = '#FCA5A5';
+      alertEl.innerHTML = `🚨 <b>CRITICAL LIMIT WARNING:</b> Card is <b>${utilPct}%</b> utilized (${fmtAmt(availableLimit, 'VND')} ₫ remaining). High risk of transaction decline! Please repay or submit pending claims immediately.`;
+    } else if (utilPct >= 80 || availableLimit <= budget * 0.20) {
+      alertEl.style.display = 'block';
+      alertEl.style.background = 'rgba(245, 158, 11, 0.25)';
+      alertEl.style.border = '1px solid rgba(245, 158, 11, 0.5)';
+      alertEl.style.color = '#FDE68A';
+      alertEl.innerHTML = `⚠️ <b>UTILIZATION WARNING:</b> Card is <b>${utilPct}%</b> utilized (${fmtAmt(totalBalanceDue, 'VND')} ₫ balance due). Available limit is low (${fmtAmt(availableLimit, 'VND')} ₫). Consider submitting pending claims soon.`;
+    } else {
+      alertEl.style.display = 'none';
+      alertEl.innerHTML = '';
+    }
+  }
+
   // Monthly activity label
   let periodLabel = 'ACTIVITY (ALL TIME)';
   if (filterMonth && filterYear) {
@@ -1501,14 +1539,21 @@ function renderCreditCardScreen() {
     const totalTransferred = linkedTransfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     const remainingDue = Math.max(0, totalSpent - totalTransferred);
 
+    const percent = totalSpent > 0 ? Math.min(100, Math.round((totalTransferred / totalSpent) * 100)) : (totalTransferred > 0 ? 100 : 0);
     let status = 'unsettled';
-    let statusText = '🔴 Unsettled';
+    let statusText = '🔴 Unsettled (0%)';
+    let barColor = '#EF4444';
+    let badgeStyle = 'background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;';
     if (totalTransferred >= totalSpent && totalSpent > 0) {
       status = 'settled';
-      statusText = '🟢 Settled';
+      statusText = '🟢 Settled (100%)';
+      barColor = '#10B981';
+      badgeStyle = 'background:#DCFCE7;color:#166534;border:1px solid #BBF7D0;';
     } else if (totalTransferred > 0) {
       status = 'partial';
-      statusText = '🟡 Partially Paid';
+      statusText = `🟡 Partial (${percent}%)`;
+      barColor = '#F59E0B';
+      badgeStyle = 'background:#FEF3C7;color:#B45309;border:1px solid #FDE68A;';
     }
 
     const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
@@ -1524,6 +1569,9 @@ function renderCreditCardScreen() {
       totalSpent,
       totalTransferred,
       remainingDue,
+      percent,
+      barColor,
+      badgeStyle,
       status,
       statusText
     });
@@ -1542,8 +1590,13 @@ function renderCreditCardScreen() {
     const linkedTransfers = (S.creditCard.transfers || []).filter(t => !t.tripId || !tripIdsSet.has(String(t.tripId)));
     const totalTransferred = linkedTransfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     const remainingDue = Math.max(0, totalSpent - totalTransferred);
+    const percent = totalSpent > 0 ? Math.min(100, Math.round((totalTransferred / totalSpent) * 100)) : (totalTransferred > 0 ? 100 : 0);
     let status = remainingDue === 0 ? 'settled' : (totalTransferred > 0 ? 'partial' : 'unsettled');
-    let statusText = status === 'settled' ? '🟢 Settled' : (status === 'partial' ? '🟡 Partially Paid' : '🔴 Unsettled');
+    let barColor = status === 'settled' ? '#10B981' : (status === 'partial' ? '#F59E0B' : '#EF4444');
+    let badgeStyle = status === 'settled'
+      ? 'background:#DCFCE7;color:#166534;border:1px solid #BBF7D0;'
+      : (status === 'partial' ? 'background:#FEF3C7;color:#B45309;border:1px solid #FDE68A;' : 'background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;');
+    let statusText = status === 'settled' ? '🟢 Settled (100%)' : (status === 'partial' ? `🟡 Partial (${percent}%)` : '🔴 Unsettled (0%)');
     tripGroups.push({
       tripId: '__unassigned__',
       plant: 'General Card Expenses',
@@ -1555,6 +1608,9 @@ function renderCreditCardScreen() {
       totalSpent,
       totalTransferred,
       remainingDue,
+      percent,
+      barColor,
+      badgeStyle,
       status,
       statusText
     });
@@ -1601,9 +1657,20 @@ function renderCreditCardScreen() {
                   📅 ${dateRangeStr} ${tg.location ? '• ' + tg.location : ''}
                 </div>
               </div>
-              <span class="badge" style="font-size:10px;padding:2px 7px;font-weight:700;background:var(--surface);border:1px solid var(--n200);flex-shrink:0;">
+              <span class="badge" style="font-size:10px;padding:2px 8px;font-weight:700;${tg.badgeStyle || ''}border-radius:6px;flex-shrink:0;">
                 ${tg.statusText}
               </span>
+            </div>
+
+            <!-- IMP-43: Per-Trip Settlement Progress Bar -->
+            <div style="margin:6px 0 10px 0;background:var(--n50);border:1px solid var(--n200);border-radius:8px;padding:6px 8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:600;margin-bottom:4px;">
+                <span style="color:var(--n600);">Repaid: <b style="color:${tg.barColor || 'var(--green)'};">${tg.percent || 0}%</b></span>
+                <span style="color:var(--n500);font-family:var(--mono);">${fmtAmt(tg.totalTransferred, 'VND')} / ${fmtAmt(tg.totalSpent, 'VND')} ₫</span>
+              </div>
+              <div style="height:6px;width:100%;background:var(--n200);border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:${tg.percent || 0}%;background:${tg.barColor || 'var(--green)'};border-radius:4px;transition:width 0.3s ease;"></div>
+              </div>
             </div>
 
             <!-- 3-Column Reconciliation Matrix -->
