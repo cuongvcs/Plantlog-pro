@@ -1223,7 +1223,8 @@ function calculateCreditCardBalanceDue() {
     const newTransfersAmt = (S.creditCard.transfers || []).filter(t => getRecordTimestamp_(t) > setAtTs).reduce((sum, t) => {
       return sum + (parseFloat(t.amount) || 0);
     }, 0);
-    return Math.max(0, baseAmount + newBillsAmt - newTransfersAmt);
+    const due = Math.max(0, baseAmount + newBillsAmt - newTransfersAmt);
+    return due < 1000 ? 0 : Math.round(due);
   }
 
   // Option 1: Trip-Based Isolation (Default & Automatic)
@@ -1260,7 +1261,7 @@ function calculateCreditCardBalanceDue() {
     }, 0);
 
     const remainingDue = Math.max(0, tSpent - tTransferred);
-    totalBalanceDue += remainingDue;
+    totalBalanceDue += (remainingDue < 1000 ? 0 : remainingDue);
   });
 
   // 2. Calculate remaining due for unassigned or orphaned card bills
@@ -1282,9 +1283,10 @@ function calculateCreditCardBalanceDue() {
   });
 
   const unassignedRemainingDue = Math.max(0, unassignedSpent - unassignedTransferred);
-  totalBalanceDue += unassignedRemainingDue;
+  totalBalanceDue += (unassignedRemainingDue < 1000 ? 0 : unassignedRemainingDue);
 
-  return totalBalanceDue;
+  if (totalBalanceDue < 1000) totalBalanceDue = 0;
+  return Math.round(totalBalanceDue);
 }
 
 /**
@@ -1540,6 +1542,29 @@ function renderCreditCardScreen() {
   if (monthReimbursedEl) monthReimbursedEl.textContent = `${fmtAmt(monthTransferred, 'VND')} ₫`;
   if (billsBadgeEl) billsBadgeEl.textContent = String(filteredBills.length);
   if (transfersBadgeEl) transfersBadgeEl.textContent = String(filteredTransfers.length);
+
+  // IMP-49: Show All-Time Rebalance Banner if Transferred Back exceeds Spent via Card
+  const allTimeBalBox = document.getElementById('cc-alltime-balance-box');
+  if (allTimeBalBox) {
+    if (!filterYear && !filterMonth && totalAllTransferred > totalAllCardSpent) {
+      const overAmt = Math.round(totalAllTransferred - totalAllCardSpent);
+      allTimeBalBox.style.display = 'block';
+      allTimeBalBox.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(245, 158, 11, 0.12);border:1px solid rgba(245, 158, 11, 0.35);border-radius:6px;padding:7px 10px;font-size:11px;color:#B45309;">
+          <div>
+            <span>⚠️ Transferred exceeds spent by <b>+${fmtAmt(overAmt, 'VND')} ₫</b></span>
+            <div style="font-size:10px;color:var(--n500);margin-top:2px;">Rebalance total transferred to match card spent (${fmtAmt(totalAllCardSpent, 'VND')} ₫)</div>
+          </div>
+          <button type="button" onclick="balanceAllCardTransfersToMatchSpent()" class="btn btn-sm" style="background:#F59E0B;color:#fff;border:none;font-size:11px;font-weight:700;padding:5px 9px;border-radius:5px;white-space:nowrap;cursor:pointer;">
+            ⚖️ Balance
+          </button>
+        </div>
+      `;
+    } else {
+      allTimeBalBox.style.display = 'none';
+      allTimeBalBox.innerHTML = '';
+    }
+  }
 
   // 4. Render Trip Card Bills (Grouped Summary by Trip)
   const tripBillsContainer = document.getElementById('cc-trip-bills-list-container');
@@ -2723,6 +2748,113 @@ async function deleteTripTransferFromModal(transferId) {
   }
 }
 
+/**
+ * IMP-49: Balance all-time card transfers to match total card spent (e.g. 523,149,534 đ)
+ * When card is 100% paid back and has no remaining debt, reconciles transfers to match spent 1:1.
+ */
+async function balanceAllCardTransfersToMatchSpent() {
+  ensureCreditCardState();
+  const allCardBills = (S.bills || []).filter(isCreditCardBill);
+  const totalAllCardSpent = Math.round(allCardBills.reduce((sum, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
+    return sum + (parseFloat(b.vndAmount) || 0);
+  }, 0));
 
+  const totalAllTransferred = Math.round((S.creditCard.transfers || []).reduce((sum, t) => {
+    return sum + (parseFloat(t.amount) || 0);
+  }, 0));
 
+  const confirmMsg = `Rebalance total card transferred from ${fmtAmt(totalAllTransferred, 'VND')} ₫ to ${fmtAmt(totalAllCardSpent, 'VND')} ₫ to match total spent 1:1?\n\n(Card will be 100% settled with 0 ₫ balance due and full ${fmtAmt(S.creditCard.budget || 100000000, 'VND')} ₫ available limit).`;
+
+  const ok = await appConfirm(confirmMsg, {
+    title: 'Rebalance Card Transfers',
+    confirmText: 'Rebalance to ' + fmtAmt(totalAllCardSpent, 'VND') + ' ₫',
+    icon: '⚖️'
+  });
+  if (!ok) return;
+
+  // 1. Group card spent by trip
+  const cardSpentByTrip = {};
+  allCardBills.forEach(b => {
+    const tId = b.tripId || '__unassigned__';
+    if (!cardSpentByTrip[tId]) cardSpentByTrip[tId] = 0;
+    const amt = (b.currency || 'VND').toUpperCase() === 'VND' ? (parseFloat(b.amount) || 0) : (parseFloat(b.vndAmount) || 0);
+    cardSpentByTrip[tId] += amt;
+  });
+
+  // 2. Adjust each trip's transfers so it does not exceed the trip's card spent
+  const transfers = S.creditCard.transfers || [];
+  const transfersByTrip = {};
+  transfers.forEach(t => {
+    const tId = t.tripId || '__unassigned__';
+    if (!transfersByTrip[tId]) transfersByTrip[tId] = [];
+    transfersByTrip[tId].push(t);
+  });
+
+  Object.keys(transfersByTrip).forEach(tId => {
+    if (tId !== '__unassigned__' && cardSpentByTrip[tId] !== undefined) {
+      const tripSpent = Math.round(cardSpentByTrip[tId]);
+      const tList = transfersByTrip[tId];
+      const tSum = tList.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+      if (tSum > tripSpent) {
+        let excess = tSum - tripSpent;
+        for (let i = tList.length - 1; i >= 0; i--) {
+          const curAmt = parseFloat(tList[i].amount) || 0;
+          const deduct = Math.min(curAmt, excess);
+          tList[i].amount = Math.round(curAmt - deduct);
+          excess -= deduct;
+          if (excess <= 0) break;
+        }
+      }
+    }
+  });
+
+  // 3. Now check overall sum vs totalAllCardSpent
+  let newSum = transfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+  let diff = newSum - totalAllCardSpent;
+
+  if (diff > 0) {
+    for (let i = transfers.length - 1; i >= 0; i--) {
+      const curAmt = parseFloat(transfers[i].amount) || 0;
+      const deduct = Math.min(curAmt, diff);
+      transfers[i].amount = Math.round(curAmt - deduct);
+      diff -= deduct;
+      if (diff <= 0) break;
+    }
+  } else if (diff < 0) {
+    const shortage = Math.abs(diff);
+    if (transfers.length > 0) {
+      transfers[0].amount = Math.round((parseFloat(transfers[0].amount) || 0) + shortage);
+    } else {
+      transfers.push({
+        id: typeof genId === 'function' ? genId('cct_') : ('cct_' + Date.now()),
+        amount: totalAllCardSpent,
+        date: new Date().toISOString().slice(0, 10),
+        tripId: '',
+        note: 'Rebalanced to match total card spent (100% Settled)',
+        updatedAt: new Date().toISOString()
+      });
+    }
+  }
+
+  // Clean and round
+  transfers.forEach(t => {
+    t.amount = Math.round(parseFloat(t.amount) || 0);
+  });
+
+  // Reset manual balance override
+  S.creditCard.manualBalance = null;
+
+  sv();
+  renderCreditCardScreen();
+  showToast(`✓ Rebalanced card transfers to ${fmtAmt(totalAllCardSpent, 'VND')} ₫`);
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.balanceAllCardTransfersToMatchSpent = balanceAllCardTransfersToMatchSpent;
+}
 
