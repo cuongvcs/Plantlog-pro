@@ -1779,29 +1779,65 @@ async function generateTAPdf(tripId){
   // DATA: Two tight rows — outbound then return
   // NO blank separator. Data starts immediately.
   // ════════════════════════════════════════════════════
-  const hasRet  = !!(fl.ret_num||fl.ret_from);
+  // 7. DATA ROWS (Flight segments)
+  // Support multi-leg connecting flights (fl.legs)
+  // ════════════════════════════════════════════════════
   const DH = 9;  // each data row height
 
   const dateOut = ddmm(trip.date);
   const dateRet = (trip.dateEnd&&trip.dateEnd!==trip.date)?ddmm(trip.dateEnd):'';
-  const fltOut  = spFlt(fl.num||'')+(fl.depart?'     '+ampm(fl.depart):'');
-  const fltRet  = hasRet?(spFlt(fl.ret_num||'')+(fl.ret_depart?'     '+ampm(fl.ret_depart):'')):'';
   const cls     = ta.taClass||'E';
   const reqDate = ta.requestDate?ddmm(ta.requestDate):(trip.createdAt?ddmm(trip.createdAt.slice(0,10)):'');
 
+  // Build unified legs list
+  let legs = [];
+  if(fl.legs && Array.isArray(fl.legs) && fl.legs.length > 0){
+    legs = fl.legs.map(l => ({
+      type: (l.type || 'outbound').toLowerCase(),
+      leg: l.leg || 1,
+      num: l.num || l.flightNo || '',
+      airline: l.airline || '',
+      from: l.from || '',
+      to: l.to || '',
+      depart: l.depart || l.departTime || '',
+      arrive: l.arrive || l.arriveTime || '',
+      date: l.date || ''
+    }));
+  } else {
+    // Legacy single outbound + return
+    legs.push({
+      type: 'outbound',
+      leg: 1,
+      num: fl.num || '',
+      airline: fl.airline || '',
+      from: fl.from || '',
+      to: fl.to || '',
+      depart: fl.depart || '',
+      arrive: fl.arrive || '',
+      date: trip.date || ''
+    });
+    if(fl.ret_num || fl.ret_from || fl.ret_to){
+      legs.push({
+        type: 'return',
+        leg: 1,
+        num: fl.ret_num || '',
+        airline: fl.ret_airline || '',
+        from: fl.ret_from || fl.to || '',
+        to: fl.ret_to || fl.from || '',
+        depart: fl.ret_depart || '',
+        arrive: fl.ret_arrive || '',
+        date: trip.dateEnd || trip.date || ''
+      });
+    }
+  }
+
+  // Ensure minimum 2 rows for aesthetic balance if only 1 leg exists
+  const rowCount = Math.max(2, legs.length);
   const dataStartY = y;
 
-  // ── Outbound row ──
   doc.setFont('helvetica','normal');
   doc.setFontSize(7);
   doc.setTextColor(0,0,0);
-  doc.setLineWidth(0.25);
-  colDefs.forEach(c=>doc.rect(c.x, y, c.w, DH, 'S'));
-  doc.setLineWidth(1.2);
-  doc.line(dblX, y, dblX, y+DH);
-  doc.line(reqX, y, reqX, y+DH);
-  doc.line(appX, y, appX, y+DH);
-  doc.setLineWidth(0.25);
 
   const putText = (idx,val,rowY)=>{
     if(!val) return;
@@ -1810,42 +1846,43 @@ async function generateTAPdf(tripId){
     doc.text(ws, c.x+1.5, rowY+DH/2+0.5);
   };
 
-  putText(0, ta.taNo||'',    y);
-  putText(1, p.name||'',     y);
-  putText(2, dateOut,         y);
-  putText(3, fl.from||'',    y);
-  putText(4, fl.to||'',      y);
-  putText(5, fltOut,          y);
-  putText(6, cls,             y);
-  putText(7, trip.plant||'', y);
-  putText(8, trip.purpose||'',y);
-  putText(9, ta.allocation||'', y);
-  putText(10,ta.entity||'',  y);
-  putText(11,ta.extension?ddmm(ta.extension):'', y);
+  for(let i = 0; i < rowCount; i++){
+    const curY = y;
+    doc.setLineWidth(0.25);
+    colDefs.forEach(c=>doc.rect(c.x, curY, c.w, DH, 'S'));
+    doc.setLineWidth(1.2);
+    doc.line(dblX, curY, dblX, curY+DH);
+    doc.line(reqX, curY, reqX, curY+DH);
+    doc.line(appX, curY, appX, curY+DH);
+    doc.setLineWidth(0.25);
 
-  y += DH;
+    // TA and general info on the first row
+    if(i === 0){
+      putText(0, ta.taNo||'', curY);
+      putText(1, p.name||'', curY);
+      putText(7, trip.plant||'', curY);
+      putText(8, trip.purpose||'', curY);
+      putText(9, ta.allocation||'', curY);
+      putText(10,ta.entity||'', curY);
+      putText(11,ta.extension?ddmm(ta.extension):'', curY);
+    }
 
-  // ── Return row ──
-  doc.setLineWidth(0.25);
-  colDefs.forEach(c=>doc.rect(c.x, y, c.w, DH, 'S'));
-  doc.setLineWidth(1.2);
-  doc.line(dblX, y, dblX, y+DH);
-  doc.line(reqX, y, reqX, y+DH);
-  doc.line(appX, y, appX, y+DH);
-  doc.setLineWidth(0.25);
+    const curLeg = legs[i];
+    if(curLeg){
+      const legDate = curLeg.date ? ddmm(curLeg.date) : (curLeg.type === 'return' ? (dateRet || dateOut) : dateOut);
+      const fltStr = spFlt(curLeg.num||'') + (curLeg.depart ? '     ' + ampm(curLeg.depart) : '');
+      putText(2, legDate, curY);
+      putText(3, curLeg.from||'', curY);
+      putText(4, curLeg.to||'', curY);
+      putText(5, fltStr, curY);
+      putText(6, cls, curY);
+    }
 
-  if(hasRet){
-    putText(2, dateRet,                     y);
-    putText(3, fl.ret_from||fl.to||'',      y);
-    putText(4, fl.ret_to||fl.from||'',      y);
-    putText(5, fltRet,                      y);
-    putText(6, cls,                         y);
+    y += DH;
   }
 
-  y += DH;
-
-  // ── Signature spanning both data rows ──
-  const sigTotalH = DH*2;
+  // ── Signature spanning all data rows ──
+  const sigTotalH = DH * rowCount;
   const rc = colDefs[reqIdx];
   try{
     const sigSrc = (S.profile && S.profile.signature) ? S.profile.signature : (typeof STORED_SIG_B64!=='undefined' ? STORED_SIG_B64 : '');

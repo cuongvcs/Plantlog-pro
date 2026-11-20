@@ -225,6 +225,144 @@ function switchTripDetailTab(tab) {
     if (pane) pane.style.display = (t === _currentTripDetailTab) ? 'block' : 'none';
   });
 }
+function addTripOutboundFlightLeg(data){
+  const container = document.getElementById('nt-fl-outbound-extra-container');
+  if(!container) return;
+  const count = container.querySelectorAll('.trip-flight-extra-card').length;
+  const legNum = count + 2;
+  
+  let prevTo = '';
+  if(count === 0){
+    const mainTo = document.getElementById('nt-fl-to');
+    if(mainTo) prevTo = mainTo.value.trim();
+  } else {
+    const toInputs = container.querySelectorAll('.fl-extra-to');
+    if(toInputs.length > 0) prevTo = toInputs[toInputs.length - 1].value.trim();
+  }
+
+  const card = document.createElement('div');
+  card.className = 'trip-flight-extra-card';
+  card.setAttribute('data-leg-type', 'outbound');
+  card.style.cssText = 'background:rgba(255,255,255,0.7);border:1px dashed rgba(16,185,129,0.4);border-radius:var(--rs);padding:8px 10px;margin-top:8px;';
+  
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-size:10px;font-weight:700;color:var(--gd);letter-spacing:0.05em;">✈️ CHẶNG ĐI ${legNum} (NỐI CHUYẾN / TRANSIT)</span>
+      <button type="button" class="btn btn-sm btn-subtle" onclick="removeTripFlightLeg(this)" style="font-size:10px;color:var(--rd);padding:2px 6px;cursor:pointer;">✕ Xóa chặng</button>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Flight No.</label><input class="fi fl-extra-num" placeholder="VN142" oninput="onTripExtraFlightNumInput(this)" style="font-family:var(--mono);text-transform:uppercase;letter-spacing:0.05em;"></div>
+      <div class="fg"><label class="fl">Airline</label><input class="fi fl-extra-airline" placeholder="e.g. Thai Airways"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">From</label><input class="fi fl-extra-from" placeholder="Transit airport"></div>
+      <div class="fg"><label class="fl">To</label><input class="fi fl-extra-to" placeholder="Final airport"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Depart</label><input class="fi fl-extra-depart" type="time"></div>
+      <div class="fg"><label class="fl">Arrive</label><input class="fi fl-extra-arrive" type="time"></div>
+    </div>
+  `;
+  container.appendChild(card);
+
+  if(data){
+    const numEl = card.querySelector('.fl-extra-num'); if(numEl) numEl.value = data.num || data.flightNo || '';
+    const airEl = card.querySelector('.fl-extra-airline'); if(airEl) airEl.value = data.airline || '';
+    const fromEl = card.querySelector('.fl-extra-from'); if(fromEl) fromEl.value = data.from || '';
+    const toEl = card.querySelector('.fl-extra-to'); if(toEl) toEl.value = data.to || '';
+    const depEl = card.querySelector('.fl-extra-depart'); if(depEl) depEl.value = data.depart || data.departTime || '';
+    const arrEl = card.querySelector('.fl-extra-arrive'); if(arrEl) arrEl.value = data.arrive || data.arriveTime || '';
+  } else if(prevTo){
+    const fromEl = card.querySelector('.fl-extra-from');
+    if(fromEl && !fromEl.value) fromEl.value = prevTo;
+  }
+}
+
+function addTripReturnFlightLeg(data){
+  const container = document.getElementById('nt-fl-return-extra-container');
+  if(!container) return;
+  const count = container.querySelectorAll('.trip-flight-extra-card').length;
+  const legNum = count + 2;
+  
+  let prevTo = '';
+  if(count === 0){
+    const mainRetTo = document.getElementById('nt-fl-ret-to');
+    if(mainRetTo) prevTo = mainRetTo.value.trim();
+  } else {
+    const toInputs = container.querySelectorAll('.fl-extra-to');
+    if(toInputs.length > 0) prevTo = toInputs[toInputs.length - 1].value.trim();
+  }
+
+  const card = document.createElement('div');
+  card.className = 'trip-flight-extra-card';
+  card.setAttribute('data-leg-type', 'return');
+  card.style.cssText = 'background:rgba(255,255,255,0.7);border:1px dashed rgba(59,130,246,0.4);border-radius:var(--rs);padding:8px 10px;margin-top:8px;';
+  
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-size:10px;font-weight:700;color:#1D4ED8;letter-spacing:0.05em;">✈️ CHẶNG VỀ ${legNum} (NỐI CHUYẾN / TRANSIT)</span>
+      <button type="button" class="btn btn-sm btn-subtle" onclick="removeTripFlightLeg(this)" style="font-size:10px;color:var(--rd);padding:2px 6px;cursor:pointer;">✕ Xóa chặng</button>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Flight No.</label><input class="fi fl-extra-num" placeholder="VN135" oninput="onTripExtraFlightNumInput(this)" style="font-family:var(--mono);text-transform:uppercase;letter-spacing:0.05em;"></div>
+      <div class="fg"><label class="fl">Airline</label><input class="fi fl-extra-airline" placeholder="e.g. Thai Airways"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">From</label><input class="fi fl-extra-from" placeholder="Transit airport"></div>
+      <div class="fg"><label class="fl">To</label><input class="fi fl-extra-to" placeholder="Final airport"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Depart</label><input class="fi fl-extra-depart" type="time"></div>
+      <div class="fg"><label class="fl">Arrive</label><input class="fi fl-extra-arrive" type="time"></div>
+    </div>
+  `;
+  container.appendChild(card);
+
+  if(data){
+    const numEl = card.querySelector('.fl-extra-num'); if(numEl) numEl.value = data.num || data.flightNo || '';
+    const airEl = card.querySelector('.fl-extra-airline'); if(airEl) airEl.value = data.airline || '';
+    const fromEl = card.querySelector('.fl-extra-from'); if(fromEl) fromEl.value = data.from || '';
+    const toEl = card.querySelector('.fl-extra-to'); if(toEl) toEl.value = data.to || '';
+    const depEl = card.querySelector('.fl-extra-depart'); if(depEl) depEl.value = data.depart || data.departTime || '';
+    const arrEl = card.querySelector('.fl-extra-arrive'); if(arrEl) arrEl.value = data.arrive || data.arriveTime || '';
+  } else if(prevTo){
+    const fromEl = card.querySelector('.fl-extra-from');
+    if(fromEl && !fromEl.value) fromEl.value = prevTo;
+  }
+}
+
+function removeTripFlightLeg(btn){
+  const card = btn ? btn.closest('.trip-flight-extra-card') : null;
+  if(card && card.parentNode){
+    const parent = card.parentNode;
+    const isOut = parent.id === 'nt-fl-outbound-extra-container';
+    card.remove();
+    const cards = parent.querySelectorAll('.trip-flight-extra-card');
+    cards.forEach((c, idx) => {
+      const titleSpan = c.querySelector('span');
+      if(titleSpan){
+        titleSpan.textContent = `✈️ ${isOut ? 'CHẶNG ĐI' : 'CHẶNG VỀ'} ${idx + 2} (NỐI CHUYẾN / TRANSIT)`;
+      }
+    });
+  }
+}
+
+function onTripExtraFlightNumInput(input){
+  if(!input) return;
+  const card = input.closest('.trip-flight-extra-card');
+  if(!card) return;
+  const airlineEl = card.querySelector('.fl-extra-airline');
+  const code = (input.value || '').toUpperCase().trim();
+  if(airlineEl && !airlineEl.value){
+    if(code.startsWith('VN')) airlineEl.value = 'Vietnam Airlines';
+    else if(code.startsWith('VJ')) airlineEl.value = 'VietJet Air';
+    else if(code.startsWith('QH')) airlineEl.value = 'Bamboo Airways';
+    else if(code.startsWith('VU')) airlineEl.value = 'Vietravel Airlines';
+    else if(code.startsWith('TG')) airlineEl.value = 'Thai Airways';
+    else if(code.startsWith('SQ')) airlineEl.value = 'Singapore Airlines';
+  }
+}
+
 function resetTripFlightFields(){
   const etf0=document.getElementById('nt-fl-num');if(etf0)etf0.value='';
   const etf1=document.getElementById('nt-fl-airline');if(etf1)etf1.value='';
@@ -239,6 +377,8 @@ function resetTripFlightFields(){
   const etf10=document.getElementById('nt-fl-ret-depart');if(etf10)etf10.value='';
   const etf11=document.getElementById('nt-fl-ret-arrive');if(etf11)etf11.value='';
   const etf12=document.getElementById('nt-fl-pnr');if(etf12)etf12.value='';
+  const outExtra = document.getElementById('nt-fl-outbound-extra-container'); if(outExtra) outExtra.innerHTML = '';
+  const retExtra = document.getElementById('nt-fl-return-extra-container'); if(retExtra) retExtra.innerHTML = '';
   const hasRet=document.getElementById('nt-fl-has-return');if(hasRet)hasRet.checked=false;
   const retSec=document.getElementById('nt-fl-return-section');if(retSec)retSec.style.display='none';
   const flSec=document.getElementById('trip-flight-section');if(flSec)flSec.style.display='none';
@@ -246,20 +386,45 @@ function resetTripFlightFields(){
 
 function loadTripFlightFields(flight){
   if(!flight)return;
-  const etf0=document.getElementById('nt-fl-num');if(etf0)etf0.value=flight['num']||'';
-  const etf1=document.getElementById('nt-fl-airline');if(etf1)etf1.value=flight['airline']||'';
-  const etf2=document.getElementById('nt-fl-from');if(etf2)etf2.value=flight['from']||'';
-  const etf3=document.getElementById('nt-fl-to');if(etf3)etf3.value=flight['to']||'';
-  const etf4=document.getElementById('nt-fl-depart');if(etf4)etf4.value=flight['depart']||'';
-  const etf5=document.getElementById('nt-fl-arrive');if(etf5)etf5.value=flight['arrive']||'';
-  const etf6=document.getElementById('nt-fl-ret-num');if(etf6)etf6.value=flight['ret_num']||'';
-  const etf7=document.getElementById('nt-fl-ret-airline');if(etf7)etf7.value=flight['ret_airline']||'';
-  const etf8=document.getElementById('nt-fl-ret-from');if(etf8)etf8.value=flight['ret_from']||'';
-  const etf9=document.getElementById('nt-fl-ret-to');if(etf9)etf9.value=flight['ret_to']||'';
-  const etf10=document.getElementById('nt-fl-ret-depart');if(etf10)etf10.value=flight['ret_depart']||'';
-  const etf11=document.getElementById('nt-fl-ret-arrive');if(etf11)etf11.value=flight['ret_arrive']||'';
+  if(typeof flight === 'string' && flight.startsWith('{')) {
+    try { flight = JSON.parse(flight); } catch(e){}
+  }
+  resetTripFlightFields();
+
+  let outboundLegs = [];
+  let returnLegs = [];
+
+  if(flight.legs && Array.isArray(flight.legs) && flight.legs.length > 0) {
+    outboundLegs = flight.legs.filter(l => (l.type || 'outbound').toLowerCase() === 'outbound');
+    returnLegs = flight.legs.filter(l => (l.type || '').toLowerCase() === 'return');
+  }
+
+  const out1 = outboundLegs.length > 0 ? outboundLegs[0] : flight;
+  const etf0=document.getElementById('nt-fl-num');if(etf0)etf0.value=out1['num']||out1['flightNo']||flight['num']||'';
+  const etf1=document.getElementById('nt-fl-airline');if(etf1)etf1.value=out1['airline']||flight['airline']||'';
+  const etf2=document.getElementById('nt-fl-from');if(etf2)etf2.value=out1['from']||flight['from']||'';
+  const etf3=document.getElementById('nt-fl-to');if(etf3)etf3.value=out1['to']||flight['to']||'';
+  const etf4=document.getElementById('nt-fl-depart');if(etf4)etf4.value=out1['depart']||out1['departTime']||flight['depart']||'';
+  const etf5=document.getElementById('nt-fl-arrive');if(etf5)etf5.value=out1['arrive']||out1['arriveTime']||flight['arrive']||'';
+
+  for(let i = 1; i < outboundLegs.length; i++){
+    addTripOutboundFlightLeg(outboundLegs[i]);
+  }
+
+  const ret1 = returnLegs.length > 0 ? returnLegs[0] : flight;
+  const hasReturn=!!(returnLegs.length > 0 || flight.ret_num || flight.ret_from || flight.ret_to);
+  const etf6=document.getElementById('nt-fl-ret-num');if(etf6)etf6.value=returnLegs.length > 0 ? (ret1['num']||ret1['flightNo']||'') : (flight['ret_num']||'');
+  const etf7=document.getElementById('nt-fl-ret-airline');if(etf7)etf7.value=returnLegs.length > 0 ? (ret1['airline']||'') : (flight['ret_airline']||'');
+  const etf8=document.getElementById('nt-fl-ret-from');if(etf8)etf8.value=returnLegs.length > 0 ? (ret1['from']||'') : (flight['ret_from']||'');
+  const etf9=document.getElementById('nt-fl-ret-to');if(etf9)etf9.value=returnLegs.length > 0 ? (ret1['to']||'') : (flight['ret_to']||'');
+  const etf10=document.getElementById('nt-fl-ret-depart');if(etf10)etf10.value=returnLegs.length > 0 ? (ret1['depart']||ret1['departTime']||'') : (flight['ret_depart']||'');
+  const etf11=document.getElementById('nt-fl-ret-arrive');if(etf11)etf11.value=returnLegs.length > 0 ? (ret1['arrive']||ret1['arriveTime']||'') : (flight['ret_arrive']||'');
+
+  for(let j = 1; j < returnLegs.length; j++){
+    addTripReturnFlightLeg(returnLegs[j]);
+  }
+
   const etf12=document.getElementById('nt-fl-pnr');if(etf12)etf12.value=flight['pnr']||'';
-  const hasReturn=!!(flight.ret_num||flight.ret_from);
   const hasRet=document.getElementById('nt-fl-has-return');if(hasRet)hasRet.checked=hasReturn;
   const retSec=document.getElementById('nt-fl-return-section');if(retSec)retSec.style.display=hasReturn?'':'none';
   const flSec=document.getElementById('trip-flight-section');if(flSec)flSec.style.display='';
@@ -267,46 +432,200 @@ function loadTripFlightFields(flight){
 
 function getTripFlightFields(){
   const gv=id=>{const e=document.getElementById(id);return e?e.value:'';};
+  const legs = [];
+
+  const out1Num = gv('nt-fl-num');
+  const out1Airline = gv('nt-fl-airline');
+  const out1From = gv('nt-fl-from');
+  const out1To = gv('nt-fl-to');
+  const out1Depart = gv('nt-fl-depart');
+  const out1Arrive = gv('nt-fl-arrive');
+
+  if(out1Num || out1From || out1To || out1Depart){
+    legs.push({
+      type: 'outbound',
+      leg: 1,
+      num: out1Num,
+      airline: out1Airline,
+      from: out1From,
+      to: out1To,
+      depart: out1Depart,
+      arrive: out1Arrive
+    });
+  }
+
+  const outExtra = document.getElementById('nt-fl-outbound-extra-container');
+  if(outExtra){
+    const extraCards = outExtra.querySelectorAll('.trip-flight-extra-card');
+    extraCards.forEach((c, idx) => {
+      const num = (c.querySelector('.fl-extra-num')||{}).value || '';
+      const airline = (c.querySelector('.fl-extra-airline')||{}).value || '';
+      const from = (c.querySelector('.fl-extra-from')||{}).value || '';
+      const to = (c.querySelector('.fl-extra-to')||{}).value || '';
+      const depart = (c.querySelector('.fl-extra-depart')||{}).value || '';
+      const arrive = (c.querySelector('.fl-extra-arrive')||{}).value || '';
+      if(num || from || to || depart){
+        legs.push({
+          type: 'outbound',
+          leg: idx + 2,
+          num: num,
+          airline: airline,
+          from: from,
+          to: to,
+          depart: depart,
+          arrive: arrive
+        });
+      }
+    });
+  }
+
+  const hasRet = document.getElementById('nt-fl-has-return');
+  let ret1Num = '', ret1Airline = '', ret1From = '', ret1To = '', ret1Depart = '', ret1Arrive = '';
+  if(hasRet && hasRet.checked){
+    ret1Num = gv('nt-fl-ret-num');
+    ret1Airline = gv('nt-fl-ret-airline');
+    ret1From = gv('nt-fl-ret-from');
+    ret1To = gv('nt-fl-ret-to');
+    ret1Depart = gv('nt-fl-ret-depart');
+    ret1Arrive = gv('nt-fl-ret-arrive');
+
+    if(ret1Num || ret1From || ret1To || ret1Depart){
+      legs.push({
+        type: 'return',
+        leg: 1,
+        num: ret1Num,
+        airline: ret1Airline,
+        from: ret1From,
+        to: ret1To,
+        depart: ret1Depart,
+        arrive: ret1Arrive
+      });
+    }
+
+    const retExtra = document.getElementById('nt-fl-return-extra-container');
+    if(retExtra){
+      const extraCards = retExtra.querySelectorAll('.trip-flight-extra-card');
+      extraCards.forEach((c, idx) => {
+        const num = (c.querySelector('.fl-extra-num')||{}).value || '';
+        const airline = (c.querySelector('.fl-extra-airline')||{}).value || '';
+        const from = (c.querySelector('.fl-extra-from')||{}).value || '';
+        const to = (c.querySelector('.fl-extra-to')||{}).value || '';
+        const depart = (c.querySelector('.fl-extra-depart')||{}).value || '';
+        const arrive = (c.querySelector('.fl-extra-arrive')||{}).value || '';
+        if(num || from || to || depart){
+          legs.push({
+            type: 'return',
+            leg: idx + 2,
+            num: num,
+            airline: airline,
+            from: from,
+            to: to,
+            depart: depart,
+            arrive: arrive
+          });
+        }
+      });
+    }
+  }
+
   return {
-    num:gv('nt-fl-num'), airline:gv('nt-fl-airline'), from:gv('nt-fl-from'), to:gv('nt-fl-to'),
-    depart:gv('nt-fl-depart'), arrive:gv('nt-fl-arrive'),
-    ret_num:gv('nt-fl-ret-num'), ret_airline:gv('nt-fl-ret-airline'), ret_from:gv('nt-fl-ret-from'),
-    ret_to:gv('nt-fl-ret-to'), ret_depart:gv('nt-fl-ret-depart'), ret_arrive:gv('nt-fl-ret-arrive'),
-    pnr:gv('nt-fl-pnr')
+    num: out1Num,
+    airline: out1Airline,
+    from: out1From,
+    to: out1To,
+    depart: out1Depart,
+    arrive: out1Arrive,
+    ret_num: ret1Num,
+    ret_airline: ret1Airline,
+    ret_from: ret1From,
+    ret_to: ret1To,
+    ret_depart: ret1Depart,
+    ret_arrive: ret1Arrive,
+    pnr: gv('nt-fl-pnr'),
+    legs: legs
   };
 }
 
 function formatTripFlightInfo(fl){
   if(!fl) return '';
-  const lines = [];
-  const outNum = fl.num || fl.flightNo || '';
-  const outAirline = fl.airline || '';
-  const outFrom = fl.from || '';
-  const outTo = fl.to || '';
-  const outDepart = fl.depart || fl.departTime || '';
-  const outArrive = fl.arrive || fl.arriveTime || '';
-
-  if(outNum || outFrom || outTo || outAirline){
-    let str = outNum;
-    if(outAirline) str += (str ? ` (${outAirline})` : outAirline);
-    if(outFrom || outTo) str += (str ? ': ' : '') + `${outFrom||'—'} -> ${outTo||'—'}`;
-    if(outDepart || outArrive) str += ` (${outDepart||''}${outDepart&&outArrive?'–':''}${outArrive||''})`;
-    if(str.trim()) lines.push(str.trim());
+  if(typeof fl === 'string' && fl.startsWith('{')){
+    try { fl = JSON.parse(fl); } catch(e){}
   }
+  const lines = [];
 
-  const retNum = fl.ret_num || fl.retNum || '';
-  const retAirline = fl.ret_airline || fl.retAirline || '';
-  const retFrom = fl.ret_from || fl.retFrom || '';
-  const retTo = fl.ret_to || fl.retTo || '';
-  const retDepart = fl.ret_depart || fl.retDepart || '';
-  const retArrive = fl.ret_arrive || fl.retArrive || '';
+  if(fl.legs && Array.isArray(fl.legs) && fl.legs.length > 0){
+    const outLegs = fl.legs.filter(l => (l.type || 'outbound').toLowerCase() === 'outbound');
+    const retLegs = fl.legs.filter(l => (l.type || '').toLowerCase() === 'return');
 
-  if(retNum || retFrom || retTo || retAirline){
-    let str = 'Return: ' + retNum;
-    if(retAirline) str += (retNum ? ` (${retAirline})` : retAirline);
-    if(retFrom || retTo) str += (retNum||retAirline ? ': ' : '') + `${retFrom||'—'} -> ${retTo||'—'}`;
-    if(retDepart || retArrive) str += ` (${retDepart||''}${retDepart&&retArrive?'–':''}${retArrive||''})`;
-    if(str.trim()) lines.push(str.trim());
+    if(outLegs.length > 0){
+      if(outLegs.length === 1){
+        const l = outLegs[0];
+        let str = l.num || '';
+        if(l.airline) str += (str ? ` (${l.airline})` : l.airline);
+        if(l.from || l.to) str += (str ? ': ' : '') + `${l.from||'—'} -> ${l.to||'—'}`;
+        if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
+        if(str.trim()) lines.push(str.trim());
+      } else {
+        lines.push('✈️ Outbound (Chặng đi):');
+        outLegs.forEach((l, idx) => {
+          let str = `  • Chặng ${idx + 1}: ${l.num || 'Flight'}`;
+          if(l.airline) str += ` (${l.airline})`;
+          if(l.from || l.to) str += `: ${l.from||'—'} -> ${l.to||'—'}`;
+          if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
+          lines.push(str);
+        });
+      }
+    }
+
+    if(retLegs.length > 0){
+      if(retLegs.length === 1){
+        const l = retLegs[0];
+        let str = 'Return: ' + (l.num || '');
+        if(l.airline) str += (l.num ? ` (${l.airline})` : l.airline);
+        if(l.from || l.to) str += (l.num||l.airline ? ': ' : '') + `${l.from||'—'} -> ${l.to||'—'}`;
+        if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
+        if(str.trim()) lines.push(str.trim());
+      } else {
+        lines.push('✈️ Return (Chặng về):');
+        retLegs.forEach((l, idx) => {
+          let str = `  • Chặng về ${idx + 1}: ${l.num || 'Flight'}`;
+          if(l.airline) str += ` (${l.airline})`;
+          if(l.from || l.to) str += `: ${l.from||'—'} -> ${l.to||'—'}`;
+          if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
+          lines.push(str);
+        });
+      }
+    }
+  } else {
+    const outNum = fl.num || fl.flightNo || '';
+    const outAirline = fl.airline || '';
+    const outFrom = fl.from || '';
+    const outTo = fl.to || '';
+    const outDepart = fl.depart || fl.departTime || '';
+    const outArrive = fl.arrive || fl.arriveTime || '';
+
+    if(outNum || outFrom || outTo || outAirline){
+      let str = outNum;
+      if(outAirline) str += (str ? ` (${outAirline})` : outAirline);
+      if(outFrom || outTo) str += (str ? ': ' : '') + `${outFrom||'—'} -> ${outTo||'—'}`;
+      if(outDepart || outArrive) str += ` (${outDepart||''}${outDepart&&outArrive?'–':''}${outArrive||''})`;
+      if(str.trim()) lines.push(str.trim());
+    }
+
+    const retNum = fl.ret_num || fl.retNum || '';
+    const retAirline = fl.ret_airline || fl.retAirline || '';
+    const retFrom = fl.ret_from || fl.retFrom || '';
+    const retTo = fl.ret_to || fl.retTo || '';
+    const retDepart = fl.ret_depart || fl.retDepart || '';
+    const retArrive = fl.ret_arrive || fl.retArrive || '';
+
+    if(retNum || retFrom || retTo || retAirline){
+      let str = 'Return: ' + retNum;
+      if(retAirline) str += (retNum ? ` (${retAirline})` : retAirline);
+      if(retFrom || retTo) str += (retNum||retAirline ? ': ' : '') + `${retFrom||'—'} -> ${retTo||'—'}`;
+      if(retDepart || retArrive) str += ` (${retDepart||''}${retDepart&&retArrive?'–':''}${retArrive||''})`;
+      if(str.trim()) lines.push(str.trim());
+    }
   }
 
   if(fl.pnr){
