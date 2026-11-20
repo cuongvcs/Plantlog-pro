@@ -732,6 +732,40 @@ function populateTripClaimDateSelectors() {
 }
 
 /**
+ * Check if a trip belongs to or overlaps the selected Year and Month filter
+ * Handles cross-month trips (e.g. 23 Mar -> 3 Apr) seamlessly across tabs
+ */
+function isTripInPeriod(t, filterYear, filterMonth) {
+  if (!t) return false;
+  if (!filterYear && !filterMonth) return true;
+
+  const dStart = t.date || '';
+  const dEnd = t.dateEnd || dStart;
+
+  // 1. Filter by Year
+  if (filterYear) {
+    const yStart = dStart.slice(0, 4);
+    const yEnd = dEnd.slice(0, 4);
+    if (yStart !== filterYear && yEnd !== filterYear) {
+      const hasBillInYear = (S.bills || []).some(b => String(b.tripId) === String(t.id) && (b.date || '').startsWith(filterYear));
+      if (!hasBillInYear) return false;
+    }
+  }
+
+  // 2. Filter by Month
+  if (filterMonth) {
+    const mStart = dStart.split('-')[1];
+    const mEnd = dEnd.split('-')[1];
+    if (mStart !== filterMonth && mEnd !== filterMonth) {
+      const hasBillInMonth = (S.bills || []).some(b => String(b.tripId) === String(t.id) && (b.date || '').split('-')[1] === filterMonth);
+      if (!hasBillInMonth) return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  * Render the entire Trip Claims view
  */
 function renderTripClaimsScreen() {
@@ -778,16 +812,9 @@ function renderTripClaimsScreen() {
 
   let trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])];
 
-  // Filter by Year
-  if (filterYear) {
-    trips = trips.filter(t => (t.date || '').startsWith(filterYear));
-  }
-  // Filter by Month
-  if (filterMonth) {
-    trips = trips.filter(t => {
-      const parts = (t.date || '').split('-');
-      return parts[1] === filterMonth;
-    });
+  // Filter by Year & Month (including cross-month trips via isTripInPeriod)
+  if (filterYear || filterMonth) {
+    trips = trips.filter(t => isTripInPeriod(t, filterYear, filterMonth));
   }
 
   // Filter by Payment Status
@@ -1265,7 +1292,7 @@ function calculateCreditCardBalanceDue() {
  */
 function isCreditCardBill(b) {
   if (!b) return false;
-  const pm = String(b.paymentMethod || b.paymentTerm || '').toLowerCase();
+  const pm = String(b.paymentMethod || b.paymentTerm || b.PaymentMethod || b.PaymentTerm || b.method || '').toLowerCase();
   return pm.includes('card') || pm.includes('credit') || pm.includes('3-') || pm === '3' || pm.includes('thẻ') || pm.includes('the');
 }
 
@@ -1516,19 +1543,23 @@ function renderCreditCardScreen() {
 
   // 4. Render Trip Card Bills (Grouped Summary by Trip)
   const tripBillsContainer = document.getElementById('cc-trip-bills-list-container');
-  const cardBillsByTrip = {};
-  filteredBills.forEach(b => {
+  // IMP-46/IMP-47: Group ALL card bills by trip (NOT sliced by month) so each trip card represents the trip's complete expenses
+  const allCardBillsByTrip = {};
+  allCardBills.forEach(b => {
     const tId = b.tripId || 'unassigned';
-    if (!cardBillsByTrip[tId]) cardBillsByTrip[tId] = [];
-    cardBillsByTrip[tId].push(b);
+    if (!allCardBillsByTrip[tId]) allCardBillsByTrip[tId] = [];
+    allCardBillsByTrip[tId].push(b);
   });
 
   const tripGroups = [];
   const sortedTrips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])];
 
   sortedTrips.forEach(tr => {
-    const tBills = cardBillsByTrip[String(tr.id)] || [];
+    const tBills = allCardBillsByTrip[String(tr.id)] || [];
     if (!tBills.length) return;
+
+    // Check if this trip belongs to or overlaps the selected period filter
+    if (!isTripInPeriod(tr, filterYear, filterMonth)) return;
 
     const totalSpent = tBills.reduce((sum, b) => {
       if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
@@ -1578,10 +1609,18 @@ function renderCreditCardScreen() {
   });
 
   const tripIdsSet = new Set(sortedTrips.map(t => String(t.id)));
-  // Handle unassigned & orphaned trip bills cleanly
-  const orphanBills = Object.entries(cardBillsByTrip)
+  // Handle unassigned & orphaned trip bills cleanly (scoped to selected period)
+  let orphanBills = Object.entries(allCardBillsByTrip)
     .filter(([k]) => k === 'unassigned' || !tripIdsSet.has(String(k)))
     .flatMap(([, list]) => list);
+
+  if (filterYear) {
+    orphanBills = orphanBills.filter(b => (b.date || '').startsWith(filterYear));
+  }
+  if (filterMonth) {
+    orphanBills = orphanBills.filter(b => (b.date || '').split('-')[1] === filterMonth);
+  }
+
   if (orphanBills.length) {
     const totalSpent = orphanBills.reduce((sum, b) => {
       if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
@@ -1745,7 +1784,7 @@ function renderCreditCardScreen() {
     if (_cardBillTripFilter) {
       if (_cardBillTripFilter === '__unassigned__') {
         const activeTripIds = new Set((S.trips || []).map(t => String(t.id)));
-        displayedGranularBills = displayedGranularBills.filter(b => !b.tripId || !activeTripIds.has(String(b.tripId)));
+        displayedGranularBills = allCardBills.filter(b => !b.tripId || !activeTripIds.has(String(b.tripId)));
         filterBannerHtml = `
           <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
             <span>Filtered by: <strong>General Card Expenses</strong> (${displayedGranularBills.length} bills)</span>
@@ -1754,7 +1793,8 @@ function renderCreditCardScreen() {
       } else {
         const filterTrip = (S.trips || []).find(t => String(t.id) === String(_cardBillTripFilter));
         const filterTripName = filterTrip ? filterTrip.plant : 'Selected Trip';
-        displayedGranularBills = displayedGranularBills.filter(b => String(b.tripId) === String(_cardBillTripFilter));
+        // When filtered by a specific trip, display ALL bills of that trip across months
+        displayedGranularBills = allCardBills.filter(b => String(b.tripId) === String(_cardBillTripFilter));
         filterBannerHtml = `
           <div style="display:flex;justify-content:space-between;align-items:center;background:#EFF6FF;border:1px solid #BFDBFE;padding:6px 10px;border-radius:6px;margin-bottom:8px;font-size:11.5px;color:#1E40AF;">
             <span>Filtered by: <strong>🏭 ${typeof escHtml === 'function' ? escHtml(filterTripName) : filterTripName}</strong> (${displayedGranularBills.length} bills)</span>
