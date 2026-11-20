@@ -4792,6 +4792,156 @@ input, textarea, select, button { font-family: var(--font); }
   </div>
 </div></div>
 
+<!-- MODAL: TRIP TRANSFER RECONCILIATION & BALANCE (IMP-46) -->
+<div id="modal-trip-transfer-balance" class="mo"><div class="modal" style="max-width:440px;">
+  <div class="mh"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div>
+      <div class="mt" style="margin-bottom:0;" id="ttb-modal-title">⚖️ Reconcile Trip Transfers</div>
+      <div style="font-size:11px;color:var(--n500);" id="ttb-trip-subtitle">Trip Settlement &amp; Card Repayment</div>
+    </div>
+    <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-trip-transfer-balance')" style="font-size:12px;padding:3px 8px;">✕</button>
+  </div>
+  <input type="hidden" id="ttb-trip-id" value="">
+
+  <!-- Trip Info & Reconciliation Matrix -->
+  <div id="ttb-trip-info" style="margin-bottom:12px;background:var(--n50);border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;">
+    <!-- Populated dynamically by openTripTransferModal() -->
+  </div>
+
+  <!-- Auto-Balance Suggestion Card (Shown when difference != 0) -->
+  <div id="ttb-auto-balance-box" style="display:none;background:#FEF3C7;border:1px solid #FDE68A;border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;">
+    <div style="font-weight:700;font-size:12px;color:#92400E;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+      <span>⚡ Quick Auto-Balance</span>
+    </div>
+    <div id="ttb-auto-balance-desc" style="font-size:11px;color:#78350F;line-height:1.45;margin-bottom:8px;"></div>
+    <div id="ttb-keep-excess-container" style="margin-bottom:10px;">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:11.5px;color:#92400E;cursor:pointer;">
+        <input type="checkbox" id="ttb-keep-excess-as-general" checked style="accent-color:#D97706;margin-top:2px;">
+        <span id="ttb-keep-excess-label">Keep excess amount as <strong>General Card Transfer</strong> so total available credit limit stays intact.</span>
+      </label>
+    </div>
+    <button type="button" class="btn btn-sm btn-p" style="background:#D97706;border-color:#D97706;color:#FFF;width:100%;font-size:12px;font-weight:700;padding:7px 10px;" onclick="executeAutoBalanceTripTransfer()">
+      ⚡ Balance Trip Transfer Now
+    </button>
+  </div>
+
+  <!-- Linked Transfer Records List -->
+  <div style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div style="font-size:12px;font-weight:700;color:var(--n800);">Linked Transfer Records</div>
+      <button type="button" class="btn btn-sm btn-o" onclick="openAddTransferForCurrentTrip()" style="font-size:10.5px;padding:2px 7px;">➕ Add Record</button>
+    </div>
+    <div id="ttb-transfers-list" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+
+  <!-- In-Place Edit / Add Form -->
+  <div id="ttb-edit-section" style="border-top:1px solid var(--n200);padding-top:10px;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div style="font-size:11.5px;font-weight:700;color:var(--n700);" id="ttb-edit-form-title">✏️ Adjust Transfer Amount</div>
+      <button type="button" class="btn btn-sm btn-o" onclick="resetTripTransferEditForm()" style="font-size:10px;padding:1px 6px;" id="ttb-edit-reset-btn">Reset</button>
+    </div>
+    <input type="hidden" id="ttb-edit-transfer-id" value="">
+    <div class="fg" style="margin-bottom:8px;">
+      <label class="fl">Amount (VND)</label>
+      <input type="number" step="any" class="fi" id="ttb-edit-amount" placeholder="0" style="font-size:14px;font-weight:700;height:36px;" oninput="updateTripBalanceHint()">
+      <div id="ttb-edit-amount-hint" style="font-size:11px;color:var(--n500);margin-top:2px;font-family:var(--mono);"></div>
+    </div>
+    <div class="fg" style="margin-bottom:8px;">
+      <label class="fl">Transfer Date</label>
+      <input type="date" class="fi" id="ttb-edit-date" style="font-size:13px;height:36px;">
+    </div>
+    <div class="fg" style="margin-bottom:8px;">
+      <label class="fl">Note / Description</label>
+      <input type="text" class="fi" id="ttb-edit-note" placeholder="e.g. Card repayment for trip..." style="font-size:13px;height:36px;">
+    </div>
+    <button type="button" class="btn btn-sm btn-p" style="width:100%;font-size:12px;padding:7px 10px;" onclick="saveCustomTripTransfer()">
+      💾 Save Transfer Record
+    </button>
+  </div>
+
+  <div class="brow" style="margin-top:4px;">
+    <button type="button" class="btn btn-o" style="flex:1;" onclick="closeModal('modal-trip-transfer-balance')">Close</button>
+  </div>
+</div></div>
+
+<!-- MODAL: TRIP TRANSFER RECONCILIATION & BALANCE (IMP-46) -->
+<div id="modal-trip-transfer-balance" class="mo"><div class="modal" style="max-width:440px;">
+  <div class="mh"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div>
+      <div class="mt" style="margin-bottom:0;" id="ttb-modal-title">⚖️ Reconcile Trip Transfers</div>
+      <div style="font-size:11px;color:var(--n500);" id="ttb-trip-subtitle">Trip Settlement &amp; Card Repayment</div>
+    </div>
+    <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-trip-transfer-balance')" style="font-size:12px;padding:3px 8px;">✕</button>
+  </div>
+  <input type="hidden" id="ttb-trip-id" value="">
+
+  <!-- Trip Info & Reconciliation Matrix -->
+  <div id="ttb-trip-info" style="margin-bottom:12px;background:var(--n50);border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;">
+    <!-- Populated dynamically by openTripTransferModal() -->
+  </div>
+
+  <!-- Auto-Balance Suggestion Card (Shown when difference != 0) -->
+  <div id="ttb-auto-balance-box" style="display:none;background:#FEF3C7;border:1px solid #FDE68A;border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;">
+    <div style="font-weight:700;font-size:12px;color:#92400E;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+      <span>⚡ Quick Auto-Balance</span>
+    </div>
+    <div id="ttb-auto-balance-desc" style="font-size:11px;color:#78350F;line-height:1.45;margin-bottom:8px;"></div>
+    <div id="ttb-keep-excess-container" style="margin-bottom:10px;">
+      <label style="display:flex;align-items:flex-start;gap:8px;font-size:11.5px;color:#92400E;cursor:pointer;">
+        <input type="checkbox" id="ttb-keep-excess-as-general" checked style="accent-color:#D97706;margin-top:2px;">
+        <span id="ttb-keep-excess-label">Keep excess amount as <strong>General Card Transfer</strong> so total available credit limit stays intact.</span>
+      </label>
+    </div>
+    <button type="button" class="btn btn-sm btn-p" style="background:#D97706;border-color:#D97706;color:#FFF;width:100%;font-size:12px;font-weight:700;padding:7px 10px;" onclick="executeAutoBalanceTripTransfer()">
+      ⚡ Balance Trip Transfer Now
+    </button>
+  </div>
+
+  <!-- Linked Transfer Records List -->
+  <div style="margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div style="font-size:12px;font-weight:700;color:var(--n800);">Linked Transfer Records</div>
+      <button type="button" class="btn btn-sm btn-o" onclick="openAddTransferForCurrentTrip()" style="font-size:10.5px;padding:2px 7px;">➕ Add Record</button>
+    </div>
+    <div id="ttb-transfers-list" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+
+  <!-- In-Place Edit / Add Form -->
+  <div id="ttb-edit-section" style="border-top:1px solid var(--n200);padding-top:10px;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div style="font-size:11.5px;font-weight:700;color:var(--n700);" id="ttb-edit-form-title">✏️ Adjust Transfer Amount</div>
+      <button type="button" class="btn btn-sm btn-o" onclick="resetTripTransferEditForm()" style="font-size:10px;padding:1px 6px;" id="ttb-edit-reset-btn">Reset</button>
+    </div>
+    <input type="hidden" id="ttb-edit-transfer-id" value="">
+    <div class="fg" style="margin-bottom:8px;">
+      <label class="fl">Amount (VND)</label>
+      <input type="number" step="any" class="fi" id="ttb-edit-amount" placeholder="0" style="font-size:14px;font-weight:700;height:36px;" oninput="updateTripBalanceHint()">
+      <div id="ttb-edit-amount-hint" style="font-size:11px;color:var(--n500);margin-top:2px;font-family:var(--mono);"></div>
+    </div>
+    <div class="fg" style="margin-bottom:8px;">
+      <label class="fl">Transfer Date</label>
+      <input type="date" class="fi" id="ttb-edit-date" style="font-size:13px;height:36px;">
+    </div>
+    <div class="fg" style="margin-bottom:8px;">
+      <label class="fl">Note / Description</label>
+      <input type="text" class="fi" id="ttb-edit-note" placeholder="e.g. Card repayment for trip..." style="font-size:13px;height:36px;">
+    </div>
+    <button type="button" class="btn btn-sm btn-p" style="width:100%;font-size:12px;padding:7px 10px;" onclick="saveCustomTripTransfer()">
+      💾 Save Transfer Record
+    </button>
+  </div>
+
+  <div class="brow" style="margin-top:4px;">
+    <button type="button" class="btn btn-o" style="flex:1;" onclick="closeModal('modal-trip-transfer-balance')">Close</button>
+  </div>
+</div></div>
+
 <!-- MODAL: ABOUT APP & RELEASE INFO (UX-06) -->
 <div id="modal-about-app" class="mo"><div class="modal">
   <div class="mh"></div>
@@ -16816,16 +16966,33 @@ function renderCreditCardScreen() {
               </span>
             </div>
 
-            <!-- IMP-43: Per-Trip Settlement Progress Bar -->
+            <!-- IMP-43 & IMP-46: Per-Trip Settlement Progress Bar -->
             <div style="margin:6px 0 10px 0;background:var(--n50);border:1px solid var(--n200);border-radius:8px;padding:6px 8px;">
               <div style="display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:600;margin-bottom:4px;">
                 <span style="color:var(--n600);">Repaid: <b style="color:${tg.barColor || 'var(--green)'};">${tg.percent || 0}%</b></span>
-                <span style="color:var(--n500);font-family:var(--mono);">${fmtAmt(tg.totalTransferred, 'VND')} / ${fmtAmt(tg.totalSpent, 'VND')} ₫</span>
+                <span style="color:var(--n500);font-family:var(--mono);">
+                  ${tg.totalTransferred > tg.totalSpent
+                    ? `${fmtAmt(tg.totalSpent, 'VND')} / ${fmtAmt(tg.totalSpent, 'VND')} ₫ <span style="color:#B45309;font-weight:700;">(+${fmtAmt(tg.totalTransferred - tg.totalSpent, 'VND')} ₫ excess)</span>`
+                    : `${fmtAmt(tg.totalTransferred, 'VND')} / ${fmtAmt(tg.totalSpent, 'VND')} ₫`}
+                </span>
               </div>
               <div style="height:6px;width:100%;background:var(--n200);border-radius:4px;overflow:hidden;">
                 <div style="height:100%;width:${tg.percent || 0}%;background:${tg.barColor || 'var(--green)'};border-radius:4px;transition:width 0.3s ease;"></div>
               </div>
             </div>
+
+            <!-- IMP-46: Excess Reconcile Notice Banner -->
+            ${tg.totalTransferred > tg.totalSpent ? `
+              <div style="display:flex;align-items:center;justify-content:space-between;background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px;padding:6px 8px;margin-bottom:8px;font-size:11px;color:#92400E;">
+                <div style="flex:1;min-width:0;padding-right:6px;">
+                  ⚠️ <strong>Transferred exceeds spent by +${fmtAmt(tg.totalTransferred - tg.totalSpent, 'VND')} ₫</strong>
+                  <div style="font-size:10px;color:#B45309;">Rebalance to match card spent or split excess</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-p" onclick="openTripTransferModal('${tg.tripId}')" style="font-size:10.5px;padding:3px 8px;white-space:nowrap;background:#D97706;border-color:#D97706;color:#FFF;">
+                  ⚖️ Balance
+                </button>
+              </div>
+            ` : ''}
 
             <!-- 3-Column Reconciliation Matrix -->
             <div class="cc-trip-reconcile-grid">
@@ -16834,10 +17001,12 @@ function renderCreditCardScreen() {
                 <div class="cc-reconcile-val" style="color:#DC2626;">-${fmtAmt(tg.totalSpent, 'VND')} ₫</div>
                 <div style="font-size:9.5px;color:var(--n400);">${tg.billsCount} bill${tg.billsCount !== 1 ? 's' : ''}</div>
               </div>
-              <div class="cc-reconcile-box">
-                <div class="cc-reconcile-label">Transferred</div>
+              <div class="cc-reconcile-box" onclick="openTripTransferModal('${tg.tripId}')" style="cursor:pointer;" title="Click to view &amp; edit transfers for this trip">
+                <div class="cc-reconcile-label">Transferred ✏️</div>
                 <div class="cc-reconcile-val" style="color:#166534;">+${fmtAmt(tg.totalTransferred, 'VND')} ₫</div>
-                <div style="font-size:9.5px;color:var(--n400);">${tg.totalTransferred > 0 ? 'Reimbursed' : 'None yet'}</div>
+                <div style="font-size:9.5px;color:${tg.totalTransferred > tg.totalSpent ? '#B45309;font-weight:700;' : 'var(--n400);'}">
+                  ${tg.totalTransferred > tg.totalSpent ? `+${fmtAmt(tg.totalTransferred - tg.totalSpent, 'VND')} excess ✏️` : (tg.totalTransferred > 0 ? 'Reimbursed ✏️' : 'None yet ➕')}
+                </div>
               </div>
               <div class="cc-reconcile-box">
                 <div class="cc-reconcile-label">Remaining Due</div>
@@ -16859,6 +17028,9 @@ function renderCreditCardScreen() {
                   ✓ Fully Reimbursed
                 </div>
               `}
+              <button type="button" class="btn btn-sm btn-o" onclick="openTripTransferModal('${tg.tripId}')" style="font-size:11px;padding:6px 10px;white-space:nowrap;" title="Balance or adjust transfer amount for this trip">
+                ✏️ Edit Transfer
+              </button>
               <button type="button" class="btn btn-sm btn-o" onclick="filterCardBillsByTrip('${tg.tripId}')" style="font-size:11px;padding:6px 10px;white-space:nowrap;">
                 🧾 View Bills (${tg.billsCount})
               </button>
@@ -17385,6 +17557,434 @@ function isHomeMoneyHidden() {
 function toggleHomeMoneyVisibility() {
   try { localStorage.setItem('plpro_hide_money', isHomeMoneyHidden() ? '0' : '1'); } catch (e) {}
   renderHomeFinanceWidget();
+}
+
+// =========================================================================
+// IMP-46: Trip Transfer Reconcile & Balance (Khớp & Sửa Tiền Trả Thẻ Trip)
+// =========================================================================
+
+/**
+ * Open Modal to Reconcile & Edit Transfers for a Specific Trip
+ */
+function openTripTransferModal(tripId) {
+  ensureCreditCardState();
+  if (!tripId) return;
+
+  const hiddenTripId = document.getElementById('ttb-trip-id');
+  if (hiddenTripId) hiddenTripId.value = tripId;
+
+  renderTripTransferModalBody_(tripId);
+  openModal('modal-trip-transfer-balance');
+}
+
+/**
+ * Render the dynamic contents inside modal-trip-transfer-balance
+ */
+function renderTripTransferModalBody_(tripId) {
+  ensureCreditCardState();
+  const trip = (S.trips || []).find(t => String(t.id) === String(tripId));
+  const isUnassigned = (tripId === '__unassigned__');
+  const plantName = isUnassigned ? 'General Card Expenses' : (trip ? trip.plant : 'Trip');
+  const weekLabel = (!isUnassigned && trip && typeof getTripWeekLabel === 'function')
+    ? getTripWeekLabel(trip.date, trip.dateEnd)
+    : (isUnassigned ? 'General' : '');
+  const dateStr = (!isUnassigned && trip)
+    ? ((trip.dateEnd && trip.dateEnd !== trip.date) ? `${fmtDate(trip.date)} ➔ ${fmtDate(trip.dateEnd)}` : (trip.date ? fmtDate(trip.date) : '—'))
+    : 'No linked trip';
+
+  // Subtitle
+  const subTitleEl = document.getElementById('ttb-trip-subtitle');
+  if (subTitleEl) {
+    subTitleEl.textContent = `${plantName} ${weekLabel ? '• ' + weekLabel : ''} • ${dateStr}`;
+  }
+
+  // Calculate card spent for this trip
+  const allTripsIds = new Set((S.trips || []).map(t => String(t.id)));
+  const cardBills = (S.bills || []).filter(b => {
+    if (!isCreditCardBill(b)) return false;
+    if (isUnassigned) {
+      return !b.tripId || !allTripsIds.has(String(b.tripId));
+    }
+    return String(b.tripId) === String(tripId);
+  });
+
+  const totalSpent = cardBills.reduce((sum, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
+    return sum + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+
+  // Find linked transfers
+  const linkedTransfers = (S.creditCard.transfers || []).filter(t => {
+    if (isUnassigned) {
+      return !t.tripId || !allTripsIds.has(String(t.tripId));
+    }
+    return String(t.tripId) === String(tripId);
+  });
+
+  const totalTransferred = linkedTransfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+  const remainingDue = Math.max(0, totalSpent - totalTransferred);
+  const isExcess = totalTransferred > totalSpent;
+  const excessAmt = isExcess ? (totalTransferred - totalSpent) : 0;
+
+  // Render Trip Info Summary
+  const infoEl = document.getElementById('ttb-trip-info');
+  if (infoEl) {
+    let diffBadge = '';
+    if (isExcess) {
+      diffBadge = `<span class="badge" style="background:#FEF3C7;color:#92400E;font-size:10.5px;padding:2px 7px;font-weight:700;">⚠️ +${fmtAmt(excessAmt, 'VND')} ₫ Excess</span>`;
+    } else if (remainingDue === 0) {
+      diffBadge = `<span class="badge" style="background:#DCFCE7;color:#166534;font-size:10.5px;padding:2px 7px;font-weight:700;">✓ Perfectly Balanced</span>`;
+    } else {
+      diffBadge = `<span class="badge" style="background:#FEE2E2;color:#991B1B;font-size:10.5px;padding:2px 7px;font-weight:700;">🔴 -${fmtAmt(remainingDue, 'VND')} ₫ Due</span>`;
+    }
+
+    infoEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:13px;font-weight:800;color:var(--n800);">🏭 ${plantName} ${weekLabel ? `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--g100);color:var(--green);font-weight:700;margin-left:4px;">${weekLabel}</span>` : ''}</span>
+        ${diffBadge}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;">
+        <div style="background:var(--surface);border:1px solid var(--n200);border-radius:6px;padding:6px 4px;">
+          <div style="font-size:9.5px;color:var(--n500);text-transform:uppercase;">Card Spent</div>
+          <div style="font-size:11.5px;font-weight:800;color:#DC2626;font-family:var(--mono);">-${fmtAmt(totalSpent, 'VND')} ₫</div>
+          <div style="font-size:9px;color:var(--n400);">${cardBills.length} bill${cardBills.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--n200);border-radius:6px;padding:6px 4px;">
+          <div style="font-size:9.5px;color:var(--n500);text-transform:uppercase;">Transferred</div>
+          <div style="font-size:11.5px;font-weight:800;color:#166534;font-family:var(--mono);">+${fmtAmt(totalTransferred, 'VND')} ₫</div>
+          <div style="font-size:9px;color:var(--n400);">${linkedTransfers.length} record${linkedTransfers.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--n200);border-radius:6px;padding:6px 4px;">
+          <div style="font-size:9.5px;color:var(--n500);text-transform:uppercase;">Balance Status</div>
+          <div style="font-size:11.5px;font-weight:800;color:${isExcess ? '#B45309' : (remainingDue === 0 ? '#166534' : '#DC2626')};font-family:var(--mono);">
+            ${isExcess ? `+${fmtAmt(excessAmt, 'VND')}` : (remainingDue === 0 ? '0 ₫' : `-${fmtAmt(remainingDue, 'VND')}`)}
+          </div>
+          <div style="font-size:9px;color:var(--n400);">${isExcess ? 'Over-transferred' : (remainingDue === 0 ? 'Settled' : 'Remaining')}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Auto-Balance Box
+  const autoBox = document.getElementById('ttb-auto-balance-box');
+  const autoDesc = document.getElementById('ttb-auto-balance-desc');
+  const keepExcessContainer = document.getElementById('ttb-keep-excess-container');
+  const keepExcessLabel = document.getElementById('ttb-keep-excess-label');
+
+  if (autoBox && autoDesc) {
+    if (isExcess) {
+      autoBox.style.display = 'block';
+      autoDesc.innerHTML = `Transfer for this trip (<b>${fmtAmt(totalTransferred, 'VND')} ₫</b>) exceeds card spent (<b>${fmtAmt(totalSpent, 'VND')} ₫</b>) by <b>+${fmtAmt(excessAmt, 'VND')} ₫</b>. Auto-balance will adjust trip repayment to match card spent.`;
+      if (keepExcessContainer) keepExcessContainer.style.display = 'block';
+      if (keepExcessLabel) {
+        keepExcessLabel.innerHTML = `Move excess (<b>+${fmtAmt(excessAmt, 'VND')} ₫</b>) to <strong>General Card Transfer</strong> so total available limit &amp; repayment history stay intact.`;
+      }
+    } else if (remainingDue > 0) {
+      autoBox.style.display = 'block';
+      autoDesc.innerHTML = `Trip has an outstanding card balance of <b>${fmtAmt(remainingDue, 'VND')} ₫</b>. Auto-balance will set total transfer for this trip to <b>${fmtAmt(totalSpent, 'VND')} ₫</b> (100% settled).`;
+      if (keepExcessContainer) keepExcessContainer.style.display = 'none';
+    } else {
+      autoBox.style.display = 'none';
+    }
+  }
+
+  // Linked Transfers List
+  const listEl = document.getElementById('ttb-transfers-list');
+  if (listEl) {
+    if (!linkedTransfers.length) {
+      listEl.innerHTML = `
+        <div style="text-align:center;padding:12px 8px;font-size:11.5px;color:var(--n500);background:var(--n50);border-radius:6px;border:1px dashed var(--n200);">
+          No card transfers linked to this trip yet.
+        </div>`;
+    } else {
+      let html = '';
+      linkedTransfers.forEach(tr => {
+        html += `
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--n200);border-radius:6px;padding:6px 10px;">
+            <div style="flex:1;min-width:0;padding-right:8px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:12.5px;font-weight:700;color:#166534;font-family:var(--mono);">+${fmtAmt(tr.amount, 'VND')} ₫</span>
+                <span style="font-size:10px;color:var(--n500);">📅 ${fmtDate(tr.date)}</span>
+              </div>
+              ${tr.note ? `<div style="font-size:10.5px;color:var(--n600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic;">💬 ${typeof escHtml === 'function' ? escHtml(tr.note) : tr.note}</div>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+              <button type="button" class="btn btn-sm btn-o" onclick="populateTripTransferEditForm('${tr.id}')" style="font-size:10.5px;padding:3px 6px;" title="Edit this record">✏️</button>
+              <button type="button" class="btn btn-sm btn-o" onclick="deleteTripTransferFromModal('${tr.id}')" style="font-size:10.5px;padding:3px 6px;color:#DC2626;" title="Delete this record">🗑️</button>
+            </div>
+          </div>`;
+      });
+      listEl.innerHTML = html;
+    }
+  }
+
+  // Pre-fill Edit / Add Form
+  if (linkedTransfers.length === 1) {
+    populateTripTransferEditForm(linkedTransfers[0].id);
+  } else if (linkedTransfers.length === 0) {
+    resetTripTransferEditForm(totalSpent > 0 ? totalSpent : '');
+  } else {
+    resetTripTransferEditForm();
+  }
+}
+
+/**
+ * Reset Edit Form to Add New or Default state
+ */
+function resetTripTransferEditForm(defaultAmount) {
+  const hiddenId = document.getElementById('ttb-edit-transfer-id');
+  const amtInput = document.getElementById('ttb-edit-amount');
+  const dateInput = document.getElementById('ttb-edit-date');
+  const noteInput = document.getElementById('ttb-edit-note');
+  const titleEl = document.getElementById('ttb-edit-form-title');
+
+  if (hiddenId) hiddenId.value = '';
+  if (amtInput) amtInput.value = (defaultAmount !== undefined && defaultAmount !== null) ? defaultAmount : '';
+  if (dateInput) dateInput.value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
+  if (noteInput) {
+    const tripId = document.getElementById('ttb-trip-id')?.value;
+    const trip = (S.trips || []).find(t => String(t.id) === String(tripId));
+    const plantName = trip ? trip.plant : 'Trip';
+    noteInput.value = `Reimbursement for ${plantName}`;
+  }
+  if (titleEl) titleEl.textContent = '➕ Add / Adjust Transfer Record';
+  updateTripBalanceHint();
+}
+
+/**
+ * Open form ready to add a new transfer record
+ */
+function openAddTransferForCurrentTrip() {
+  resetTripTransferEditForm('');
+  const amtInput = document.getElementById('ttb-edit-amount');
+  if (amtInput) amtInput.focus();
+}
+
+/**
+ * Populate Edit Form with an existing transfer record
+ */
+function populateTripTransferEditForm(transferId) {
+  if (!transferId) return;
+  const item = (S.creditCard.transfers || []).find(t => String(t.id) === String(transferId));
+  if (!item) return;
+
+  const hiddenId = document.getElementById('ttb-edit-transfer-id');
+  const amtInput = document.getElementById('ttb-edit-amount');
+  const dateInput = document.getElementById('ttb-edit-date');
+  const noteInput = document.getElementById('ttb-edit-note');
+  const titleEl = document.getElementById('ttb-edit-form-title');
+
+  if (hiddenId) hiddenId.value = item.id;
+  if (amtInput) amtInput.value = item.amount;
+  if (dateInput) dateInput.value = item.date || '';
+  if (noteInput) noteInput.value = item.note || '';
+  if (titleEl) titleEl.textContent = '✏️ Edit Transfer Record';
+
+  updateTripBalanceHint();
+}
+
+/**
+ * Update hint below amount input in trip balance modal
+ */
+function updateTripBalanceHint() {
+  const amtInput = document.getElementById('ttb-edit-amount');
+  const hint = document.getElementById('ttb-edit-amount-hint');
+  if (!amtInput || !hint) return;
+  const val = parseFloat(amtInput.value) || 0;
+  hint.textContent = val > 0 ? `≈ ${fmtAmt(val, 'VND')} VND` : '';
+}
+
+/**
+ * Execute Auto-Balance for current trip
+ */
+function executeAutoBalanceTripTransfer() {
+  ensureCreditCardState();
+  const tripId = document.getElementById('ttb-trip-id')?.value;
+  if (!tripId) return;
+
+  const isUnassigned = (tripId === '__unassigned__');
+  const trip = (S.trips || []).find(t => String(t.id) === String(tripId));
+  const plantName = isUnassigned ? 'General Card Expenses' : (trip ? trip.plant : 'Trip');
+  const weekLabel = (!isUnassigned && trip && typeof getTripWeekLabel === 'function')
+    ? getTripWeekLabel(trip.date, trip.dateEnd)
+    : '';
+
+  const allTripsIds = new Set((S.trips || []).map(t => String(t.id)));
+  const cardBills = (S.bills || []).filter(b => {
+    if (!isCreditCardBill(b)) return false;
+    if (isUnassigned) return !b.tripId || !allTripsIds.has(String(b.tripId));
+    return String(b.tripId) === String(tripId);
+  });
+
+  const totalSpent = cardBills.reduce((sum, b) => {
+    if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
+    return sum + (parseFloat(b.vndAmount) || 0);
+  }, 0);
+
+  const linkedTransfers = (S.creditCard.transfers || []).filter(t => {
+    if (isUnassigned) return !t.tripId || !allTripsIds.has(String(t.tripId));
+    return String(t.tripId) === String(tripId);
+  });
+
+  const totalTransferred = linkedTransfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+  if (totalTransferred === totalSpent) {
+    showToast('Trip is already balanced!');
+    return;
+  }
+
+  const todayStr = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
+
+  if (totalTransferred > totalSpent) {
+    const excess = totalTransferred - totalSpent;
+    const keepExcess = !!document.getElementById('ttb-keep-excess-as-general')?.checked;
+
+    if (linkedTransfers.length === 1) {
+      linkedTransfers[0].amount = totalSpent;
+      linkedTransfers[0].updatedAt = new Date().toISOString();
+    } else if (linkedTransfers.length > 1) {
+      let remainingToAllocate = totalSpent;
+      for (const t of linkedTransfers) {
+        if (remainingToAllocate <= 0) {
+          t.amount = 0;
+        } else if (t.amount <= remainingToAllocate) {
+          remainingToAllocate -= t.amount;
+        } else {
+          t.amount = remainingToAllocate;
+          remainingToAllocate = 0;
+        }
+        t.updatedAt = new Date().toISOString();
+      }
+      S.creditCard.transfers = S.creditCard.transfers.filter(t => t.amount > 0);
+    }
+
+    if (keepExcess && excess > 0) {
+      const excessRecord = {
+        id: typeof genId === 'function' ? genId('cct_') : ('cct_' + Date.now()),
+        amount: excess,
+        date: (linkedTransfers[0] && linkedTransfers[0].date) || todayStr,
+        tripId: '', // Unassigned / General card transfer
+        note: `Excess reimbursement split from ${plantName}${weekLabel ? ' (' + weekLabel + ')' : ''}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      S.creditCard.transfers.unshift(excessRecord);
+    }
+  } else {
+    // totalTransferred < totalSpent (shortage / remaining due)
+    const shortage = totalSpent - totalTransferred;
+    if (linkedTransfers.length >= 1) {
+      linkedTransfers[0].amount += shortage;
+      linkedTransfers[0].updatedAt = new Date().toISOString();
+    } else {
+      const newRecord = {
+        id: typeof genId === 'function' ? genId('cct_') : ('cct_' + Date.now()),
+        amount: totalSpent,
+        date: todayStr,
+        tripId: isUnassigned ? '' : tripId,
+        note: `Reimbursement for ${plantName}${weekLabel ? ' (' + weekLabel + ')' : ''}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      S.creditCard.transfers.unshift(newRecord);
+    }
+  }
+
+  sv();
+  renderCreditCardScreen();
+  renderTripTransferModalBody_(tripId);
+  showToast(`✓ Balanced trip transfer to ${fmtAmt(totalSpent, 'VND')} ₫`);
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
+}
+
+/**
+ * Save Custom / In-Place Trip Transfer
+ */
+function saveCustomTripTransfer() {
+  ensureCreditCardState();
+  const tripId = document.getElementById('ttb-trip-id')?.value;
+  if (!tripId) return;
+
+  const hiddenId = document.getElementById('ttb-edit-transfer-id');
+  const amtInput = document.getElementById('ttb-edit-amount');
+  const dateInput = document.getElementById('ttb-edit-date');
+  const noteInput = document.getElementById('ttb-edit-note');
+
+  const amt = parseFloat(amtInput ? amtInput.value : 0);
+  if (!amt || amt <= 0) {
+    showToast('Please enter a valid transfer amount');
+    return;
+  }
+  const date = dateInput ? dateInput.value : '';
+  if (!date) {
+    showToast('Please select a transfer date');
+    return;
+  }
+
+  const isUnassigned = (tripId === '__unassigned__');
+  const transferId = hiddenId && hiddenId.value;
+
+  if (transferId) {
+    const existing = S.creditCard.transfers.find(t => String(t.id) === String(transferId));
+    if (existing) {
+      existing.amount = amt;
+      existing.date = date;
+      existing.tripId = isUnassigned ? '' : tripId;
+      existing.note = (noteInput && noteInput.value.trim()) || '';
+      existing.updatedAt = new Date().toISOString();
+    }
+  } else {
+    const newRecord = {
+      id: typeof genId === 'function' ? genId('cct_') : ('cct_' + Date.now()),
+      amount: amt,
+      date: date,
+      tripId: isUnassigned ? '' : tripId,
+      note: (noteInput && noteInput.value.trim()) || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    S.creditCard.transfers.unshift(newRecord);
+  }
+
+  sv();
+  renderCreditCardScreen();
+  renderTripTransferModalBody_(tripId);
+  showToast(`✓ Transfer updated: ${fmtAmt(amt, 'VND')} ₫`);
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
+}
+
+/**
+ * Delete a transfer record directly from the Trip Transfer Modal
+ */
+async function deleteTripTransferFromModal(transferId) {
+  if (!transferId) return;
+  const ok = await appConfirm('Delete this card transfer record? This cannot be undone.', {
+    title: 'Delete Card Transfer',
+    danger: true,
+    confirmText: 'Delete Record',
+    icon: '💳'
+  });
+  if (!ok) return;
+
+  ensureCreditCardState();
+  const tripId = document.getElementById('ttb-trip-id')?.value;
+  S.creditCard.transfers = S.creditCard.transfers.filter(t => String(t.id) !== String(transferId));
+  sv();
+  renderCreditCardScreen();
+  if (tripId) {
+    renderTripTransferModalBody_(tripId);
+  }
+  showToast('✓ Transfer record deleted');
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
 }
 
 // ====== sync.js ======
