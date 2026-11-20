@@ -247,8 +247,8 @@ function addTripOutboundFlightLeg(data){
   
   card.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <span style="font-size:10px;font-weight:700;color:var(--gd);letter-spacing:0.05em;">✈️ CHẶNG ĐI ${legNum} (NỐI CHUYẾN / TRANSIT)</span>
-      <button type="button" class="btn btn-sm btn-subtle" onclick="removeTripFlightLeg(this)" style="font-size:10px;color:var(--rd);padding:2px 6px;cursor:pointer;">✕ Xóa chặng</button>
+      <span style="font-size:10px;font-weight:700;color:var(--gd);letter-spacing:0.05em;">✈️ OUTBOUND LEG ${legNum} (TRANSIT)</span>
+      <button type="button" class="btn btn-sm btn-subtle" onclick="removeTripFlightLeg(this)" style="font-size:10px;color:var(--rd);padding:2px 6px;cursor:pointer;">✕ Remove Leg</button>
     </div>
     <div class="frow">
       <div class="fg"><label class="fl">Flight No.</label><input class="fi fl-extra-num" placeholder="VN142" oninput="onTripExtraFlightNumInput(this)" style="font-family:var(--mono);text-transform:uppercase;letter-spacing:0.05em;"></div>
@@ -300,8 +300,8 @@ function addTripReturnFlightLeg(data){
   
   card.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <span style="font-size:10px;font-weight:700;color:#1D4ED8;letter-spacing:0.05em;">✈️ CHẶNG VỀ ${legNum} (NỐI CHUYẾN / TRANSIT)</span>
-      <button type="button" class="btn btn-sm btn-subtle" onclick="removeTripFlightLeg(this)" style="font-size:10px;color:var(--rd);padding:2px 6px;cursor:pointer;">✕ Xóa chặng</button>
+      <span style="font-size:10px;font-weight:700;color:#1D4ED8;letter-spacing:0.05em;">✈️ RETURN LEG ${legNum} (TRANSIT)</span>
+      <button type="button" class="btn btn-sm btn-subtle" onclick="removeTripFlightLeg(this)" style="font-size:10px;color:var(--rd);padding:2px 6px;cursor:pointer;">✕ Remove Leg</button>
     </div>
     <div class="frow">
       <div class="fg"><label class="fl">Flight No.</label><input class="fi fl-extra-num" placeholder="VN135" oninput="onTripExtraFlightNumInput(this)" style="font-family:var(--mono);text-transform:uppercase;letter-spacing:0.05em;"></div>
@@ -341,7 +341,7 @@ function removeTripFlightLeg(btn){
     cards.forEach((c, idx) => {
       const titleSpan = c.querySelector('span');
       if(titleSpan){
-        titleSpan.textContent = `✈️ ${isOut ? 'CHẶNG ĐI' : 'CHẶNG VỀ'} ${idx + 2} (NỐI CHUYẾN / TRANSIT)`;
+        titleSpan.textContent = `✈️ ${isOut ? 'OUTBOUND LEG' : 'RETURN LEG'} ${idx + 2} (TRANSIT)`;
       }
     });
   }
@@ -566,9 +566,9 @@ function formatTripFlightInfo(fl){
         if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
         if(str.trim()) lines.push(str.trim());
       } else {
-        lines.push('✈️ Outbound (Chặng đi):');
+        lines.push('✈️ Outbound Flights:');
         outLegs.forEach((l, idx) => {
-          let str = `  • Chặng ${idx + 1}: ${l.num || 'Flight'}`;
+          let str = `  • Leg ${idx + 1}: ${l.num || 'Flight'}`;
           if(l.airline) str += ` (${l.airline})`;
           if(l.from || l.to) str += `: ${l.from||'—'} -> ${l.to||'—'}`;
           if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
@@ -586,9 +586,9 @@ function formatTripFlightInfo(fl){
         if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
         if(str.trim()) lines.push(str.trim());
       } else {
-        lines.push('✈️ Return (Chặng về):');
+        lines.push('✈️ Return Flights:');
         retLegs.forEach((l, idx) => {
-          let str = `  • Chặng về ${idx + 1}: ${l.num || 'Flight'}`;
+          let str = `  • Return Leg ${idx + 1}: ${l.num || 'Flight'}`;
           if(l.airline) str += ` (${l.airline})`;
           if(l.from || l.to) str += `: ${l.from||'—'} -> ${l.to||'—'}`;
           if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;

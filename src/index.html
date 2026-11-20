@@ -3564,7 +3564,7 @@ input, textarea, select, button { font-family: var(--font); }
   <!-- TRIP FLIGHT DETAILS — shown when Flight is selected -->
   <div id="trip-flight-section" style="display:none;">
     <div style="background:var(--gl);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;border-left:3px solid var(--green);">
-      <div style="font-size:10px;font-weight:700;color:var(--gd);letter-spacing:0.08em;margin-bottom:8px;">✈️ OUTBOUND FLIGHT (CHẶNG ĐI 1)</div>
+      <div style="font-size:10px;font-weight:700;color:var(--gd);letter-spacing:0.08em;margin-bottom:8px;">✈️ OUTBOUND FLIGHT (LEG 1)</div>
       <div class="frow">
         <div class="fg"><label class="fl">Flight No.</label><input class="fi" id="nt-fl-num" placeholder="VN113" oninput="if(typeof onTripFlightNumInput==='function')onTripFlightNumInput(false);" style="font-family:var(--mono);text-transform:uppercase;letter-spacing:0.05em;"></div>
         <div class="fg"><label class="fl">Airline</label><input class="fi" id="nt-fl-airline" placeholder="e.g. Thai Airways"></div>
@@ -3579,14 +3579,14 @@ input, textarea, select, button { font-family: var(--font); }
       </div>
       <!-- Extra outbound connecting flight legs container -->
       <div id="nt-fl-outbound-extra-container"></div>
-      <button type="button" class="btn btn-sm btn-subtle" onclick="if(typeof addTripOutboundFlightLeg==='function')addTripOutboundFlightLeg();" style="margin-top:6px;width:100%;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(16,185,129,0.12);color:var(--gd);border:1px dashed var(--green);cursor:pointer;padding:6px 10px;border-radius:var(--rs);"><span>➕</span> Thêm chặng bay nối chuyến đi (Add Outbound Leg)</button>
+      <button type="button" class="btn btn-sm btn-subtle" onclick="if(typeof addTripOutboundFlightLeg==='function')addTripOutboundFlightLeg();" style="margin-top:6px;width:100%;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(16,185,129,0.12);color:var(--gd);border:1px dashed var(--green);cursor:pointer;padding:6px 10px;border-radius:var(--rs);"><span>➕</span> Add Outbound Flight Leg (Transit)</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <input type="checkbox" id="nt-fl-has-return" onchange="toggleTripReturnFlight()" style="width:16px;height:16px;accent-color:var(--green);cursor:pointer;">
       <label for="nt-fl-has-return" style="font-size:12px;font-weight:600;color:var(--g700);cursor:pointer;">Add return flight</label>
     </div>
     <div id="nt-fl-return-section" style="display:none;background:var(--bl);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;border-left:3px solid var(--blue);">
-      <div style="font-size:10px;font-weight:700;color:#1D4ED8;letter-spacing:0.08em;margin-bottom:8px;">✈️ RETURN FLIGHT (CHẶNG VỀ 1)</div>
+      <div style="font-size:10px;font-weight:700;color:#1D4ED8;letter-spacing:0.08em;margin-bottom:8px;">✈️ RETURN FLIGHT (LEG 1)</div>
       <div class="frow">
         <div class="fg"><label class="fl">Flight No.</label><input class="fi" id="nt-fl-ret-num" placeholder="VN134" oninput="if(typeof onTripFlightNumInput==='function')onTripFlightNumInput(true);" style="font-family:var(--mono);text-transform:uppercase;letter-spacing:0.05em;"></div>
         <div class="fg"><label class="fl">Airline</label><input class="fi" id="nt-fl-ret-airline" placeholder="e.g. Thai Airways"></div>
@@ -3601,7 +3601,7 @@ input, textarea, select, button { font-family: var(--font); }
       </div>
       <!-- Extra return connecting flight legs container -->
       <div id="nt-fl-return-extra-container"></div>
-      <button type="button" class="btn btn-sm btn-subtle" onclick="if(typeof addTripReturnFlightLeg==='function')addTripReturnFlightLeg();" style="margin-top:6px;width:100%;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(59,130,246,0.12);color:#1D4ED8;border:1px dashed #3B82F6;cursor:pointer;padding:6px 10px;border-radius:var(--rs);"><span>➕</span> Thêm chặng bay nối chuyến về (Add Return Leg)</button>
+      <button type="button" class="btn btn-sm btn-subtle" onclick="if(typeof addTripReturnFlightLeg==='function')addTripReturnFlightLeg();" style="margin-top:6px;width:100%;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(59,130,246,0.12);color:#1D4ED8;border:1px dashed #3B82F6;cursor:pointer;padding:6px 10px;border-radius:var(--rs);"><span>➕</span> Add Return Flight Leg (Transit)</button>
     </div>
     <div class="fg">
       <label class="fl">Booking ref / PNR</label>
@@ -7563,8 +7563,8 @@ function addTripOutboundFlightLeg(data){
   
   card.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <span style="font-size:10px;font-weight:700;color:var(--gd);letter-spacing:0.05em;">✈️ CHẶNG ĐI ${legNum} (NỐI CHUYẾN / TRANSIT)</span>
-      <button type="button" class="btn btn-sm btn-subtle" onclick="removeTripFlightLeg(this)" style="font-size:10px;color:var(--rd);padding:2px 6px;cursor:pointer;">✕ Xóa chặng</button>
+      <span style="font-size:10px;font-weight:700;color:var(--gd);letter-spacing:0.05em;">✈️ OUTBOUND LEG ${legNum} (TRANSIT)</span>
+      <button type="button" class="btn btn-sm btn-subtle" onclick="removeTripFlightLeg(this)" style="font-size:10px;color:var(--rd);padding:2px 6px;cursor:pointer;">✕ Remove Leg</button>
     </div>
     <div class="frow">
       <div class="fg"><label class="fl">Flight No.</label><input class="fi fl-extra-num" placeholder="VN142" oninput="onTripExtraFlightNumInput(this)" style="font-family:var(--mono);text-transform:uppercase;letter-spacing:0.05em;"></div>
@@ -7616,8 +7616,8 @@ function addTripReturnFlightLeg(data){
   
   card.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <span style="font-size:10px;font-weight:700;color:#1D4ED8;letter-spacing:0.05em;">✈️ CHẶNG VỀ ${legNum} (NỐI CHUYẾN / TRANSIT)</span>
-      <button type="button" class="btn btn-sm btn-subtle" onclick="removeTripFlightLeg(this)" style="font-size:10px;color:var(--rd);padding:2px 6px;cursor:pointer;">✕ Xóa chặng</button>
+      <span style="font-size:10px;font-weight:700;color:#1D4ED8;letter-spacing:0.05em;">✈️ RETURN LEG ${legNum} (TRANSIT)</span>
+      <button type="button" class="btn btn-sm btn-subtle" onclick="removeTripFlightLeg(this)" style="font-size:10px;color:var(--rd);padding:2px 6px;cursor:pointer;">✕ Remove Leg</button>
     </div>
     <div class="frow">
       <div class="fg"><label class="fl">Flight No.</label><input class="fi fl-extra-num" placeholder="VN135" oninput="onTripExtraFlightNumInput(this)" style="font-family:var(--mono);text-transform:uppercase;letter-spacing:0.05em;"></div>
@@ -7657,7 +7657,7 @@ function removeTripFlightLeg(btn){
     cards.forEach((c, idx) => {
       const titleSpan = c.querySelector('span');
       if(titleSpan){
-        titleSpan.textContent = `✈️ ${isOut ? 'CHẶNG ĐI' : 'CHẶNG VỀ'} ${idx + 2} (NỐI CHUYẾN / TRANSIT)`;
+        titleSpan.textContent = `✈️ ${isOut ? 'OUTBOUND LEG' : 'RETURN LEG'} ${idx + 2} (TRANSIT)`;
       }
     });
   }
@@ -7882,9 +7882,9 @@ function formatTripFlightInfo(fl){
         if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
         if(str.trim()) lines.push(str.trim());
       } else {
-        lines.push('✈️ Outbound (Chặng đi):');
+        lines.push('✈️ Outbound Flights:');
         outLegs.forEach((l, idx) => {
-          let str = `  • Chặng ${idx + 1}: ${l.num || 'Flight'}`;
+          let str = `  • Leg ${idx + 1}: ${l.num || 'Flight'}`;
           if(l.airline) str += ` (${l.airline})`;
           if(l.from || l.to) str += `: ${l.from||'—'} -> ${l.to||'—'}`;
           if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
@@ -7902,9 +7902,9 @@ function formatTripFlightInfo(fl){
         if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
         if(str.trim()) lines.push(str.trim());
       } else {
-        lines.push('✈️ Return (Chặng về):');
+        lines.push('✈️ Return Flights:');
         retLegs.forEach((l, idx) => {
-          let str = `  • Chặng về ${idx + 1}: ${l.num || 'Flight'}`;
+          let str = `  • Return Leg ${idx + 1}: ${l.num || 'Flight'}`;
           if(l.airline) str += ` (${l.airline})`;
           if(l.from || l.to) str += `: ${l.from||'—'} -> ${l.to||'—'}`;
           if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
