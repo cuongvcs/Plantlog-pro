@@ -304,6 +304,26 @@ async function syncSingleTripClaim(item) {
 }
 
 /**
+ * IMP-45: Sync Credit Card configuration & transfers to Google Sheets Settings
+ */
+async function syncCreditCardToSheets_() {
+  const url = getGSUrl();
+  if (!url) return { ok: false, offline: true };
+  if (typeof ensureCreditCardState === 'function') ensureCreditCardState();
+  const payload = {
+    action: 'saveCreditCard',
+    creditCard: S.creditCard || {}
+  };
+  try {
+    const res = await gsPost(url, payload);
+    return res;
+  } catch (err) {
+    console.warn('syncCreditCardToSheets_ error:', err);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
  * IMP-31: Compare trip claims in chronological order
  * Sorts from Week 1 (early in year) down to Week 52/53 (late in year)
  */
@@ -1152,6 +1172,19 @@ async function loadFromSheets(silent) {
         S.reminders = mergeCollectionByTimestamp(existingRem, remoteRem, 'id');
       }
 
+      // IMP-45: Load Credit Card state from cloud
+      if (d.creditCard && typeof d.creditCard === 'object') {
+        if (typeof ensureCreditCardState === 'function') ensureCreditCardState();
+        if (d.creditCard.budget) S.creditCard.budget = parseFloat(d.creditCard.budget) || S.creditCard.budget || 100000000;
+        if (d.creditCard.cardName) S.creditCard.cardName = d.creditCard.cardName;
+        if (Array.isArray(d.creditCard.transfers) && d.creditCard.transfers.length > 0) {
+          S.creditCard.transfers = d.creditCard.transfers;
+        }
+        if (d.creditCard.manualBalance !== undefined) {
+          S.creditCard.manualBalance = d.creditCard.manualBalance;
+        }
+      }
+
       sv();
       try { if (typeof autoStartTodayItems === 'function') autoStartTodayItems(); } catch (e) { }
       renderDash(); renderTripList(); renderTasks(); renderCalendar();
@@ -1163,6 +1196,8 @@ async function loadFromSheets(silent) {
         renderTripSafety(curTrip);
       }
       if (typeof renderTripClaimsScreen === 'function') renderTripClaimsScreen();
+      if (typeof renderCreditCardScreen === 'function') renderCreditCardScreen();
+      if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
       showGSResult('✅ Data loaded from Google Sheets successfully!', 'ok');
       showToast('Loaded from Google Sheets ✓');
     } else {

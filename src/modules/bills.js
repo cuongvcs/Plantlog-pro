@@ -1139,13 +1139,14 @@ function setTripCardStatusFilter(status) {
 function ensureCreditCardState() {
   if (!S.creditCard) {
     S.creditCard = {
-      budget: 50000000,
+      budget: 100000000,
       cardName: 'Corporate Credit Card',
-      transfers: []
+      transfers: [],
+      manualBalance: null
     };
   }
   if (typeof S.creditCard.budget !== 'number') {
-    S.creditCard.budget = parseFloat(S.creditCard.budget) || 50000000;
+    S.creditCard.budget = parseFloat(S.creditCard.budget) || 100000000;
   }
   if (!S.creditCard.cardName) {
     S.creditCard.cardName = 'Corporate Credit Card';
@@ -1153,6 +1154,94 @@ function ensureCreditCardState() {
   if (!Array.isArray(S.creditCard.transfers)) {
     S.creditCard.transfers = [];
   }
+  if (S.creditCard.manualBalance === undefined) {
+    S.creditCard.manualBalance = null;
+  }
+}
+
+/**
+ * IMP-41: Calculate total card balance due across all trips
+ * Uses Trip-Based Isolation (Option 1) combined with Manual Balance Override (Option 4).
+ * Each trip is an isolated financial bucket clamped at 0, preventing personal
+ * overpayment/surplus in past trips from swallowing new trip bills.
+ */
+function calculateCreditCardBalanceDue() {
+  ensureCreditCardState();
+
+  // Option 4: If manual balance override is active
+  if (S.creditCard.manualBalance && typeof S.creditCard.manualBalance.amount === 'number') {
+    const baseAmount = S.creditCard.manualBalance.amount;
+    const setAt = S.creditCard.manualBalance.setAt || '';
+    const allCardBills = (S.bills || []).filter(isCreditCardBill);
+    const newBillsAmt = allCardBills.filter(b => (b.createdAt || b.date || '') > setAt).reduce((sum, b) => {
+      if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
+      return sum + (parseFloat(b.vndAmount) || 0);
+    }, 0);
+    const newTransfersAmt = (S.creditCard.transfers || []).filter(t => (t.createdAt || t.date || '') > setAt).reduce((sum, t) => {
+      return sum + (parseFloat(t.amount) || 0);
+    }, 0);
+    return Math.max(0, baseAmount + newBillsAmt - newTransfersAmt);
+  }
+
+  // Option 1: Trip-Based Isolation (Default & Automatic)
+  const allCardBills = (S.bills || []).filter(isCreditCardBill);
+  const cardBillsByTrip = {};
+  allCardBills.forEach(b => {
+    const tId = b.tripId || '__unassigned__';
+    if (!cardBillsByTrip[tId]) cardBillsByTrip[tId] = [];
+    cardBillsByTrip[tId].push(b);
+  });
+
+  const allTransfers = S.creditCard.transfers || [];
+  const transfersByTrip = {};
+  allTransfers.forEach(t => {
+    const tId = t.tripId || '__unassigned__';
+    if (!transfersByTrip[tId]) transfersByTrip[tId] = 0;
+    transfersByTrip[tId] += (parseFloat(t.amount) || 0);
+  });
+
+  let totalBalanceDue = 0;
+  const processedTripIds = new Set();
+
+  // 1. Calculate remaining due for all known trips that have card bills or transfers
+  (S.trips || []).forEach(tr => {
+    const tId = String(tr.id);
+    processedTripIds.add(tId);
+    const tBills = cardBillsByTrip[tId] || [];
+    const tTransferred = transfersByTrip[tId] || 0;
+    if (!tBills.length && !tTransferred) return;
+
+    const tSpent = tBills.reduce((sum, b) => {
+      if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
+      return sum + (parseFloat(b.vndAmount) || 0);
+    }, 0);
+
+    const remainingDue = Math.max(0, tSpent - tTransferred);
+    totalBalanceDue += remainingDue;
+  });
+
+  // 2. Calculate remaining due for unassigned or orphaned card bills
+  let unassignedSpent = 0;
+  Object.entries(cardBillsByTrip).forEach(([tId, bList]) => {
+    if (tId === '__unassigned__' || !processedTripIds.has(tId)) {
+      unassignedSpent += bList.reduce((sum, b) => {
+        if ((b.currency || 'VND').toUpperCase() === 'VND') return sum + (parseFloat(b.amount) || 0);
+        return sum + (parseFloat(b.vndAmount) || 0);
+      }, 0);
+    }
+  });
+
+  let unassignedTransferred = 0;
+  Object.entries(transfersByTrip).forEach(([tId, amt]) => {
+    if (tId === '__unassigned__' || !processedTripIds.has(tId)) {
+      unassignedTransferred += amt;
+    }
+  });
+
+  const unassignedRemainingDue = Math.max(0, unassignedSpent - unassignedTransferred);
+  totalBalanceDue += unassignedRemainingDue;
+
+  return totalBalanceDue;
 }
 
 /**
@@ -1160,8 +1249,8 @@ function ensureCreditCardState() {
  */
 function isCreditCardBill(b) {
   if (!b) return false;
-  const pm = String(b.paymentMethod || b.paymentTerm || '');
-  return pm.includes('Card') || pm.includes('Credit');
+  const pm = String(b.paymentMethod || b.paymentTerm || '').toLowerCase();
+  return pm.includes('card') || pm.includes('credit') || pm.includes('3-') || pm === '3' || pm.includes('thẻ') || pm.includes('the');
 }
 
 /**
@@ -1269,12 +1358,21 @@ function quickTransferForTrip(tripId, remainingAmt) {
   updateCardTransferHint();
 }
 
+let _creditCardLastSyncedTs = 0;
+
 /**
  * Render the entire Credit Card Screen
  */
 function renderCreditCardScreen() {
   ensureCreditCardState();
   populateCardDateSelectors();
+
+  // Auto-sync credit card state to Sheets in background (debounced 10s)
+  const now = Date.now();
+  if (now - _creditCardLastSyncedTs > 10000 && typeof syncCreditCardToSheets_ === 'function' && typeof getGSUrl === 'function' && getGSUrl()) {
+    _creditCardLastSyncedTs = now;
+    syncCreditCardToSheets_().catch(() => {});
+  }
 
   const yearSel = document.getElementById('cc-year-select');
   const monthSel = document.getElementById('cc-month-select');
@@ -1297,7 +1395,7 @@ function renderCreditCardScreen() {
     return sum + (parseFloat(t.amount) || 0);
   }, 0);
 
-  const totalBalanceDue = Math.max(0, totalAllCardSpent - totalAllTransferred);
+  const totalBalanceDue = calculateCreditCardBalanceDue();
   const availableLimit = budget - totalBalanceDue;
 
   // 2. Filtered calculations for selected month / year
@@ -1354,7 +1452,8 @@ function renderCreditCardScreen() {
     availEl.style.color = availableLimit < 0 ? '#FCA5A5' : '#6EE7B7';
   }
   if (debtEl) {
-    debtEl.textContent = `${fmtAmt(totalBalanceDue, 'VND')} ₫`;
+    const isManual = S.creditCard.manualBalance && typeof S.creditCard.manualBalance.amount === 'number';
+    debtEl.innerHTML = `${fmtAmt(totalBalanceDue, 'VND')} ₫ ${isManual ? '<span style="font-size:10px;opacity:0.8;font-weight:600;">(Manual)</span>' : ''}`;
     debtEl.style.color = totalBalanceDue > 0 ? '#FCA5A5' : '#E0E7FF';
   }
 
@@ -1661,7 +1760,7 @@ function openSetCardBudgetModal() {
   const nameInput = document.getElementById('cc-input-name');
   const budgetInput = document.getElementById('cc-input-budget');
   if (nameInput) nameInput.value = S.creditCard.cardName || '';
-  if (budgetInput) budgetInput.value = S.creditCard.budget || 50000000;
+  if (budgetInput) budgetInput.value = S.creditCard.budget || 100000000;
   updateCardBudgetHint();
   openModal('modal-card-budget');
 }
@@ -1699,6 +1798,82 @@ function saveCardBudget() {
   closeModal('modal-card-budget');
   renderCreditCardScreen();
   showToast('✓ Credit card budget updated');
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
+}
+
+/**
+ * IMP-41: Open modal to set manual balance due (Option 4)
+ */
+function openSetCardBalanceModal() {
+  ensureCreditCardState();
+  const balanceInput = document.getElementById('cc-input-balance-due');
+  const currentDue = calculateCreditCardBalanceDue();
+  if (balanceInput) {
+    balanceInput.value = (S.creditCard.manualBalance && typeof S.creditCard.manualBalance.amount === 'number')
+      ? S.creditCard.manualBalance.amount
+      : currentDue;
+  }
+  updateCardBalanceHint();
+  openModal('modal-card-balance');
+}
+
+/**
+ * Update hint below balance input with formatted VND
+ */
+function updateCardBalanceHint() {
+  const input = document.getElementById('cc-input-balance-due');
+  const hint = document.getElementById('cc-balance-hint');
+  if (!input || !hint) return;
+  const val = parseFloat(input.value) || 0;
+  hint.textContent = val > 0 ? `≈ ${fmtAmt(val, 'VND')} VND` : '0 ₫ (Fully cleared)';
+}
+
+/**
+ * Save manual card balance due override
+ */
+function saveCardBalance() {
+  ensureCreditCardState();
+  const balanceInput = document.getElementById('cc-input-balance-due');
+  const val = parseFloat(balanceInput ? balanceInput.value : 0);
+  if (isNaN(val) || val < 0) {
+    showToast('Please enter a valid balance due (≥ 0)');
+    return;
+  }
+
+  S.creditCard.manualBalance = {
+    amount: val,
+    setAt: new Date().toISOString()
+  };
+
+  sv();
+  closeModal('modal-card-balance');
+  renderCreditCardScreen();
+  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
+  showToast('✓ Card balance due updated: ' + fmtAmt(val, 'VND') + ' ₫');
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
+}
+
+/**
+ * Reset manual balance due back to Trip-Based Auto calculation
+ */
+function resetCardBalanceToAuto() {
+  ensureCreditCardState();
+  S.creditCard.manualBalance = null;
+  sv();
+  closeModal('modal-card-balance');
+  renderCreditCardScreen();
+  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
+  showToast('✓ Reset to Trip-Based Auto calculation');
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
 }
 
 /**
@@ -1816,6 +1991,10 @@ function saveTransferBack() {
   closeModal('modal-card-transfer');
   renderCreditCardScreen();
   showToast('✓ Transferred back to card');
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
 }
 
 /**
@@ -1836,6 +2015,82 @@ async function deleteTransferBack(transferId) {
   sv();
   renderCreditCardScreen();
   showToast('✓ Transfer record deleted');
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
+}
+
+/**
+ * IMP-41: Open modal to set manual balance due (Option 4)
+ */
+function openSetCardBalanceModal() {
+  ensureCreditCardState();
+  const balanceInput = document.getElementById('cc-input-balance-due');
+  const currentDue = calculateCreditCardBalanceDue();
+  if (balanceInput) {
+    balanceInput.value = (S.creditCard.manualBalance && typeof S.creditCard.manualBalance.amount === 'number')
+      ? S.creditCard.manualBalance.amount
+      : currentDue;
+  }
+  updateCardBalanceHint();
+  openModal('modal-card-balance');
+}
+
+/**
+ * Update hint below balance input with formatted VND
+ */
+function updateCardBalanceHint() {
+  const input = document.getElementById('cc-input-balance-due');
+  const hint = document.getElementById('cc-balance-hint');
+  if (!input || !hint) return;
+  const val = parseFloat(input.value) || 0;
+  hint.textContent = val > 0 ? `≈ ${fmtAmt(val, 'VND')} VND` : '0 ₫ (Fully cleared)';
+}
+
+/**
+ * Save manual card balance due override
+ */
+function saveCardBalance() {
+  ensureCreditCardState();
+  const balanceInput = document.getElementById('cc-input-balance-due');
+  const val = parseFloat(balanceInput ? balanceInput.value : 0);
+  if (isNaN(val) || val < 0) {
+    showToast('Please enter a valid balance due (≥ 0)');
+    return;
+  }
+
+  S.creditCard.manualBalance = {
+    amount: val,
+    setAt: new Date().toISOString()
+  };
+
+  sv();
+  closeModal('modal-card-balance');
+  renderCreditCardScreen();
+  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
+  showToast('✓ Card balance due updated: ' + fmtAmt(val, 'VND') + ' ₫');
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
+}
+
+/**
+ * Reset manual balance due back to Trip-Based Auto calculation
+ */
+function resetCardBalanceToAuto() {
+  ensureCreditCardState();
+  S.creditCard.manualBalance = null;
+  sv();
+  closeModal('modal-card-balance');
+  renderCreditCardScreen();
+  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
+  showToast('✓ Reset to Trip-Based Auto calculation');
+
+  if (typeof syncCreditCardToSheets_ === 'function') {
+    syncCreditCardToSheets_();
+  }
 }
 
 /**
@@ -1846,14 +2101,16 @@ function renderHomeFinanceWidget() {
   if (!el) return;
 
   ensureCreditCardState();
-  const budget = parseFloat(S.creditCard.budget) || 50000000;
+  const budget = parseFloat(S.creditCard.budget) || 100000000;
   const allCardBills = (S.bills || []).filter(isCreditCardBill);
   const cardSpent = allCardBills.reduce((s, b) => {
     if ((b.currency || 'VND').toUpperCase() === 'VND') return s + (parseFloat(b.amount) || 0);
     return s + (parseFloat(b.vndAmount) || 0);
   }, 0);
   const cardRepaid = ((S.creditCard && S.creditCard.transfers) || []).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
-  const cardDebt = Math.max(0, cardSpent - cardRepaid);
+  const cardDebt = (typeof calculateCreditCardBalanceDue === 'function')
+    ? calculateCreditCardBalanceDue()
+    : Math.max(0, cardSpent - cardRepaid);
   const cardAvail = budget - cardDebt;
   const availColor = cardAvail <= 0 ? 'var(--red)' : (cardAvail < budget * 0.2 ? 'var(--amber)' : 'var(--green)');
 
