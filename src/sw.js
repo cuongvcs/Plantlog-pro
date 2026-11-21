@@ -1,11 +1,20 @@
-// PlantLog Pro Service Worker v134
-// Single-file architecture — only index.html needs caching
-const CACHE = 'plantlog-pro-v134';
+// PlantLog Pro Service Worker v137
+// Single-file architecture — reliable caching with failsafe offline fallback
+const CACHE = 'plantlog-pro-v137';
 
 self.addEventListener('install', e => {
+  self.skipWaiting();
   e.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll(['./index.html', './manifest.json', './icon-192.png', './icon-512.png', './vendor/jspdf.umd.min.js']))
+    caches.open(CACHE).then(async c => {
+      const urls = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png', './vendor/jspdf.umd.min.js', './plantlog_pro_mobile.html'];
+      for (const u of urls) {
+        try {
+          await c.add(u);
+        } catch (err) {
+          // Graceful skip for optional/secondary assets
+        }
+      }
+    })
   );
 });
 
@@ -42,7 +51,7 @@ self.addEventListener('fetch', e => {
           }
           return r;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => caches.match('./index.html').then(r => r || caches.match('./plantlog_pro_mobile.html') || caches.match('./')))
     );
     return;
   }

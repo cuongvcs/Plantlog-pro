@@ -83,18 +83,33 @@ function lockApp() {
   _settingsUnlocked = false;
   pinBuffer = '';
   pinMode = 'login';
-  updatePinDots('lock');
-  document.getElementById('lock-title').textContent = 'Enter PIN';
-  document.getElementById('lock-error').textContent = '';
-  document.getElementById('lock-forgot').style.display = 'block';
-  document.getElementById('screen-lock').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
+  const lockEl = document.getElementById('screen-lock');
+  const appEl = document.getElementById('app');
+  if (lockEl) lockEl.style.display = 'flex';
+  if (appEl) appEl.style.display = 'none';
+  try {
+    updatePinDots('lock');
+    const titleEl = document.getElementById('lock-title');
+    if (titleEl) titleEl.textContent = 'Enter PIN';
+    const errEl = document.getElementById('lock-error');
+    if (errEl) errEl.textContent = '';
+    const forgotEl = document.getElementById('lock-forgot');
+    if (forgotEl) forgotEl.style.display = 'block';
+  } catch (e) {
+    console.warn('[lockApp UI]', e);
+  }
 }
 
 function unlockApp() {
   _isLocked = false;
-  document.getElementById('screen-lock').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
+  const lockStyle = document.getElementById('pl-lock-style');
+  if (lockStyle) {
+    try { lockStyle.remove(); } catch (e) { }
+  }
+  const lockEl = document.getElementById('screen-lock');
+  if (lockEl) lockEl.style.display = 'none';
+  const appEl = document.getElementById('app');
+  if (appEl) appEl.style.display = 'flex';
   resetAutoLock();
 }
 
@@ -337,9 +352,21 @@ function authInit() {
   const appEl = document.getElementById('app');
   const lockEl = document.getElementById('screen-lock');
 
-  function showApp() { if (appEl) appEl.style.display = 'flex'; if (lockEl) lockEl.style.display = 'none'; }
-  function showLock() { if (lockEl) lockEl.style.display = 'flex'; if (appEl) appEl.style.display = 'none'; }
-  function hideLock() { if (lockEl) lockEl.style.display = 'none'; }
+  function showApp() {
+    const lockStyle = document.getElementById('pl-lock-style');
+    if (lockStyle) { try { lockStyle.remove(); } catch (e) { } }
+    if (appEl) appEl.style.display = 'flex';
+    if (lockEl) lockEl.style.display = 'none';
+  }
+  function showLock() {
+    if (lockEl) lockEl.style.display = 'flex';
+    if (appEl) appEl.style.display = 'none';
+  }
+  function hideLock() {
+    const lockStyle = document.getElementById('pl-lock-style');
+    if (lockStyle) { try { lockStyle.remove(); } catch (e) { } }
+    if (lockEl) lockEl.style.display = 'none';
+  }
 
   if (hasPIN()) {
     lockApp();

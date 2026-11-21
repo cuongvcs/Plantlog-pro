@@ -492,24 +492,28 @@ if(typeof window !== 'undefined'){
 function setupPWA(){
   // ── Clear legacy pre-v10 caches only (sw.js activate handles current cache rotation) ─────
   if('caches' in window){
-    caches.keys().then(keys=>keys.forEach(k=>{
-      if(!k.startsWith('plantlog-pro-') || /^plantlog-pro-v\d$/.test(k)){
-        console.log('[PlantLog] Deleting old cache:',k);
-        caches.delete(k);
-      }
-    }));
+    try {
+      caches.keys().then(keys=>keys.forEach(k=>{
+        if(!k.startsWith('plantlog-pro-') || /^plantlog-pro-v\d$/.test(k)){
+          console.log('[PlantLog] Deleting old cache:',k);
+          caches.delete(k);
+        }
+      })).catch(e => console.warn('[PlantLog] Cache cleanup error:', e));
+    } catch(e) {}
   }
   // Unregister any old service workers not pointing to our sw.js
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.getRegistrations().then(regs=>{
-      regs.forEach(reg=>{
-        const url=reg.active&&reg.active.scriptURL||'';
-        if(url&&!url.endsWith('sw.js')){
-          console.log('[PlantLog] Unregistering old SW:',url);
-          reg.unregister();
-        }
-      });
-    });
+    try {
+      navigator.serviceWorker.getRegistrations().then(regs=>{
+        regs.forEach(reg=>{
+          const url=reg.active&&reg.active.scriptURL||'';
+          if(url&&!url.endsWith('sw.js')){
+            console.log('[PlantLog] Unregistering old SW:',url);
+            reg.unregister();
+          }
+        });
+      }).catch(e => console.warn('[PlantLog] SW getRegistrations error:', e));
+    } catch(e) {}
   }
 
   // Manifest is now a static file (manifest.json) — no dynamic blob needed
@@ -518,44 +522,49 @@ function setupPWA(){
   // Service Worker for offline
   if('serviceWorker' in navigator){
     // Try relative sw.js first (GitHub Pages), fall back to inline
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => {
-        // SW registered — check for updates
-        reg.update();
-        console.log('[PlantLog] SW registered:', reg.scope);
-        // REL-04: Non-disruptive update notification banner
-        if (typeof watchServiceWorkerUpdates === 'function') {
-          watchServiceWorkerUpdates(reg);
-        }
-      })
-      .catch(err => {
-        console.warn('[PlantLog] SW registration failed:', err);
-        // For single-file mode: try registering an inline SW
-        // This enables PWA install prompt on Android
-        try {
-          const swCode = [
-            "const C='plpro-v8';",
-            "self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./'])).then(()=>self.skipWaiting()));});",
-            "self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});",
-            "self.addEventListener('fetch',e=>{",
-            "  if(e.request.url.includes('script.google.com')||e.request.url.includes('googleapis.com'))return;",
-            "  if(e.request.mode==='navigate'){",
-            "    e.respondWith(fetch(e.request).catch(()=>caches.match('./index.html')||caches.match('./')));",
-            "    return;",
-            "  }",
-            "  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));",
-            "});"
-          ].join('\n');
-          const blob = new Blob([swCode], {type:'application/javascript'});
-          const url = URL.createObjectURL(blob);
-          navigator.serviceWorker.register(url).catch(e=>console.warn('[PlantLog] Inline SW failed:',e));
-        } catch(e2) {}
-      });
+    try {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => {
+          // SW registered — check for updates
+          if (reg && typeof reg.update === 'function') reg.update();
+          console.log('[PlantLog] SW registered:', reg.scope);
+          // REL-04: Non-disruptive update notification banner
+          if (typeof watchServiceWorkerUpdates === 'function') {
+            watchServiceWorkerUpdates(reg);
+          }
+        })
+        .catch(err => {
+          console.warn('[PlantLog] SW registration failed:', err);
+          // For single-file mode: try registering an inline SW
+          // This enables PWA install prompt on Android
+          try {
+            const swCode = [
+              "const C='plpro-v8';",
+              "self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./'])).then(()=>self.skipWaiting()));});",
+              "self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});",
+              "self.addEventListener('fetch',e=>{",
+              "  if(e.request.url.includes('script.google.com')||e.request.url.includes('googleapis.com'))return;",
+              "  if(e.request.mode==='navigate'){",
+              "    e.respondWith(fetch(e.request).catch(()=>caches.match('./index.html')||caches.match('./')));",
+              "    return;",
+              "  }",
+              "  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));",
+              "});"
+            ].join('\n');
+            const blob = new Blob([swCode], {type:'application/javascript'});
+            const url = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(url).catch(e=>console.warn('[PlantLog] Inline SW failed:',e));
+          } catch(e2) {}
+        });
+    } catch(e) {}
   }
 
   // Install prompt — fires when app meets PWA criteria
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  if(!isStandalone){
+  let isStandalone = false;
+  try {
+    isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)')?.matches) || (window.navigator && window.navigator.standalone === true);
+  } catch(e) {}
+  if(!isStandalone && typeof window !== 'undefined'){
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       deferredPrompt = e;
@@ -653,7 +662,15 @@ function setLang(l){
   document.body.style.fontFamily=l==='vi'?"'Be Vietnam Pro',sans-serif":"'DM Sans',sans-serif";
   applyT();renderDash();renderTripList();renderCalendar();renderTasks();
 }
-function applyT(){document.querySelectorAll('[data-t]').forEach(el=>{const v=T[S.lang][el.getAttribute('data-t')];if(v)el.textContent=v;});}
+function applyT(){
+  const lang = (S && S.lang) || 'en';
+  const langDict = (T && T[lang]) || (T && T['en']) || {};
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const k = el.getAttribute('data-t');
+    const v = langDict[k];
+    if (v) el.textContent = v;
+  });
+}
 
 // ═══════ INIT ═══════
 function safeRun(fn, name){
@@ -662,10 +679,13 @@ function safeRun(fn, name){
 }
 
 function init(){
-  ld(); setupPWA();
+  safeRun(ld, 'ld');
+  safeRun(setupPWA, 'setupPWA');
   // ARC-01: Check device mirror for recovery if localStorage was cleared or corrupted
   if (typeof recoverFromMirror === 'function') {
-    recoverFromMirror().catch(err => console.warn('[Recover]', err));
+    try {
+      recoverFromMirror().catch(err => console.warn('[Recover]', err));
+    } catch(e) {}
   }
   // UX-10: Accessibility keyboard & label bindings
   if (typeof initA11y === 'function') safeRun(initA11y, 'initA11y');
@@ -678,7 +698,7 @@ function init(){
   // Set today label safely
   const todayEl = document.getElementById('today-date');
   if(todayEl) todayEl.textContent = now.toLocaleDateString(
-    S.lang==='vi'?'vi-VN':'en-GB',
+    (S && S.lang==='vi')?'vi-VN':'en-GB',
     {weekday:'long',day:'numeric',month:'long',year:'numeric'}
   );
 
@@ -691,7 +711,7 @@ function init(){
   safeRun(initSig,          'initSig');
   safeRun(renderTemplates,  'renderTemplates');
   safeRun(renderDefaultTeam,'renderDefaultTeam');
-  safeRun(() => setLang(S.lang||'en'), 'setLang');
+  safeRun(() => setLang((S && S.lang)||'en'), 'setLang');
   safeRun(checkNotifPrompt, 'checkNotifPrompt');
   safeRun(updateGSStatus,   'updateGSStatus');
   safeRun(updateNetworkStatus, 'updateNetworkStatus');
@@ -699,8 +719,7 @@ function init(){
   safeRun(ensureAssetsInitialized, 'ensureAssetsInitialized');
   safeRun(initScratchpadStore, 'initScratchpadStore');
 
-  // Auth MUST run last — it controls app visibility
-  // Do NOT hide app before this — a crash would leave it blank
+  // Auth controls app visibility & security gate
   safeRun(authInit, 'authInit');
   // Telegram: update status label + schedule daily notification check
   try{
