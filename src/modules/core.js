@@ -654,13 +654,31 @@ function checkNotifPrompt(){
   }
 }
 
-// ═══════ LANG ═══════
+// ═══════ LANG (IMP-55) ═══════
 function setLang(l){
-  S.lang=l;sv();
-  document.getElementById('lang-en').classList.toggle('act',l==='en');
-  document.getElementById('lang-vi').classList.toggle('act',l==='vi');
-  document.body.style.fontFamily=l==='vi'?"'Be Vietnam Pro',sans-serif":"'DM Sans',sans-serif";
-  applyT();renderDash();renderTripList();renderCalendar();renderTasks();
+  S.lang = l;
+  sv();
+  const btnEn = document.getElementById('lang-en');
+  const btnVi = document.getElementById('lang-vi');
+  if (btnEn) btnEn.classList.toggle('act', l === 'en');
+  if (btnVi) btnVi.classList.toggle('act', l === 'vi');
+  const togBtn = document.getElementById('lang-toggle-btn');
+  if (togBtn) {
+    togBtn.textContent = (l === 'vi') ? 'VI' : 'EN';
+    togBtn.title = (l === 'vi') ? 'Ngôn ngữ: Tiếng Việt (Bấm để chuyển sang EN)' : 'Language: English (Click to switch to VI)';
+    togBtn.setAttribute('data-lang', l);
+  }
+  document.body.style.fontFamily = (l === 'vi') ? "'Be Vietnam Pro',sans-serif" : "'DM Sans',sans-serif";
+  applyT(); renderDash(); renderTripList(); renderCalendar(); renderTasks();
+}
+
+function toggleLang(){
+  const cur = (S && S.lang) || 'en';
+  const next = (cur === 'vi') ? 'en' : 'vi';
+  setLang(next);
+  if (typeof showToast === 'function') {
+    showToast(next === 'vi' ? '🇻🇳 Đã chuyển sang Tiếng Việt' : '🇺🇸 Switched to English');
+  }
 }
 function applyT(){
   const lang = (S && S.lang) || 'en';

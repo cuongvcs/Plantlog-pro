@@ -3747,6 +3747,41 @@ button {
   opacity: 0.85;
 }
 
+/* Home Topbar Language Switcher Toggle (IMP-55) */
+.lang-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  font-family: var(--font);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: all var(--dur-fast);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.lang-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.lang-toggle-btn:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.38);
+}
+
 @keyframes spinSlow {
   from {
     transform: rotate(0deg);
@@ -4396,10 +4431,7 @@ button:focus-visible {
         <span id="net-dot" style="width:7px;height:7px;border-radius:50%;background:#4ADE80;"></span>
         <span id="net-text">Online</span>
       </div>
-      <div class="ltog">
-        <button class="lbtn act" id="lang-en" onclick="setLang('en')">EN</button>
-        <button class="lbtn" id="lang-vi" onclick="setLang('vi')">VI</button>
-      </div>
+      <button type="button" class="lang-toggle-btn" id="lang-toggle-btn" onclick="toggleLang()" title="Language: English (Click to switch to VI)">EN</button>
       <button type="button" id="home-settings-btn" class="topbar-btn" onclick="showScreen('settings')" title="Settings" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;padding:0;flex-shrink:0;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
@@ -8399,13 +8431,31 @@ function checkNotifPrompt(){
   }
 }
 
-// ═══════ LANG ═══════
+// ═══════ LANG (IMP-55) ═══════
 function setLang(l){
-  S.lang=l;sv();
-  document.getElementById('lang-en').classList.toggle('act',l==='en');
-  document.getElementById('lang-vi').classList.toggle('act',l==='vi');
-  document.body.style.fontFamily=l==='vi'?"'Be Vietnam Pro',sans-serif":"'DM Sans',sans-serif";
-  applyT();renderDash();renderTripList();renderCalendar();renderTasks();
+  S.lang = l;
+  sv();
+  const btnEn = document.getElementById('lang-en');
+  const btnVi = document.getElementById('lang-vi');
+  if (btnEn) btnEn.classList.toggle('act', l === 'en');
+  if (btnVi) btnVi.classList.toggle('act', l === 'vi');
+  const togBtn = document.getElementById('lang-toggle-btn');
+  if (togBtn) {
+    togBtn.textContent = (l === 'vi') ? 'VI' : 'EN';
+    togBtn.title = (l === 'vi') ? 'Ngôn ngữ: Tiếng Việt (Bấm để chuyển sang EN)' : 'Language: English (Click to switch to VI)';
+    togBtn.setAttribute('data-lang', l);
+  }
+  document.body.style.fontFamily = (l === 'vi') ? "'Be Vietnam Pro',sans-serif" : "'DM Sans',sans-serif";
+  applyT(); renderDash(); renderTripList(); renderCalendar(); renderTasks();
+}
+
+function toggleLang(){
+  const cur = (S && S.lang) || 'en';
+  const next = (cur === 'vi') ? 'en' : 'vi';
+  setLang(next);
+  if (typeof showToast === 'function') {
+    showToast(next === 'vi' ? '🇻🇳 Đã chuyển sang Tiếng Việt' : '🇺🇸 Switched to English');
+  }
 }
 function applyT(){
   const lang = (S && S.lang) || 'en';
