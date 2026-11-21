@@ -4200,7 +4200,7 @@ button:focus-visible {
 /* Modern Segmented Control */
 .segmented-control-wrap {
   background: var(--surface);
-  padding: 6px 12px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--n150);
   flex-shrink: 0;
 }
@@ -4208,9 +4208,9 @@ button:focus-visible {
 .segmented-control {
   display: flex;
   background: var(--n100);
-  border-radius: var(--rs);
-  padding: 3px;
-  gap: 3px;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
 }
 
 [data-theme="dark"] .segmented-control {
@@ -4222,29 +4222,44 @@ button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 6px 4px;
+  gap: 7px;
+  min-height: 42px;
+  padding: 8px 10px;
   border: none;
-  border-radius: calc(var(--rs) - 2px);
+  border-radius: 9px;
   background: transparent;
   color: var(--n600);
-  font-size: 11.5px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: background var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), transform 0.1s ease;
+}
+
+.segmented-tab span {
+  font-size: 15px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.segmented-tab:active {
+  transform: scale(0.97);
 }
 
 .segmented-tab.active {
   background: var(--surface);
   color: var(--n900);
   font-weight: 700;
-  box-shadow: var(--sh-xs);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 [data-theme="dark"] .segmented-tab.active {
   background: var(--n700);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 /* Priority Chips & Micro Progress */
@@ -5533,9 +5548,9 @@ button:focus-visible {
 
       <!-- Sub tabs: Trip Card Bills vs Card Bills vs Transfer History -->
       <div style="display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none;">
-        <button type="button" class="tf-btn active" id="cc-tab-trip-bills" onclick="switchCreditCardSubTab('trip-bills')" style="flex:1;font-size:11px;padding:6px 4px;text-align:center;white-space:nowrap;">✈️ Trip Card Bills (<span id="cc-trip-bills-badge">0</span>)</button>
-        <button type="button" class="tf-btn" id="cc-tab-bills" onclick="switchCreditCardSubTab('bills')" style="flex:1;font-size:11px;padding:6px 4px;text-align:center;white-space:nowrap;">🧾 Card Bills (<span id="cc-bills-badge">0</span>)</button>
-        <button type="button" class="tf-btn" id="cc-tab-transfers" onclick="switchCreditCardSubTab('transfers')" style="flex:1;font-size:11px;padding:6px 4px;text-align:center;white-space:nowrap;">🏦 Transfer History (<span id="cc-transfers-badge">0</span>)</button>
+        <button type="button" class="tf-btn active" id="cc-tab-trip-bills" onclick="switchCreditCardSubTab('trip-bills')" style="flex:1;font-size:11.5px;padding:7px 6px;min-height:34px;text-align:center;white-space:nowrap;">✈️ Trip Card Bills (<span id="cc-trip-bills-badge">0</span>)</button>
+        <button type="button" class="tf-btn" id="cc-tab-bills" onclick="switchCreditCardSubTab('bills')" style="flex:1;font-size:11.5px;padding:7px 6px;min-height:34px;text-align:center;white-space:nowrap;">🧾 Card Bills (<span id="cc-bills-badge">0</span>)</button>
+        <button type="button" class="tf-btn" id="cc-tab-transfers" onclick="switchCreditCardSubTab('transfers')" style="flex:1;font-size:11.5px;padding:7px 6px;min-height:34px;text-align:center;white-space:nowrap;">🏦 Transfer History (<span id="cc-transfers-badge">0</span>)</button>
       </div>
 
       <!-- Trip Card Status Filter Chips (UX-02) -->
