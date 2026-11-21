@@ -1426,8 +1426,8 @@ function applyVoiceResultToInput() {
   if (typeof showToast === 'function') showToast('🎙️ English notes inserted & saved! ✓');
 }
 
-// ── App Version, PDF Text Normalizer & Settings About (IMP-34) ──
-const APP_VERSION = 'v4.16';
+// ── App Version, PDF Text Normalizer & Settings About (IMP-34, IMP-53) ──
+const APP_VERSION = 'v4.18';
 
 function pdfSafeText(v) {
   if (v === null || v === undefined) return '';

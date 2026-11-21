@@ -1,6 +1,6 @@
-// PlantLog Pro Service Worker v137
+// PlantLog Pro Service Worker v139
 // Single-file architecture — reliable caching with failsafe offline fallback
-const CACHE = 'plantlog-pro-v137';
+const CACHE = 'plantlog-pro-v139';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -18,9 +18,9 @@ self.addEventListener('install', e => {
   );
 });
 
-// REL-04: Controlled activation via user prompt (no mid-session cache swap)
+// REL-04: Controlled activation via user prompt (instant update on reload)
 self.addEventListener('message', e => {
-  if (e.data === 'SKIP_WAITING') {
+  if (e.data === 'SKIP_WAITING' || (e.data && e.data.type === 'SKIP_WAITING')) {
     self.skipWaiting();
   }
 });

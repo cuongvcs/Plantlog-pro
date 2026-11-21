@@ -438,9 +438,29 @@ function showUpdateBanner(worker) {
   reloadBtn.textContent = 'Reload';
   reloadBtn.onclick = () => {
     reloadBtn.disabled = true;
+    reloadBtn.textContent = 'Updating...';
     _swUpdateRequested = true;
-    try { worker.postMessage('SKIP_WAITING'); }
-    catch (e) { location.reload(); }
+    try {
+      if (worker && typeof worker.postMessage === 'function') {
+        worker.postMessage('SKIP_WAITING');
+      }
+    } catch (e) {
+      console.warn('[SW update postMessage]', e);
+    }
+    try {
+      if (_swReg && _swReg.waiting) {
+        _swReg.waiting.postMessage('SKIP_WAITING');
+      }
+    } catch (e) {}
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage('SKIP_WAITING');
+      }
+    } catch (e) {}
+    // Failsafe: force reload after 350ms even if controllerchange event is suppressed
+    setTimeout(() => {
+      location.reload();
+    }, 350);
   };
   const laterBtn = document.createElement('button');
   laterBtn.type = 'button';

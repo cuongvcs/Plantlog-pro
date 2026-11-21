@@ -1879,8 +1879,7 @@ button {
 }
 
 /* ── SIGNATURE ─────────────────────────────────────────── */
-#sigCanvas,
-#ticketSigCanvas {
+#sigCanvas, #ticketSigCanvas {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
