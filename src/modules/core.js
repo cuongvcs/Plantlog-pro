@@ -7,7 +7,7 @@
 // ═══════ TRANSLATIONS ═══════
 const T={
   en:{
-    home:'Home',trips:'Trips',tasks:'Tasks',leave:'Leave',settings:'Settings',
+    home:'Home',trips:'Trips',tasks:'Tasks',leave:'Leave',settings:'Settings',tools:'Tools',
     tripsMonth:'Trips',pendingTasks:'Tasks today',leaveDays:'Leave days',
     upcomingTrips:'Upcoming trips',recentReports:'Recent reports',todayTasks:"Today's tasks",
     noTrips:'No upcoming trips. Tap + to create.',noReports:'No completed reports yet.',noTasks:'No tasks yet. Tap + to add.',
@@ -49,7 +49,7 @@ const T={
     inProgress2:'In Progress'
   },
   vi:{
-    home:'Trang chủ',trips:'Chuyến đi',tasks:'Nhiệm vụ',leave:'Nghỉ phép',settings:'Cài đặt',
+    home:'Trang chủ',trips:'Chuyến đi',tasks:'Nhiệm vụ',leave:'Nghỉ phép',settings:'Cài đặt',tools:'Công cụ',
     tripsMonth:'Chuyến đi',pendingTasks:'Việc hôm nay',leaveDays:'Ngày nghỉ',
     upcomingTrips:'Chuyến sắp tới',recentReports:'Báo cáo gần đây',todayTasks:'Nhiệm vụ hôm nay',
     noTrips:'Chưa có chuyến đi. Nhấn + để tạo.',noReports:'Chưa có báo cáo hoàn thành.',noTasks:'Chưa có nhiệm vụ. Nhấn + để thêm.',
@@ -780,9 +780,10 @@ function showScreen(n){
   if(n==='assets') { if(typeof renderAssetList==='function') renderAssetList(); }
   if(n==='bill-export')buildBillPDFPreview();
   if(n==='settings') { if(typeof renderSettingsAbout==='function') renderSettingsAbout(); }
+  if(n==='tools') { if(typeof renderToolsScreen==='function') renderToolsScreen(); }
 }
 
-// ── Unified Bottom Nav synchronization (IMP-10) ──
+// ── Unified Bottom Nav synchronization (IMP-10, IMP-50) ──
 function updateBottomNav(activeScreen){
   document.querySelectorAll('.bnav').forEach(nav => {
     nav.querySelectorAll('.nb').forEach(btn => {
@@ -791,7 +792,9 @@ function updateBottomNav(activeScreen){
       const match = onclickAttr.match(/showScreen\(['"]([^'"]+)['"]\)/);
       const screenName = dataScreen || (match ? match[1] : null);
       if(screenName){
-        if(screenName === activeScreen){
+        const isMatch = (screenName === activeScreen) ||
+          (screenName === 'tools' && ['tools', 'toolbox', 'assets', 'library'].includes(activeScreen));
+        if(isMatch){
           btn.classList.add('active');
         } else {
           btn.classList.remove('active');

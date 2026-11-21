@@ -1820,7 +1820,12 @@ input, textarea, select, button { font-family: var(--font); }
         <button class="lbtn act" id="lang-en" onclick="setLang('en')">EN</button>
         <button class="lbtn" id="lang-vi" onclick="setLang('vi')">VI</button>
       </div>
-      <div id="home-av" class="av" style="width:34px;height:34px;font-size:13px;cursor:pointer;" onclick="showScreen('settings')"></div>
+      <button type="button" id="home-settings-btn" class="topbar-btn" onclick="showScreen('settings')" title="Settings" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;padding:0;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
     </div>
   </div>
   <div class="sb" style="padding-top:10px;">
@@ -1833,18 +1838,6 @@ input, textarea, select, button { font-family: var(--font); }
       <div class="sb2 clickable" onclick="showScreen('trips')" title="View all trips"><div class="sn" id="stat-trips">0</div><div class="sl" data-t="tripsMonth">Trips</div></div>
       <div class="sb2 clickable" onclick="showScreen('tasks')" title="View today's tasks"><div class="sn" id="stat-tasks" style="color:var(--amber);">0</div><div class="sl" data-t="pendingTasks">Tasks today</div></div>
       <div class="sb2 clickable" onclick="showScreen('leave')" title="Open Leave & Calendar Planner"><div class="sn" id="stat-leave" style="color:var(--blue);">0</div><div class="sl" data-t="leaveDays">Leave days</div></div>
-    </div>
-    <!-- Field Tools Quick Row (IMP-21, IMP-22, IMP-24) -->
-    <div style="display:flex;gap:8px;margin-top:0;margin-bottom:6px;">
-      <button type="button" onclick="openToolboxScreen()" class="btn btn-sm btn-o" style="flex:1;min-height:34px;padding:6px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);background:var(--surface);" title="Engineering Toolbox & Unit Converters">
-        <span>🧮</span> Toolbox
-      </button>
-      <button type="button" onclick="openQuickScratchModal()" class="btn btn-sm btn-p" style="flex:1;min-height:34px;padding:6px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);" title="Quick Field Scratchpad & Nameplate Camera">
-        <span>⚡</span> Quick Snap
-      </button>
-      <button type="button" onclick="openAssetsScreen()" class="btn btn-sm btn-o" style="flex:1;min-height:34px;padding:6px 6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:var(--rs);background:var(--surface);" title="Equipment & Machine Passport Registry">
-        <span>🏭</span> Assets
-      </button>
     </div>
     <div id="home-finance-widget"></div>
     <div id="home-active-mission"></div>
@@ -1881,9 +1874,9 @@ input, textarea, select, button { font-family: var(--font); }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       <span>Bills</span>
     </button>
-    <button class="nb" data-screen="settings" onclick="showScreen('settings')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      <span data-t="settings">Settings</span>
+    <button class="nb" data-screen="tools" onclick="showScreen('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span data-t="tools">Tools</span>
     </button>
   </div>
 </div>
@@ -1939,7 +1932,10 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="nb active" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
     <button class="nb" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
     <button class="nb" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
-    <button class="nb" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
+    <button class="nb" data-screen="tools" onclick="showScreen('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span data-t="tools">Tools</span>
+    </button>
   </div>
 </div>
 
@@ -2794,7 +2790,10 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="nb" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
     <button class="nb active" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
     <button class="nb" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
-    <button class="nb" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
+    <button class="nb" data-screen="tools" onclick="showScreen('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span data-t="tools">Tools</span>
+    </button>
   </div>
 </div>
 
@@ -2998,7 +2997,10 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="nb" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
     <button class="nb" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
     <button class="nb" data-screen="bills" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
-    <button class="nb" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
+    <button class="nb" data-screen="tools" onclick="showScreen('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span data-t="tools">Tools</span>
+    </button>
   </div>
 </div>
 
@@ -3073,13 +3075,110 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="nb" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
     <button class="nb" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
     <button class="nb" data-screen="bills" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
-    <button class="nb" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
+    <button class="nb" data-screen="tools" onclick="showScreen('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span data-t="tools">Tools</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════ TOOLS HUB (IMP-50) ═══════════════ -->
+<div id="screen-tools" class="screen">
+  <div class="topbar">
+    <div class="tb-title" data-t="tools">Tools Hub</div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button type="button" class="topbar-btn" onclick="showScreen('settings')" title="Settings" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;padding:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="sb" style="padding-top:12px;">
+    <div style="font-size:12px;color:var(--g500);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em;">Engineering &amp; Field Toolkit</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <!-- Toolbox Card -->
+      <div class="card" onclick="openToolboxScreen()" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px;border-radius:12px;border:1px solid var(--border);background:var(--surface);box-shadow:var(--shadow-sm);transition:transform 0.15s ease;">
+        <div style="width:46px;height:46px;border-radius:10px;background:#EFF6FF;color:#2563EB;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
+          🧮
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:2px;">Toolbox</div>
+          <div style="font-size:12px;color:var(--g500);line-height:1.35;">Engineering converters, motor FLA, sensor 4-20mA scaling &amp; unit calculations.</div>
+        </div>
+        <div style="font-size:16px;color:var(--g400);font-weight:bold;">→</div>
+      </div>
+
+      <!-- Quick Snap Card -->
+      <div class="card" onclick="openQuickScratchModal()" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px;border-radius:12px;border:1px solid var(--border);background:var(--surface);box-shadow:var(--shadow-sm);transition:transform 0.15s ease;">
+        <div style="width:46px;height:46px;border-radius:10px;background:#FEF3C7;color:#D97706;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
+          ⚡
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:2px;">Quick Snap</div>
+          <div style="font-size:12px;color:var(--g500);line-height:1.35;">Instant scratchpad, audio notes &amp; machine nameplate photo capture.</div>
+        </div>
+        <div style="font-size:16px;color:var(--g400);font-weight:bold;">→</div>
+      </div>
+
+      <!-- Assets Card -->
+      <div class="card" onclick="openAssetsScreen()" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px;border-radius:12px;border:1px solid var(--border);background:var(--surface);box-shadow:var(--shadow-sm);transition:transform 0.15s ease;">
+        <div style="width:46px;height:46px;border-radius:10px;background:#ECFDF5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
+          🏭
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:2px;">Asset Passport</div>
+          <div style="font-size:12px;color:var(--g500);line-height:1.35;">Equipment registry, machine QR/Barcode lookups &amp; maintenance logs.</div>
+        </div>
+        <div style="font-size:16px;color:var(--g400);font-weight:bold;">→</div>
+      </div>
+
+      <!-- Field Library Card -->
+      <div class="card" onclick="showScreen('library')" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:15px;border-radius:12px;border:1px solid var(--border);background:var(--surface);box-shadow:var(--shadow-sm);transition:transform 0.15s ease;">
+        <div style="width:46px;height:46px;border-radius:10px;background:#F3E8FF;color:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
+          📚
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:2px;">Inspection Library</div>
+          <div style="font-size:12px;color:var(--g500);line-height:1.35;">Industry checklist templates, equipment standard readings &amp; references.</div>
+        </div>
+        <div style="font-size:16px;color:var(--g400);font-weight:bold;">→</div>
+      </div>
+    </div>
+  </div>
+  <div class="bnav">
+    <button class="nb" data-screen="home" onclick="showScreen('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span data-t="home">Home</span>
+    </button>
+    <button class="nb" data-screen="trips" onclick="showScreen('trips')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span data-t="trips">Trips</span>
+    </button>
+    <button class="nb" data-screen="tasks" onclick="showScreen('tasks')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <span data-t="tasks">Tasks</span>
+    </button>
+    <button class="nb" data-screen="bills" onclick="showScreen('bills')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span>Bills</span>
+    </button>
+    <button class="nb active" data-screen="tools" onclick="showScreen('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span data-t="tools">Tools</span>
+    </button>
   </div>
 </div>
 
 <!-- ═══════════════ SETTINGS ═══════════════ -->
 <div id="screen-settings" class="screen">
-  <div class="topbar"><div class="tb-title" data-t="settings">Settings</div></div>
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button type="button" class="tb-back" onclick="showScreen(window._prevScreen||'home')" title="Back" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0 6px 0 0;display:flex;align-items:center;">←</button>
+      <div class="tb-title" data-t="settings">Settings</div>
+    </div>
+  </div>
   <div class="sb" style="position:relative;">
     <div class="card" style="margin-bottom:14px;">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
@@ -3298,7 +3397,10 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="nb" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
     <button class="nb" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
     <button class="nb" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
-    <button class="nb active" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
+    <button class="nb" data-screen="tools" onclick="showScreen('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span data-t="tools">Tools</span>
+    </button>
   </div>
 </div>
 
@@ -3502,7 +3604,10 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="nb" data-screen="trips" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
     <button class="nb" data-screen="tasks" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
     <button class="nb" data-screen="bills" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
-    <button class="nb" data-screen="settings" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
+    <button class="nb" data-screen="tools" onclick="showScreen('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span data-t="tools">Tools</span>
+    </button>
   </div>
 </div>
 
@@ -3539,7 +3644,10 @@ input, textarea, select, button { font-family: var(--font); }
     <button class="nb" data-screen="trips" onclick="showScreen('trips')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-t="trips">Trips</span></button>
     <button class="nb" data-screen="tasks" onclick="showScreen('tasks')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span data-t="tasks">Tasks</span></button>
     <button class="nb" data-screen="bills" onclick="showScreen('bills')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Bills</span></button>
-    <button class="nb" data-screen="settings" onclick="showScreen('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-t="settings">Settings</span></button>
+    <button class="nb" data-screen="tools" onclick="showScreen('tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      <span data-t="tools">Tools</span>
+    </button>
   </div>
 </div>
 
@@ -4999,7 +5107,7 @@ input, textarea, select, button { font-family: var(--font); }
 // ═══════ TRANSLATIONS ═══════
 const T={
   en:{
-    home:'Home',trips:'Trips',tasks:'Tasks',leave:'Leave',settings:'Settings',
+    home:'Home',trips:'Trips',tasks:'Tasks',leave:'Leave',settings:'Settings',tools:'Tools',
     tripsMonth:'Trips',pendingTasks:'Tasks today',leaveDays:'Leave days',
     upcomingTrips:'Upcoming trips',recentReports:'Recent reports',todayTasks:"Today's tasks",
     noTrips:'No upcoming trips. Tap + to create.',noReports:'No completed reports yet.',noTasks:'No tasks yet. Tap + to add.',
@@ -5041,7 +5149,7 @@ const T={
     inProgress2:'In Progress'
   },
   vi:{
-    home:'Trang chủ',trips:'Chuyến đi',tasks:'Nhiệm vụ',leave:'Nghỉ phép',settings:'Cài đặt',
+    home:'Trang chủ',trips:'Chuyến đi',tasks:'Nhiệm vụ',leave:'Nghỉ phép',settings:'Cài đặt',tools:'Công cụ',
     tripsMonth:'Chuyến đi',pendingTasks:'Việc hôm nay',leaveDays:'Ngày nghỉ',
     upcomingTrips:'Chuyến sắp tới',recentReports:'Báo cáo gần đây',todayTasks:'Nhiệm vụ hôm nay',
     noTrips:'Chưa có chuyến đi. Nhấn + để tạo.',noReports:'Chưa có báo cáo hoàn thành.',noTasks:'Chưa có nhiệm vụ. Nhấn + để thêm.',
@@ -5772,9 +5880,10 @@ function showScreen(n){
   if(n==='assets') { if(typeof renderAssetList==='function') renderAssetList(); }
   if(n==='bill-export')buildBillPDFPreview();
   if(n==='settings') { if(typeof renderSettingsAbout==='function') renderSettingsAbout(); }
+  if(n==='tools') { if(typeof renderToolsScreen==='function') renderToolsScreen(); }
 }
 
-// ── Unified Bottom Nav synchronization (IMP-10) ──
+// ── Unified Bottom Nav synchronization (IMP-10, IMP-50) ──
 function updateBottomNav(activeScreen){
   document.querySelectorAll('.bnav').forEach(nav => {
     nav.querySelectorAll('.nb').forEach(btn => {
@@ -5783,7 +5892,9 @@ function updateBottomNav(activeScreen){
       const match = onclickAttr.match(/showScreen\(['"]([^'"]+)['"]\)/);
       const screenName = dataScreen || (match ? match[1] : null);
       if(screenName){
-        if(screenName === activeScreen){
+        const isMatch = (screenName === activeScreen) ||
+          (screenName === 'tools' && ['tools', 'toolbox', 'assets', 'library'].includes(activeScreen));
+        if(isMatch){
           btn.classList.add('active');
         } else {
           btn.classList.remove('active');
@@ -17264,78 +17375,6 @@ function saveCardBudget() {
 }
 
 /**
- * IMP-41: Open modal to set manual balance due (Option 4)
- */
-function openSetCardBalanceModal() {
-  ensureCreditCardState();
-  const balanceInput = document.getElementById('cc-input-balance-due');
-  const currentDue = calculateCreditCardBalanceDue();
-  if (balanceInput) {
-    balanceInput.value = (S.creditCard.manualBalance && typeof S.creditCard.manualBalance.amount === 'number')
-      ? S.creditCard.manualBalance.amount
-      : currentDue;
-  }
-  updateCardBalanceHint();
-  openModal('modal-card-balance');
-}
-
-/**
- * Update hint below balance input with formatted VND
- */
-function updateCardBalanceHint() {
-  const input = document.getElementById('cc-input-balance-due');
-  const hint = document.getElementById('cc-balance-hint');
-  if (!input || !hint) return;
-  const val = parseFloat(input.value) || 0;
-  hint.textContent = val > 0 ? `≈ ${fmtAmt(val, 'VND')} VND` : '0 ₫ (Fully cleared)';
-}
-
-/**
- * Save manual card balance due override
- */
-function saveCardBalance() {
-  ensureCreditCardState();
-  const balanceInput = document.getElementById('cc-input-balance-due');
-  const val = parseFloat(balanceInput ? balanceInput.value : 0);
-  if (isNaN(val) || val < 0) {
-    showToast('Please enter a valid balance due (≥ 0)');
-    return;
-  }
-
-  S.creditCard.manualBalance = {
-    amount: val,
-    setAt: new Date().toISOString()
-  };
-
-  sv();
-  closeModal('modal-card-balance');
-  renderCreditCardScreen();
-  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
-  showToast('✓ Card balance due updated: ' + fmtAmt(val, 'VND') + ' ₫');
-
-  if (typeof syncCreditCardToSheets_ === 'function') {
-    syncCreditCardToSheets_();
-  }
-}
-
-/**
- * Reset manual balance due back to Trip-Based Auto calculation
- */
-function resetCardBalanceToAuto() {
-  ensureCreditCardState();
-  S.creditCard.manualBalance = null;
-  sv();
-  closeModal('modal-card-balance');
-  renderCreditCardScreen();
-  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
-  showToast('✓ Reset to Trip-Based Auto calculation');
-
-  if (typeof syncCreditCardToSheets_ === 'function') {
-    syncCreditCardToSheets_();
-  }
-}
-
-/**
  * Open Modal to record a reimbursement payment transferred back to card
  */
 function openTransferBackModal(transferId) {
@@ -18118,22 +18157,28 @@ async function balanceAllCardTransfersToMatchSpent() {
   let newSum = transfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
   let diff = newSum - totalAllCardSpent;
 
+  // IMP-50: TRIP ISOLATION GUARD
+  // Any remaining excess MUST ONLY be deducted from unassigned / general transfers!
+  // Settled trips (where transfers match card spent) must NEVER be deducted from or diluted!
   if (diff > 0) {
-    for (let i = transfers.length - 1; i >= 0; i--) {
-      const curAmt = parseFloat(transfers[i].amount) || 0;
+    const unassignedTransfers = transfers.filter(t => !t.tripId || t.tripId === '__unassigned__');
+    for (let i = unassignedTransfers.length - 1; i >= 0; i--) {
+      const curAmt = parseFloat(unassignedTransfers[i].amount) || 0;
       const deduct = Math.min(curAmt, diff);
-      transfers[i].amount = Math.round(curAmt - deduct);
+      unassignedTransfers[i].amount = Math.round(curAmt - deduct);
       diff -= deduct;
       if (diff <= 0) break;
     }
   } else if (diff < 0) {
+    // If shortage, add shortage to an unassigned transfer, NEVER to a trip-linked transfer!
     const shortage = Math.abs(diff);
-    if (transfers.length > 0) {
-      transfers[0].amount = Math.round((parseFloat(transfers[0].amount) || 0) + shortage);
+    let targetUnassigned = transfers.find(t => !t.tripId || t.tripId === '__unassigned__');
+    if (targetUnassigned) {
+      targetUnassigned.amount = Math.round((parseFloat(targetUnassigned.amount) || 0) + shortage);
     } else {
       transfers.push({
         id: typeof genId === 'function' ? genId('cct_') : ('cct_' + Date.now()),
-        amount: totalAllCardSpent,
+        amount: shortage,
         date: new Date().toISOString().slice(0, 10),
         tripId: '',
         note: 'Rebalanced to match total card spent (100% Settled)',
@@ -18142,8 +18187,14 @@ async function balanceAllCardTransfersToMatchSpent() {
     }
   }
 
+  // Filter out any unassigned transfers with amount <= 0, but keep all trip transfers
+  S.creditCard.transfers = transfers.filter(t => {
+    const amt = Math.round(parseFloat(t.amount) || 0);
+    return amt > 0 || (t.tripId && t.tripId !== '__unassigned__');
+  });
+
   // Clean and round
-  transfers.forEach(t => {
+  S.creditCard.transfers.forEach(t => {
     t.amount = Math.round(parseFloat(t.amount) || 0);
   });
 

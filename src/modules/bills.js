@@ -1959,78 +1959,6 @@ function saveCardBudget() {
 }
 
 /**
- * IMP-41: Open modal to set manual balance due (Option 4)
- */
-function openSetCardBalanceModal() {
-  ensureCreditCardState();
-  const balanceInput = document.getElementById('cc-input-balance-due');
-  const currentDue = calculateCreditCardBalanceDue();
-  if (balanceInput) {
-    balanceInput.value = (S.creditCard.manualBalance && typeof S.creditCard.manualBalance.amount === 'number')
-      ? S.creditCard.manualBalance.amount
-      : currentDue;
-  }
-  updateCardBalanceHint();
-  openModal('modal-card-balance');
-}
-
-/**
- * Update hint below balance input with formatted VND
- */
-function updateCardBalanceHint() {
-  const input = document.getElementById('cc-input-balance-due');
-  const hint = document.getElementById('cc-balance-hint');
-  if (!input || !hint) return;
-  const val = parseFloat(input.value) || 0;
-  hint.textContent = val > 0 ? `≈ ${fmtAmt(val, 'VND')} VND` : '0 ₫ (Fully cleared)';
-}
-
-/**
- * Save manual card balance due override
- */
-function saveCardBalance() {
-  ensureCreditCardState();
-  const balanceInput = document.getElementById('cc-input-balance-due');
-  const val = parseFloat(balanceInput ? balanceInput.value : 0);
-  if (isNaN(val) || val < 0) {
-    showToast('Please enter a valid balance due (≥ 0)');
-    return;
-  }
-
-  S.creditCard.manualBalance = {
-    amount: val,
-    setAt: new Date().toISOString()
-  };
-
-  sv();
-  closeModal('modal-card-balance');
-  renderCreditCardScreen();
-  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
-  showToast('✓ Card balance due updated: ' + fmtAmt(val, 'VND') + ' ₫');
-
-  if (typeof syncCreditCardToSheets_ === 'function') {
-    syncCreditCardToSheets_();
-  }
-}
-
-/**
- * Reset manual balance due back to Trip-Based Auto calculation
- */
-function resetCardBalanceToAuto() {
-  ensureCreditCardState();
-  S.creditCard.manualBalance = null;
-  sv();
-  closeModal('modal-card-balance');
-  renderCreditCardScreen();
-  if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
-  showToast('✓ Reset to Trip-Based Auto calculation');
-
-  if (typeof syncCreditCardToSheets_ === 'function') {
-    syncCreditCardToSheets_();
-  }
-}
-
-/**
  * Open Modal to record a reimbursement payment transferred back to card
  */
 function openTransferBackModal(transferId) {
@@ -2813,22 +2741,28 @@ async function balanceAllCardTransfersToMatchSpent() {
   let newSum = transfers.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
   let diff = newSum - totalAllCardSpent;
 
+  // IMP-50: TRIP ISOLATION GUARD
+  // Any remaining excess MUST ONLY be deducted from unassigned / general transfers!
+  // Settled trips (where transfers match card spent) must NEVER be deducted from or diluted!
   if (diff > 0) {
-    for (let i = transfers.length - 1; i >= 0; i--) {
-      const curAmt = parseFloat(transfers[i].amount) || 0;
+    const unassignedTransfers = transfers.filter(t => !t.tripId || t.tripId === '__unassigned__');
+    for (let i = unassignedTransfers.length - 1; i >= 0; i--) {
+      const curAmt = parseFloat(unassignedTransfers[i].amount) || 0;
       const deduct = Math.min(curAmt, diff);
-      transfers[i].amount = Math.round(curAmt - deduct);
+      unassignedTransfers[i].amount = Math.round(curAmt - deduct);
       diff -= deduct;
       if (diff <= 0) break;
     }
   } else if (diff < 0) {
+    // If shortage, add shortage to an unassigned transfer, NEVER to a trip-linked transfer!
     const shortage = Math.abs(diff);
-    if (transfers.length > 0) {
-      transfers[0].amount = Math.round((parseFloat(transfers[0].amount) || 0) + shortage);
+    let targetUnassigned = transfers.find(t => !t.tripId || t.tripId === '__unassigned__');
+    if (targetUnassigned) {
+      targetUnassigned.amount = Math.round((parseFloat(targetUnassigned.amount) || 0) + shortage);
     } else {
       transfers.push({
         id: typeof genId === 'function' ? genId('cct_') : ('cct_' + Date.now()),
-        amount: totalAllCardSpent,
+        amount: shortage,
         date: new Date().toISOString().slice(0, 10),
         tripId: '',
         note: 'Rebalanced to match total card spent (100% Settled)',
@@ -2837,8 +2771,14 @@ async function balanceAllCardTransfersToMatchSpent() {
     }
   }
 
+  // Filter out any unassigned transfers with amount <= 0, but keep all trip transfers
+  S.creditCard.transfers = transfers.filter(t => {
+    const amt = Math.round(parseFloat(t.amount) || 0);
+    return amt > 0 || (t.tripId && t.tripId !== '__unassigned__');
+  });
+
   // Clean and round
-  transfers.forEach(t => {
+  S.creditCard.transfers.forEach(t => {
     t.amount = Math.round(parseFloat(t.amount) || 0);
   });
 
