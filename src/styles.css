@@ -4423,3 +4423,55 @@ button:focus-visible {
   background: rgba(16, 185, 129, 0.15);
   border-color: var(--brand);
 }
+
+
+/* ── INDUSTRY TEMPLATES MODAL (IMP-57) ──────────────────── */
+.indg {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.indb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--n200);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  box-shadow: var(--shadow-xs);
+  touch-action: manipulation;
+}
+
+.indb:active {
+  background: var(--gl);
+  border-color: var(--brand);
+  transform: scale(0.97);
+}
+
+.indb .ii {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+[data-theme="dark"] .indb {
+  background: var(--surface);
+  border-color: var(--n700);
+  color: var(--text);
+}
+
+[data-theme="dark"] .indb:active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: var(--brand);
+}
