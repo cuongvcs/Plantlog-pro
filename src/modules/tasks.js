@@ -485,7 +485,9 @@ function renderTasks(){
     const dateRx=/^\d{4}-\d{2}-\d{2}$/;
     const dEnd=(tk.dateEnd&&dateRx.test(tk.dateEnd))?tk.dateEnd:dStart;
     const dateRange=(dStart&&dEnd&&dStart!==dEnd)?`${fmtDate(dStart)} → ${fmtDate(dEnd)}`:fmtDate(dStart);
-    const trip=tk.tripId?(S.trips.find(tr=>tr.id===tk.tripId)||{}).plant||'':'' ;
+    const trObj=tk.tripId?(S.trips||[]).find(tr=>String(tr.id)===String(tk.tripId)):null;
+    const trip=trObj?trObj.plant:'';
+    const tripBadge=(trObj&&typeof getTripTypeBadge==='function')?getTripTypeBadge(trObj):'';
     return `<div class="task-card-v4" onclick="openTaskDetail('${tk.id}')">
       <div class="tc-bar ${isOver?'overdue':cat}"></div>
       <div class="tc-body">
@@ -503,7 +505,7 @@ function renderTasks(){
           ${dur?`<span class="tc-meta-item">⏱ ${dur}</span>`:''}
           ${tk.machine?`<span class="tc-meta-item">🔩 ${tk.machine}</span>`:''}
           ${tk.plan?`<span class="tc-meta-item">📁 ${tk.plan}</span>`:''}
-          ${trip?`<span class="tc-meta-item">🏭 ${trip}</span>`:''}
+          ${trip?`<span class="tc-meta-item">🏭 ${trip} ${tripBadge}</span>`:''}
           ${isOver?`<span class="tc-meta-item" style="color:var(--red);font-weight:600;">⚠ Overdue</span>`:''}
         </div>
         ${tk.checklist&&tk.checklist.length?(()=>{
@@ -643,7 +645,10 @@ function renderKanban(body, today){
         html += '<span style="background:'+cc.bg+';color:'+cc.text+
           ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:600;">'+catIcon+' '+cc.label+'</span>';
         if(tk.machine) html += '<span style="background:#EFF6FF;color:#2563EB;border-radius:4px;padding:2px 5px;font-size:9px;">⚙️ '+tk.machine+'</span>';
-        if(trip)       html += '<span style="background:#F0FDF4;color:#15803D;border-radius:4px;padding:2px 5px;font-size:9px;">🏭 '+trip.plant+'</span>';
+        if(trip) {
+          const tripBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(trip) : '';
+          html += '<span style="background:#F0FDF4;color:#15803D;border-radius:4px;padding:2px 5px;font-size:9px;">🏭 '+trip.plant+'</span>' + (tripBadge ? ' ' + tripBadge : '');
+        }
         html += '</div>';
 
         // Status buttons - use data attributes to avoid quote escaping
@@ -718,7 +723,9 @@ function openTaskDetail(id){
   const isOver=(tk.dateEnd||tk.date||tk.dateStart||'')<today&&tk.status!=='done';
   const cat=tk.category||'work';const cc=catConfig(cat);
   const dur=calcDuration(tk);
-  const trip=tk.tripId?(S.trips.find(tr=>tr.id===tk.tripId)||{}).plant||'':'' ;
+  const trObj=tk.tripId?(S.trips||[]).find(tr=>String(tr.id)===String(tk.tripId)):null;
+  const trip=trObj?trObj.plant:'';
+  const tripBadge=(trObj&&typeof getTripTypeBadge==='function')?getTripTypeBadge(trObj):'';
   const dStart=tk.dateStart||tk.date||'';
   // Only use dateEnd if it's a real YYYY-MM-DD, not empty/time string
   const _dateRx=/^\d{4}-\d{2}-\d{2}$/;
@@ -741,7 +748,7 @@ function openTaskDetail(id){
       <div class="dg-item"><div class="dg-label">Period</div><div class="dg-val">${periodLabel(tk.period)||'—'}</div></div>
       ${tk.machine?`<div class="dg-item"><div class="dg-label">Machine</div><div class="dg-val">${tk.machine}</div></div>`:''}
       ${tk.plan?`<div class="dg-item"><div class="dg-label">Plan</div><div class="dg-val">${tk.plan}</div></div>`:''}
-      ${trip?`<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val">${trip}</div></div>`:''}
+      ${trip?`<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val">${trip} ${tripBadge}</div></div>`:''}
     </div>
     ${(tk.files&&tk.files.length)?`<div style="margin-bottom:12px;">
       <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">📎 ATTACHMENTS (${tk.files.length})</div>

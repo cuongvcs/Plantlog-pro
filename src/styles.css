@@ -474,7 +474,7 @@ button {
 .cat-tabs {
   display: flex;
   overflow-x: auto;
-  gap: 4px;
+  gap: 6px;
   scrollbar-width: none;
   padding-bottom: 6px;
 }
@@ -484,9 +484,10 @@ button {
 }
 
 .cat-tab {
-  padding: 5px 14px;
+  min-height: 38px;
+  padding: 7px 15px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   font-family: var(--font);
@@ -495,28 +496,38 @@ button {
   background: var(--surface);
   color: var(--n500);
   transition: all var(--dur-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .cat-tab.active {
   background: var(--n800);
   color: #fff;
   border-color: var(--n800);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 .cat-tab.work.active {
   background: var(--brand);
   border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(15, 123, 62, 0.28);
 }
 
 .cat-tab.leave.active {
   background: var(--am);
   border-color: var(--am);
   color: #fff;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.28);
 }
 
 .cat-tab.travel.active {
   background: var(--blue);
   border-color: var(--blue);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.28);
 }
 
 /* ── SECTION HEADER ────────────────────────────────────── */
@@ -3832,13 +3843,13 @@ button {
   text-overflow: ellipsis;
 }
 
-/* Trip Card Bills Status Filter Chips */
+/* Trip Card Bills Status Filter Chips (IMP-57: Enhanced touch targets) */
 .trip-card-chips {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
-  margin-bottom: 8px;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
   scrollbar-width: none;
 }
 
@@ -3847,22 +3858,28 @@ button {
 }
 
 .trip-card-chip {
-  padding: 5px 10px;
-  border-radius: 16px;
-  border: 1px solid var(--n200);
+  min-height: 38px;
+  padding: 7px 15px;
+  border-radius: 20px;
+  border: 1.5px solid var(--n200);
   background: var(--surface);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--n600);
   cursor: pointer;
   white-space: nowrap;
   transition: all var(--dur-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .trip-card-chip.active {
   background: #7C3AED;
   color: #fff;
   border-color: #7C3AED;
+  box-shadow: 0 1px 4px rgba(124, 58, 237, 0.28);
 }
 
 /* Settings About Card (UX-06) */

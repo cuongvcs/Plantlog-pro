@@ -1622,6 +1622,7 @@ function renderCreditCardScreen() {
 
     tripGroups.push({
       tripId: tr.id,
+      tripObj: tr,
       plant: tr.plant,
       date: tr.date,
       dateEnd: tr.dateEnd,
@@ -1721,6 +1722,7 @@ function renderCreditCardScreen() {
               <div style="flex:1;min-width:0;">
                 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
                   <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🏭 ${tg.plant}</span>
+                  ${typeof getTripTypeBadge === 'function' && tg.tripObj ? getTripTypeBadge(tg.tripObj) : ''}
                   ${tg.weekLabel ? `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--g100);color:var(--green);font-weight:700;">${tg.weekLabel}</span>` : ''}
                 </div>
                 <div style="font-size:11px;color:var(--n500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
@@ -1846,6 +1848,7 @@ function renderCreditCardScreen() {
       displayedGranularBills.forEach(b => {
         const trip = (S.trips || []).find(t => String(t.id) === String(b.tripId));
         const plantStr = trip ? trip.plant : 'General Expense';
+        const tripBadge = (trip && typeof getTripTypeBadge === 'function') ? getTripTypeBadge(trip) : '';
         const amtVND = (b.currency || 'VND').toUpperCase() === 'VND' ? (parseFloat(b.amount) || 0) : (parseFloat(b.vndAmount) || 0);
         bHtml += `
           <div class="cc-item-row expense" onclick="openEditBill('${b.id}')" style="cursor:pointer;">
@@ -1854,7 +1857,7 @@ function renderCreditCardScreen() {
                 <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.detail || 'Bill'}</span>
               </div>
               <div style="font-size:11px;color:var(--n500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                📅 ${fmtDate(b.date)} • 🏭 ${plantStr}
+                📅 ${fmtDate(b.date)} • 🏭 ${plantStr} ${tripBadge}
               </div>
             </div>
             <div style="text-align:right;flex-shrink:0;">

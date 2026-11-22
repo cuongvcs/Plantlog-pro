@@ -151,10 +151,12 @@ function renderTripList(filter){
     const tripTasks=(S.tasks||[]).filter(tk=>tk.tripId===tr.id);
     const doneTasks=tripTasks.filter(tk=>tk.status==='done'||tk.status==='completed');
     const pct=tripTasks.length?Math.round(doneTasks.length/tripTasks.length*100):0;
+    const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
     return `<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
-        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;flex-wrap:wrap;">
           <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
+          ${typeBadge}
           ${wk?`<span class="badge-week">${wk}</span>`:''}
         </div>
         <span class="badge ${bc}" style="flex-shrink:0;">${bt}</span>
@@ -178,7 +180,8 @@ function openTripDetail(id){
   const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
   const nameEl=document.getElementById('detail-plant-name');
   if(nameEl){
-    nameEl.innerHTML=`<span>${tr.plant}</span>${wk?` <span class="badge-week" style="background:rgba(255,255,255,0.22);color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px;vertical-align:middle;margin-left:6px;">${wk}</span>`:''}`;
+    const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
+    nameEl.innerHTML=`<span>${tr.plant}</span> ${typeBadge}${wk?` <span class="badge-week" style="background:rgba(255,255,255,0.22);color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px;vertical-align:middle;margin-left:6px;">${wk}</span>`:''}`;
   }
   document.getElementById('detail-date').textContent=fmtDate(tr.date)+(tr.location?' · '+tr.location:'');
   // render bills for this trip
@@ -196,18 +199,8 @@ function openTripDetail(id){
       </div>
     </div>` : '';
 
-  // IMP-57: Plant Base & Leave non-claimable indicator badge
-  const isClaimable = typeof isTripClaimable === 'function' ? isTripClaimable(tr) : true;
-  let tripTypeBadgeHtml = '';
-  if (!isClaimable) {
-    const isLeave = (tr.plant || '').toLowerCase().includes('leave') || (tr.purpose || '').toLowerCase().includes('leave') || tr.type === 'leave';
-    if (isLeave) {
-      tripTypeBadgeHtml = `<span class="badge" style="font-size:11px;font-weight:700;color:#92400E;background:var(--al);padding:2px 8px;border-radius:20px;border:1px solid rgba(245,158,11,0.3);">🌴 Leave</span>`;
-    } else {
-      const baseName = (S.profile && (S.profile.plantBase || S.profile.base)) || 'DaNang';
-      tripTypeBadgeHtml = `<span class="badge" style="font-size:11px;font-weight:700;color:var(--green);background:var(--gl);padding:2px 8px;border-radius:20px;border:1px solid rgba(0,132,61,0.25);">📍 Base Plant (${baseName})</span>`;
-    }
-  }
+  // IMP-57: Plant Base & Leave visual indicator badge
+  const tripTypeBadgeHtml = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
 
   document.getElementById('trip-detail-card').innerHTML=`
     <div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -977,7 +970,10 @@ function renderDash(){
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <div style="min-width:0;flex:1;padding-right:8px;">
-              <div style="font-size:14px;font-weight:800;color:var(--n900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${activeTrip.plant}</div>
+              <div style="font-size:14px;font-weight:800;color:var(--n900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span>${activeTrip.plant}</span>
+                ${typeof getTripTypeBadge === 'function' ? getTripTypeBadge(activeTrip) : ''}
+              </div>
               <div style="font-size:11px;color:var(--n500);margin-top:1px;">📅 ${fmtDate(activeTrip.date)}${activeTrip.location ? ' · ' + activeTrip.location : ''}</div>
             </div>
             <div style="display:flex;gap:4px;flex-shrink:0;">
@@ -1068,10 +1064,12 @@ function renderDash(){
   const upEl=document.getElementById('upcoming-trips');
   upEl.innerHTML=upcoming.length?upcoming.map(tr=>{
     const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+    const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
     return `<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
-        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;flex-wrap:wrap;">
           <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
+          ${typeBadge}
           ${wk?`<span class="badge-week">${wk}</span>`:''}
         </div>
         <span class="badge ${tr.status==='in_progress'?'bb':'ba'}" style="flex-shrink:0;">${tr.status==='in_progress'?t('inProgress'):t('planned')}</span>
@@ -1083,10 +1081,12 @@ function renderDash(){
   const recEl=document.getElementById('recent-reports');
   recEl.innerHTML=completed.length?completed.map(tr=>{
     const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+    const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
     return `<div class="card" style="cursor:pointer;" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
-        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;flex-wrap:wrap;">
           <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
+          ${typeBadge}
           ${wk?`<span class="badge-week">${wk}</span>`:''}
         </div>
         <span class="badge bg" style="flex-shrink:0;">${t('completed')}</span>

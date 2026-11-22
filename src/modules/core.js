@@ -209,6 +209,9 @@ function ld(){
     if(d) {
       const parsed = JSON.parse(d);
       S={...S,...parsed};
+      if(S.profile && !S.profile.plantBase) {
+        S.profile.plantBase = 'DaNang';
+      }
     }
   }catch(e){
     console.error('[PlantLog] LocalStorage load error:', e);
@@ -218,6 +221,8 @@ function ld(){
     _bootInfo.hadLocal = hadLocal;
     _bootInfo.parseError = parseError;
   }
+  if (!S.profile) S.profile = { name: '', title: '', company: '', plantBase: 'DaNang', empid: '', signature: '' };
+  if (!S.profile.plantBase) S.profile.plantBase = 'DaNang';
   if (typeof ensureStateShape === 'function') ensureStateShape(S);
   if (typeof migrateState === 'function') migrateState(S);
   if(!S.assets) S.assets = [];
@@ -1017,31 +1022,102 @@ function updateProfileDisplay(){
  */
 function isTripClaimable(tr) {
   if (!tr) return false;
-  const rawBase = (S.profile && (S.profile.plantBase || S.profile.base)) !== undefined 
-    ? (S.profile.plantBase || S.profile.base) 
-    : 'DaNang';
-  const base = (rawBase || '').trim().toLowerCase();
-  const plant = (tr.plant || '').trim().toLowerCase();
-  const purpose = (tr.purpose || '').trim().toLowerCase();
+  const rawBase = (S.profile && (S.profile.plantBase || S.profile.base)) || 'DaNang';
+  const base = String(rawBase).trim() || 'DaNang';
+  const plant = (tr.plant || '').trim();
+  const purpose = (tr.purpose || '').trim();
   const type = (tr.type || '').trim().toLowerCase();
+  const location = (tr.location || '').trim();
 
-  const stripTones = str => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
-  const plantNorm = stripTones(plant).replace(/\s+/g, '');
-  const baseNorm = stripTones(base).replace(/\s+/g, '');
-  const purposeNorm = stripTones(purpose).replace(/\s+/g, '');
+  const stripTones = str => (str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+  const plantNorm = stripTones(plant);
+  const baseNorm = stripTones(base);
+  const purposeNorm = stripTones(purpose);
+  const locationNorm = stripTones(location);
 
   // 1. Exclude trips at Plant Base
-  if (baseNorm && plantNorm && (plantNorm.includes(baseNorm) || baseNorm.includes(plantNorm))) {
-    return false;
-  }
+  const isBase = (baseNorm && (
+    (plantNorm && (plantNorm.includes(baseNorm) || baseNorm.includes(plantNorm))) ||
+    (locationNorm && (locationNorm.includes(baseNorm) || baseNorm.includes(locationNorm)))
+  )) || (
+    (baseNorm.includes('danang') || baseNorm === 'dn') && (
+      plantNorm.includes('danang') || locationNorm.includes('danang') ||
+      /\b(dn|dana)\b/i.test(plant) || /\b(dn|dana)\b/i.test(location)
+    )
+  );
+
+  if (isBase) return false;
 
   // 2. Exclude Leave / Nghỉ phép trips
-  if (plantNorm.includes('leave') || plantNorm.includes('nghiphep') || plantNorm.includes('annualleave') ||
-      purposeNorm.includes('leave') || purposeNorm.includes('nghiphep') || type === 'leave') {
-    return false;
-  }
+  const isLeave = plantNorm.includes('leave') || plantNorm.includes('nghiphep') || plantNorm.includes('phep') ||
+    plantNorm.includes('annualleave') || plantNorm.includes('dayoff') || plantNorm.includes('nghibu') ||
+    purposeNorm.includes('leave') || purposeNorm.includes('nghiphep') || purposeNorm.includes('phep') ||
+    purposeNorm.includes('annualleave') || purposeNorm.includes('dayoff') || purposeNorm.includes('nghibu') ||
+    type === 'leave' || tr.category === 'leave';
+
+  if (isLeave) return false;
 
   return true;
+}
+
+/**
+ * IMP-57: Returns a visual identification badge for Base Plant or Leave trips.
+ */
+function getTripTypeBadge(tr) {
+  if (!tr) return '';
+  const rawBase = (S.profile && (S.profile.plantBase || S.profile.base)) || 'DaNang';
+  const base = String(rawBase).trim() || 'DaNang';
+  const plant = (tr.plant || '').trim();
+  const purpose = (tr.purpose || '').trim();
+  const type = (tr.type || '').trim();
+  const location = (tr.location || '').trim();
+
+  const stripTones = str => (str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+  const plantNorm = stripTones(plant);
+  const baseNorm = stripTones(base);
+  const purposeNorm = stripTones(purpose);
+  const typeNorm = stripTones(type);
+  const locationNorm = stripTones(location);
+
+  // 1. Leave Check
+  if (plantNorm.includes('leave') || plantNorm.includes('nghiphep') || plantNorm.includes('phep') ||
+      plantNorm.includes('annualleave') || plantNorm.includes('dayoff') || plantNorm.includes('nghibu') ||
+      purposeNorm.includes('leave') || purposeNorm.includes('nghiphep') || purposeNorm.includes('phep') ||
+      purposeNorm.includes('annualleave') || purposeNorm.includes('dayoff') || purposeNorm.includes('nghibu') ||
+      typeNorm === 'leave' || tr.category === 'leave') {
+    return `<span class="badge" style="font-size:10.5px;font-weight:700;color:#92400E;background:var(--al);padding:2px 8px;border-radius:12px;border:1px solid rgba(245,158,11,0.35);flex-shrink:0;">🌴 Leave</span>`;
+  }
+
+  // 2. Base Plant Check
+  const isBase = (baseNorm && (
+    (plantNorm && (plantNorm.includes(baseNorm) || baseNorm.includes(plantNorm))) ||
+    (locationNorm && (locationNorm.includes(baseNorm) || baseNorm.includes(locationNorm)))
+  )) || (
+    (baseNorm.includes('danang') || baseNorm === 'dn') && (
+      plantNorm.includes('danang') || locationNorm.includes('danang') ||
+      /\b(dn|dana)\b/i.test(plant) || /\b(dn|dana)\b/i.test(location)
+    )
+  );
+
+  if (isBase) {
+    return `<span class="badge" style="font-size:10.5px;font-weight:700;color:var(--green);background:var(--gl);padding:2px 8px;border-radius:12px;border:1px solid rgba(0,132,61,0.25);flex-shrink:0;">📍 ${base} Base</span>`;
+  }
+
+  return '';
 }
 
 function clearProfileSignature(){

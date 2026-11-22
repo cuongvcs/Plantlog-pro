@@ -496,7 +496,7 @@ button {
 .cat-tabs {
   display: flex;
   overflow-x: auto;
-  gap: 4px;
+  gap: 6px;
   scrollbar-width: none;
   padding-bottom: 6px;
 }
@@ -506,9 +506,10 @@ button {
 }
 
 .cat-tab {
-  padding: 5px 14px;
+  min-height: 38px;
+  padding: 7px 15px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   font-family: var(--font);
@@ -517,28 +518,38 @@ button {
   background: var(--surface);
   color: var(--n500);
   transition: all var(--dur-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .cat-tab.active {
   background: var(--n800);
   color: #fff;
   border-color: var(--n800);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 .cat-tab.work.active {
   background: var(--brand);
   border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(15, 123, 62, 0.28);
 }
 
 .cat-tab.leave.active {
   background: var(--am);
   border-color: var(--am);
   color: #fff;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.28);
 }
 
 .cat-tab.travel.active {
   background: var(--blue);
   border-color: var(--blue);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.28);
 }
 
 /* ── SECTION HEADER ────────────────────────────────────── */
@@ -3854,13 +3865,13 @@ button {
   text-overflow: ellipsis;
 }
 
-/* Trip Card Bills Status Filter Chips */
+/* Trip Card Bills Status Filter Chips (IMP-57: Enhanced touch targets) */
 .trip-card-chips {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
-  margin-bottom: 8px;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
   scrollbar-width: none;
 }
 
@@ -3869,22 +3880,28 @@ button {
 }
 
 .trip-card-chip {
-  padding: 5px 10px;
-  border-radius: 16px;
-  border: 1px solid var(--n200);
+  min-height: 38px;
+  padding: 7px 15px;
+  border-radius: 20px;
+  border: 1.5px solid var(--n200);
   background: var(--surface);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--n600);
   cursor: pointer;
   white-space: nowrap;
   transition: all var(--dur-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .trip-card-chip.active {
   background: #7C3AED;
   color: #fff;
   border-color: #7C3AED;
+  box-shadow: 0 1px 4px rgba(124, 58, 237, 0.28);
 }
 
 /* Settings About Card (UX-06) */
@@ -4445,7 +4462,58 @@ button:focus-visible {
   background: rgba(16, 185, 129, 0.15);
   border-color: var(--brand);
 }
-</style>
+
+
+/* ── INDUSTRY TEMPLATES MODAL (IMP-57) ──────────────────── */
+.indg {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.indb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--n200);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  box-shadow: var(--shadow-xs);
+  touch-action: manipulation;
+}
+
+.indb:active {
+  background: var(--gl);
+  border-color: var(--brand);
+  transform: scale(0.97);
+}
+
+.indb .ii {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+[data-theme="dark"] .indb {
+  background: var(--surface);
+  border-color: var(--n700);
+  color: var(--text);
+}
+
+[data-theme="dark"] .indb:active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: var(--brand);
+}</style>
 </head>
 <body>
 <!-- ═══ LOCK SCREEN ═══ -->
@@ -5640,11 +5708,11 @@ button:focus-visible {
         <div id="cc-alltime-balance-box" style="display:none;margin-top:8px;"></div>
       </div>
 
-      <!-- Sub tabs: Trip Card Bills vs Card Bills vs Transfer History -->
-      <div style="display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none;">
-        <button type="button" class="tf-btn active" id="cc-tab-trip-bills" onclick="switchCreditCardSubTab('trip-bills')" style="flex:1;font-size:11.5px;padding:7px 6px;min-height:34px;text-align:center;white-space:nowrap;">✈️ Trip Card Bills (<span id="cc-trip-bills-badge">0</span>)</button>
-        <button type="button" class="tf-btn" id="cc-tab-bills" onclick="switchCreditCardSubTab('bills')" style="flex:1;font-size:11.5px;padding:7px 6px;min-height:34px;text-align:center;white-space:nowrap;">🧾 Card Bills (<span id="cc-bills-badge">0</span>)</button>
-        <button type="button" class="tf-btn" id="cc-tab-transfers" onclick="switchCreditCardSubTab('transfers')" style="flex:1;font-size:11.5px;padding:7px 6px;min-height:34px;text-align:center;white-space:nowrap;">🏦 Transfer History (<span id="cc-transfers-badge">0</span>)</button>
+      <!-- Sub tabs: Trip Card Bills vs Card Bills vs Transfer History (IMP-57: Enhanced touch targets) -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none;">
+        <button type="button" class="tf-btn active" id="cc-tab-trip-bills" onclick="switchCreditCardSubTab('trip-bills')" style="flex:1;font-size:12.5px;padding:8px 8px;min-height:38px;text-align:center;white-space:nowrap;">✈️ Trip Card Bills (<span id="cc-trip-bills-badge">0</span>)</button>
+        <button type="button" class="tf-btn" id="cc-tab-bills" onclick="switchCreditCardSubTab('bills')" style="flex:1;font-size:12.5px;padding:8px 8px;min-height:38px;text-align:center;white-space:nowrap;">🧾 Card Bills (<span id="cc-bills-badge">0</span>)</button>
+        <button type="button" class="tf-btn" id="cc-tab-transfers" onclick="switchCreditCardSubTab('transfers')" style="flex:1;font-size:12.5px;padding:8px 8px;min-height:38px;text-align:center;white-space:nowrap;">🏦 Transfer History (<span id="cc-transfers-badge">0</span>)</button>
       </div>
 
       <!-- Trip Card Status Filter Chips (UX-02) -->
@@ -8053,6 +8121,9 @@ function ld(){
     if(d) {
       const parsed = JSON.parse(d);
       S={...S,...parsed};
+      if(S.profile && !S.profile.plantBase) {
+        S.profile.plantBase = 'DaNang';
+      }
     }
   }catch(e){
     console.error('[PlantLog] LocalStorage load error:', e);
@@ -8062,6 +8133,8 @@ function ld(){
     _bootInfo.hadLocal = hadLocal;
     _bootInfo.parseError = parseError;
   }
+  if (!S.profile) S.profile = { name: '', title: '', company: '', plantBase: 'DaNang', empid: '', signature: '' };
+  if (!S.profile.plantBase) S.profile.plantBase = 'DaNang';
   if (typeof ensureStateShape === 'function') ensureStateShape(S);
   if (typeof migrateState === 'function') migrateState(S);
   if(!S.assets) S.assets = [];
@@ -8861,31 +8934,102 @@ function updateProfileDisplay(){
  */
 function isTripClaimable(tr) {
   if (!tr) return false;
-  const rawBase = (S.profile && (S.profile.plantBase || S.profile.base)) !== undefined 
-    ? (S.profile.plantBase || S.profile.base) 
-    : 'DaNang';
-  const base = (rawBase || '').trim().toLowerCase();
-  const plant = (tr.plant || '').trim().toLowerCase();
-  const purpose = (tr.purpose || '').trim().toLowerCase();
+  const rawBase = (S.profile && (S.profile.plantBase || S.profile.base)) || 'DaNang';
+  const base = String(rawBase).trim() || 'DaNang';
+  const plant = (tr.plant || '').trim();
+  const purpose = (tr.purpose || '').trim();
   const type = (tr.type || '').trim().toLowerCase();
+  const location = (tr.location || '').trim();
 
-  const stripTones = str => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
-  const plantNorm = stripTones(plant).replace(/\s+/g, '');
-  const baseNorm = stripTones(base).replace(/\s+/g, '');
-  const purposeNorm = stripTones(purpose).replace(/\s+/g, '');
+  const stripTones = str => (str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+  const plantNorm = stripTones(plant);
+  const baseNorm = stripTones(base);
+  const purposeNorm = stripTones(purpose);
+  const locationNorm = stripTones(location);
 
   // 1. Exclude trips at Plant Base
-  if (baseNorm && plantNorm && (plantNorm.includes(baseNorm) || baseNorm.includes(plantNorm))) {
-    return false;
-  }
+  const isBase = (baseNorm && (
+    (plantNorm && (plantNorm.includes(baseNorm) || baseNorm.includes(plantNorm))) ||
+    (locationNorm && (locationNorm.includes(baseNorm) || baseNorm.includes(locationNorm)))
+  )) || (
+    (baseNorm.includes('danang') || baseNorm === 'dn') && (
+      plantNorm.includes('danang') || locationNorm.includes('danang') ||
+      /\b(dn|dana)\b/i.test(plant) || /\b(dn|dana)\b/i.test(location)
+    )
+  );
+
+  if (isBase) return false;
 
   // 2. Exclude Leave / Nghỉ phép trips
-  if (plantNorm.includes('leave') || plantNorm.includes('nghiphep') || plantNorm.includes('annualleave') ||
-      purposeNorm.includes('leave') || purposeNorm.includes('nghiphep') || type === 'leave') {
-    return false;
-  }
+  const isLeave = plantNorm.includes('leave') || plantNorm.includes('nghiphep') || plantNorm.includes('phep') ||
+    plantNorm.includes('annualleave') || plantNorm.includes('dayoff') || plantNorm.includes('nghibu') ||
+    purposeNorm.includes('leave') || purposeNorm.includes('nghiphep') || purposeNorm.includes('phep') ||
+    purposeNorm.includes('annualleave') || purposeNorm.includes('dayoff') || purposeNorm.includes('nghibu') ||
+    type === 'leave' || tr.category === 'leave';
+
+  if (isLeave) return false;
 
   return true;
+}
+
+/**
+ * IMP-57: Returns a visual identification badge for Base Plant or Leave trips.
+ */
+function getTripTypeBadge(tr) {
+  if (!tr) return '';
+  const rawBase = (S.profile && (S.profile.plantBase || S.profile.base)) || 'DaNang';
+  const base = String(rawBase).trim() || 'DaNang';
+  const plant = (tr.plant || '').trim();
+  const purpose = (tr.purpose || '').trim();
+  const type = (tr.type || '').trim();
+  const location = (tr.location || '').trim();
+
+  const stripTones = str => (str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+  const plantNorm = stripTones(plant);
+  const baseNorm = stripTones(base);
+  const purposeNorm = stripTones(purpose);
+  const typeNorm = stripTones(type);
+  const locationNorm = stripTones(location);
+
+  // 1. Leave Check
+  if (plantNorm.includes('leave') || plantNorm.includes('nghiphep') || plantNorm.includes('phep') ||
+      plantNorm.includes('annualleave') || plantNorm.includes('dayoff') || plantNorm.includes('nghibu') ||
+      purposeNorm.includes('leave') || purposeNorm.includes('nghiphep') || purposeNorm.includes('phep') ||
+      purposeNorm.includes('annualleave') || purposeNorm.includes('dayoff') || purposeNorm.includes('nghibu') ||
+      typeNorm === 'leave' || tr.category === 'leave') {
+    return `<span class="badge" style="font-size:10.5px;font-weight:700;color:#92400E;background:var(--al);padding:2px 8px;border-radius:12px;border:1px solid rgba(245,158,11,0.35);flex-shrink:0;">🌴 Leave</span>`;
+  }
+
+  // 2. Base Plant Check
+  const isBase = (baseNorm && (
+    (plantNorm && (plantNorm.includes(baseNorm) || baseNorm.includes(plantNorm))) ||
+    (locationNorm && (locationNorm.includes(baseNorm) || baseNorm.includes(locationNorm)))
+  )) || (
+    (baseNorm.includes('danang') || baseNorm === 'dn') && (
+      plantNorm.includes('danang') || locationNorm.includes('danang') ||
+      /\b(dn|dana)\b/i.test(plant) || /\b(dn|dana)\b/i.test(location)
+    )
+  );
+
+  if (isBase) {
+    return `<span class="badge" style="font-size:10.5px;font-weight:700;color:var(--green);background:var(--gl);padding:2px 8px;border-radius:12px;border:1px solid rgba(0,132,61,0.25);flex-shrink:0;">📍 ${base} Base</span>`;
+  }
+
+  return '';
 }
 
 function clearProfileSignature(){
@@ -10596,10 +10740,12 @@ function renderTripList(filter){
     const tripTasks=(S.tasks||[]).filter(tk=>tk.tripId===tr.id);
     const doneTasks=tripTasks.filter(tk=>tk.status==='done'||tk.status==='completed');
     const pct=tripTasks.length?Math.round(doneTasks.length/tripTasks.length*100):0;
+    const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
     return `<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
-        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;flex-wrap:wrap;">
           <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
+          ${typeBadge}
           ${wk?`<span class="badge-week">${wk}</span>`:''}
         </div>
         <span class="badge ${bc}" style="flex-shrink:0;">${bt}</span>
@@ -10623,7 +10769,8 @@ function openTripDetail(id){
   const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
   const nameEl=document.getElementById('detail-plant-name');
   if(nameEl){
-    nameEl.innerHTML=`<span>${tr.plant}</span>${wk?` <span class="badge-week" style="background:rgba(255,255,255,0.22);color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px;vertical-align:middle;margin-left:6px;">${wk}</span>`:''}`;
+    const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
+    nameEl.innerHTML=`<span>${tr.plant}</span> ${typeBadge}${wk?` <span class="badge-week" style="background:rgba(255,255,255,0.22);color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px;vertical-align:middle;margin-left:6px;">${wk}</span>`:''}`;
   }
   document.getElementById('detail-date').textContent=fmtDate(tr.date)+(tr.location?' · '+tr.location:'');
   // render bills for this trip
@@ -10641,18 +10788,8 @@ function openTripDetail(id){
       </div>
     </div>` : '';
 
-  // IMP-57: Plant Base & Leave non-claimable indicator badge
-  const isClaimable = typeof isTripClaimable === 'function' ? isTripClaimable(tr) : true;
-  let tripTypeBadgeHtml = '';
-  if (!isClaimable) {
-    const isLeave = (tr.plant || '').toLowerCase().includes('leave') || (tr.purpose || '').toLowerCase().includes('leave') || tr.type === 'leave';
-    if (isLeave) {
-      tripTypeBadgeHtml = `<span class="badge" style="font-size:11px;font-weight:700;color:#92400E;background:var(--al);padding:2px 8px;border-radius:20px;border:1px solid rgba(245,158,11,0.3);">🌴 Leave</span>`;
-    } else {
-      const baseName = (S.profile && (S.profile.plantBase || S.profile.base)) || 'DaNang';
-      tripTypeBadgeHtml = `<span class="badge" style="font-size:11px;font-weight:700;color:var(--green);background:var(--gl);padding:2px 8px;border-radius:20px;border:1px solid rgba(0,132,61,0.25);">📍 Base Plant (${baseName})</span>`;
-    }
-  }
+  // IMP-57: Plant Base & Leave visual indicator badge
+  const tripTypeBadgeHtml = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
 
   document.getElementById('trip-detail-card').innerHTML=`
     <div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -11422,7 +11559,10 @@ function renderDash(){
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <div style="min-width:0;flex:1;padding-right:8px;">
-              <div style="font-size:14px;font-weight:800;color:var(--n900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${activeTrip.plant}</div>
+              <div style="font-size:14px;font-weight:800;color:var(--n900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span>${activeTrip.plant}</span>
+                ${typeof getTripTypeBadge === 'function' ? getTripTypeBadge(activeTrip) : ''}
+              </div>
               <div style="font-size:11px;color:var(--n500);margin-top:1px;">📅 ${fmtDate(activeTrip.date)}${activeTrip.location ? ' · ' + activeTrip.location : ''}</div>
             </div>
             <div style="display:flex;gap:4px;flex-shrink:0;">
@@ -11513,10 +11653,12 @@ function renderDash(){
   const upEl=document.getElementById('upcoming-trips');
   upEl.innerHTML=upcoming.length?upcoming.map(tr=>{
     const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+    const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
     return `<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
-        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;flex-wrap:wrap;">
           <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
+          ${typeBadge}
           ${wk?`<span class="badge-week">${wk}</span>`:''}
         </div>
         <span class="badge ${tr.status==='in_progress'?'bb':'ba'}" style="flex-shrink:0;">${tr.status==='in_progress'?t('inProgress'):t('planned')}</span>
@@ -11528,10 +11670,12 @@ function renderDash(){
   const recEl=document.getElementById('recent-reports');
   recEl.innerHTML=completed.length?completed.map(tr=>{
     const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+    const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
     return `<div class="card" style="cursor:pointer;" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
-        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;flex-wrap:wrap;">
           <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
+          ${typeBadge}
           ${wk?`<span class="badge-week">${wk}</span>`:''}
         </div>
         <span class="badge bg" style="flex-shrink:0;">${t('completed')}</span>
@@ -12629,7 +12773,9 @@ function renderTasks(){
     const dateRx=/^\d{4}-\d{2}-\d{2}$/;
     const dEnd=(tk.dateEnd&&dateRx.test(tk.dateEnd))?tk.dateEnd:dStart;
     const dateRange=(dStart&&dEnd&&dStart!==dEnd)?`${fmtDate(dStart)} → ${fmtDate(dEnd)}`:fmtDate(dStart);
-    const trip=tk.tripId?(S.trips.find(tr=>tr.id===tk.tripId)||{}).plant||'':'' ;
+    const trObj=tk.tripId?(S.trips||[]).find(tr=>String(tr.id)===String(tk.tripId)):null;
+    const trip=trObj?trObj.plant:'';
+    const tripBadge=(trObj&&typeof getTripTypeBadge==='function')?getTripTypeBadge(trObj):'';
     return `<div class="task-card-v4" onclick="openTaskDetail('${tk.id}')">
       <div class="tc-bar ${isOver?'overdue':cat}"></div>
       <div class="tc-body">
@@ -12647,7 +12793,7 @@ function renderTasks(){
           ${dur?`<span class="tc-meta-item">⏱ ${dur}</span>`:''}
           ${tk.machine?`<span class="tc-meta-item">🔩 ${tk.machine}</span>`:''}
           ${tk.plan?`<span class="tc-meta-item">📁 ${tk.plan}</span>`:''}
-          ${trip?`<span class="tc-meta-item">🏭 ${trip}</span>`:''}
+          ${trip?`<span class="tc-meta-item">🏭 ${trip} ${tripBadge}</span>`:''}
           ${isOver?`<span class="tc-meta-item" style="color:var(--red);font-weight:600;">⚠ Overdue</span>`:''}
         </div>
         ${tk.checklist&&tk.checklist.length?(()=>{
@@ -12787,7 +12933,10 @@ function renderKanban(body, today){
         html += '<span style="background:'+cc.bg+';color:'+cc.text+
           ';border-radius:4px;padding:2px 6px;font-size:9px;font-weight:600;">'+catIcon+' '+cc.label+'</span>';
         if(tk.machine) html += '<span style="background:#EFF6FF;color:#2563EB;border-radius:4px;padding:2px 5px;font-size:9px;">⚙️ '+tk.machine+'</span>';
-        if(trip)       html += '<span style="background:#F0FDF4;color:#15803D;border-radius:4px;padding:2px 5px;font-size:9px;">🏭 '+trip.plant+'</span>';
+        if(trip) {
+          const tripBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(trip) : '';
+          html += '<span style="background:#F0FDF4;color:#15803D;border-radius:4px;padding:2px 5px;font-size:9px;">🏭 '+trip.plant+'</span>' + (tripBadge ? ' ' + tripBadge : '');
+        }
         html += '</div>';
 
         // Status buttons - use data attributes to avoid quote escaping
@@ -12862,7 +13011,9 @@ function openTaskDetail(id){
   const isOver=(tk.dateEnd||tk.date||tk.dateStart||'')<today&&tk.status!=='done';
   const cat=tk.category||'work';const cc=catConfig(cat);
   const dur=calcDuration(tk);
-  const trip=tk.tripId?(S.trips.find(tr=>tr.id===tk.tripId)||{}).plant||'':'' ;
+  const trObj=tk.tripId?(S.trips||[]).find(tr=>String(tr.id)===String(tk.tripId)):null;
+  const trip=trObj?trObj.plant:'';
+  const tripBadge=(trObj&&typeof getTripTypeBadge==='function')?getTripTypeBadge(trObj):'';
   const dStart=tk.dateStart||tk.date||'';
   // Only use dateEnd if it's a real YYYY-MM-DD, not empty/time string
   const _dateRx=/^\d{4}-\d{2}-\d{2}$/;
@@ -12885,7 +13036,7 @@ function openTaskDetail(id){
       <div class="dg-item"><div class="dg-label">Period</div><div class="dg-val">${periodLabel(tk.period)||'—'}</div></div>
       ${tk.machine?`<div class="dg-item"><div class="dg-label">Machine</div><div class="dg-val">${tk.machine}</div></div>`:''}
       ${tk.plan?`<div class="dg-item"><div class="dg-label">Plan</div><div class="dg-val">${tk.plan}</div></div>`:''}
-      ${trip?`<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val">${trip}</div></div>`:''}
+      ${trip?`<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val">${trip} ${tripBadge}</div></div>`:''}
     </div>
     ${(tk.files&&tk.files.length)?`<div style="margin-bottom:12px;">
       <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">📎 ATTACHMENTS (${tk.files.length})</div>
@@ -18312,7 +18463,7 @@ function fmtAmt(val, currency) {
   const v = parseFloat(val) || 0;
   const cur = (currency || 'VND').toUpperCase();
   // VND is always whole numbers
-  if (cur === 'VND') return v.toLocaleString(undefined, {maximumFractionDigits: 0});
+  if (cur === 'VND') return v.toLocaleString(undefined, { maximumFractionDigits: 0 });
   // Other currencies: show decimals only if they exist
   const hasDec = (v % 1) !== 0;
   return v.toLocaleString(undefined, {
@@ -18332,90 +18483,90 @@ function getPaymentStyle(pm) {
   return { icon: '💵', val, bg: '#DCFCE7', color: '#166534', border: '#059669', badgeHtml: `<span style="background:#DCFCE7;color:#166534;border:1px solid #86EFAC;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;">💵 1-Cash</span>` };
 }
 
-function toggleVNDRow(){
-  const cur=document.getElementById('bill-currency');
-  const row=document.getElementById('bill-vnd-row');
-  if(row)row.style.display=(cur&&cur.value!=='VND')?'':'none';
-  if(cur&&cur.value==='VND'){
-    const v=document.getElementById('bill-vnd');if(v)v.value='';
+function toggleVNDRow() {
+  const cur = document.getElementById('bill-currency');
+  const row = document.getElementById('bill-vnd-row');
+  if (row) row.style.display = (cur && cur.value !== 'VND') ? '' : 'none';
+  if (cur && cur.value === 'VND') {
+    const v = document.getElementById('bill-vnd'); if (v) v.value = '';
   }
   updateVNDHint();
 }
-function updateVNDHint(){
-  const hint=document.getElementById('bill-vnd-hint');
-  if(!hint)return;
-  const amt=parseFloat(document.getElementById('bill-amount').value)||0;
-  const cur=document.getElementById('bill-currency');
-  const vnd=parseFloat(document.getElementById('bill-vnd').value)||0;
-  if(amt&&vnd&&cur&&cur.value!=='VND'){
-    const rate=Math.round(vnd/amt);
-    hint.textContent=`≈ ${rate.toLocaleString()} VND per 1 ${cur.value}`;
+function updateVNDHint() {
+  const hint = document.getElementById('bill-vnd-hint');
+  if (!hint) return;
+  const amt = parseFloat(document.getElementById('bill-amount').value) || 0;
+  const cur = document.getElementById('bill-currency');
+  const vnd = parseFloat(document.getElementById('bill-vnd').value) || 0;
+  if (amt && vnd && cur && cur.value !== 'VND') {
+    const rate = Math.round(vnd / amt);
+    hint.textContent = `≈ ${rate.toLocaleString()} VND per 1 ${cur.value}`;
   } else {
-    hint.textContent='';
+    hint.textContent = '';
   }
 }
 
 // ═══════ BILLS SCREEN ═══════
 let billFilter = 'all';
 
-function populateBillSelectors(){
+function populateBillSelectors() {
   // Trip selector
   const tripSel = document.getElementById('bf-trip-select');
-  if(tripSel){
-    const trips = [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if (tripSel) {
+    const trips = [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     const cur = tripSel.value;
     tripSel.innerHTML = '<option value="">— All Trips —</option>' +
-      trips.map(t=>`<option value="${t.id}" ${t.id===cur?'selected':''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
+      trips.map(t => `<option value="${t.id}" ${t.id === cur ? 'selected' : ''}>${t.plant} (${fmtDate(t.date)})</option>`).join('');
   }
   // Year selector
   updateBillYearOptions();
 }
 
-function updateBillYearOptions(){
+function updateBillYearOptions() {
   const yearSel = document.getElementById('bf-year-select');
-  if(!yearSel) return;
-  const years = [...new Set((S.bills||[]).map(b=>(b.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  if (!yearSel) return;
+  const years = [...new Set((S.bills || []).map(b => (b.date || '').slice(0, 4)).filter(Boolean))].sort().reverse();
   const now = new Date().getFullYear().toString();
-  if(!years.includes(now)) years.unshift(now);
+  if (!years.includes(now)) years.unshift(now);
   const cur = yearSel.value || now;
-  yearSel.innerHTML = years.map(y=>`<option value="${y}" ${y===cur?'selected':''}>${y}</option>`).join('');
+  yearSel.innerHTML = years.map(y => `<option value="${y}" ${y === cur ? 'selected' : ''}>${y}</option>`).join('');
   updateBillMonthOptions();
 }
 
-function updateBillMonthOptions(){
-  const yearSel  = document.getElementById('bf-year-select');
+function updateBillMonthOptions() {
+  const yearSel = document.getElementById('bf-year-select');
   const monthSel = document.getElementById('bf-month-select');
-  if(!monthSel) return;
+  if (!monthSel) return;
   const year = (yearSel && yearSel.value) || new Date().getFullYear().toString();
   const months = [
-    ['01','January'],['02','February'],['03','March'],['04','April'],
-    ['05','May'],['06','June'],['07','July'],['08','August'],
-    ['09','September'],['10','October'],['11','November'],['12','December']
+    ['01', 'January'], ['02', 'February'], ['03', 'March'], ['04', 'April'],
+    ['05', 'May'], ['06', 'June'], ['07', 'July'], ['08', 'August'],
+    ['09', 'September'], ['10', 'October'], ['11', 'November'], ['12', 'December']
   ];
   const now = new Date();
   const curMonth = year === now.getFullYear().toString()
-    ? String(now.getMonth()+1).padStart(2,'0')
+    ? String(now.getMonth() + 1).padStart(2, '0')
     : '01';
   const cur = monthSel.value || curMonth;
-  monthSel.innerHTML = months.map(([v,l])=>`<option value="${v}" ${v===cur?'selected':''}>${l} ${year}</option>`).join('');
+  monthSel.innerHTML = months.map(([v, l]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${l} ${year}</option>`).join('');
 }
 
 function setBillFilter(f) {
   resetBillsRenderLimit();
   billFilter = f;
   // Update active tab
-  ['all','trip','month'].forEach(id => {
+  ['all', 'trip', 'month'].forEach(id => {
     const el = document.getElementById('bf-' + id);
-    if(el) el.classList.toggle('active', id === f);
+    if (el) el.classList.toggle('active', id === f);
   });
   // Show/hide selectors
-  const tripDiv  = document.getElementById('bf-trip-selector');
+  const tripDiv = document.getElementById('bf-trip-selector');
   const monthDiv = document.getElementById('bf-month-selector');
-  if(tripDiv)  tripDiv.style.display  = f === 'trip'  ? '' : 'none';
-  if(monthDiv) monthDiv.style.display = f === 'month' ? '' : 'none';
+  if (tripDiv) tripDiv.style.display = f === 'trip' ? '' : 'none';
+  if (monthDiv) monthDiv.style.display = f === 'month' ? '' : 'none';
   // Populate options when switching to that view
-  if(f === 'trip')  populateBillSelectors();
-  if(f === 'month') updateBillYearOptions();
+  if (f === 'trip') populateBillSelectors();
+  if (f === 'month') updateBillYearOptions();
   renderBillsScreen();
 }
 
@@ -18424,9 +18575,9 @@ let billPaymentFilter = 'all';
 
 function setBillPaymentFilter(pm) {
   billPaymentFilter = pm;
-  ['all','cash','bank','card'].forEach(k => {
+  ['all', 'cash', 'bank', 'card'].forEach(k => {
     const el = document.getElementById('bpf-' + k);
-    if(el) el.classList.toggle('active', k === pm);
+    if (el) el.classList.toggle('active', k === pm);
   });
   renderBillsScreen();
 }
@@ -18436,25 +18587,25 @@ function openAddBillFromScreen() {
   editingBillId = null;
   tmpBillPhotos = [];
   _savingBill = false;
-  const _sb3=document.getElementById('bill-save-btn');
-  if(_sb3){ _sb3.disabled=false; _sb3.textContent='💾 Save Bill'; }
+  const _sb3 = document.getElementById('bill-save-btn');
+  if (_sb3) { _sb3.disabled = false; _sb3.textContent = '💾 Save Bill'; }
   document.getElementById('bill-modal-title').textContent = 'Add Bill';
   document.getElementById('bill-edit-id').textContent = '';
   document.getElementById('bill-save-btn').textContent = '💾 Save Bill';
-  ['bill-detail','bill-number','bill-amount','bill-notes'].forEach(id => {
+  ['bill-detail', 'bill-number', 'bill-amount', 'bill-notes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  document.getElementById('bill-date').value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10);
+  document.getElementById('bill-date').value = typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10);
   document.getElementById('bill-currency').value = 'VND';
   document.getElementById('bill-category').value = 'other';
   const pmEl = document.getElementById('bill-payment-method'); if (pmEl) pmEl.value = '1-Cash';
-  const vndElS=document.getElementById('bill-vnd');if(vndElS)vndElS.value='';
+  const vndElS = document.getElementById('bill-vnd'); if (vndElS) vndElS.value = '';
   toggleVNDRow();
   renderBillPhotoGrid();
   // Populate trip selector for linking
   const tripSel = document.getElementById('bill-trip-select');
   if (tripSel) {
-    const trips = typeof getSortedTrips==='function' ? getSortedTrips() : [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     tripSel.innerHTML = '<option value="">No trip link</option>' +
       trips.map(t => `<option value="${t.id}">${t.plant} (${fmtDate(t.date)})</option>`).join('');
     // Auto-select active trip of current week if available
@@ -18489,7 +18640,7 @@ function renderBillsScreen() {
   if (!body) return;
 
   const now = new Date();
-  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const s = v => (v === null || v === undefined) ? '' : String(v);
 
   let bills = [...(S.bills || [])];
@@ -18497,14 +18648,14 @@ function renderBillsScreen() {
   if (billFilter === 'trip') {
     const selTrip = document.getElementById('bf-trip-select');
     const tripVal = selTrip ? selTrip.value : '';
-    if(tripVal) bills = bills.filter(b => b.tripId === tripVal);
+    if (tripVal) bills = bills.filter(b => b.tripId === tripVal);
   }
   if (billFilter === 'month') {
-    const yearSel  = document.getElementById('bf-year-select');
+    const yearSel = document.getElementById('bf-year-select');
     const monthSel = document.getElementById('bf-month-select');
-    const year  = (yearSel  && yearSel.value)  || new Date().getFullYear().toString();
-    const month = (monthSel && monthSel.value) || String(new Date().getMonth()+1).padStart(2,'0');
-    bills = bills.filter(b => (b.date||'').startsWith(`${year}-${month}`));
+    const year = (yearSel && yearSel.value) || new Date().getFullYear().toString();
+    const month = (monthSel && monthSel.value) || String(new Date().getMonth() + 1).padStart(2, '0');
+    bills = bills.filter(b => (b.date || '').startsWith(`${year}-${month}`));
   }
 
   // Lọc theo hình thức thanh toán (IMP-07)
@@ -18541,21 +18692,21 @@ function renderBillsScreen() {
     byCur[c] = (byCur[c] || 0) + (parseFloat(b.amount) || 0);
   });
   // Grand total in VND
-  const grandVND = bills.reduce((s,b)=>{
-    if((b.currency||'VND')==='VND') return s+(parseFloat(b.amount)||0);
-    return s+(parseFloat(b.vndAmount)||0);
-  },0);
+  const grandVND = bills.reduce((s, b) => {
+    if ((b.currency || 'VND') === 'VND') return s + (parseFloat(b.amount) || 0);
+    return s + (parseFloat(b.vndAmount) || 0);
+  }, 0);
 
   let html = '';
 
   // Total summary card — VND grand total prominent, then each currency
   html += `<div class="card" style="margin-bottom:10px;">
     <div style="font-size:11px;font-weight:700;color:var(--g500);letter-spacing:0.07em;margin-bottom:8px;">TOTAL EXPENSES (${bills.length} bills)</div>
-    ${grandVND?`
+    ${grandVND ? `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:2px solid var(--amber);margin-bottom:4px;">
       <span style="font-size:13px;font-weight:700;color:#92400E;">Grand Total (VND)</span>
       <span style="font-size:20px;font-weight:700;color:#92400E;">${fmtAmt(grandVND, "VND")} ₫</span>
-    </div>`:''}
+    </div>`: ''}
     ${Object.entries(byCur).map(([c, t]) => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--g100);">
         <span style="font-size:12px;color:var(--g500);">${c}</span>
@@ -18583,8 +18734,8 @@ function renderBillsScreen() {
       const tripName = trip ? trip.plant : 'No trip linked';
       const tripDate = trip ? fmtDate(trip.date) : '';
       const tripTotal = {};
-      tripBills.forEach(b => { const c = b.currency||'VND'; tripTotal[c] = (tripTotal[c]||0) + (parseFloat(b.amount)||0); });
-      const totalStr = Object.entries(tripTotal).map(([c,t]) => `${fmtAmt(t, c)} ${c}`).join(' + ');
+      tripBills.forEach(b => { const c = b.currency || 'VND'; tripTotal[c] = (tripTotal[c] || 0) + (parseFloat(b.amount) || 0); });
+      const totalStr = Object.entries(tripTotal).map(([c, t]) => `${fmtAmt(t, c)} ${c}`).join(' + ');
       html += `<div style="display:flex;justify-content:space-between;align-items:center;background:#00843D;color:#fff;border-radius:var(--rs) var(--rs) 0 0;padding:8px 12px;">
         <div>
           <div style="font-size:13px;font-weight:600;">🏭 ${tripName}</div>
@@ -18593,7 +18744,7 @@ function renderBillsScreen() {
         <div style="font-size:13px;font-weight:700;">${totalStr}</div>
       </div>
       <div style="background:var(--surface);border-radius:0 0 var(--rs) var(--rs);box-shadow:var(--sh);margin-bottom:12px;">
-        ${tripBills.sort((a,b)=>b.date.localeCompare(a.date)).map(b => renderBillRow(b)).join('')}
+        ${tripBills.sort((a, b) => b.date.localeCompare(a.date)).map(b => renderBillRow(b)).join('')}
       </div>`;
     });
   } else {
@@ -18606,8 +18757,8 @@ function renderBillsScreen() {
     });
     Object.entries(byDate).forEach(([dateKey, dayBills]) => {
       const dayTotal = {};
-      dayBills.forEach(b => { const c = b.currency||'VND'; dayTotal[c] = (dayTotal[c]||0) + (parseFloat(b.amount)||0); });
-      const dTotalStr = Object.entries(dayTotal).map(([c,t]) => `${fmtAmt(t, c)} ${c}`).join(' + ');
+      dayBills.forEach(b => { const c = b.currency || 'VND'; dayTotal[c] = (dayTotal[c] || 0) + (parseFloat(b.amount) || 0); });
+      const dTotalStr = Object.entries(dayTotal).map(([c, t]) => `${fmtAmt(t, c)} ${c}`).join(' + ');
       const trip = dayBills[0].tripId ? S.trips.find(t => t.id === dayBills[0].tripId) : null;
       html += `<div class="bill-day-header">
         <div>
@@ -18641,8 +18792,8 @@ function renderBillRow(b) {
   const amt = fmtAmt(b.amount, b.currency);
   const hasVND = b.currency !== 'VND' && b.vndAmount;
   const vndAmt = hasVND ? fmtAmt(b.vndAmount, 'VND') : null;
-  const catIcon = {accommodation:'🏨',travel:'✈️',meals:'🍽',parts:'🔩',tools:'🔧',other:'📋'}[b.category] || '📋';
-  const catLabel = {accommodation:'Accommodation',travel:'Travel',meals:'Meals',parts:'Parts/Materials',tools:'Tools',other:'Other'}[b.category] || 'Other';
+  const catIcon = { accommodation: '🏨', travel: '✈️', meals: '🍽', parts: '🔩', tools: '🔧', other: '📋' }[b.category] || '📋';
+  const catLabel = { accommodation: 'Accommodation', travel: 'Travel', meals: 'Meals', parts: 'Parts/Materials', tools: 'Tools', other: 'Other' }[b.category] || 'Other';
   const pm = getPaymentStyle(b.paymentMethod || b.paymentTerm);
   return `<div style="padding:10px 12px;border-bottom:1px solid var(--g100);border-left:4px solid ${pm.border};margin-bottom:2px;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
@@ -18655,12 +18806,12 @@ function renderBillRow(b) {
           ${b.notes ? `<span style="font-size:11px;color:var(--g500);">${b.notes}</span>` : ''}
         </div>
         ${b.photos && b.photos.length ? `<div class="bill-photo-strip" style="margin-top:6px;">
-          ${b.photos.map((p,pi) => `<img class="bill-photo-thumb" src="${p}" onclick="viewBillPhoto('${b.id}',${pi})" title="Tap to view">`).join('')}
+          ${b.photos.map((p, pi) => `<img class="bill-photo-thumb" src="${p}" onclick="viewBillPhoto('${b.id}',${pi})" title="Tap to view">`).join('')}
         </div>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
-        <div class="bill-amount">${amt} ${b.currency||''}</div>
-        ${vndAmt?`<div style="font-size:11px;color:var(--g500);text-align:right;margin-top:1px;">= ${vndAmt} ₫</div>`:''}
+        <div class="bill-amount">${amt} ${b.currency || ''}</div>
+        ${vndAmt ? `<div style="font-size:11px;color:var(--g500);text-align:right;margin-top:1px;">= ${vndAmt} ₫</div>` : ''}
         <div style="display:flex;gap:4px;">
           <button onclick="openEditBill('${b.id}');event.stopPropagation()" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--g200);background:var(--surface);cursor:pointer;font-size:13px;" title="Edit">✏️</button>
           <button onclick="deleteBillFromScreen('${b.id}')" class="db" title="Delete">×</button>
@@ -18692,12 +18843,12 @@ async function deleteBillFromScreen(id) {
   }
 
   // IMP-31: Single-row Trip Claim update when bill is deleted
-  if(tripIdOfDeleted && typeof calculateTripTotalClaim === 'function'){
+  if (tripIdOfDeleted && typeof calculateTripTotalClaim === 'function') {
     const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tripIdOfDeleted));
-    if(claim){
+    if (claim) {
       claim.totalClaim = calculateTripTotalClaim(tripIdOfDeleted);
       claim.updatedAt = new Date().toISOString();
-      if(typeof syncSingleTripClaim === 'function'){
+      if (typeof syncSingleTripClaim === 'function') {
         syncSingleTripClaim(claim);
       }
     }
@@ -18711,7 +18862,7 @@ async function deleteBillFromScreen(id) {
 function openBillExport() {
   const sel = document.getElementById('bill-pdf-trip');
   if (sel) {
-    const trips = typeof getSortedTrips==='function' ? getSortedTrips() : [...(S.trips||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     sel.innerHTML = '<option value="all">All trips</option>' +
       trips.map(t => `<option value="${t.id}">${t.plant} — ${fmtDate(t.date)}</option>`).join('');
     sel.onchange = () => { updateBillExportTitle(); buildBillPDFPreview(); };
@@ -18753,18 +18904,18 @@ function buildBillPDFPreview() {
 
   const byCur = {};
   bills.forEach(b => {
-    const c = b.currency||'VND'; byCur[c] = (byCur[c]||0) + (parseFloat(b.amount)||0);
+    const c = b.currency || 'VND'; byCur[c] = (byCur[c] || 0) + (parseFloat(b.amount) || 0);
   });
   // Per-currency only — no grand VND total in summary
-  const totalStr = Object.entries(byCur).map(([c,t]) =>
+  const totalStr = Object.entries(byCur).map(([c, t]) =>
     `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--g100);">
       <span style="color:var(--g600);font-weight:500;">${c}</span>
       <span style="font-weight:700;color:#92400E;">${fmtAmt(t, c)} ${c}</span>
     </div>`).join('');
-  const exportDate = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const exportDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const byDate = {};
-  bills.forEach(b => { const d = b.date||''; if(!byDate[d]) byDate[d]=[]; byDate[d].push(b); });
+  bills.forEach(b => { const d = b.date || ''; if (!byDate[d]) byDate[d] = []; byDate[d].push(b); });
 
   const previewTitle = (document.getElementById('bill-pdf-title') ? document.getElementById('bill-pdf-title').value : '') || 'Expense Report';
   let html = `<div class="pprev">
@@ -18779,26 +18930,26 @@ function buildBillPDFPreview() {
     </div>`;
 
   Object.entries(byDate).forEach(([dateKey, dayBills]) => {
-    const dt = {}; dayBills.forEach(b=>{const c=b.currency||'VND';dt[c]=(dt[c]||0)+(parseFloat(b.amount)||0);});
-    const dtStr = Object.entries(dt).map(([c,t])=>`${fmtAmt(t, c)} ${c}`).join(' + ');
-    const trip = dayBills[0].tripId ? S.trips.find(t=>t.id===dayBills[0].tripId) : null;
+    const dt = {}; dayBills.forEach(b => { const c = b.currency || 'VND'; dt[c] = (dt[c] || 0) + (parseFloat(b.amount) || 0); });
+    const dtStr = Object.entries(dt).map(([c, t]) => `${fmtAmt(t, c)} ${c}`).join(' + ');
+    const trip = dayBills[0].tripId ? S.trips.find(t => t.id === dayBills[0].tripId) : null;
     html += `<div class="ps">
       <div style="display:flex;justify-content:space-between;background:var(--al);border-radius:5px;padding:5px 8px;margin-bottom:6px;">
         <div><div style="font-size:11px;font-weight:700;color:#92400E;">📅 ${fmtDate(dateKey)}</div>
-        ${trip?`<div style="font-size:10px;color:#92400E;">🏭 ${trip.plant}</div>`:''}</div>
+        ${trip ? `<div style="font-size:10px;color:#92400E;">🏭 ${trip.plant}</div>` : ''}</div>
         <div style="font-size:12px;font-weight:700;color:#92400E;">${dtStr}</div>
       </div>
-      ${dayBills.map(b=>{
-        const catIcon={accommodation:'🏨',travel:'✈️',meals:'🍽',parts:'🔩',tools:'🔧',other:'📋'}[b.category]||'📋';
-        const pm=getPaymentStyle(b.paymentMethod||b.paymentTerm);
-        return `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--g100);border-left:3px solid ${pm.border};padding-left:6px;margin-bottom:2px;">
-          <div><div style="font-weight:500;">${catIcon} ${b.billNumber?'[#'+b.billNumber+'] ':''}${b.detail} ${pm.badgeHtml}</div>
-          ${b.notes?`<div style="font-size:10px;color:var(--g500);">${b.notes}</div>`:''}
-          ${b.photos&&b.photos.length?`<div style="font-size:10px;color:var(--blue);">📷 ${b.photos.length} photo${b.photos.length>1?'s':''}</div>`:''}
+      ${dayBills.map(b => {
+      const catIcon = { accommodation: '🏨', travel: '✈️', meals: '🍽', parts: '🔩', tools: '🔧', other: '📋' }[b.category] || '📋';
+      const pm = getPaymentStyle(b.paymentMethod || b.paymentTerm);
+      return `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid var(--g100);border-left:3px solid ${pm.border};padding-left:6px;margin-bottom:2px;">
+          <div><div style="font-weight:500;">${catIcon} ${b.billNumber ? '[#' + b.billNumber + '] ' : ''}${b.detail} ${pm.badgeHtml}</div>
+          ${b.notes ? `<div style="font-size:10px;color:var(--g500);">${b.notes}</div>` : ''}
+          ${b.photos && b.photos.length ? `<div style="font-size:10px;color:var(--blue);">📷 ${b.photos.length} photo${b.photos.length > 1 ? 's' : ''}</div>` : ''}
           </div>
-          <div style="font-weight:700;color:#92400E;flex-shrink:0;margin-left:8px;">${fmtAmt(b.amount, b.currency)} ${b.currency||''}</div>
+          <div style="font-weight:700;color:#92400E;flex-shrink:0;margin-left:8px;">${fmtAmt(b.amount, b.currency)} ${b.currency || ''}</div>
         </div>`;
-      }).join('')}
+    }).join('')}
     </div>`;
   });
   html += '</div>';
@@ -18811,74 +18962,74 @@ function buildBillPDFPreview() {
 }
 
 function exportBillsPDF() {
-  if(typeof window.jspdf==='undefined'){showToast('PDF loading...');setTimeout(exportBillsPDF,1500);return;}
-  const{jsPDF}=window.jspdf;
-  const tripFilter=document.getElementById('bill-pdf-trip')?document.getElementById('bill-pdf-trip').value:'all';
-  const reportTitle=(document.getElementById('bill-pdf-title')?document.getElementById('bill-pdf-title').value.trim():'')||'Expense Report';
-  const p=S.profile;
-  let bills=[...(S.bills||[])];
-  if(tripFilter!=='all')bills=bills.filter(b=>b.tripId===tripFilter);
-  bills.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  if(!bills.length){showToast('No bills to export');return;}
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
-  if(typeof attachPdfTextNormalizer==='function') attachPdfTextNormalizer(doc);
-  const W=210,mg=16;let y=20,pageNum=1;const R=W-mg;
-  const rtxt=(str,yy,col)=>{if(col)doc.setTextColor(...col);const tw=doc.getTextWidth(String(str));doc.text(String(str),R-tw,yy);if(col)doc.setTextColor(33,37,41);};
-  const chk=()=>{if(y>265){doc.addPage();y=20;pageNum++;addPN();}};
-  const addPN=()=>{doc.setFontSize(7);doc.setTextColor(150,150,150);doc.setFont('helvetica','normal');rtxt(`Page ${pageNum}`,289);doc.text('PlantLog Bills  ·  '+new Date().toLocaleDateString('en-GB'),mg,289);};
-  const sec=(title)=>{doc.setFillColor(241,243,245);doc.rect(mg,y-4,W-mg*2,8,'F');doc.setTextColor(0,132,61);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text(title,mg+2,y+1);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=9;chk();};
-  doc.setFillColor(0,132,61);doc.rect(0,0,W,36,'F');doc.setTextColor(255,255,255);
-  const tl=doc.splitTextToSize(reportTitle,W-mg*2);doc.setFontSize(tl.length>1?11:15);doc.setFont('helvetica','bold');doc.text(tl,mg,tl.length>1?9:13);
-  doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.text('Date: '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),mg,22);doc.text(`${p.name||'Engineer'}${p.title?' · '+p.title:''}${p.company?' · '+p.company:''}`,mg,28);y=42;
-  const computeTotals=(bs)=>{const byCur={};let vt=0;bs.forEach(b=>{const c=b.currency||'VND';byCur[c]=(byCur[c]||0)+(parseFloat(b.amount)||0);if(c==='VND')vt+=(parseFloat(b.amount)||0);else vt+=(parseFloat(b.vndAmount)||0);});return{byCur,vndTotal:vt};};
-  const{byCur:allByCur,vndTotal:grandVND}=computeTotals(bills);
+  if (typeof window.jspdf === 'undefined') { showToast('PDF loading...'); setTimeout(exportBillsPDF, 1500); return; }
+  const { jsPDF } = window.jspdf;
+  const tripFilter = document.getElementById('bill-pdf-trip') ? document.getElementById('bill-pdf-trip').value : 'all';
+  const reportTitle = (document.getElementById('bill-pdf-title') ? document.getElementById('bill-pdf-title').value.trim() : '') || 'Expense Report';
+  const p = S.profile;
+  let bills = [...(S.bills || [])];
+  if (tripFilter !== 'all') bills = bills.filter(b => b.tripId === tripFilter);
+  bills.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  if (!bills.length) { showToast('No bills to export'); return; }
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+  if (typeof attachPdfTextNormalizer === 'function') attachPdfTextNormalizer(doc);
+  const W = 210, mg = 16; let y = 20, pageNum = 1; const R = W - mg;
+  const rtxt = (str, yy, col) => { if (col) doc.setTextColor(...col); const tw = doc.getTextWidth(String(str)); doc.text(String(str), R - tw, yy); if (col) doc.setTextColor(33, 37, 41); };
+  const chk = () => { if (y > 265) { doc.addPage(); y = 20; pageNum++; addPN(); } };
+  const addPN = () => { doc.setFontSize(7); doc.setTextColor(150, 150, 150); doc.setFont('helvetica', 'normal'); rtxt(`Page ${pageNum}`, 289); doc.text('PlantLog Bills  ·  ' + new Date().toLocaleDateString('en-GB'), mg, 289); };
+  const sec = (title) => { doc.setFillColor(241, 243, 245); doc.rect(mg, y - 4, W - mg * 2, 8, 'F'); doc.setTextColor(0, 132, 61); doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.text(title, mg + 2, y + 1); doc.setTextColor(33, 37, 41); doc.setFont('helvetica', 'normal'); y += 9; chk(); };
+  doc.setFillColor(0, 132, 61); doc.rect(0, 0, W, 36, 'F'); doc.setTextColor(255, 255, 255);
+  const tl = doc.splitTextToSize(reportTitle, W - mg * 2); doc.setFontSize(tl.length > 1 ? 11 : 15); doc.setFont('helvetica', 'bold'); doc.text(tl, mg, tl.length > 1 ? 9 : 13);
+  doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.text('Date: ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }), mg, 22); doc.text(`${p.name || 'Engineer'}${p.title ? ' · ' + p.title : ''}${p.company ? ' · ' + p.company : ''}`, mg, 28); y = 42;
+  const computeTotals = (bs) => { const byCur = {}; let vt = 0; bs.forEach(b => { const c = b.currency || 'VND'; byCur[c] = (byCur[c] || 0) + (parseFloat(b.amount) || 0); if (c === 'VND') vt += (parseFloat(b.amount) || 0); else vt += (parseFloat(b.vndAmount) || 0); }); return { byCur, vndTotal: vt }; };
+  const { byCur: allByCur, vndTotal: grandVND } = computeTotals(bills);
   sec(`EXPENSE SUMMARY  (${bills.length} bills)`);
-  doc.setFontSize(9);doc.setFont('helvetica','normal');Object.entries(allByCur).forEach(([c,t])=>{doc.setTextColor(80,80,80);doc.text(c,mg+4,y);doc.setFont('helvetica','bold');rtxt(fmtAmt(t,c)+' '+c,y,[100,60,0]);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);y+=5;});
-  doc.setDrawColor(220,220,220);doc.line(mg,y,W-mg,y);y+=6;
-  const byTrip={};bills.forEach(b=>{const k=b.tripId||'__none__';if(!byTrip[k])byTrip[k]=[];byTrip[k].push(b);});
-  const tripCount=Object.keys(byTrip).length;
-  if(tripCount>1){sec('SUMMARY BY TRIP');Object.entries(byTrip).forEach(([tid,tb])=>{const tr=S.trips.find(t=>t.id===tid);const{byCur:tC,vndTotal:tV}=computeTotals(tb);const brk=Object.entries(tC).map(([c,t])=>fmtAmt(t,c)+' '+c).join('  ·  ');doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text(`${tr?tr.plant:'No trip'}${tr&&tr.date?' ('+fmtDate(tr.date)+')':''}`,mg+2,y);rtxt(fmtAmt(tV,'VND')+' VND',y,[146,64,14]);y+=4;doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(130,130,130);doc.text(brk,mg+4,y);y+=6;chk();});doc.setDrawColor(220,220,220);doc.line(mg,y,W-mg,y);y+=6;}
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); Object.entries(allByCur).forEach(([c, t]) => { doc.setTextColor(80, 80, 80); doc.text(c, mg + 4, y); doc.setFont('helvetica', 'bold'); rtxt(fmtAmt(t, c) + ' ' + c, y, [100, 60, 0]); doc.setFont('helvetica', 'normal'); doc.setTextColor(33, 37, 41); y += 5; });
+  doc.setDrawColor(220, 220, 220); doc.line(mg, y, W - mg, y); y += 6;
+  const byTrip = {}; bills.forEach(b => { const k = b.tripId || '__none__'; if (!byTrip[k]) byTrip[k] = []; byTrip[k].push(b); });
+  const tripCount = Object.keys(byTrip).length;
+  if (tripCount > 1) { sec('SUMMARY BY TRIP'); Object.entries(byTrip).forEach(([tid, tb]) => { const tr = S.trips.find(t => t.id === tid); const { byCur: tC, vndTotal: tV } = computeTotals(tb); const brk = Object.entries(tC).map(([c, t]) => fmtAmt(t, c) + ' ' + c).join('  ·  '); doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(33, 37, 41); doc.text(`${tr ? tr.plant : 'No trip'}${tr && tr.date ? ' (' + fmtDate(tr.date) + ')' : ''}`, mg + 2, y); rtxt(fmtAmt(tV, 'VND') + ' VND', y, [146, 64, 14]); y += 4; doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(130, 130, 130); doc.text(brk, mg + 4, y); y += 6; chk(); }); doc.setDrawColor(220, 220, 220); doc.line(mg, y, W - mg, y); y += 6; }
   sec('BILL DETAILS');
-  Object.entries(byTrip).forEach(([tid,tripBills])=>{
-    const trip=S.trips.find(t=>t.id===tid);const{byCur:tCur,vndTotal:tVND}=computeTotals(tripBills);
-    if(tripCount>1){doc.setFillColor(0,132,61);doc.rect(mg,y-3,W-mg*2,8,'F');doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text((trip?trip.plant:'No trip'),mg+3,y+1);rtxt(fmtAmt(tVND,'VND')+' VND',y+1,[255,220,150]);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=10;chk();}
-    const byDate={};tripBills.forEach(b=>{const d=b.date||'';if(!byDate[d])byDate[d]=[];byDate[d].push(b);});
-    Object.entries(byDate).forEach(([dk,dayBills])=>{
-      const{byCur:dCur,vndTotal:dVND}=computeTotals(dayBills);const dtStr=Object.entries(dCur).map(([c,t])=>fmtAmt(t,c)+' '+c).join(' + ');
-      doc.setFillColor(254,243,199);doc.rect(mg,y-3,W-mg*2,7,'F');doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(120,53,15);doc.text(fmtDate(dk),mg+3,y+1);rtxt(dVND?dtStr+' = '+fmtAmt(dVND,'VND')+' VND':dtStr,y+1,[120,53,15]);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=8;chk();
-      dayBills.forEach(b=>{
-        const catLabel={accommodation:'Accommodation',travel:'Travel',meals:'Meals',parts:'Parts/Materials',tools:'Tools',other:'Other'}[b.category]||'Other';
-        if(b.billNumber){doc.setFontSize(7.5);doc.setTextColor(140,140,140);doc.text('Receipt #'+b.billNumber,mg+4,y);y+=4;chk();}
-        const bl=doc.splitTextToSize('• '+b.detail,W-mg*2-42);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);doc.text(bl,mg+2,y);doc.setFont('helvetica','bold');rtxt(fmtAmt(b.amount,b.currency)+' '+(b.currency||'VND'),y,[146,64,14]);doc.setFont('helvetica','normal');doc.setTextColor(33,37,41);y+=bl.length*5;
-        if(b.currency!=='VND'&&b.vndAmount){doc.setFontSize(8);doc.setTextColor(120,80,0);rtxt('= '+fmtAmt(b.vndAmount,'VND')+' VND',y);y+=4;}
-        const meta=[catLabel,b.paymentMethod||b.paymentTerm||'1-Cash',b.notes].filter(Boolean).join('  ·  ');if(meta){doc.setFontSize(8);doc.setTextColor(120,120,120);doc.text(meta,mg+6,y);y+=4;}
-        if(b.photos&&b.photos.length){const mx=Math.min(b.photos.length,3);chk();for(let pi=0;pi<mx;pi++){try{if(y+28>265){doc.addPage();y=20;pageNum++;addPN();}doc.addImage(b.photos[pi],'JPEG',mg+6+(pi*36),y,30,23);}catch(e){}}if(mx>0)y+=26;}
-        y+=2;chk();
+  Object.entries(byTrip).forEach(([tid, tripBills]) => {
+    const trip = S.trips.find(t => t.id === tid); const { byCur: tCur, vndTotal: tVND } = computeTotals(tripBills);
+    if (tripCount > 1) { doc.setFillColor(0, 132, 61); doc.rect(mg, y - 3, W - mg * 2, 8, 'F'); doc.setTextColor(255, 255, 255); doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.text((trip ? trip.plant : 'No trip'), mg + 3, y + 1); rtxt(fmtAmt(tVND, 'VND') + ' VND', y + 1, [255, 220, 150]); doc.setTextColor(33, 37, 41); doc.setFont('helvetica', 'normal'); y += 10; chk(); }
+    const byDate = {}; tripBills.forEach(b => { const d = b.date || ''; if (!byDate[d]) byDate[d] = []; byDate[d].push(b); });
+    Object.entries(byDate).forEach(([dk, dayBills]) => {
+      const { byCur: dCur, vndTotal: dVND } = computeTotals(dayBills); const dtStr = Object.entries(dCur).map(([c, t]) => fmtAmt(t, c) + ' ' + c).join(' + ');
+      doc.setFillColor(254, 243, 199); doc.rect(mg, y - 3, W - mg * 2, 7, 'F'); doc.setFontSize(8.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(120, 53, 15); doc.text(fmtDate(dk), mg + 3, y + 1); rtxt(dVND ? dtStr + ' = ' + fmtAmt(dVND, 'VND') + ' VND' : dtStr, y + 1, [120, 53, 15]); doc.setTextColor(33, 37, 41); doc.setFont('helvetica', 'normal'); y += 8; chk();
+      dayBills.forEach(b => {
+        const catLabel = { accommodation: 'Accommodation', travel: 'Travel', meals: 'Meals', parts: 'Parts/Materials', tools: 'Tools', other: 'Other' }[b.category] || 'Other';
+        if (b.billNumber) { doc.setFontSize(7.5); doc.setTextColor(140, 140, 140); doc.text('Receipt #' + b.billNumber, mg + 4, y); y += 4; chk(); }
+        const bl = doc.splitTextToSize('• ' + b.detail, W - mg * 2 - 42); doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(33, 37, 41); doc.text(bl, mg + 2, y); doc.setFont('helvetica', 'bold'); rtxt(fmtAmt(b.amount, b.currency) + ' ' + (b.currency || 'VND'), y, [146, 64, 14]); doc.setFont('helvetica', 'normal'); doc.setTextColor(33, 37, 41); y += bl.length * 5;
+        if (b.currency !== 'VND' && b.vndAmount) { doc.setFontSize(8); doc.setTextColor(120, 80, 0); rtxt('= ' + fmtAmt(b.vndAmount, 'VND') + ' VND', y); y += 4; }
+        const meta = [catLabel, b.paymentMethod || b.paymentTerm || '1-Cash', b.notes].filter(Boolean).join('  ·  '); if (meta) { doc.setFontSize(8); doc.setTextColor(120, 120, 120); doc.text(meta, mg + 6, y); y += 4; }
+        if (b.photos && b.photos.length) { const mx = Math.min(b.photos.length, 3); chk(); for (let pi = 0; pi < mx; pi++) { try { if (y + 28 > 265) { doc.addPage(); y = 20; pageNum++; addPN(); } doc.addImage(b.photos[pi], 'JPEG', mg + 6 + (pi * 36), y, 30, 23); } catch (e) { } } if (mx > 0) y += 26; }
+        y += 2; chk();
       });
-      doc.setDrawColor(245,158,11);doc.line(mg+4,y,W-mg,y);y+=3;doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(120,53,15);doc.text('Day subtotal:',mg+6,y+1);rtxt(dVND?fmtAmt(dVND,'VND')+' VND  ('+dtStr+')':dtStr,y+1,[120,53,15]);doc.setTextColor(33,37,41);doc.setFont('helvetica','normal');y+=7;chk();y+=3;
+      doc.setDrawColor(245, 158, 11); doc.line(mg + 4, y, W - mg, y); y += 3; doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(120, 53, 15); doc.text('Day subtotal:', mg + 6, y + 1); rtxt(dVND ? fmtAmt(dVND, 'VND') + ' VND  (' + dtStr + ')' : dtStr, y + 1, [120, 53, 15]); doc.setTextColor(33, 37, 41); doc.setFont('helvetica', 'normal'); y += 7; chk(); y += 3;
     });
-    if(tripCount>1){const{byCur:tC2,vndTotal:tV2}=computeTotals(tripBills);const brk2=Object.entries(tC2).map(([c,t])=>fmtAmt(t,c)+' '+c).join('  ·  ');doc.setDrawColor(0,132,61);doc.line(mg,y,W-mg,y);y+=3;doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text(`Total — ${trip?trip.plant:'No trip'}`,mg+2,y+1);rtxt(fmtAmt(tV2,'VND')+' VND  ('+brk2+')',y+1,[0,132,61]);y+=8;chk();y+=3;}
+    if (tripCount > 1) { const { byCur: tC2, vndTotal: tV2 } = computeTotals(tripBills); const brk2 = Object.entries(tC2).map(([c, t]) => fmtAmt(t, c) + ' ' + c).join('  ·  '); doc.setDrawColor(0, 132, 61); doc.line(mg, y, W - mg, y); y += 3; doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(33, 37, 41); doc.text(`Total — ${trip ? trip.plant : 'No trip'}`, mg + 2, y + 1); rtxt(fmtAmt(tV2, 'VND') + ' VND  (' + brk2 + ')', y + 1, [0, 132, 61]); y += 8; chk(); y += 3; }
   });
-  doc.setDrawColor(0,132,61);doc.line(mg,y,W-mg,y);y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(33,37,41);doc.text('GRAND TOTAL',mg+2,y+1);rtxt(fmtAmt(grandVND,'VND')+' VND',y+1,[146,64,14]);y+=7;doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(120,120,120);const brkAll=Object.entries(allByCur).map(([c,t])=>fmtAmt(t,c)+' '+c).join('  ·  ');if(brkAll){doc.text(brkAll,mg+2,y);y+=5;}
+  doc.setDrawColor(0, 132, 61); doc.line(mg, y, W - mg, y); y += 4; doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(33, 37, 41); doc.text('GRAND TOTAL', mg + 2, y + 1); rtxt(fmtAmt(grandVND, 'VND') + ' VND', y + 1, [146, 64, 14]); y += 7; doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(120, 120, 120); const brkAll = Object.entries(allByCur).map(([c, t]) => fmtAmt(t, c) + ' ' + c).join('  ·  '); if (brkAll) { doc.text(brkAll, mg + 2, y); y += 5; }
   addPN();
-  const safeName2=reportTitle.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_').slice(0,40);
-  const bFileName=`Bills_${safeName2}_${(typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0,10)).replace(/-/g,'')}.pdf`;
+  const safeName2 = reportTitle.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_').slice(0, 40);
+  const bFileName = `Bills_${safeName2}_${(typeof localDateStr === 'function' ? localDateStr() : new Date().toISOString().slice(0, 10)).replace(/-/g, '')}.pdf`;
   // Pass tripId so the Drive upload links to correct trip
-  const billsTripId = (tripFilter && tripFilter !== 'all') ? tripFilter : (curTrip||null);
+  const billsTripId = (tripFilter && tripFilter !== 'all') ? tripFilter : (curTrip || null);
   showPdfSaveOptions(doc, bFileName, 'bills', billsTripId);
 }
 
 function emailBillsReport() {
   const title = document.getElementById('bill-pdf-title') ? document.getElementById('bill-pdf-title').value.trim() : 'Expense Report';
   const tripFilter = document.getElementById('bill-pdf-trip') ? document.getElementById('bill-pdf-trip').value : 'all';
-  let bills = [...(S.bills||[])];
-  if (tripFilter !== 'all') bills = bills.filter(b=>b.tripId===tripFilter);
+  let bills = [...(S.bills || [])];
+  if (tripFilter !== 'all') bills = bills.filter(b => b.tripId === tripFilter);
   const byCur = {};
-  bills.forEach(b=>{const c=b.currency||'VND';byCur[c]=(byCur[c]||0)+(parseFloat(b.amount)||0);});
-  const totalStr = Object.entries(byCur).map(([c,t])=>fmtAmt(t, c)+' '+c).join(' + ');
+  bills.forEach(b => { const c = b.currency || 'VND'; byCur[c] = (byCur[c] || 0) + (parseFloat(b.amount) || 0); });
+  const totalStr = Object.entries(byCur).map(([c, t]) => fmtAmt(t, c) + ' ' + c).join(' + ');
   document.getElementById('email-subject').value = title;
   document.getElementById('email-body').value =
-    `Please find attached the expense report.\n\nTitle: ${title}\nBills: ${bills.length}\nTotal: ${totalStr}\nPrepared by: ${S.profile.name||'Engineer'}\nDate: ${new Date().toLocaleDateString('en-GB')}\n\nPlease download and attach the PDF from the app.\n\nBest regards,\n${S.profile.name||'Engineer'}`;
+    `Please find attached the expense report.\n\nTitle: ${title}\nBills: ${bills.length}\nTotal: ${totalStr}\nPrepared by: ${S.profile.name || 'Engineer'}\nDate: ${new Date().toLocaleDateString('en-GB')}\n\nPlease download and attach the PDF from the app.\n\nBest regards,\n${S.profile.name || 'Engineer'}`;
   openModal('modal-email');
 }
 
@@ -18985,9 +19136,9 @@ function setTripClaimStatusFilter(status) {
     const el = document.getElementById('tcf-' + c);
     if (!el) return;
     const match = (c === 'all' && status === 'all') ||
-                  (c === 'notyet' && status === 'Not yet') ||
-                  (c === 'proc' && status === 'Processing') ||
-                  (c === 'done' && status === 'Done');
+      (c === 'notyet' && status === 'Not yet') ||
+      (c === 'proc' && status === 'Processing') ||
+      (c === 'done' && status === 'Done');
     el.classList.toggle('active', match);
   });
   renderTripClaimsScreen();
@@ -19723,7 +19874,7 @@ function renderCreditCardScreen() {
   const now = Date.now();
   if (now - _creditCardLastSyncedTs > 10000 && typeof syncCreditCardToSheets_ === 'function' && typeof getGSUrl === 'function' && getGSUrl()) {
     _creditCardLastSyncedTs = now;
-    syncCreditCardToSheets_().catch(() => {});
+    syncCreditCardToSheets_().catch(() => { });
   }
 
   const yearSel = document.getElementById('cc-year-select');
@@ -19923,6 +20074,7 @@ function renderCreditCardScreen() {
 
     tripGroups.push({
       tripId: tr.id,
+      tripObj: tr,
       plant: tr.plant,
       date: tr.date,
       dateEnd: tr.dateEnd,
@@ -20022,6 +20174,7 @@ function renderCreditCardScreen() {
               <div style="flex:1;min-width:0;">
                 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
                   <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🏭 ${tg.plant}</span>
+                  ${typeof getTripTypeBadge === 'function' && tg.tripObj ? getTripTypeBadge(tg.tripObj) : ''}
                   ${tg.weekLabel ? `<span class="badge" style="font-size:10px;padding:1px 5px;background:var(--g100);color:var(--green);font-weight:700;">${tg.weekLabel}</span>` : ''}
                 </div>
                 <div style="font-size:11px;color:var(--n500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
@@ -20039,8 +20192,8 @@ function renderCreditCardScreen() {
                 <span style="color:var(--n600);">Repaid: <b style="color:${tg.barColor || 'var(--green)'};">${tg.percent || 0}%</b></span>
                 <span style="color:var(--n500);font-family:var(--mono);">
                   ${tg.totalTransferred > tg.totalSpent
-                    ? `${fmtAmt(tg.totalSpent, 'VND')} / ${fmtAmt(tg.totalSpent, 'VND')} ₫ <span style="color:#B45309;font-weight:700;">(+${fmtAmt(tg.totalTransferred - tg.totalSpent, 'VND')} ₫ excess)</span>`
-                    : `${fmtAmt(tg.totalTransferred, 'VND')} / ${fmtAmt(tg.totalSpent, 'VND')} ₫`}
+            ? `${fmtAmt(tg.totalSpent, 'VND')} / ${fmtAmt(tg.totalSpent, 'VND')} ₫ <span style="color:#B45309;font-weight:700;">(+${fmtAmt(tg.totalTransferred - tg.totalSpent, 'VND')} ₫ excess)</span>`
+            : `${fmtAmt(tg.totalTransferred, 'VND')} / ${fmtAmt(tg.totalSpent, 'VND')} ₫`}
                 </span>
               </div>
               <div style="height:6px;width:100%;background:var(--n200);border-radius:4px;overflow:hidden;">
@@ -20147,6 +20300,7 @@ function renderCreditCardScreen() {
       displayedGranularBills.forEach(b => {
         const trip = (S.trips || []).find(t => String(t.id) === String(b.tripId));
         const plantStr = trip ? trip.plant : 'General Expense';
+        const tripBadge = (trip && typeof getTripTypeBadge === 'function') ? getTripTypeBadge(trip) : '';
         const amtVND = (b.currency || 'VND').toUpperCase() === 'VND' ? (parseFloat(b.amount) || 0) : (parseFloat(b.vndAmount) || 0);
         bHtml += `
           <div class="cc-item-row expense" onclick="openEditBill('${b.id}')" style="cursor:pointer;">
@@ -20155,7 +20309,7 @@ function renderCreditCardScreen() {
                 <span style="font-size:13px;font-weight:700;color:var(--n800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.detail || 'Bill'}</span>
               </div>
               <div style="font-size:11px;color:var(--n500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                📅 ${fmtDate(b.date)} • 🏭 ${plantStr}
+                📅 ${fmtDate(b.date)} • 🏭 ${plantStr} ${tripBadge}
               </div>
             </div>
             <div style="text-align:right;flex-shrink:0;">
@@ -20551,7 +20705,7 @@ function isHomeMoneyHidden() {
 }
 
 function toggleHomeMoneyVisibility() {
-  try { localStorage.setItem('plpro_hide_money', isHomeMoneyHidden() ? '0' : '1'); } catch (e) {}
+  try { localStorage.setItem('plpro_hide_money', isHomeMoneyHidden() ? '0' : '1'); } catch (e) { }
   renderHomeFinanceWidget();
 }
 
