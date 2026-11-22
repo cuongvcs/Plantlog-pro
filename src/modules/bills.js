@@ -772,10 +772,11 @@ function renderTripClaimsScreen() {
   const container = document.getElementById('tc-claims-list');
   if (!container) return;
 
-  // Auto-populate S.tripClaims for all trips to ensure sync readiness
+  // Auto-populate S.tripClaims only for eligible travel trips (IMP-57)
   if (!S.tripClaims) S.tripClaims = [];
   let stateChanged = false;
   (S.trips || []).forEach(tr => {
+    if (typeof isTripClaimable === 'function' && !isTripClaimable(tr)) return;
     let claim = S.tripClaims.find(c => String(c.tripId) === String(tr.id));
     const totalClaim = calculateTripTotalClaim(tr.id);
     const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
@@ -811,6 +812,11 @@ function renderTripClaimsScreen() {
   const filterMonth = monthSel ? monthSel.value : '';
 
   let trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])];
+
+  // IMP-57: Filter out Base Plant (DaNang) and Leave trips (no travel claims required)
+  if (typeof isTripClaimable === 'function') {
+    trips = trips.filter(isTripClaimable);
+  }
 
   // Filter by Year & Month (including cross-month trips via isTripInPeriod)
   if (filterYear || filterMonth) {

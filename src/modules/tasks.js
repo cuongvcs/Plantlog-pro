@@ -154,18 +154,20 @@ function autoSuggestTripFlightCities() {
   const retFromEl = document.getElementById('nt-fl-ret-from');
   const retToEl = document.getElementById('nt-fl-ret-to');
 
-  let defaultFrom = 'DaNang';
+  const userBase = (S.profile && (S.profile.plantBase || S.profile.base)) || 'DaNang';
+  const baseLower = userBase.toLowerCase();
+  let defaultFrom = userBase;
   let defaultTo = 'Ho Chi Minh';
 
-  if (plantVal.includes('danang') || plantVal.includes('đà nẵng') || plantVal.includes('quangnam')) {
+  if (plantVal.includes(baseLower) || plantVal.includes('danang') || plantVal.includes('đà nẵng') || plantVal.includes('quangnam')) {
     defaultFrom = 'Ho Chi Minh';
-    defaultTo = 'DaNang';
+    defaultTo = userBase;
   } else if (plantVal.includes('hanoi') || plantVal.includes('hà nội') || plantVal.includes('bacninh') || plantVal.includes('bacgiang') || plantVal.includes('haiphong')) {
-    defaultFrom = 'DaNang';
+    defaultFrom = userBase;
     defaultTo = 'Ha Noi';
   } else {
     // DongNai, BinhDuong, LongAn, CanTho, HCM...
-    defaultFrom = 'DaNang';
+    defaultFrom = userBase;
     defaultTo = 'Ho Chi Minh';
   }
 

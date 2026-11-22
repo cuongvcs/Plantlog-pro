@@ -196,8 +196,24 @@ function openTripDetail(id){
       </div>
     </div>` : '';
 
+  // IMP-57: Plant Base & Leave non-claimable indicator badge
+  const isClaimable = typeof isTripClaimable === 'function' ? isTripClaimable(tr) : true;
+  let tripTypeBadgeHtml = '';
+  if (!isClaimable) {
+    const isLeave = (tr.plant || '').toLowerCase().includes('leave') || (tr.purpose || '').toLowerCase().includes('leave') || tr.type === 'leave';
+    if (isLeave) {
+      tripTypeBadgeHtml = `<span class="badge" style="font-size:11px;font-weight:700;color:#92400E;background:var(--al);padding:2px 8px;border-radius:20px;border:1px solid rgba(245,158,11,0.3);">🌴 Leave</span>`;
+    } else {
+      const baseName = (S.profile && (S.profile.plantBase || S.profile.base)) || 'DaNang';
+      tripTypeBadgeHtml = `<span class="badge" style="font-size:11px;font-weight:700;color:var(--green);background:var(--gl);padding:2px 8px;border-radius:20px;border:1px solid rgba(0,132,61,0.25);">📍 Base Plant (${baseName})</span>`;
+    }
+  }
+
   document.getElementById('trip-detail-card').innerHTML=`
-    <div style="margin-bottom:10px;"><span class="badge ${tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned')}</span></div>
+    <div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <span class="badge ${tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned')}</span>
+      ${tripTypeBadgeHtml}
+    </div>
     ${expenseSummaryHtml}
     ${kv(t('plantName').replace(' *',''),tr.plant)}${kv(t('location'),tr.location||'—')}${kv(t('visitDate').replace(' *',''),fmtDate(tr.date))}
     ${tr.dateEnd&&tr.dateEnd!==tr.date?kv(t('endDate'),fmtDate(tr.dateEnd)):''}

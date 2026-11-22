@@ -26,7 +26,7 @@ const T={
     emailPdf:'Email Report',markCompleted:'Mark completed',
     leavePlanner:'Leave Planner',workTrip:'Work trip',holiday:'Holiday',tripDays:'Trip days',clearDay:'Clear day',
     addTaskForDay:'Add task for this day',
-    fullName:'Full name',jobTitle:'Job title',company:'Company',employeeId:'Employee ID',
+    fullName:'Full name',jobTitle:'Job title',company:'Company',plantBase:'Plant Base',plantBaseHint:'Your primary base plant (trips at base plant or leave will not require travel claims)',employeeId:'Employee ID',
     defaultTeam:'Default Team',industryTemplates:'Industry templates',
     loadChecklistTemplates:'Load checklist for your industry',checklistTemplates:'Checklist templates',
     manageDefaultItems:'Manage default items',clearData:'Clear all data',
@@ -68,7 +68,7 @@ const T={
     emailPdf:'Gửi qua email',markCompleted:'Đánh dấu hoàn thành',
     leavePlanner:'Kế hoạch nghỉ phép',workTrip:'Công tác',holiday:'Ngày lễ',tripDays:'Ngày công tác',clearDay:'Xóa ngày',
     addTaskForDay:'Thêm nhiệm vụ cho ngày này',
-    fullName:'Họ và tên',jobTitle:'Chức danh',company:'Công ty',employeeId:'Mã nhân viên',
+    fullName:'Họ và tên',jobTitle:'Chức danh',company:'Công ty',plantBase:'Nhà máy cơ sở',plantBaseHint:'Nhà máy làm việc chính (chuyến đi tại base hoặc nghỉ phép sẽ không phát sinh claim)',employeeId:'Mã nhân viên',
     defaultTeam:'Nhóm mặc định',industryTemplates:'Mẫu theo ngành',
     loadChecklistTemplates:'Tải mẫu kiểm tra theo ngành',checklistTemplates:'Mẫu danh mục',
     manageDefaultItems:'Quản lý mẫu mặc định',clearData:'Xóa tất cả dữ liệu',
@@ -104,7 +104,7 @@ const IND={
 
 // ═══════ STATE ═══════
 let S={
-  profile:{name:'',title:'',company:'',empid:'',signature:''},
+  profile:{name:'',title:'',company:'',plantBase:'DaNang',empid:'',signature:''},
   gsUrl:'',gsApiKey:'',
   trips:[],reports:{},tasks:[],leaveData:{},
   machines:[],plans:[],bills:[],
@@ -972,6 +972,8 @@ function loadProfile(){
   document.getElementById('pref-name').value=S.profile.name||'';
   document.getElementById('pref-title').value=S.profile.title||'';
   document.getElementById('pref-company').value=S.profile.company||'';
+  const baseEl = document.getElementById('pref-plant-base');
+  if(baseEl) baseEl.value=S.profile.plantBase!==undefined?S.profile.plantBase:'DaNang';
   document.getElementById('pref-empid').value=S.profile.empid||'';
   updateProfileDisplay();
   if(typeof renderSettingsAbout==='function') renderSettingsAbout();
@@ -980,6 +982,8 @@ function saveProfile(){
   S.profile.name=document.getElementById('pref-name').value;
   S.profile.title=document.getElementById('pref-title').value;
   S.profile.company=document.getElementById('pref-company').value;
+  const baseEl = document.getElementById('pref-plant-base');
+  if(baseEl) S.profile.plantBase=(baseEl.value||'').trim();
   S.profile.empid=document.getElementById('pref-empid').value;
   sv();updateProfileDisplay();
 }
@@ -993,7 +997,8 @@ function updateProfileDisplay(){
   const snd = document.getElementById('s-name-d');
   const std = document.getElementById('s-title-d');
   if(snd) snd.textContent=S.profile.name||'Set your name';
-  if(std) std.textContent=[S.profile.title,S.profile.company].filter(Boolean).join(' · ')||'Add title & company';
+  const subParts = [S.profile.title, S.profile.company, S.profile.plantBase ? '📍 ' + S.profile.plantBase : ''].filter(Boolean);
+  if(std) std.textContent=subParts.join(' · ')||'Add title & company';
 
   const sigPrev = document.getElementById('profile-sig-preview');
   if(sigPrev){
@@ -1003,6 +1008,40 @@ function updateProfileDisplay(){
       sigPrev.innerHTML = `<span style="font-size:11px;color:var(--n400);">No signature</span>`;
     }
   }
+}
+
+/**
+ * IMP-57: Determines if a trip is a business travel trip requiring expense claims.
+ * - Trips at Plant Base (e.g. DaNang) -> regular factory on-site work, NO travel claim.
+ * - Leave trips (e.g. plant or purpose contains 'leave' or 'nghỉ') -> personal time off, NO travel claim.
+ */
+function isTripClaimable(tr) {
+  if (!tr) return false;
+  const rawBase = (S.profile && (S.profile.plantBase || S.profile.base)) !== undefined 
+    ? (S.profile.plantBase || S.profile.base) 
+    : 'DaNang';
+  const base = (rawBase || '').trim().toLowerCase();
+  const plant = (tr.plant || '').trim().toLowerCase();
+  const purpose = (tr.purpose || '').trim().toLowerCase();
+  const type = (tr.type || '').trim().toLowerCase();
+
+  const stripTones = str => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  const plantNorm = stripTones(plant).replace(/\s+/g, '');
+  const baseNorm = stripTones(base).replace(/\s+/g, '');
+  const purposeNorm = stripTones(purpose).replace(/\s+/g, '');
+
+  // 1. Exclude trips at Plant Base
+  if (baseNorm && plantNorm && (plantNorm.includes(baseNorm) || baseNorm.includes(plantNorm))) {
+    return false;
+  }
+
+  // 2. Exclude Leave / Nghỉ phép trips
+  if (plantNorm.includes('leave') || plantNorm.includes('nghiphep') || plantNorm.includes('annualleave') ||
+      purposeNorm.includes('leave') || purposeNorm.includes('nghiphep') || type === 'leave') {
+    return false;
+  }
+
+  return true;
 }
 
 function clearProfileSignature(){
@@ -1176,7 +1215,7 @@ async function clearAllData(){
   });
   if(!ok) return;
   S={
-    profile:{name:'',title:'',company:'',empid:'',signature:''},
+    profile:{name:'',title:'',company:'',plantBase:'DaNang',empid:'',signature:''},
     gsUrl:'',gsApiKey:'',
     trips:[],reports:{},tasks:[],leaveData:{},
     machines:[],plans:[],bills:[],inspections:[],

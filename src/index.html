@@ -347,45 +347,50 @@ button {
 }
 
 .tb-back {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: 600;
-  transition: background var(--dur-fast);
-  flex-shrink: 0;
-}
-
-.tb-back:active {
-  background: rgba(255, 255, 255, 0.20);
-}
-
-.tb-action {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-sm);
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
+  font-weight: 600;
+  transition: background var(--dur-fast), transform var(--dur-fast);
+  flex-shrink: 0;
+}
+
+.tb-back:active {
+  background: rgba(255, 255, 255, 0.24);
+  transform: scale(0.94);
+}
+
+.tb-action {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
   line-height: 1;
   transition: background var(--dur-fast), transform var(--dur-fast);
 }
 
 .tb-action:active {
-  background: rgba(255, 255, 255, 0.22);
-  transform: scale(0.93);
+  background: rgba(255, 255, 255, 0.26);
+  transform: scale(0.94);
 }
 
 /* ── SCROLL BODY ───────────────────────────────────────── */
@@ -461,9 +466,10 @@ button {
 
 /* ── FILTER PILL TABS ──────────────────────────────────── */
 .tf-btn {
-  padding: 5px 13px;
+  min-height: 38px;
+  padding: 7px 15px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   font-family: var(--font);
@@ -473,6 +479,10 @@ button {
   color: var(--n500);
   transition: all var(--dur-fast);
   letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .tf-btn.active {
@@ -2645,8 +2655,8 @@ button {
 .tb-back,
 .tb-action,
 .cn {
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 40px;
+  min-height: 40px;
   touch-action: manipulation;
 }
 
@@ -4383,7 +4393,59 @@ button:focus-visible {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.05em;
-}</style>
+}
+
+/* ── INDUSTRY TEMPLATES MODAL (IMP-57) ──────────────────── */
+.indg {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.indb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--n200);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  box-shadow: var(--shadow-xs);
+  touch-action: manipulation;
+}
+
+.indb:active {
+  background: var(--gl);
+  border-color: var(--brand);
+  transform: scale(0.97);
+}
+
+.indb .ii {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+[data-theme="dark"] .indb {
+  background: var(--surface);
+  border-color: var(--n700);
+  color: var(--text);
+}
+
+[data-theme="dark"] .indb:active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: var(--brand);
+}
+</style>
 </head>
 <body>
 <!-- ═══ LOCK SCREEN ═══ -->
@@ -4518,13 +4580,13 @@ button:focus-visible {
         style="padding-left:32px;height:36px;font-size:13px;" oninput="renderTripList()">
     </div>
     <!-- Date range toggle -->
-    <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
+    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
       <button onclick="document.getElementById('trip-date-row').style.display=document.getElementById('trip-date-row').style.display==='none'?'flex':'none'"
-        style="font-size:11px;font-weight:600;color:var(--green);background:var(--gl);border:1px solid rgba(0,132,61,0.2);border-radius:var(--rs);padding:5px 10px;cursor:pointer;font-family:var(--font);">
+        style="font-size:12.5px;font-weight:600;color:var(--green);background:var(--gl);border:1.5px solid rgba(0,132,61,0.25);border-radius:20px;padding:7px 14px;cursor:pointer;font-family:var(--font);min-height:36px;display:inline-flex;align-items:center;">
         📅 Filter by date
       </button>
       <button onclick="document.getElementById('trip-search').value='';document.getElementById('trip-from').value='';document.getElementById('trip-to').value='';renderTripList();"
-        style="font-size:11px;color:var(--g500);background:none;border:none;cursor:pointer;font-family:var(--font);">Clear</button>
+        style="font-size:12px;color:var(--g500);background:none;border:none;cursor:pointer;font-family:var(--font);padding:6px 10px;">Clear</button>
     </div>
     <!-- Date range row -->
     <div id="trip-date-row" style="display:none;gap:6px;margin-bottom:8px;align-items:center;">
@@ -5379,13 +5441,13 @@ button:focus-visible {
         style="padding-left:32px;height:36px;font-size:13px;" oninput="renderTasks()">
     </div>
     <!-- Date range toggle -->
-    <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
+    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
       <button onclick="document.getElementById('task-date-row').style.display=document.getElementById('task-date-row').style.display==='none'?'flex':'none'"
-        style="font-size:11px;font-weight:600;color:var(--green);background:var(--gl);border:1px solid rgba(0,132,61,0.2);border-radius:var(--rs);padding:5px 10px;cursor:pointer;font-family:var(--font);">
+        style="font-size:12.5px;font-weight:600;color:var(--green);background:var(--gl);border:1.5px solid rgba(0,132,61,0.25);border-radius:20px;padding:7px 14px;cursor:pointer;font-family:var(--font);min-height:36px;display:inline-flex;align-items:center;">
         📅 Filter by date
       </button>
       <button onclick="document.getElementById('task-search').value='';document.getElementById('task-from').value='';document.getElementById('task-to').value='';renderTasks();"
-        style="font-size:11px;color:var(--g500);background:none;border:none;cursor:pointer;font-family:var(--font);">Clear</button>
+        style="font-size:12px;color:var(--g500);background:none;border:none;cursor:pointer;font-family:var(--font);padding:6px 10px;">Clear</button>
     </div>
     <!-- Date range -->
     <div id="task-date-row" style="display:none;gap:6px;margin-bottom:8px;align-items:center;">
@@ -5437,12 +5499,12 @@ button:focus-visible {
       <button class="tf-btn"        id="bf-trip"  onclick="setBillFilter('trip')">By Trip</button>
       <button class="tf-btn"        id="bf-month" onclick="setBillFilter('month')">By Month</button>
     </div>
-    <!-- Payment method tabs (IMP-07) -->
-    <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px;">
-      <button class="tf-btn active" id="bpf-all"  onclick="setBillPaymentFilter('all')"  style="font-size:11px;padding:3px 9px;">All PM</button>
-      <button class="tf-btn"        id="bpf-cash" onclick="setBillPaymentFilter('cash')" style="font-size:11px;padding:3px 9px;">💵 Cash</button>
-      <button class="tf-btn"        id="bpf-bank" onclick="setBillPaymentFilter('bank')" style="font-size:11px;padding:3px 9px;">🏦 Bank</button>
-      <button class="tf-btn"        id="bpf-card" onclick="setBillPaymentFilter('card')" style="font-size:11px;padding:3px 9px;">💳 Card</button>
+    <!-- Payment method tabs (IMP-07 & IMP-57) -->
+    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px;">
+      <button class="tf-btn active" id="bpf-all"  onclick="setBillPaymentFilter('all')">All PM</button>
+      <button class="tf-btn"        id="bpf-cash" onclick="setBillPaymentFilter('cash')">💵 Cash</button>
+      <button class="tf-btn"        id="bpf-bank" onclick="setBillPaymentFilter('bank')">🏦 Bank</button>
+      <button class="tf-btn"        id="bpf-card" onclick="setBillPaymentFilter('card')">💳 Card</button>
     </div>
     <!-- Search bills input (UX-02) -->
     <div style="position:relative;padding-bottom:6px;">
@@ -5472,19 +5534,19 @@ button:focus-visible {
   <div id="claims-view-container" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
     <!-- Filter Bar -->
     <div style="background:var(--surface);padding:8px 12px 6px;flex-shrink:0;border-bottom:1px solid var(--n150);">
-      <!-- Year & Month Selectors -->
-      <div style="display:flex;gap:6px;margin-bottom:6px;">
-        <select class="fsel" id="tc-year-select" style="width:105px;font-size:12px;height:34px;font-weight:600;" onchange="renderTripClaimsScreen()">
+      <!-- Year & Month Selectors (IMP-57: Enhanced touch targets) -->
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <select class="fsel" id="tc-year-select" style="width:115px;font-size:13px;height:38px;font-weight:600;" onchange="renderTripClaimsScreen()">
         </select>
-        <select class="fsel" id="tc-month-select" style="flex:1;font-size:12px;height:34px;font-weight:600;" onchange="renderTripClaimsScreen()">
+        <select class="fsel" id="tc-month-select" style="flex:1;font-size:13px;height:38px;font-weight:600;" onchange="renderTripClaimsScreen()">
         </select>
       </div>
-      <!-- Status Filter Chips -->
-      <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;">
-        <button type="button" class="tf-btn active" id="tcf-all" onclick="setTripClaimStatusFilter('all')" style="font-size:11px;padding:3px 9px;">All Status</button>
-        <button type="button" class="tf-btn" id="tcf-notyet" onclick="setTripClaimStatusFilter('Not yet')" style="font-size:11px;padding:3px 9px;">🔴 Not yet</button>
-        <button type="button" class="tf-btn" id="tcf-proc" onclick="setTripClaimStatusFilter('Processing')" style="font-size:11px;padding:3px 9px;">🟡 Processing</button>
-        <button type="button" class="tf-btn" id="tcf-done" onclick="setTripClaimStatusFilter('Done')" style="font-size:11px;padding:3px 9px;">🟢 Done</button>
+      <!-- Status Filter Chips (IMP-57: Touch friendly buttons) -->
+      <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px;">
+        <button type="button" class="tf-btn active" id="tcf-all" onclick="setTripClaimStatusFilter('all')">All Status</button>
+        <button type="button" class="tf-btn" id="tcf-notyet" onclick="setTripClaimStatusFilter('Not yet')">🔴 Not yet</button>
+        <button type="button" class="tf-btn" id="tcf-proc" onclick="setTripClaimStatusFilter('Processing')">🟡 Processing</button>
+        <button type="button" class="tf-btn" id="tcf-done" onclick="setTripClaimStatusFilter('Done')">🟢 Done</button>
       </div>
     </div>
 
@@ -5824,6 +5886,11 @@ button:focus-visible {
       <div class="fg"><label class="fl" data-t="fullName">Full name</label><input class="fi" id="pref-name" placeholder="Your full name" oninput="saveProfile()"></div>
       <div class="fg"><label class="fl" data-t="jobTitle">Job title</label><input class="fi" id="pref-title" placeholder="e.g. Field Engineer" oninput="saveProfile()"></div>
       <div class="fg"><label class="fl" data-t="company">Company</label><input class="fi" id="pref-company" placeholder="Company name" oninput="saveProfile()"></div>
+      <div class="fg">
+        <label class="fl" data-t="plantBase">Plant Base</label>
+        <input class="fi" id="pref-plant-base" placeholder="e.g. DaNang" oninput="saveProfile()">
+        <div style="font-size:11px;color:var(--g500);margin-top:3px;" data-t="plantBaseHint">Your primary base plant (trips at base plant or leave will not require travel claims)</div>
+      </div>
       <div class="fg"><label class="fl" data-t="employeeId">Employee ID</label><input class="fi" id="pref-empid" placeholder="EMP-0001" oninput="saveProfile()"></div>
       <div class="fg" style="margin-bottom:0;">
         <label class="fl" data-t="defaultSig">Default Signature</label>
@@ -5831,8 +5898,8 @@ button:focus-visible {
           <div id="profile-sig-preview" style="width:130px;height:48px;border:1.5px solid var(--n200);border-radius:var(--rs);background:var(--n50);display:flex;align-items:center;justify-content:center;overflow:hidden;padding:2px;">
             <span style="font-size:11px;color:var(--n400);">No signature</span>
           </div>
-          <button type="button" class="btn btn-sm btn-o" onclick="document.getElementById('profile-sig-file-input').click()" style="font-size:11px;">📁 <span data-t="uploadSig">Upload</span></button>
-          <button type="button" class="btn btn-sm btn-o" onclick="clearProfileSignature()" style="font-size:11px;color:var(--red);">✕ <span data-t="clearSig">Clear</span></button>
+          <button type="button" class="btn btn-sm btn-o" onclick="document.getElementById('profile-sig-file-input').click()" style="font-size:12.5px;padding:7px 12px;">📁 <span data-t="uploadSig">Upload</span></button>
+          <button type="button" class="btn btn-sm btn-o" onclick="clearProfileSignature()" style="font-size:12.5px;padding:7px 12px;color:var(--red);">✕ <span data-t="clearSig">Clear</span></button>
           <input type="file" id="profile-sig-file-input" accept="image/*" style="display:none;" onchange="handleProfileSignatureUpload(event)">
         </div>
       </div>
@@ -5853,10 +5920,10 @@ button:focus-visible {
           <div class="sil">Appearance / Theme</div>
           <div class="sis">Light, Dark or System Auto</div>
         </div>
-        <div style="display:flex;gap:4px;">
-          <button type="button" class="tf-btn" id="theme-btn-auto" onclick="setTheme('auto')" style="padding:4px 9px;font-size:11px;">Auto</button>
-          <button type="button" class="tf-btn" id="theme-btn-light" onclick="setTheme('light')" style="padding:4px 9px;font-size:11px;">☀️ Light</button>
-          <button type="button" class="tf-btn" id="theme-btn-dark" onclick="setTheme('dark')" style="padding:4px 9px;font-size:11px;">🌙 Dark</button>
+        <div style="display:flex;gap:6px;">
+          <button type="button" class="tf-btn" id="theme-btn-auto" onclick="setTheme('auto')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">Auto</button>
+          <button type="button" class="tf-btn" id="theme-btn-light" onclick="setTheme('light')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">☀️ Light</button>
+          <button type="button" class="tf-btn" id="theme-btn-dark" onclick="setTheme('dark')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">🌙 Dark</button>
         </div>
       </div>
       <div class="si" onclick="openModal('modal-industry')">
@@ -7803,7 +7870,7 @@ const T={
     emailPdf:'Email Report',markCompleted:'Mark completed',
     leavePlanner:'Leave Planner',workTrip:'Work trip',holiday:'Holiday',tripDays:'Trip days',clearDay:'Clear day',
     addTaskForDay:'Add task for this day',
-    fullName:'Full name',jobTitle:'Job title',company:'Company',employeeId:'Employee ID',
+    fullName:'Full name',jobTitle:'Job title',company:'Company',plantBase:'Plant Base',plantBaseHint:'Your primary base plant (trips at base plant or leave will not require travel claims)',employeeId:'Employee ID',
     defaultTeam:'Default Team',industryTemplates:'Industry templates',
     loadChecklistTemplates:'Load checklist for your industry',checklistTemplates:'Checklist templates',
     manageDefaultItems:'Manage default items',clearData:'Clear all data',
@@ -7845,7 +7912,7 @@ const T={
     emailPdf:'Gửi qua email',markCompleted:'Đánh dấu hoàn thành',
     leavePlanner:'Kế hoạch nghỉ phép',workTrip:'Công tác',holiday:'Ngày lễ',tripDays:'Ngày công tác',clearDay:'Xóa ngày',
     addTaskForDay:'Thêm nhiệm vụ cho ngày này',
-    fullName:'Họ và tên',jobTitle:'Chức danh',company:'Công ty',employeeId:'Mã nhân viên',
+    fullName:'Họ và tên',jobTitle:'Chức danh',company:'Công ty',plantBase:'Nhà máy cơ sở',plantBaseHint:'Nhà máy làm việc chính (chuyến đi tại base hoặc nghỉ phép sẽ không phát sinh claim)',employeeId:'Mã nhân viên',
     defaultTeam:'Nhóm mặc định',industryTemplates:'Mẫu theo ngành',
     loadChecklistTemplates:'Tải mẫu kiểm tra theo ngành',checklistTemplates:'Mẫu danh mục',
     manageDefaultItems:'Quản lý mẫu mặc định',clearData:'Xóa tất cả dữ liệu',
@@ -7881,7 +7948,7 @@ const IND={
 
 // ═══════ STATE ═══════
 let S={
-  profile:{name:'',title:'',company:'',empid:'',signature:''},
+  profile:{name:'',title:'',company:'',plantBase:'DaNang',empid:'',signature:''},
   gsUrl:'',gsApiKey:'',
   trips:[],reports:{},tasks:[],leaveData:{},
   machines:[],plans:[],bills:[],
@@ -8749,6 +8816,8 @@ function loadProfile(){
   document.getElementById('pref-name').value=S.profile.name||'';
   document.getElementById('pref-title').value=S.profile.title||'';
   document.getElementById('pref-company').value=S.profile.company||'';
+  const baseEl = document.getElementById('pref-plant-base');
+  if(baseEl) baseEl.value=S.profile.plantBase!==undefined?S.profile.plantBase:'DaNang';
   document.getElementById('pref-empid').value=S.profile.empid||'';
   updateProfileDisplay();
   if(typeof renderSettingsAbout==='function') renderSettingsAbout();
@@ -8757,6 +8826,8 @@ function saveProfile(){
   S.profile.name=document.getElementById('pref-name').value;
   S.profile.title=document.getElementById('pref-title').value;
   S.profile.company=document.getElementById('pref-company').value;
+  const baseEl = document.getElementById('pref-plant-base');
+  if(baseEl) S.profile.plantBase=(baseEl.value||'').trim();
   S.profile.empid=document.getElementById('pref-empid').value;
   sv();updateProfileDisplay();
 }
@@ -8770,7 +8841,8 @@ function updateProfileDisplay(){
   const snd = document.getElementById('s-name-d');
   const std = document.getElementById('s-title-d');
   if(snd) snd.textContent=S.profile.name||'Set your name';
-  if(std) std.textContent=[S.profile.title,S.profile.company].filter(Boolean).join(' · ')||'Add title & company';
+  const subParts = [S.profile.title, S.profile.company, S.profile.plantBase ? '📍 ' + S.profile.plantBase : ''].filter(Boolean);
+  if(std) std.textContent=subParts.join(' · ')||'Add title & company';
 
   const sigPrev = document.getElementById('profile-sig-preview');
   if(sigPrev){
@@ -8780,6 +8852,40 @@ function updateProfileDisplay(){
       sigPrev.innerHTML = `<span style="font-size:11px;color:var(--n400);">No signature</span>`;
     }
   }
+}
+
+/**
+ * IMP-57: Determines if a trip is a business travel trip requiring expense claims.
+ * - Trips at Plant Base (e.g. DaNang) -> regular factory on-site work, NO travel claim.
+ * - Leave trips (e.g. plant or purpose contains 'leave' or 'nghỉ') -> personal time off, NO travel claim.
+ */
+function isTripClaimable(tr) {
+  if (!tr) return false;
+  const rawBase = (S.profile && (S.profile.plantBase || S.profile.base)) !== undefined 
+    ? (S.profile.plantBase || S.profile.base) 
+    : 'DaNang';
+  const base = (rawBase || '').trim().toLowerCase();
+  const plant = (tr.plant || '').trim().toLowerCase();
+  const purpose = (tr.purpose || '').trim().toLowerCase();
+  const type = (tr.type || '').trim().toLowerCase();
+
+  const stripTones = str => (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  const plantNorm = stripTones(plant).replace(/\s+/g, '');
+  const baseNorm = stripTones(base).replace(/\s+/g, '');
+  const purposeNorm = stripTones(purpose).replace(/\s+/g, '');
+
+  // 1. Exclude trips at Plant Base
+  if (baseNorm && plantNorm && (plantNorm.includes(baseNorm) || baseNorm.includes(plantNorm))) {
+    return false;
+  }
+
+  // 2. Exclude Leave / Nghỉ phép trips
+  if (plantNorm.includes('leave') || plantNorm.includes('nghiphep') || plantNorm.includes('annualleave') ||
+      purposeNorm.includes('leave') || purposeNorm.includes('nghiphep') || type === 'leave') {
+    return false;
+  }
+
+  return true;
 }
 
 function clearProfileSignature(){
@@ -8953,7 +9059,7 @@ async function clearAllData(){
   });
   if(!ok) return;
   S={
-    profile:{name:'',title:'',company:'',empid:'',signature:''},
+    profile:{name:'',title:'',company:'',plantBase:'DaNang',empid:'',signature:''},
     gsUrl:'',gsApiKey:'',
     trips:[],reports:{},tasks:[],leaveData:{},
     machines:[],plans:[],bills:[],inspections:[],
@@ -10535,8 +10641,24 @@ function openTripDetail(id){
       </div>
     </div>` : '';
 
+  // IMP-57: Plant Base & Leave non-claimable indicator badge
+  const isClaimable = typeof isTripClaimable === 'function' ? isTripClaimable(tr) : true;
+  let tripTypeBadgeHtml = '';
+  if (!isClaimable) {
+    const isLeave = (tr.plant || '').toLowerCase().includes('leave') || (tr.purpose || '').toLowerCase().includes('leave') || tr.type === 'leave';
+    if (isLeave) {
+      tripTypeBadgeHtml = `<span class="badge" style="font-size:11px;font-weight:700;color:#92400E;background:var(--al);padding:2px 8px;border-radius:20px;border:1px solid rgba(245,158,11,0.3);">🌴 Leave</span>`;
+    } else {
+      const baseName = (S.profile && (S.profile.plantBase || S.profile.base)) || 'DaNang';
+      tripTypeBadgeHtml = `<span class="badge" style="font-size:11px;font-weight:700;color:var(--green);background:var(--gl);padding:2px 8px;border-radius:20px;border:1px solid rgba(0,132,61,0.25);">📍 Base Plant (${baseName})</span>`;
+    }
+  }
+
   document.getElementById('trip-detail-card').innerHTML=`
-    <div style="margin-bottom:10px;"><span class="badge ${tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned')}</span></div>
+    <div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <span class="badge ${tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned')}</span>
+      ${tripTypeBadgeHtml}
+    </div>
     ${expenseSummaryHtml}
     ${kv(t('plantName').replace(' *',''),tr.plant)}${kv(t('location'),tr.location||'—')}${kv(t('visitDate').replace(' *',''),fmtDate(tr.date))}
     ${tr.dateEnd&&tr.dateEnd!==tr.date?kv(t('endDate'),fmtDate(tr.dateEnd)):''}
@@ -12176,18 +12298,20 @@ function autoSuggestTripFlightCities() {
   const retFromEl = document.getElementById('nt-fl-ret-from');
   const retToEl = document.getElementById('nt-fl-ret-to');
 
-  let defaultFrom = 'DaNang';
+  const userBase = (S.profile && (S.profile.plantBase || S.profile.base)) || 'DaNang';
+  const baseLower = userBase.toLowerCase();
+  let defaultFrom = userBase;
   let defaultTo = 'Ho Chi Minh';
 
-  if (plantVal.includes('danang') || plantVal.includes('đà nẵng') || plantVal.includes('quangnam')) {
+  if (plantVal.includes(baseLower) || plantVal.includes('danang') || plantVal.includes('đà nẵng') || plantVal.includes('quangnam')) {
     defaultFrom = 'Ho Chi Minh';
-    defaultTo = 'DaNang';
+    defaultTo = userBase;
   } else if (plantVal.includes('hanoi') || plantVal.includes('hà nội') || plantVal.includes('bacninh') || plantVal.includes('bacgiang') || plantVal.includes('haiphong')) {
-    defaultFrom = 'DaNang';
+    defaultFrom = userBase;
     defaultTo = 'Ha Noi';
   } else {
     // DongNai, BinhDuong, LongAn, CanTho, HCM...
-    defaultFrom = 'DaNang';
+    defaultFrom = userBase;
     defaultTo = 'Ho Chi Minh';
   }
 
@@ -18949,10 +19073,11 @@ function renderTripClaimsScreen() {
   const container = document.getElementById('tc-claims-list');
   if (!container) return;
 
-  // Auto-populate S.tripClaims for all trips to ensure sync readiness
+  // Auto-populate S.tripClaims only for eligible travel trips (IMP-57)
   if (!S.tripClaims) S.tripClaims = [];
   let stateChanged = false;
   (S.trips || []).forEach(tr => {
+    if (typeof isTripClaimable === 'function' && !isTripClaimable(tr)) return;
     let claim = S.tripClaims.find(c => String(c.tripId) === String(tr.id));
     const totalClaim = calculateTripTotalClaim(tr.id);
     const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
@@ -18988,6 +19113,11 @@ function renderTripClaimsScreen() {
   const filterMonth = monthSel ? monthSel.value : '';
 
   let trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])];
+
+  // IMP-57: Filter out Base Plant (DaNang) and Leave trips (no travel claims required)
+  if (typeof isTripClaimable === 'function') {
+    trips = trips.filter(isTripClaimable);
+  }
 
   // Filter by Year & Month (including cross-month trips via isTripInPeriod)
   if (filterYear || filterMonth) {
@@ -21344,7 +21474,8 @@ async function syncAllTripClaims() {
 
   try {
     if (!S.tripClaims) S.tripClaims = [];
-    const claims = (S.trips || []).map(tr => {
+    const claimableTrips = (S.trips || []).filter(tr => (typeof isTripClaimable === 'function' ? isTripClaimable(tr) : true));
+    const claims = claimableTrips.map(tr => {
       let claim = S.tripClaims.find(c => String(c.tripId) === String(tr.id));
       const totalClaim = typeof calculateTripTotalClaim === 'function' ? calculateTripTotalClaim(tr.id) : 0;
       const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
@@ -21635,9 +21766,10 @@ async function syncToSheets() {
   };
   const enrichedServiceTickets = await buildServiceTickets();
 
-  // IMP-31: Build Trip Claims payload
+  // IMP-31 & IMP-57: Build Trip Claims payload (exclude Base Plant & Leave)
   const buildTripClaims = () => {
-    const list = (S.trips || []).map(tr => {
+    const claimableTrips = (S.trips || []).filter(tr => (typeof isTripClaimable === 'function' ? isTripClaimable(tr) : true));
+    const list = claimableTrips.map(tr => {
       const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tr.id)) || {};
       const totalClaim = typeof calculateTripTotalClaim === 'function' ? calculateTripTotalClaim(tr.id) : 0;
       const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';

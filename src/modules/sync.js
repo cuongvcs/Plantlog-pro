@@ -367,7 +367,8 @@ async function syncAllTripClaims() {
 
   try {
     if (!S.tripClaims) S.tripClaims = [];
-    const claims = (S.trips || []).map(tr => {
+    const claimableTrips = (S.trips || []).filter(tr => (typeof isTripClaimable === 'function' ? isTripClaimable(tr) : true));
+    const claims = claimableTrips.map(tr => {
       let claim = S.tripClaims.find(c => String(c.tripId) === String(tr.id));
       const totalClaim = typeof calculateTripTotalClaim === 'function' ? calculateTripTotalClaim(tr.id) : 0;
       const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
@@ -658,9 +659,10 @@ async function syncToSheets() {
   };
   const enrichedServiceTickets = await buildServiceTickets();
 
-  // IMP-31: Build Trip Claims payload
+  // IMP-31 & IMP-57: Build Trip Claims payload (exclude Base Plant & Leave)
   const buildTripClaims = () => {
-    const list = (S.trips || []).map(tr => {
+    const claimableTrips = (S.trips || []).filter(tr => (typeof isTripClaimable === 'function' ? isTripClaimable(tr) : true));
+    const list = claimableTrips.map(tr => {
       const claim = (S.tripClaims || []).find(c => String(c.tripId) === String(tr.id)) || {};
       const totalClaim = typeof calculateTripTotalClaim === 'function' ? calculateTripTotalClaim(tr.id) : 0;
       const weekLabel = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
