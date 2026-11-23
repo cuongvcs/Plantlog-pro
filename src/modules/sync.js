@@ -506,6 +506,9 @@ async function syncToSheets() {
         if (tk.hours || tk.minutes) return (parseInt(tk.hours || 0) * 60) + (parseInt(tk.minutes || 0));
         return '';
       })(),
+      assigneeName: s(tk.assigneeName || tk.assignee_name),
+      assigneeEmail: s(tk.assigneeEmail || tk.assignee_email),
+      completionNotes: s(tk.completionNotes || tk.completion_notes),
       createdAt: s(tk.createdAt),
       updatedAt: s(tk.updatedAt) || new Date().toISOString()
     };
@@ -1003,6 +1006,9 @@ async function loadFromSheets(silent) {
             flight: tk.FlightJson ? (() => { try { return JSON.parse(ss(tk.FlightJson)); } catch (e) { return null; } })() : null,
             files: tk.FilesJson ? (() => { try { return JSON.parse(ss(tk.FilesJson)); } catch (e) { return []; } })() : [],
             savedReports: tk.SavedReports ? (() => { try { const p = JSON.parse(ss(tk.SavedReports)); return Array.isArray(p) ? p : []; } catch (e) { return []; } })() : [],
+            assigneeName: ss(tk.AssigneeName || tk.assigneeName || ''),
+            assigneeEmail: ss(tk.AssigneeEmail || tk.assigneeEmail || ''),
+            completionNotes: ss(tk.CompletionNotes || tk.completionNotes || ''),
             date: ds,
             time: ts,
             createdAt: ss(tk.CreatedAt),

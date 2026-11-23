@@ -6845,6 +6845,37 @@ button:focus-visible {
     <div id="task-cl-summary" style="font-size:12px;color:var(--g500);"></div>
   </div>
 
+  <!-- TASK ASSIGNMENT & EMAIL NOTIFICATION (IMP-61) -->
+  <div class="form-section" id="task-assignee-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div class="form-section-title" style="margin-bottom:0;">👤 Assignment &amp; Email Dispatch</div>
+      <span style="font-size:11px;color:var(--n500);font-weight:600;">Optional</span>
+    </div>
+    <div class="frow">
+      <div class="fg" style="margin-bottom:6px;">
+        <label class="fl">Assignee Name</label>
+        <input class="fi" id="task-assignee-name" placeholder="e.g. Nam Nguyen (Tech)">
+      </div>
+      <div class="fg" style="margin-bottom:6px;">
+        <label class="fl">Assignee Email</label>
+        <input class="fi" type="email" id="task-assignee-email" list="task-assignee-history" placeholder="colleague@company.com" oninput="onTaskAssigneeEmailChange()">
+        <datalist id="task-assignee-history"></datalist>
+      </div>
+    </div>
+    <div id="task-email-actions" style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;">
+      <button type="button" class="btn btn-sm" id="task-send-email-btn" onclick="sendTaskAssignmentEmailFromModal()" style="background:var(--brand);color:#fff;display:none;align-items:center;gap:5px;font-size:12px;padding:6px 14px;border-radius:18px;">
+        <span>✉️ Send Email Brief</span>
+      </button>
+      <button type="button" class="btn btn-sm btn-o" id="task-mailto-btn" onclick="openTaskMailtoFromModal()" style="display:none;align-items:center;gap:5px;font-size:12px;padding:6px 14px;border-radius:18px;">
+        <span>📨 Open in Mail Client</span>
+      </button>
+      <label id="task-send-email-toggle-lbl" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--n700);cursor:pointer;margin-left:auto;">
+        <input type="checkbox" id="task-send-email-on-save">
+        <span>Auto-send on Save</span>
+      </label>
+    </div>
+  </div>
+
   <div class="brow">
     <button class="btn btn-o" onclick="closeModal('modal-new-task')">Cancel</button>
     <button class="btn btn-p" style="flex:1;" onclick="saveNewTask()">💾 Save Task</button>
@@ -12713,7 +12744,11 @@ function openNewTaskModal(prefillDate, prefillCat) {
   document.getElementById('task-modal-title').textContent = 'New Task';
   document.getElementById('task-edit-id').textContent = '';
   // Clear all fields
-  ['task-title', 'task-desc', 'task-date-start', 'task-time-start', 'task-date-end', 'task-time-end', 'task-hours', 'task-minutes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['task-title', 'task-desc', 'task-date-start', 'task-time-start', 'task-date-end', 'task-time-end', 'task-hours', 'task-minutes', 'task-assignee-name', 'task-assignee-email'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const autoSendEl = document.getElementById('task-send-email-on-save');
+  if (autoSendEl) autoSendEl.checked = false;
+  populateAssigneeDatalist();
+  onTaskAssigneeEmailChange();
   document.getElementById('task-priority').value = 'medium';
   document.getElementById('task-period').value = 'weekly';
   selectTaskCat(prefillCat || 'work');
@@ -12751,6 +12786,14 @@ function openEditTaskModal(id) {
   }
   document.getElementById('task-priority').value = tk.priority || 'medium';
   document.getElementById('task-period').value = tk.period || 'weekly';
+  const nameEl = document.getElementById('task-assignee-name');
+  if (nameEl) nameEl.value = tk.assigneeName || tk.assignee_name || '';
+  const emailEl = document.getElementById('task-assignee-email');
+  if (emailEl) emailEl.value = tk.assigneeEmail || tk.assignee_email || '';
+  const autoSendEl = document.getElementById('task-send-email-on-save');
+  if (autoSendEl) autoSendEl.checked = false;
+  populateAssigneeDatalist();
+  onTaskAssigneeEmailChange();
   selectTaskCat(tk.category || 'work');
   populateTaskTripSelect(); populateMachineSelect(); populatePlanSelect();
   resetTaskCheckItems();
@@ -12965,6 +13008,11 @@ function saveNewTask() {
   const dateStart = document.getElementById('task-date-start').value;
   if (!title || !dateStart) { showToast('Title and start date are required'); return; }
   const now = new Date().toISOString();
+  const assigneeName = (document.getElementById('task-assignee-name') || {}).value ? document.getElementById('task-assignee-name').value.trim() : '';
+  const assigneeEmail = (document.getElementById('task-assignee-email') || {}).value ? document.getElementById('task-assignee-email').value.trim() : '';
+  const autoSendEmail = !!((document.getElementById('task-send-email-on-save') || {}).checked);
+  const existingTk = editingTaskId ? (S.tasks.find(t => t.id === editingTaskId) || {}) : {};
+
   const task = {
     id: editingTaskId || (typeof genId === 'function' ? genId('task_') : ('task_' + Date.now())),
     title,
@@ -12982,11 +13030,14 @@ function saveNewTask() {
     machine: document.getElementById('task-machine').value,
     plan: document.getElementById('task-plan').value,
     tripId: document.getElementById('task-trip').value,
-    status: editingTaskId ? (S.tasks.find(t => t.id === editingTaskId) || {}).status || 'pending' : 'pending',
+    status: editingTaskId ? (existingTk.status || 'pending') : 'pending',
+    assigneeName: assigneeName || existingTk.assigneeName || '',
+    assigneeEmail: assigneeEmail || existingTk.assigneeEmail || '',
+    completionNotes: existingTk.completionNotes || '',
     // legacy compat
     date: dateStart,
     time: document.getElementById('task-time-start').value,
-    createdAt: editingTaskId ? (S.tasks.find(t => t.id === editingTaskId) || {}).createdAt || now : now,
+    createdAt: editingTaskId ? (existingTk.createdAt || now) : now,
     updatedAt: now,
     checklist: [...taskCheckItems],
     parts: [...taskPartsItems],
@@ -13003,6 +13054,9 @@ function saveNewTask() {
   sv(); closeModal('modal-new-task'); editingTaskId = null;
   Store.commit('task:save');
   showToast((wasEditing ? 'Task updated' : 'Task saved') + ' ✓');
+  if (autoSendEmail && task.assigneeEmail && task.assigneeEmail.includes('@')) {
+    setTimeout(() => { sendTaskAssignmentEmail(task); }, 250);
+  }
   if (Notification.permission === 'granted') scheduleNotifications();
 }
 
@@ -13172,6 +13226,8 @@ function renderTasks() {
           ${tk.machine ? `<span class="tc-meta-item">🔩 ${tk.machine}</span>` : ''}
           ${tk.plan ? `<span class="tc-meta-item">📁 ${tk.plan}</span>` : ''}
           ${trip ? `<span class="tc-meta-item">🏭 ${trip} ${tripBadge}</span>` : ''}
+          ${(tk.assigneeEmail || tk.assigneeName) ? `<span class="tc-meta-item" style="color:var(--brand);font-weight:600;">👤 ${escHtml(tk.assigneeName || tk.assigneeEmail.split('@')[0])}</span>` : ''}
+          ${tk.completionNotes ? `<span class="tc-meta-item" style="color:var(--green);font-weight:600;" title="${escHtml(tk.completionNotes)}">📝 Note</span>` : ''}
           ${isOver ? `<span class="tc-meta-item" style="color:var(--red);font-weight:600;">⚠ Overdue</span>` : ''}
         </div>
         ${tk.checklist && tk.checklist.length ? (() => {
@@ -13415,7 +13471,13 @@ function openTaskDetail(id) {
       ${tk.machine ? `<div class="dg-item"><div class="dg-label">Machine</div><div class="dg-val">${tk.machine}</div></div>` : ''}
       ${tk.plan ? `<div class="dg-item"><div class="dg-label">Plan</div><div class="dg-val">${tk.plan}</div></div>` : ''}
       ${trip ? `<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val" style="cursor:pointer;color:var(--brand);" onclick="closeModal('modal-task-detail');filterTasksByTrip('${tk.tripId}')">${trip} ${tripBadge} 🔍</div></div>` : ''}
+      ${(tk.assigneeEmail || tk.assigneeName) ? `<div class="dg-item"><div class="dg-label">Assignee</div><div class="dg-val" style="color:var(--brand);font-weight:600;">👤 ${escHtml(tk.assigneeName ? tk.assigneeName + ' (' + (tk.assigneeEmail || 'No email') + ')' : tk.assigneeEmail)}</div></div>` : ''}
     </div>
+    ${tk.completionNotes ? `
+    <div style="margin-bottom:12px;background:var(--gl);border:1px solid rgba(0,132,61,0.25);border-radius:var(--rs);padding:10px 12px;">
+      <div style="font-size:10px;font-weight:700;color:var(--brand);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">📝 TECHNICIAN COMPLETION NOTE</div>
+      <div style="font-size:12.5px;color:var(--n800);line-height:1.4;">${escHtml(tk.completionNotes)}</div>
+    </div>` : ''}
     ${(tk.files && tk.files.length) ? `<div style="margin-bottom:12px;">
       <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">📎 ATTACHMENTS (${tk.files.length})</div>
       <div style="display:flex;flex-direction:column;gap:5px;">
@@ -13451,6 +13513,19 @@ function openTaskDetail(id) {
       <button class="ss-btn ${tk.status === 'in_progress' ? 'active-ip' : ''}" style="padding:8px 14px;font-size:13px;" onclick="setTaskStatus('${tk.id}','in_progress');openTaskDetail('${tk.id}')">◑ In Progress</button>
       <button class="ss-btn ${tk.status === 'done' ? 'active-d' : ''}" style="padding:8px 14px;font-size:13px;" onclick="setTaskStatus('${tk.id}','done');openTaskDetail('${tk.id}')">● Done</button>
     </div>
+    ${tk.assigneeEmail ? `
+    <div style="background:var(--n50);border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--brand);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">👤 ASSIGNED COLLABORATION</div>
+      <div style="font-size:12px;color:var(--n700);margin-bottom:8px;">
+        Assigned to <strong>${escHtml(tk.assigneeName || 'Technician')}</strong> &lt;${escHtml(tk.assigneeEmail)}&gt;
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-o" onclick="sendTaskAssignmentEmail('${tk.id}')" style="font-size:11px;padding:5px 10px;border-radius:15px;">✉️ Resend Email</button>
+        <button class="btn btn-sm btn-o" onclick="openTaskMailto('${tk.id}')" style="font-size:11px;padding:5px 10px;border-radius:15px;">📨 Mail Client</button>
+        <button class="btn btn-sm btn-o" onclick="copyTaskMagicLink('${tk.id}')" style="font-size:11px;padding:5px 10px;border-radius:15px;">🔗 Copy Magic Link</button>
+        <button class="btn btn-sm btn-o" onclick="openTaskWebView('${tk.id}')" style="font-size:11px;padding:5px 10px;border-radius:15px;">🌐 Open Web View</button>
+      </div>
+    </div>` : ''}
     <div style="display:flex;gap:8px;">
       <button class="btn btn-o" style="flex:1;" onclick="closeModal('modal-task-detail');openEditTaskModal('${tk.id}')">✏️ Edit</button>
       <button class="btn btn-d btn-sm" onclick="deleteTask('${tk.id}');closeModal('modal-task-detail')">🗑 Delete</button>
@@ -14023,6 +14098,333 @@ function kbSetStatus(btn) {
   const id = row.getAttribute('data-id');
   const st = btn.getAttribute('data-st');
   if (id && st) setTaskStatus(id, st);
+}
+
+// ═══════ TASK ASSIGNMENT & EMAIL NOTIFICATION (IMP-61) ═══════
+function populateAssigneeDatalist() {
+  const dl = document.getElementById('task-assignee-history');
+  if (!dl) return;
+  const seen = new Set();
+  const opts = [];
+  (S.tasks || []).forEach(tk => {
+    const email = (tk.assigneeEmail || tk.assignee_email || '').trim();
+    if (email && !seen.has(email.toLowerCase())) {
+      seen.add(email.toLowerCase());
+      const name = (tk.assigneeName || tk.assignee_name || '').trim();
+      opts.push(`<option value="${escHtml(email)}">${name ? escHtml(name) : escHtml(email)}</option>`);
+    }
+  });
+  dl.innerHTML = opts.join('');
+}
+
+function onTaskAssigneeEmailChange() {
+  const emailEl = document.getElementById('task-assignee-email');
+  const sendBtn = document.getElementById('task-send-email-btn');
+  const mailtoBtn = document.getElementById('task-mailto-btn');
+  const toggleLbl = document.getElementById('task-send-email-toggle-lbl');
+  const nameEl = document.getElementById('task-assignee-name');
+  if (!emailEl) return;
+  const email = emailEl.value.trim();
+  const hasEmail = email.includes('@');
+  if (sendBtn) sendBtn.style.display = hasEmail ? 'inline-flex' : 'none';
+  if (mailtoBtn) mailtoBtn.style.display = hasEmail ? 'inline-flex' : 'none';
+  if (toggleLbl) toggleLbl.style.display = hasEmail ? 'inline-flex' : 'none';
+
+  // Auto-fill name if known from past tasks
+  if (hasEmail && nameEl && !nameEl.value.trim()) {
+    const prev = (S.tasks || []).find(t => (t.assigneeEmail || '').toLowerCase() === email.toLowerCase() && t.assigneeName);
+    if (prev) nameEl.value = prev.assigneeName;
+  }
+}
+
+function getTaskMagicLink(task) {
+  if (!task || !task.id) return '';
+  const gsUrl = S.gsUrl || localStorage.getItem('plantlog_gs_url') || '';
+  if (!gsUrl) return '';
+  const rawToken = String(task.id) + ':' + String(task.createdAt || '');
+  let token = '';
+  try {
+    token = btoa(rawToken).replace(/=/g, '');
+  } catch (e) {
+    token = encodeURIComponent(rawToken);
+  }
+  return gsUrl + (gsUrl.includes('?') ? '&' : '?') + 'action=taskView&id=' + encodeURIComponent(task.id) + '&token=' + encodeURIComponent(token);
+}
+
+function buildTaskAssignmentEmailContent(task) {
+  if (!task) return null;
+  const plantObj = task.tripId ? (S.trips || []).find(t => String(t.id) === String(task.tripId)) : null;
+  const plantName = plantObj ? (plantObj.plant + (plantObj.location ? ' - ' + plantObj.location : '')) : 'General Field Service';
+  const tripTitle = plantObj ? plantObj.plant : '';
+  const dateRange = (task.dateStart && task.dateEnd && task.dateStart !== task.dateEnd)
+    ? (task.dateStart + ' to ' + task.dateEnd)
+    : (task.dateStart || task.date || 'TBD');
+  const timeRange = task.timeStart ? (task.timeStart + (task.timeEnd ? ' - ' + task.timeEnd : '')) : '';
+  const dur = calcDuration(task);
+  const prioUpper = (task.priority || 'MEDIUM').toUpperCase();
+  const catUpper = (task.category || 'WORK').toUpperCase();
+  const sender = (S.user && S.user.name) || (S.company && S.company.name) || 'Lead Service Engineer';
+  const senderContact = (S.user && (S.user.phone || S.user.email)) || '';
+  const magicLink = getTaskMagicLink(task);
+
+  const subject = `[PlantLog Pro] Task Assignment: ${task.title} — ${tripTitle || plantName}`;
+
+  // Plain text body for mailto and non-HTML mail clients
+  let textBody = `=== PLANTLOG PRO · FIELD TASK ASSIGNMENT ===\n\n`;
+  textBody += `Dear ${task.assigneeName || 'Colleague'},\n\n`;
+  textBody += `You have been assigned a task on PlantLog Pro:\n\n`;
+  textBody += `• Title: ${task.title}\n`;
+  textBody += `• Priority: [${prioUpper}] · Category: [${catUpper}] · Status: [${(task.status || 'pending').toUpperCase()}]\n`;
+  textBody += `• Plant / Location: ${plantName}\n`;
+  if (task.machine) textBody += `• Machine / Equipment Tag: ${task.machine}\n`;
+  if (task.plan) textBody += `• Plan / Work Order: ${task.plan}\n`;
+  textBody += `• Schedule: ${dateRange}${timeRange ? ' (' + timeRange + ')' : ''}${dur ? ' · Duration: ' + dur : ''}\n\n`;
+
+  if (task.desc) {
+    textBody += `DESCRIPTION / SCOPE OF WORK:\n${task.desc}\n\n`;
+  }
+
+  if (task.checklist && task.checklist.length) {
+    const doneCount = task.checklist.filter(c => c.done).length;
+    textBody += `SUB-CHECKLIST (${doneCount}/${task.checklist.length} done):\n`;
+    task.checklist.forEach((c, idx) => {
+      textBody += `  [${c.done ? 'X' : ' '}] ${idx + 1}. ${c.text || c.name}\n`;
+    });
+    textBody += `\n`;
+  }
+
+  if (task.parts && task.parts.length) {
+    textBody += `REQUIRED PARTS / MATERIALS:\n`;
+    task.parts.forEach((p, idx) => {
+      textBody += `  • Part #${p.partNo || idx + 1}: ${p.desc || ''} (Qty: ${p.qty || 1})\n`;
+    });
+    textBody += `\n`;
+  }
+
+  if (magicLink) {
+    textBody += `👉 INTERACTIVE ONLINE UPDATE (No app installation required):\n`;
+    textBody += `${magicLink}\n\n`;
+  }
+
+  textBody += `Assigned by: ${sender}${senderContact ? ' (' + senderContact + ')' : ''}\n`;
+  textBody += `PlantLog Pro Industrial Mobile System`;
+
+  // HTML Body for Google Apps Script MailApp / Gmail
+  const prioColor = task.priority === 'high' ? '#DC2626' : task.priority === 'low' ? '#2563EB' : '#D97706';
+  let htmlChecklist = '';
+  if (task.checklist && task.checklist.length) {
+    const doneCount = task.checklist.filter(c => c.done).length;
+    htmlChecklist = `<div style="margin-top:16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:700;color:#64748B;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">Sub-Checklist (${doneCount}/${task.checklist.length})</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;color:#1E293B;">
+        ${task.checklist.map((c, i) => `
+          <tr style="border-bottom:1px solid #EDF2F7;">
+            <td style="padding:6px 4px;width:24px;vertical-align:top;font-size:14px;">${c.done ? '✅' : '⬜'}</td>
+            <td style="padding:6px 4px;${c.done ? 'text-decoration:line-through;color:#94A3B8;' : ''}"><strong>${i + 1}.</strong> ${escHtml(c.text || c.name)}</td>
+          </tr>
+        `).join('')}
+      </table>
+    </div>`;
+  }
+
+  let htmlParts = '';
+  if (task.parts && task.parts.length) {
+    htmlParts = `<div style="margin-top:14px;background:#F1F5F9;border-radius:8px;padding:10px 14px;">
+      <div style="font-size:11px;font-weight:700;color:#475569;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">🔩 Parts / Materials</div>
+      <div style="font-size:12.5px;color:#334155;">
+        ${task.parts.map(p => `• <strong>${escHtml(p.partNo || '')}</strong> ${escHtml(p.desc || '')} (Qty: ${p.qty || 1})`).join('<br>')}
+      </div>
+    </div>`;
+  }
+
+  const htmlBody = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:20px;background:#F1F5F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:580px;margin:0 auto;background:#FFFFFF;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);border:1px solid #E2E8F0;">
+    <div style="background:linear-gradient(135deg,#00843D 0%,#005A29 100%);padding:20px 24px;color:#FFFFFF;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#86EFAC;">PLANTLOG PRO · FIELD TASK</span>
+        <span style="background:${prioColor};color:#FFFFFF;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">${prioUpper}</span>
+      </div>
+      <h2 style="margin:10px 0 4px;font-size:20px;font-weight:700;color:#FFFFFF;line-height:1.3;">${escHtml(task.title)}</h2>
+      <div style="font-size:13px;color:#DCFCE7;">🏭 ${escHtml(plantName)}</div>
+    </div>
+    <div style="padding:20px 24px;">
+      <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+        <tr>
+          <td style="padding:6px 0;width:50%;font-size:12.5px;color:#64748B;">📅 Schedule: <strong style="color:#0F172A;">${dateRange}</strong></td>
+          <td style="padding:6px 0;width:50%;font-size:12.5px;color:#64748B;">⏰ Time: <strong style="color:#0F172A;">${timeRange || '—'}</strong></td>
+        </tr>
+        <tr>
+          <td style="padding:6px 0;font-size:12.5px;color:#64748B;">🔩 Machine Tag: <strong style="color:#0F172A;">${escHtml(task.machine || '—')}</strong></td>
+          <td style="padding:6px 0;font-size:12.5px;color:#64748B;">📁 Plan / Ref: <strong style="color:#0F172A;">${escHtml(task.plan || '—')}</strong></td>
+        </tr>
+      </table>
+      ${task.desc ? `
+      <div style="background:#F8FAFC;border-left:3px solid #00843D;padding:12px 14px;border-radius:0 8px 8px 0;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:#64748B;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Description</div>
+        <div style="font-size:13.5px;color:#1E293B;line-height:1.5;">${escHtml(task.desc).replace(/\n/g, '<br>')}</div>
+      </div>` : ''}
+      ${htmlChecklist}
+      ${htmlParts}
+      ${magicLink ? `
+      <div style="margin-top:24px;text-align:center;">
+        <a href="${magicLink}" target="_blank" style="display:inline-block;background:#00843D;color:#FFFFFF;text-decoration:none;padding:13px 26px;border-radius:24px;font-size:14px;font-weight:700;box-shadow:0 3px 8px rgba(0,132,61,0.35);">
+          👉 Open &amp; Update Task Progress (Online)
+        </a>
+        <div style="font-size:11px;color:#94A3B8;margin-top:8px;">No app installation required · Direct update to Google Sheet</div>
+      </div>` : ''}
+    </div>
+    <div style="background:#F8FAFC;border-top:1px solid #E2E8F0;padding:14px 24px;font-size:12px;color:#64748B;">
+      <div>Assigned by: <strong style="color:#1E293B;">${escHtml(sender)}</strong> ${senderContact ? '· ' + escHtml(senderContact) : ''}</div>
+      <div style="margin-top:3px;font-size:11px;color:#94A3B8;">PlantLog Pro Industrial Management System</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return { subject, textBody, htmlBody, magicLink };
+}
+
+function resolveTaskObj(taskIdOrTask) {
+  if (!taskIdOrTask) return null;
+  if (typeof taskIdOrTask === 'object') return taskIdOrTask;
+  return (S.tasks || []).find(t => String(t.id) === String(taskIdOrTask)) || null;
+}
+
+function openTaskMailto(taskIdOrTask) {
+  const task = resolveTaskObj(taskIdOrTask);
+  if (!task) { showToast('Task not found'); return; }
+  const email = (task.assigneeEmail || '').trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please specify a valid Assignee Email first');
+    return;
+  }
+  const content = buildTaskAssignmentEmailContent(task);
+  if (!content) return;
+  const mailtoUri = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(content.subject)}&body=${encodeURIComponent(content.textBody)}`;
+  window.location.href = mailtoUri;
+  showToast('Opened in email client ✓');
+}
+
+function openTaskMailtoFromModal() {
+  const tempTask = getTempTaskFromModal();
+  if (!tempTask) return;
+  openTaskMailto(tempTask);
+}
+
+function getTempTaskFromModal() {
+  const title = (document.getElementById('task-title') || {}).value || 'Task';
+  const email = ((document.getElementById('task-assignee-email') || {}).value || '').trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid Assignee Email');
+    return null;
+  }
+  return {
+    id: editingTaskId || ('temp_' + Date.now()),
+    title: title.trim(),
+    desc: (document.getElementById('task-desc') || {}).value || '',
+    category: getSelectedCat(),
+    dateStart: (document.getElementById('task-date-start') || {}).value || todayStr(),
+    timeStart: (document.getElementById('task-time-start') || {}).value || '',
+    dateEnd: (document.getElementById('task-date-end') || {}).value || '',
+    timeEnd: (document.getElementById('task-time-end') || {}).value || '',
+    priority: (document.getElementById('task-priority') || {}).value || 'medium',
+    period: (document.getElementById('task-period') || {}).value || 'weekly',
+    machine: (document.getElementById('task-machine') || {}).value || '',
+    plan: (document.getElementById('task-plan') || {}).value || '',
+    tripId: (document.getElementById('task-trip') || {}).value || '',
+    status: editingTaskId ? ((S.tasks || []).find(t => t.id === editingTaskId) || {}).status || 'pending' : 'pending',
+    assigneeName: ((document.getElementById('task-assignee-name') || {}).value || '').trim(),
+    assigneeEmail: email,
+    checklist: [...taskCheckItems],
+    parts: [...taskPartsItems],
+    createdAt: editingTaskId ? ((S.tasks || []).find(t => t.id === editingTaskId) || {}).createdAt || new Date().toISOString() : new Date().toISOString()
+  };
+}
+
+async function sendTaskAssignmentEmail(taskIdOrTask) {
+  const task = resolveTaskObj(taskIdOrTask);
+  if (!task) { showToast('Task not found'); return; }
+  const email = (task.assigneeEmail || '').trim();
+  if (!email || !email.includes('@')) {
+    showToast('Please specify a valid Assignee Email first');
+    return;
+  }
+
+  const gasUrl = S.gsUrl || localStorage.getItem('plantlog_gs_url') || '';
+  const apiKey = S.apiKey || localStorage.getItem('plantlog_api_key') || '';
+
+  if (!navigator.onLine || !gasUrl) {
+    showToast('Offline or Google Sheets not connected. Opening mail client...');
+    setTimeout(() => { openTaskMailto(task); }, 300);
+    return;
+  }
+
+  showToast('Sending task assignment email...');
+  try {
+    const payload = {
+      action: 'assignTaskEmail',
+      apiKey: apiKey,
+      task: task,
+      assigneeEmail: email,
+      assigneeName: task.assigneeName || '',
+      senderName: (S.user && S.user.name) || (S.company && S.company.name) || 'Lead Service Engineer'
+    };
+
+    const res = await fetch(gasUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data && data.ok) {
+      showToast(`Email dispatched to ${email} ✓`);
+    } else {
+      const errMsg = (data && data.error) ? data.error : 'Server dispatch failed';
+      showToast(`Email error: ${errMsg}. Opening mail client...`);
+      setTimeout(() => { openTaskMailto(task); }, 400);
+    }
+  } catch (err) {
+    showToast('Failed to reach backend. Opening mail client...');
+    setTimeout(() => { openTaskMailto(task); }, 400);
+  }
+}
+
+function sendTaskAssignmentEmailFromModal() {
+  const tempTask = getTempTaskFromModal();
+  if (!tempTask) return;
+  sendTaskAssignmentEmail(tempTask);
+}
+
+function copyTaskMagicLink(taskId) {
+  const task = resolveTaskObj(taskId);
+  if (!task) { showToast('Task not found'); return; }
+  const link = getTaskMagicLink(task);
+  if (!link) {
+    showToast('Google Apps Script URL is not configured yet');
+    return;
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      showToast('Magic Link copied to clipboard ✓');
+    }).catch(() => {
+      prompt('Copy this Magic Link:', link);
+    });
+  } else {
+    prompt('Copy this Magic Link:', link);
+  }
+}
+
+function openTaskWebView(taskId) {
+  const task = resolveTaskObj(taskId);
+  if (!task) { showToast('Task not found'); return; }
+  const link = getTaskMagicLink(task);
+  if (!link) {
+    showToast('Google Apps Script URL is not configured yet');
+    return;
+  }
+  window.open(link, '_blank');
 }
 
 // ====== report.js ======
@@ -22145,6 +22547,9 @@ async function syncToSheets() {
         if (tk.hours || tk.minutes) return (parseInt(tk.hours || 0) * 60) + (parseInt(tk.minutes || 0));
         return '';
       })(),
+      assigneeName: s(tk.assigneeName || tk.assignee_name),
+      assigneeEmail: s(tk.assigneeEmail || tk.assignee_email),
+      completionNotes: s(tk.completionNotes || tk.completion_notes),
       createdAt: s(tk.createdAt),
       updatedAt: s(tk.updatedAt) || new Date().toISOString()
     };
@@ -22642,6 +23047,9 @@ async function loadFromSheets(silent) {
             flight: tk.FlightJson ? (() => { try { return JSON.parse(ss(tk.FlightJson)); } catch (e) { return null; } })() : null,
             files: tk.FilesJson ? (() => { try { return JSON.parse(ss(tk.FilesJson)); } catch (e) { return []; } })() : [],
             savedReports: tk.SavedReports ? (() => { try { const p = JSON.parse(ss(tk.SavedReports)); return Array.isArray(p) ? p : []; } catch (e) { return []; } })() : [],
+            assigneeName: ss(tk.AssigneeName || tk.assigneeName || ''),
+            assigneeEmail: ss(tk.AssigneeEmail || tk.assigneeEmail || ''),
+            completionNotes: ss(tk.CompletionNotes || tk.completionNotes || ''),
             date: ds,
             time: ts,
             createdAt: ss(tk.CreatedAt),
