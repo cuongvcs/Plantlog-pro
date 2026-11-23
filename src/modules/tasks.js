@@ -11,6 +11,136 @@ function populateTaskTripSelect() {
   const trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   sel.innerHTML = '<option value="">None</option>' + trips.map(tr => `<option value="${tr.id}">${tr.plant} (${fmtDate(tr.date)})</option>`).join('');
 }
+
+// ── TASK TRIP FILTER FUNCTIONS (IMP-59) ──────────────────────────────────
+function populateTaskFilterTripSelect() {
+  const sel = document.getElementById('task-filter-trip');
+  if (!sel) return;
+  const currentVal = sel.value;
+  const trips = (S.trips || []).slice().sort((a, b) => {
+    const da = a.dateStart || a.date || '';
+    const db = b.dateStart || b.date || '';
+    return db.localeCompare(da);
+  });
+  let html = '<option value="">All Trips</option>';
+  html += '<option value="__none__">📋 No Trip (Unassigned)</option>';
+  trips.forEach(tr => {
+    const dStr = tr.date ? (typeof fmtDate === 'function' ? fmtDate(tr.date) : tr.date) : '';
+    const isLeave = (tr.type === 'leave') || /leave|nghỉ/i.test(tr.purpose || tr.plant || '');
+    const isBase = typeof isTripBasePlant === 'function' && isTripBasePlant(tr);
+    const prefix = isLeave ? '🌴' : isBase ? '🏢' : '🧳';
+    const st = tr.status === 'in_progress' ? ' [Active]' : tr.status === 'completed' ? ' [Done]' : ' [Planned]';
+    html += `<option value="${tr.id}">${prefix} ${tr.plant || 'Trip'}${dStr ? ' (' + dStr + ')' : ''}${st}</option>`;
+  });
+  sel.innerHTML = html;
+  if (currentVal) sel.value = currentVal;
+}
+
+function toggleTaskTripFilter() {
+  const row = document.getElementById('task-trip-filter-row');
+  if (!row) return;
+  const isHidden = (row.style.display === 'none' || !row.style.display);
+  row.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) {
+    populateTaskFilterTripSelect();
+    const sel = document.getElementById('task-filter-trip');
+    if (sel) sel.focus();
+  }
+}
+
+function toggleTaskDateRow() {
+  const row = document.getElementById('task-date-row');
+  if (!row) return;
+  const isHidden = (row.style.display === 'none' || !row.style.display);
+  row.style.display = isHidden ? 'flex' : 'none';
+  if (isHidden) {
+    const fromEl = document.getElementById('task-from');
+    if (fromEl) fromEl.focus();
+  }
+}
+
+function onTaskTripFilterChange() {
+  updateTaskFilterButtonsState();
+  renderTasks();
+}
+
+function resetTaskTripFilter() {
+  const sel = document.getElementById('task-filter-trip');
+  if (sel) sel.value = '';
+  updateTaskFilterButtonsState();
+  renderTasks();
+}
+
+function clearTaskFilters() {
+  const searchEl = document.getElementById('task-search');
+  if (searchEl) searchEl.value = '';
+  const fromEl = document.getElementById('task-from');
+  if (fromEl) fromEl.value = '';
+  const toEl = document.getElementById('task-to');
+  if (toEl) toEl.value = '';
+  const tripSel = document.getElementById('task-filter-trip');
+  if (tripSel) tripSel.value = '';
+  const dateRow = document.getElementById('task-date-row');
+  if (dateRow) dateRow.style.display = 'none';
+  const tripRow = document.getElementById('task-trip-filter-row');
+  if (tripRow) tripRow.style.display = 'none';
+  updateTaskFilterButtonsState();
+  renderTasks();
+}
+
+function filterTasksByTrip(tripId) {
+  if (typeof showScreen === 'function') showScreen('tasks');
+  const tripRow = document.getElementById('task-trip-filter-row');
+  if (tripRow) tripRow.style.display = 'block';
+  populateTaskFilterTripSelect();
+  const tripSel = document.getElementById('task-filter-trip');
+  if (tripSel) tripSel.value = tripId || '';
+  updateTaskFilterButtonsState();
+  renderTasks();
+}
+
+function updateTaskFilterButtonsState() {
+  const dateFrom = (document.getElementById('task-from') || {}).value;
+  const dateTo = (document.getElementById('task-to') || {}).value;
+  const hasDate = !!(dateFrom || dateTo);
+  const dateBtn = document.getElementById('task-date-toggle-btn');
+  if (dateBtn) {
+    if (hasDate) {
+      dateBtn.style.background = 'var(--brand)';
+      dateBtn.style.color = '#fff';
+      dateBtn.style.borderColor = 'var(--brand)';
+    } else {
+      dateBtn.style.background = 'var(--gl)';
+      dateBtn.style.color = 'var(--green)';
+      dateBtn.style.borderColor = 'rgba(0,132,61,0.25)';
+    }
+  }
+
+  const tripSel = document.getElementById('task-filter-trip');
+  const selTripId = tripSel ? tripSel.value : '';
+  const hasTrip = !!selTripId;
+  const tripBtn = document.getElementById('task-trip-toggle-btn');
+  if (tripBtn) {
+    if (hasTrip) {
+      tripBtn.style.background = 'var(--brand)';
+      tripBtn.style.color = '#fff';
+      tripBtn.style.borderColor = 'var(--brand)';
+      if (selTripId === '__none__') {
+        tripBtn.innerHTML = '📋 No Trip';
+      } else {
+        const trObj = (S.trips || []).find(t => String(t.id) === String(selTripId));
+        const plant = trObj ? (trObj.plant || 'Trip') : 'Trip';
+        const shortPlant = plant.length > 14 ? plant.substring(0, 12) + '…' : plant;
+        tripBtn.innerHTML = '🧳 ' + shortPlant;
+      }
+    } else {
+      tripBtn.style.background = 'var(--gl)';
+      tripBtn.style.color = 'var(--green)';
+      tripBtn.style.borderColor = 'rgba(0,132,61,0.25)';
+      tripBtn.innerHTML = '🧳 Filter by trip';
+    }
+  }
+}
 function populateMachineSelect() {
   const sel = document.getElementById('task-machine'); if (!sel) return;
   const machines = S.machines || [];
@@ -89,6 +219,12 @@ function openNewTaskModal(prefillDate, prefillCat) {
   selectTaskCat(prefillCat || 'work');
   if (prefillDate) document.getElementById('task-date-start').value = prefillDate;
   populateTaskTripSelect(); populateMachineSelect(); populatePlanSelect();
+  const tripFilterEl = document.getElementById('task-filter-trip');
+  const selTripId = tripFilterEl ? tripFilterEl.value : '';
+  if (selTripId && selTripId !== '__none__') {
+    const tripSelect = document.getElementById('task-trip');
+    if (tripSelect) tripSelect.value = selTripId;
+  }
   resetTaskCheckItems();
   resetPartRows();
   resetTaskFileItems();
@@ -422,6 +558,19 @@ function renderTasks() {
   if (taskCat !== 'all') tasks = tasks.filter(tk => (tk.category || 'work') === taskCat);
   if (taskStatusFilter !== 'all') tasks = tasks.filter(tk => tk.status === taskStatusFilter);
 
+  // Filter by trip (IMP-59)
+  const tripFilterEl = document.getElementById('task-filter-trip');
+  const optCount = (tripFilterEl && tripFilterEl.options) ? tripFilterEl.options.length : 0;
+  if (tripFilterEl && optCount <= 1 && (S.trips || []).length > 0) {
+    populateTaskFilterTripSelect();
+  }
+  const selTripId = tripFilterEl ? tripFilterEl.value : '';
+  if (selTripId === '__none__') {
+    tasks = tasks.filter(tk => !tk.tripId);
+  } else if (selTripId) {
+    tasks = tasks.filter(tk => String(tk.tripId) === String(selTripId));
+  }
+
   // Text search — title, desc, machine, plan, trip plant
   const tq = ((document.getElementById('task-search') || {}).value || '').toLowerCase().trim();
   if (tq) tasks = tasks.filter(tk => {
@@ -440,7 +589,23 @@ function renderTasks() {
 
   // Active filter label
   const tlbl = document.getElementById('task-active-filter');
-  if (tlbl) { const tp = []; if (tq) tp.push('"' + tq + '"'); if (tdf || tdt) tp.push((tdf || 'start') + ' → ' + (tdt || 'end')); tlbl.style.display = tp.length ? '' : 'none'; tlbl.textContent = tp.length ? 'Showing ' + tasks.length + ' task' + (tasks.length !== 1 ? 's' : '') + ' · ' + tp.join(' · ') : ''; }
+  if (tlbl) {
+    const tp = [];
+    if (tq) tp.push('"' + tq + '"');
+    if (tdf || tdt) tp.push((tdf || 'start') + ' → ' + (tdt || 'end'));
+    if (selTripId) {
+      if (selTripId === '__none__') {
+        tp.push('No Trip');
+      } else {
+        const trObj = (S.trips || []).find(t => String(t.id) === String(selTripId));
+        tp.push('Trip: ' + (trObj ? trObj.plant : selTripId));
+      }
+    }
+    tlbl.style.display = tp.length ? '' : 'none';
+    tlbl.textContent = tp.length ? 'Showing ' + tasks.length + ' task' + (tasks.length !== 1 ? 's' : '') + ' · ' + tp.join(' · ') : '';
+  }
+
+  if (typeof updateTaskFilterButtonsState === 'function') updateTaskFilterButtonsState();
 
   tasks.sort((a, b) => (b.dateStart || b.date || '').localeCompare(a.dateStart || a.date || ''));
   // Summary stats
@@ -470,7 +635,8 @@ function renderTasks() {
   </div>`;
 
   if (!tasks.length) {
-    html += `<div class="empty"><div class="ei">${taskCat === 'leave' ? '🌴' : taskCat === 'travel' ? '✈️' : '📋'}</div><div class="et">No ${taskCat === 'all' ? 'tasks' : taskCat + ' tasks'} yet.<br>Tap + to add.</div></div>`;
+    const emptyMsg = selTripId ? (selTripId === '__none__' ? 'No unassigned tasks found.<br>Tap + to add.' : 'No tasks found for this trip.<br>Tap + to add a task for this trip.') : `No ${taskCat === 'all' ? 'tasks' : taskCat + ' tasks'} yet.<br>Tap + to add.`;
+    html += `<div class="empty"><div class="ei">${taskCat === 'leave' ? '🌴' : taskCat === 'travel' ? '✈️' : '📋'}</div><div class="et">${emptyMsg}</div></div>`;
     body.innerHTML = html; return;
   }
 
@@ -748,7 +914,7 @@ function openTaskDetail(id) {
       <div class="dg-item"><div class="dg-label">Period</div><div class="dg-val">${periodLabel(tk.period) || '—'}</div></div>
       ${tk.machine ? `<div class="dg-item"><div class="dg-label">Machine</div><div class="dg-val">${tk.machine}</div></div>` : ''}
       ${tk.plan ? `<div class="dg-item"><div class="dg-label">Plan</div><div class="dg-val">${tk.plan}</div></div>` : ''}
-      ${trip ? `<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val">${trip} ${tripBadge}</div></div>` : ''}
+      ${trip ? `<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val" style="cursor:pointer;color:var(--brand);" onclick="closeModal('modal-task-detail');filterTasksByTrip('${tk.tripId}')">${trip} ${tripBadge} 🔍</div></div>` : ''}
     </div>
     ${(tk.files && tk.files.length) ? `<div style="margin-bottom:12px;">
       <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">📎 ATTACHMENTS (${tk.files.length})</div>

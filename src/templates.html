@@ -495,26 +495,43 @@
         <input id="task-search" class="fi" placeholder="Task, machine, plan, trip…"
           style="padding-left:32px;height:36px;font-size:13px;" oninput="renderTasks()">
       </div>
-      <!-- Date range toggle -->
-      <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
-        <button
-          onclick="document.getElementById('task-date-row').style.display=document.getElementById('task-date-row').style.display==='none'?'flex':'none'"
-          style="font-size:11px;font-weight:600;color:var(--green);background:var(--gl);border:1px solid rgba(0,132,61,0.2);border-radius:var(--rs);padding:5px 10px;cursor:pointer;font-family:var(--font);">
+      <!-- Filter bar (Date & Trip) -->
+      <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">
+        <button id="task-date-toggle-btn" type="button" onclick="toggleTaskDateRow()"
+          style="font-size:12.5px;font-weight:600;color:var(--green);background:var(--gl);border:1.5px solid rgba(0,132,61,0.25);border-radius:20px;padding:7px 12px;cursor:pointer;font-family:var(--font);min-height:36px;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s ease;">
           📅 Filter by date
         </button>
-        <button
-          onclick="document.getElementById('task-search').value='';document.getElementById('task-from').value='';document.getElementById('task-to').value='';renderTasks();"
-          style="font-size:11px;color:var(--g500);background:none;border:none;cursor:pointer;font-family:var(--font);">Clear</button>
+        <button id="task-trip-toggle-btn" type="button" onclick="toggleTaskTripFilter()"
+          style="font-size:12.5px;font-weight:600;color:var(--green);background:var(--gl);border:1.5px solid rgba(0,132,61,0.25);border-radius:20px;padding:7px 12px;cursor:pointer;font-family:var(--font);min-height:36px;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s ease;">
+          🧳 Filter by trip
+        </button>
+        <button type="button" onclick="clearTaskFilters()"
+          style="font-size:12px;color:var(--g500);background:none;border:none;cursor:pointer;font-family:var(--font);padding:6px 8px;margin-left:auto;">
+          Clear
+        </button>
       </div>
-      <!-- Date range -->
+      <!-- Date range row -->
       <div id="task-date-row" style="display:none;gap:6px;margin-bottom:8px;align-items:center;">
-        <input type="date" id="task-from" class="fi" style="flex:1;height:34px;font-size:12px;" oninput="renderTasks()">
+        <input type="date" id="task-from" class="fi" style="flex:1;height:36px;font-size:12px;border-radius:10px;padding:6px 10px;" oninput="renderTasks()">
         <span style="color:var(--g500);font-size:12px;">→</span>
-        <input type="date" id="task-to" class="fi" style="flex:1;height:34px;font-size:12px;" oninput="renderTasks()">
+        <input type="date" id="task-to" class="fi" style="flex:1;height:36px;font-size:12px;border-radius:10px;padding:6px 10px;" oninput="renderTasks()">
+      </div>
+      <!-- Trip filter row (IMP-59) -->
+      <div id="task-trip-filter-row" style="display:none;margin-bottom:8px;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <select id="task-filter-trip" class="fi"
+            style="flex:1;height:38px;min-height:38px;font-size:12.5px;border-radius:10px;background:var(--surface);padding:6px 10px;"
+            onchange="onTaskTripFilterChange()">
+            <option value="">All Trips</option>
+          </select>
+          <button type="button" onclick="resetTaskTripFilter()"
+            style="font-size:11.5px;color:var(--n600);background:var(--n100);border:1px solid var(--n200);border-radius:10px;height:38px;padding:0 12px;cursor:pointer;font-family:var(--font);white-space:nowrap;font-weight:600;">
+            ✕ Reset
+          </button>
+        </div>
       </div>
       <!-- Active filter label -->
-      <div id="task-active-filter"
-        style="font-size:11px;color:var(--green);font-weight:600;padding-bottom:6px;display:none;"></div>
+      <div id="task-active-filter" style="font-size:11.5px;color:var(--green);font-weight:600;padding-bottom:6px;display:none;"></div>
     </div>
     <div class="sb" id="task-list-body"></div>
     <div class="bnav">

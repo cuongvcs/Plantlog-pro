@@ -168,7 +168,7 @@ function renderTripList(filter){
           <div class="tc-progress-fill" style="width:${pct}%;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--n500);margin-top:3px;font-weight:600;">
-          <span>📋 Tasks: ${doneTasks.length}/${tripTasks.length}</span>
+          <span onclick="event.stopPropagation();if(typeof filterTasksByTrip==='function')filterTasksByTrip('${tr.id}');else showScreen('tasks');" style="cursor:pointer;" title="View tasks for this trip">📋 Tasks: ${doneTasks.length}/${tripTasks.length}</span>
           <span>${pct}%</span>
         </div>`:''}
     </div>`;
@@ -211,7 +211,17 @@ function openTripDetail(id){
     ${kv(t('plantName').replace(' *',''),tr.plant)}${kv(t('location'),tr.location||'—')}${kv(t('visitDate').replace(' *',''),fmtDate(tr.date))}
     ${tr.dateEnd&&tr.dateEnd!==tr.date?kv(t('endDate'),fmtDate(tr.dateEnd)):''}
     ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}
-    ${tr.flight&&formatTripFlightInfo(tr.flight)?kv('Flight Details',formatTripFlightInfo(tr.flight).replace(/\n/g,'<br>')):''}`;
+    ${tr.flight&&formatTripFlightInfo(tr.flight)?kv('Flight Details',formatTripFlightInfo(tr.flight).replace(/\n/g,'<br>')):''}
+    ${(()=>{
+      const trTasks = (S.tasks || []).filter(tk => String(tk.tripId) === String(tr.id));
+      if (!trTasks.length) return '';
+      const doneT = trTasks.filter(tk => tk.status === 'done' || tk.status === 'completed').length;
+      return `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--n150);">
+        <button type="button" class="btn btn-o btn-full" onclick="if(typeof filterTasksByTrip==='function')filterTasksByTrip('${tr.id}');else showScreen('tasks');" style="font-size:12px;padding:7px 12px;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <span>📋 View Trip Tasks (${doneT}/${trTasks.length} done)</span>
+        </button>
+      </div>`;
+    })()}`;
   // Load trip note
   const noteEl=document.getElementById('trip-note-input');
   if(noteEl)noteEl.value=tr.notes||'';

@@ -5508,23 +5508,43 @@ button:focus-visible {
       <input id="task-search" class="fi" placeholder="Task, machine, plan, trip…"
         style="padding-left:32px;height:36px;font-size:13px;" oninput="renderTasks()">
     </div>
-    <!-- Date range toggle -->
-    <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
-      <button onclick="document.getElementById('task-date-row').style.display=document.getElementById('task-date-row').style.display==='none'?'flex':'none'"
-        style="font-size:12.5px;font-weight:600;color:var(--green);background:var(--gl);border:1.5px solid rgba(0,132,61,0.25);border-radius:20px;padding:7px 14px;cursor:pointer;font-family:var(--font);min-height:36px;display:inline-flex;align-items:center;">
+    <!-- Filter bar (Date & Trip) -->
+    <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">
+      <button id="task-date-toggle-btn" type="button" onclick="toggleTaskDateRow()"
+        style="font-size:12.5px;font-weight:600;color:var(--green);background:var(--gl);border:1.5px solid rgba(0,132,61,0.25);border-radius:20px;padding:7px 12px;cursor:pointer;font-family:var(--font);min-height:36px;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s ease;">
         📅 Filter by date
       </button>
-      <button onclick="document.getElementById('task-search').value='';document.getElementById('task-from').value='';document.getElementById('task-to').value='';renderTasks();"
-        style="font-size:12px;color:var(--g500);background:none;border:none;cursor:pointer;font-family:var(--font);padding:6px 10px;">Clear</button>
+      <button id="task-trip-toggle-btn" type="button" onclick="toggleTaskTripFilter()"
+        style="font-size:12.5px;font-weight:600;color:var(--green);background:var(--gl);border:1.5px solid rgba(0,132,61,0.25);border-radius:20px;padding:7px 12px;cursor:pointer;font-family:var(--font);min-height:36px;display:inline-flex;align-items:center;gap:4px;transition:all 0.15s ease;">
+        🧳 Filter by trip
+      </button>
+      <button type="button" onclick="clearTaskFilters()"
+        style="font-size:12px;color:var(--g500);background:none;border:none;cursor:pointer;font-family:var(--font);padding:6px 8px;margin-left:auto;">
+        Clear
+      </button>
     </div>
-    <!-- Date range -->
+    <!-- Date range row -->
     <div id="task-date-row" style="display:none;gap:6px;margin-bottom:8px;align-items:center;">
-      <input type="date" id="task-from" class="fi" style="flex:1;height:34px;font-size:12px;" oninput="renderTasks()">
+      <input type="date" id="task-from" class="fi" style="flex:1;height:36px;font-size:12px;border-radius:10px;padding:6px 10px;" oninput="renderTasks()">
       <span style="color:var(--g500);font-size:12px;">→</span>
-      <input type="date" id="task-to" class="fi" style="flex:1;height:34px;font-size:12px;" oninput="renderTasks()">
+      <input type="date" id="task-to" class="fi" style="flex:1;height:36px;font-size:12px;border-radius:10px;padding:6px 10px;" oninput="renderTasks()">
+    </div>
+    <!-- Trip filter row (IMP-59) -->
+    <div id="task-trip-filter-row" style="display:none;margin-bottom:8px;">
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="task-filter-trip" class="fi"
+          style="flex:1;height:38px;min-height:38px;font-size:12.5px;border-radius:10px;background:var(--surface);padding:6px 10px;"
+          onchange="onTaskTripFilterChange()">
+          <option value="">All Trips</option>
+        </select>
+        <button type="button" onclick="resetTaskTripFilter()"
+          style="font-size:11.5px;color:var(--n600);background:var(--n100);border:1px solid var(--n200);border-radius:10px;height:38px;padding:0 12px;cursor:pointer;font-family:var(--font);white-space:nowrap;font-weight:600;">
+          ✕ Reset
+        </button>
+      </div>
     </div>
     <!-- Active filter label -->
-    <div id="task-active-filter" style="font-size:11px;color:var(--green);font-weight:600;padding-bottom:6px;display:none;"></div>
+    <div id="task-active-filter" style="font-size:11.5px;color:var(--green);font-weight:600;padding-bottom:6px;display:none;"></div>
   </div>
   <div class="sb" id="task-list-body"></div>
   <div class="bnav">
@@ -10923,7 +10943,7 @@ function renderTripList(filter){
           <div class="tc-progress-fill" style="width:${pct}%;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--n500);margin-top:3px;font-weight:600;">
-          <span>📋 Tasks: ${doneTasks.length}/${tripTasks.length}</span>
+          <span onclick="event.stopPropagation();if(typeof filterTasksByTrip==='function')filterTasksByTrip('${tr.id}');else showScreen('tasks');" style="cursor:pointer;" title="View tasks for this trip">📋 Tasks: ${doneTasks.length}/${tripTasks.length}</span>
           <span>${pct}%</span>
         </div>`:''}
     </div>`;
@@ -10966,7 +10986,17 @@ function openTripDetail(id){
     ${kv(t('plantName').replace(' *',''),tr.plant)}${kv(t('location'),tr.location||'—')}${kv(t('visitDate').replace(' *',''),fmtDate(tr.date))}
     ${tr.dateEnd&&tr.dateEnd!==tr.date?kv(t('endDate'),fmtDate(tr.dateEnd)):''}
     ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}
-    ${tr.flight&&formatTripFlightInfo(tr.flight)?kv('Flight Details',formatTripFlightInfo(tr.flight).replace(/\n/g,'<br>')):''}`;
+    ${tr.flight&&formatTripFlightInfo(tr.flight)?kv('Flight Details',formatTripFlightInfo(tr.flight).replace(/\n/g,'<br>')):''}
+    ${(()=>{
+      const trTasks = (S.tasks || []).filter(tk => String(tk.tripId) === String(tr.id));
+      if (!trTasks.length) return '';
+      const doneT = trTasks.filter(tk => tk.status === 'done' || tk.status === 'completed').length;
+      return `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--n150);">
+        <button type="button" class="btn btn-o btn-full" onclick="if(typeof filterTasksByTrip==='function')filterTasksByTrip('${tr.id}');else showScreen('tasks');" style="font-size:12px;padding:7px 12px;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <span>📋 View Trip Tasks (${doneT}/${trTasks.length} done)</span>
+        </button>
+      </div>`;
+    })()}`;
   // Load trip note
   const noteEl=document.getElementById('trip-note-input');
   if(noteEl)noteEl.value=tr.notes||'';
@@ -12465,6 +12495,136 @@ function populateTaskTripSelect() {
   const trips = typeof getSortedTrips === 'function' ? getSortedTrips() : [...(S.trips || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   sel.innerHTML = '<option value="">None</option>' + trips.map(tr => `<option value="${tr.id}">${tr.plant} (${fmtDate(tr.date)})</option>`).join('');
 }
+
+// ── TASK TRIP FILTER FUNCTIONS (IMP-59) ──────────────────────────────────
+function populateTaskFilterTripSelect() {
+  const sel = document.getElementById('task-filter-trip');
+  if (!sel) return;
+  const currentVal = sel.value;
+  const trips = (S.trips || []).slice().sort((a, b) => {
+    const da = a.dateStart || a.date || '';
+    const db = b.dateStart || b.date || '';
+    return db.localeCompare(da);
+  });
+  let html = '<option value="">All Trips</option>';
+  html += '<option value="__none__">📋 No Trip (Unassigned)</option>';
+  trips.forEach(tr => {
+    const dStr = tr.date ? (typeof fmtDate === 'function' ? fmtDate(tr.date) : tr.date) : '';
+    const isLeave = (tr.type === 'leave') || /leave|nghỉ/i.test(tr.purpose || tr.plant || '');
+    const isBase = typeof isTripBasePlant === 'function' && isTripBasePlant(tr);
+    const prefix = isLeave ? '🌴' : isBase ? '🏢' : '🧳';
+    const st = tr.status === 'in_progress' ? ' [Active]' : tr.status === 'completed' ? ' [Done]' : ' [Planned]';
+    html += `<option value="${tr.id}">${prefix} ${tr.plant || 'Trip'}${dStr ? ' (' + dStr + ')' : ''}${st}</option>`;
+  });
+  sel.innerHTML = html;
+  if (currentVal) sel.value = currentVal;
+}
+
+function toggleTaskTripFilter() {
+  const row = document.getElementById('task-trip-filter-row');
+  if (!row) return;
+  const isHidden = (row.style.display === 'none' || !row.style.display);
+  row.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) {
+    populateTaskFilterTripSelect();
+    const sel = document.getElementById('task-filter-trip');
+    if (sel) sel.focus();
+  }
+}
+
+function toggleTaskDateRow() {
+  const row = document.getElementById('task-date-row');
+  if (!row) return;
+  const isHidden = (row.style.display === 'none' || !row.style.display);
+  row.style.display = isHidden ? 'flex' : 'none';
+  if (isHidden) {
+    const fromEl = document.getElementById('task-from');
+    if (fromEl) fromEl.focus();
+  }
+}
+
+function onTaskTripFilterChange() {
+  updateTaskFilterButtonsState();
+  renderTasks();
+}
+
+function resetTaskTripFilter() {
+  const sel = document.getElementById('task-filter-trip');
+  if (sel) sel.value = '';
+  updateTaskFilterButtonsState();
+  renderTasks();
+}
+
+function clearTaskFilters() {
+  const searchEl = document.getElementById('task-search');
+  if (searchEl) searchEl.value = '';
+  const fromEl = document.getElementById('task-from');
+  if (fromEl) fromEl.value = '';
+  const toEl = document.getElementById('task-to');
+  if (toEl) toEl.value = '';
+  const tripSel = document.getElementById('task-filter-trip');
+  if (tripSel) tripSel.value = '';
+  const dateRow = document.getElementById('task-date-row');
+  if (dateRow) dateRow.style.display = 'none';
+  const tripRow = document.getElementById('task-trip-filter-row');
+  if (tripRow) tripRow.style.display = 'none';
+  updateTaskFilterButtonsState();
+  renderTasks();
+}
+
+function filterTasksByTrip(tripId) {
+  if (typeof showScreen === 'function') showScreen('tasks');
+  const tripRow = document.getElementById('task-trip-filter-row');
+  if (tripRow) tripRow.style.display = 'block';
+  populateTaskFilterTripSelect();
+  const tripSel = document.getElementById('task-filter-trip');
+  if (tripSel) tripSel.value = tripId || '';
+  updateTaskFilterButtonsState();
+  renderTasks();
+}
+
+function updateTaskFilterButtonsState() {
+  const dateFrom = (document.getElementById('task-from') || {}).value;
+  const dateTo = (document.getElementById('task-to') || {}).value;
+  const hasDate = !!(dateFrom || dateTo);
+  const dateBtn = document.getElementById('task-date-toggle-btn');
+  if (dateBtn) {
+    if (hasDate) {
+      dateBtn.style.background = 'var(--brand)';
+      dateBtn.style.color = '#fff';
+      dateBtn.style.borderColor = 'var(--brand)';
+    } else {
+      dateBtn.style.background = 'var(--gl)';
+      dateBtn.style.color = 'var(--green)';
+      dateBtn.style.borderColor = 'rgba(0,132,61,0.25)';
+    }
+  }
+
+  const tripSel = document.getElementById('task-filter-trip');
+  const selTripId = tripSel ? tripSel.value : '';
+  const hasTrip = !!selTripId;
+  const tripBtn = document.getElementById('task-trip-toggle-btn');
+  if (tripBtn) {
+    if (hasTrip) {
+      tripBtn.style.background = 'var(--brand)';
+      tripBtn.style.color = '#fff';
+      tripBtn.style.borderColor = 'var(--brand)';
+      if (selTripId === '__none__') {
+        tripBtn.innerHTML = '📋 No Trip';
+      } else {
+        const trObj = (S.trips || []).find(t => String(t.id) === String(selTripId));
+        const plant = trObj ? (trObj.plant || 'Trip') : 'Trip';
+        const shortPlant = plant.length > 14 ? plant.substring(0, 12) + '…' : plant;
+        tripBtn.innerHTML = '🧳 ' + shortPlant;
+      }
+    } else {
+      tripBtn.style.background = 'var(--gl)';
+      tripBtn.style.color = 'var(--green)';
+      tripBtn.style.borderColor = 'rgba(0,132,61,0.25)';
+      tripBtn.innerHTML = '🧳 Filter by trip';
+    }
+  }
+}
 function populateMachineSelect() {
   const sel = document.getElementById('task-machine'); if (!sel) return;
   const machines = S.machines || [];
@@ -12543,6 +12703,12 @@ function openNewTaskModal(prefillDate, prefillCat) {
   selectTaskCat(prefillCat || 'work');
   if (prefillDate) document.getElementById('task-date-start').value = prefillDate;
   populateTaskTripSelect(); populateMachineSelect(); populatePlanSelect();
+  const tripFilterEl = document.getElementById('task-filter-trip');
+  const selTripId = tripFilterEl ? tripFilterEl.value : '';
+  if (selTripId && selTripId !== '__none__') {
+    const tripSelect = document.getElementById('task-trip');
+    if (tripSelect) tripSelect.value = selTripId;
+  }
   resetTaskCheckItems();
   resetPartRows();
   resetTaskFileItems();
@@ -12876,6 +13042,19 @@ function renderTasks() {
   if (taskCat !== 'all') tasks = tasks.filter(tk => (tk.category || 'work') === taskCat);
   if (taskStatusFilter !== 'all') tasks = tasks.filter(tk => tk.status === taskStatusFilter);
 
+  // Filter by trip (IMP-59)
+  const tripFilterEl = document.getElementById('task-filter-trip');
+  const optCount = (tripFilterEl && tripFilterEl.options) ? tripFilterEl.options.length : 0;
+  if (tripFilterEl && optCount <= 1 && (S.trips || []).length > 0) {
+    populateTaskFilterTripSelect();
+  }
+  const selTripId = tripFilterEl ? tripFilterEl.value : '';
+  if (selTripId === '__none__') {
+    tasks = tasks.filter(tk => !tk.tripId);
+  } else if (selTripId) {
+    tasks = tasks.filter(tk => String(tk.tripId) === String(selTripId));
+  }
+
   // Text search — title, desc, machine, plan, trip plant
   const tq = ((document.getElementById('task-search') || {}).value || '').toLowerCase().trim();
   if (tq) tasks = tasks.filter(tk => {
@@ -12894,7 +13073,23 @@ function renderTasks() {
 
   // Active filter label
   const tlbl = document.getElementById('task-active-filter');
-  if (tlbl) { const tp = []; if (tq) tp.push('"' + tq + '"'); if (tdf || tdt) tp.push((tdf || 'start') + ' → ' + (tdt || 'end')); tlbl.style.display = tp.length ? '' : 'none'; tlbl.textContent = tp.length ? 'Showing ' + tasks.length + ' task' + (tasks.length !== 1 ? 's' : '') + ' · ' + tp.join(' · ') : ''; }
+  if (tlbl) {
+    const tp = [];
+    if (tq) tp.push('"' + tq + '"');
+    if (tdf || tdt) tp.push((tdf || 'start') + ' → ' + (tdt || 'end'));
+    if (selTripId) {
+      if (selTripId === '__none__') {
+        tp.push('No Trip');
+      } else {
+        const trObj = (S.trips || []).find(t => String(t.id) === String(selTripId));
+        tp.push('Trip: ' + (trObj ? trObj.plant : selTripId));
+      }
+    }
+    tlbl.style.display = tp.length ? '' : 'none';
+    tlbl.textContent = tp.length ? 'Showing ' + tasks.length + ' task' + (tasks.length !== 1 ? 's' : '') + ' · ' + tp.join(' · ') : '';
+  }
+
+  if (typeof updateTaskFilterButtonsState === 'function') updateTaskFilterButtonsState();
 
   tasks.sort((a, b) => (b.dateStart || b.date || '').localeCompare(a.dateStart || a.date || ''));
   // Summary stats
@@ -12924,7 +13119,8 @@ function renderTasks() {
   </div>`;
 
   if (!tasks.length) {
-    html += `<div class="empty"><div class="ei">${taskCat === 'leave' ? '🌴' : taskCat === 'travel' ? '✈️' : '📋'}</div><div class="et">No ${taskCat === 'all' ? 'tasks' : taskCat + ' tasks'} yet.<br>Tap + to add.</div></div>`;
+    const emptyMsg = selTripId ? (selTripId === '__none__' ? 'No unassigned tasks found.<br>Tap + to add.' : 'No tasks found for this trip.<br>Tap + to add a task for this trip.') : `No ${taskCat === 'all' ? 'tasks' : taskCat + ' tasks'} yet.<br>Tap + to add.`;
+    html += `<div class="empty"><div class="ei">${taskCat === 'leave' ? '🌴' : taskCat === 'travel' ? '✈️' : '📋'}</div><div class="et">${emptyMsg}</div></div>`;
     body.innerHTML = html; return;
   }
 
@@ -13202,7 +13398,7 @@ function openTaskDetail(id) {
       <div class="dg-item"><div class="dg-label">Period</div><div class="dg-val">${periodLabel(tk.period) || '—'}</div></div>
       ${tk.machine ? `<div class="dg-item"><div class="dg-label">Machine</div><div class="dg-val">${tk.machine}</div></div>` : ''}
       ${tk.plan ? `<div class="dg-item"><div class="dg-label">Plan</div><div class="dg-val">${tk.plan}</div></div>` : ''}
-      ${trip ? `<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val">${trip} ${tripBadge}</div></div>` : ''}
+      ${trip ? `<div class="dg-item"><div class="dg-label">Trip</div><div class="dg-val" style="cursor:pointer;color:var(--brand);" onclick="closeModal('modal-task-detail');filterTasksByTrip('${tk.tripId}')">${trip} ${tripBadge} 🔍</div></div>` : ''}
     </div>
     ${(tk.files && tk.files.length) ? `<div style="margin-bottom:12px;">
       <div style="font-size:10px;font-weight:700;color:var(--n400);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">📎 ATTACHMENTS (${tk.files.length})</div>
