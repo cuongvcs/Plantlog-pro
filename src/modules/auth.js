@@ -48,41 +48,113 @@ let _pendingScreen = null;    // 'login' | 'setup_new' | 'setup_confirm' | 'chan
 let pinFirst = '';        // stores first entry during setup confirm step
 let _lockTimer = null;
 let _isLocked = false;
-const AUTO_LOCK_MS = 2 * 60 * 1000;  // 2 minutes
+let _hiddenAt = 0;
+
+// ── App Lock Configuration Helpers (IMP-58) ──────────────────
+function getAutoLockIdleMs() {
+  const val = (typeof localStorage !== 'undefined' && localStorage.getItem('plpro_lock_idle')) ||
+    (typeof S !== 'undefined' && S.securityConfig && S.securityConfig.idle) || '2m';
+  if (val === 'never' || val === '0') return 0;
+  if (val === '30s') return 30 * 1000;
+  if (val === '1m' || val === '1') return 60 * 1000;
+  if (val === '2m' || val === '2') return 2 * 60 * 1000;
+  if (val === '3m' || val === '3') return 3 * 60 * 1000;
+  if (val === '4m' || val === '4') return 4 * 60 * 1000;
+  if (val === '5m' || val === '5') return 5 * 60 * 1000;
+  if (val === '10m' || val === '10') return 10 * 60 * 1000;
+  const num = parseInt(val, 10);
+  return isNaN(num) ? 2 * 60 * 1000 : num * 60 * 1000;
+}
+
+function getLockOnExitSetting() {
+  return (typeof localStorage !== 'undefined' && localStorage.getItem('plpro_lock_exit')) ||
+    (typeof S !== 'undefined' && S.securityConfig && S.securityConfig.exit) || '1m';
+}
+
+function getLockOnExitMs() {
+  const val = getLockOnExitSetting();
+  if (val === 'immediate' || val === '0') return 0;
+  if (val === 'never') return -1; // -1 means never lock on background
+  if (val === '30s') return 30 * 1000;
+  if (val === '1m' || val === '1') return 60 * 1000;
+  if (val === '2m' || val === '2') return 2 * 60 * 1000;
+  if (val === '3m' || val === '3') return 3 * 60 * 1000;
+  if (val === '4m' || val === '4') return 4 * 60 * 1000;
+  if (val === '5m' || val === '5') return 5 * 60 * 1000;
+  const num = parseInt(val, 10);
+  return isNaN(num) ? 60 * 1000 : num * 60 * 1000;
+}
 
 function resetAutoLock() {
   clearTimeout(_lockTimer);
-  if (hasPIN()) {
-    _lockTimer = setTimeout(lockApp, AUTO_LOCK_MS);
+  _lockTimer = null;
+  if (hasPIN() && !_isLocked) {
+    const idleMs = getAutoLockIdleMs();
+    if (idleMs > 0) {
+      _lockTimer = setTimeout(lockApp, idleMs);
+    }
   }
 }
 
-document.addEventListener('touchstart', resetAutoLock, { passive: true });
-document.addEventListener('click', resetAutoLock);
+// Global user activity listeners in CAPTURE phase so stopPropagation() cannot block reset
+if (typeof window !== 'undefined') {
+  const ACTIVITY_EVENTS = [
+    'touchstart',
+    'touchmove',
+    'touchend',
+    'pointerdown',
+    'mousedown',
+    'keydown',
+    'scroll',
+    'input',
+    'wheel'
+  ];
+  ACTIVITY_EVENTS.forEach(evt => {
+    window.addEventListener(evt, resetAutoLock, { capture: true, passive: true });
+  });
+}
 
-// UX-08: Auto-lock on app backgrounding / visibility change
-let _hiddenAt = 0;
-const BACKGROUND_LOCK_MS = 60 * 1000; // 1 minute in background locks app
+// Background / Visibility change / App switch handling (IMP-58)
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
       _hiddenAt = Date.now();
+      const exitMs = getLockOnExitMs();
+      if (hasPIN() && !_isLocked && exitMs === 0) {
+        // Immediate lock on exit / app switch
+        lockApp();
+      }
     } else if (document.visibilityState === 'visible') {
-      if (hasPIN() && !_isLocked && _hiddenAt && (Date.now() - _hiddenAt >= BACKGROUND_LOCK_MS)) {
+      const exitMs = getLockOnExitMs();
+      if (hasPIN() && !_isLocked && exitMs > 0 && _hiddenAt && (Date.now() - _hiddenAt >= exitMs)) {
         lockApp();
       }
       _hiddenAt = 0;
       resetAutoLock();
     }
   });
+
+  // Also support pagehide (mobile browser swipe-to-close / swipe-away)
+  if (typeof window !== 'undefined') {
+    window.addEventListener('pagehide', () => {
+      const exitMs = getLockOnExitMs();
+      if (hasPIN() && !_isLocked && exitMs === 0) {
+        lockApp();
+      }
+    });
+  }
 }
 
 function lockApp() {
   if (!hasPIN()) return;
   _isLocked = true;
+  if (typeof window !== 'undefined') window._appUnlocked = false;
+  try { if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('pl_unlocked'); } catch (e) { }
   _settingsUnlocked = false;
   pinBuffer = '';
   pinMode = 'login';
+  clearTimeout(_lockTimer);
+  _lockTimer = null;
   const lockEl = document.getElementById('screen-lock');
   const appEl = document.getElementById('app');
   if (lockEl) lockEl.style.display = 'flex';
@@ -102,6 +174,8 @@ function lockApp() {
 
 function unlockApp() {
   _isLocked = false;
+  if (typeof window !== 'undefined') window._appUnlocked = true;
+  try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('pl_unlocked', '1'); } catch (e) { }
   const lockStyle = document.getElementById('pl-lock-style');
   if (lockStyle) {
     try { lockStyle.remove(); } catch (e) { }
@@ -345,6 +419,43 @@ function updatePINStatusLabel() {
   if (el) el.textContent = hasPIN() ? 'Active — tap to change or remove' : 'Tap to set up a 4-digit PIN';
   const lockRow = document.getElementById('lock-now-row');
   if (lockRow) lockRow.style.display = hasPIN() ? '' : 'none';
+  const lockCfg = document.getElementById('app-lock-config-rows');
+  if (lockCfg) lockCfg.style.display = hasPIN() ? '' : 'none';
+  loadAppLockSettings();
+}
+
+function saveAppLockSettings() {
+  const exitEl = document.getElementById('pref-lock-exit');
+  const idleEl = document.getElementById('pref-lock-idle');
+  if (exitEl) {
+    const exitVal = exitEl.value;
+    try { localStorage.setItem('plpro_lock_exit', exitVal); } catch (e) { }
+    if (typeof S !== 'undefined') {
+      if (!S.securityConfig) S.securityConfig = {};
+      S.securityConfig.exit = exitVal;
+    }
+  }
+  if (idleEl) {
+    const idleVal = idleEl.value;
+    try { localStorage.setItem('plpro_lock_idle', idleVal); } catch (e) { }
+    if (typeof S !== 'undefined') {
+      if (!S.securityConfig) S.securityConfig = {};
+      S.securityConfig.idle = idleVal;
+    }
+  }
+  if (typeof sv === 'function') sv();
+  resetAutoLock();
+  if (typeof showToast === 'function') showToast('App lock settings saved ✓');
+}
+
+function loadAppLockSettings() {
+  const exitEl = document.getElementById('pref-lock-exit');
+  const idleEl = document.getElementById('pref-lock-idle');
+  const exitVal = getLockOnExitSetting();
+  const idleVal = (typeof localStorage !== 'undefined' && localStorage.getItem('plpro_lock_idle')) ||
+    (typeof S !== 'undefined' && S.securityConfig && S.securityConfig.idle) || '2m';
+  if (exitEl) exitEl.value = exitVal;
+  if (idleEl) idleEl.value = idleVal;
 }
 
 // ── Startup auth check ─────────────────────────────────────
@@ -369,7 +480,12 @@ function authInit() {
   }
 
   if (hasPIN()) {
-    lockApp();
+    // If already authenticated during this active browser session, keep unlocked; otherwise lock
+    if (window._appUnlocked || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('pl_unlocked') === '1')) {
+      unlockApp();
+    } else {
+      lockApp();
+    }
   } else {
     hideLock();
     showApp();

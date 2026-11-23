@@ -119,7 +119,8 @@ let S={
   calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
   reminders:[],  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
   tripClaims:[], // [{tripId, dateRequest, dateApproved, processDate, doneDate, paymentStatus, comment, updatedAt}] (IMP-31)
-  creditCard:{budget:50000000,cardName:'Corporate Credit Card',transfers:[]}
+  creditCard:{budget:50000000,cardName:'Corporate Credit Card',transfers:[]},
+  securityConfig:{exit:'1m',idle:'2m'}
 };
 let curTrip=null,curReport=null,sigCanvas,sigCtx,isDrw=false;
 let calY,calM,selDay=null,signoffRes='Completed';
@@ -223,6 +224,7 @@ function ld(){
   }
   if (!S.profile) S.profile = { name: '', title: '', company: '', plantBase: 'DaNang', empid: '', signature: '' };
   if (!S.profile.plantBase) S.profile.plantBase = 'DaNang';
+  if (!S.securityConfig) S.securityConfig = { exit: '1m', idle: '2m' };
   if (typeof ensureStateShape === 'function') ensureStateShape(S);
   if (typeof migrateState === 'function') migrateState(S);
   if(!S.assets) S.assets = [];
@@ -821,7 +823,10 @@ function showScreen(n){
   if(n==='toolbox') { if(typeof switchToolboxTab==='function') switchToolboxTab(curToolboxTab||'pressure'); }
   if(n==='assets') { if(typeof renderAssetList==='function') renderAssetList(); }
   if(n==='bill-export')buildBillPDFPreview();
-  if(n==='settings') { if(typeof renderSettingsAbout==='function') renderSettingsAbout(); }
+  if(n==='settings') {
+    if(typeof renderSettingsAbout==='function') renderSettingsAbout();
+    if(typeof updatePINStatusLabel==='function') updatePINStatusLabel();
+  }
   if(n==='tools') { if(typeof renderToolsScreen==='function') renderToolsScreen(); }
 }
 
@@ -982,6 +987,7 @@ function loadProfile(){
   document.getElementById('pref-empid').value=S.profile.empid||'';
   updateProfileDisplay();
   if(typeof renderSettingsAbout==='function') renderSettingsAbout();
+  if(typeof updatePINStatusLabel==='function') updatePINStatusLabel();
 }
 function saveProfile(){
   S.profile.name=document.getElementById('pref-name').value;
@@ -1298,6 +1304,7 @@ async function clearAllData(){
     assets:[],scratchpad:[],deletedIds:{},library:[],
     reminders:[],tripClaims:[],
     creditCard:{budget:50000000,cardName:'Corporate Credit Card',transfers:[]},
+    securityConfig:{exit:'1m',idle:'2m'},
     telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
     calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
     templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],
