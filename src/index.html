@@ -3214,32 +3214,48 @@ button {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-/* ── IMP-22: Quick Scratchpad ─────────────────────── */
+/* ── IMP-22: Quick Scratchpad (IMP-60: Enhanced Touch Ergonomics) ─────── */
 .scratch-cat-chips {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
-  margin-bottom: 8px;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.scratch-cat-chips::-webkit-scrollbar {
+  display: none;
 }
 
 .scratch-cat-chip {
-  padding: 5px 10px;
-  border-radius: 16px;
-  border: 1px solid var(--n200);
+  min-height: 38px;
+  padding: 7px 15px;
+  border-radius: 20px;
+  border: 1.5px solid var(--n200);
   background: var(--surface);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--n600);
+  color: var(--n700);
   cursor: pointer;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   transition: all var(--dur-fast);
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.scratch-cat-chip:active {
+  transform: scale(0.96);
 }
 
 .scratch-cat-chip.active {
   background: var(--brand);
   color: #fff;
   border-color: var(--brand);
+  box-shadow: 0 2px 6px rgba(0, 132, 61, 0.25);
 }
 
 .scratch-card {
@@ -10780,187 +10796,187 @@ function settingsPinDel() { modalPinBackspace(); }
 // =====================================================
 
 // ═══════ TRIPS ═══════
-function saveNewTrip(){
-  const plant=document.getElementById('nt-plant').value.trim();
-  const date=document.getElementById('nt-date').value;
-  if(!plant||!date){showToast('Plant name and date required');return;}
-  const clearForm=()=>{
-    ['nt-plant','nt-location','nt-date','nt-date-end','nt-purpose','nt-contact'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('nt-transport').value='';
+function saveNewTrip() {
+  const plant = document.getElementById('nt-plant').value.trim();
+  const date = document.getElementById('nt-date').value;
+  if (!plant || !date) { showToast('Plant name and date required'); return; }
+  const clearForm = () => {
+    ['nt-plant', 'nt-location', 'nt-date', 'nt-date-end', 'nt-purpose', 'nt-contact'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('nt-transport').value = '';
     resetTripFlightFields();
     resetTripTAFields();
-    document.getElementById('trip-modal-title').textContent='New Trip';
-    document.getElementById('trip-edit-badge').textContent='';
-    document.getElementById('trip-save-btn').textContent='Save trip';
+    document.getElementById('trip-modal-title').textContent = 'New Trip';
+    document.getElementById('trip-edit-badge').textContent = '';
+    document.getElementById('trip-save-btn').textContent = 'Save trip';
   };
-  if(editingTripId){
-    const tr=S.trips.find(t=>t.id===editingTripId);
-    if(tr){
-      tr.plant=plant;tr.date=date;
-      tr.dateEnd=document.getElementById('nt-date-end').value||date;
-      tr.location=document.getElementById('nt-location').value;
-      tr.purpose=document.getElementById('nt-purpose').value;
-      tr.contact=document.getElementById('nt-contact').value;
-      tr.transport=document.getElementById('nt-transport').value;
-      tr.flight=tr.transport.toLowerCase().includes('flight')?getTripFlightFields():null;
-      tr.ta=tr.transport.toLowerCase().includes('flight')?getTripTAFields():(tr.ta||null);
-      tr.updatedAt=new Date().toISOString();
+  if (editingTripId) {
+    const tr = S.trips.find(t => t.id === editingTripId);
+    if (tr) {
+      tr.plant = plant; tr.date = date;
+      tr.dateEnd = document.getElementById('nt-date-end').value || date;
+      tr.location = document.getElementById('nt-location').value;
+      tr.purpose = document.getElementById('nt-purpose').value;
+      tr.contact = document.getElementById('nt-contact').value;
+      tr.transport = document.getElementById('nt-transport').value;
+      tr.flight = tr.transport.toLowerCase().includes('flight') ? getTripFlightFields() : null;
+      tr.ta = tr.transport.toLowerCase().includes('flight') ? getTripTAFields() : (tr.ta || null);
+      tr.updatedAt = new Date().toISOString();
       // notes preserved — not in the edit modal, edited inline
     }
-    editingTripId=null;
-    sv();closeModal('modal-new-trip');clearForm();
+    editingTripId = null;
+    sv(); closeModal('modal-new-trip'); clearForm();
     Store.commit('trip:save');
     showToast('Trip updated ✓');
-    if(curTrip)openTripDetail(curTrip);
+    if (curTrip) openTripDetail(curTrip);
     return;
   }
-  const tripTransport=document.getElementById('nt-transport').value;
+  const tripTransport = document.getElementById('nt-transport').value;
   const tripId = typeof genId === 'function' ? genId('trip_') : ('trip_' + Date.now());
-  const trip={id:tripId,plant,date,dateEnd:document.getElementById('nt-date-end').value||date,location:document.getElementById('nt-location').value,purpose:document.getElementById('nt-purpose').value,contact:document.getElementById('nt-contact').value,transport:tripTransport,flight:tripTransport.toLowerCase().includes('flight')?getTripFlightFields():null,ta:tripTransport.toLowerCase().includes('flight')?getTripTAFields():null,status:'planned',createdAt:new Date().toISOString()};
+  const trip = { id: tripId, plant, date, dateEnd: document.getElementById('nt-date-end').value || date, location: document.getElementById('nt-location').value, purpose: document.getElementById('nt-purpose').value, contact: document.getElementById('nt-contact').value, transport: tripTransport, flight: tripTransport.toLowerCase().includes('flight') ? getTripFlightFields() : null, ta: tripTransport.toLowerCase().includes('flight') ? getTripTAFields() : null, status: 'planned', createdAt: new Date().toISOString() };
   S.trips.push(trip);
-  S.reports[trip.id]={checklist:S.templates.map((tmpl,i)=>({id:(typeof genId==='function'?genId('ci'):'ci'+i+Date.now()),name:tmpl,result:'',note:''})),readings:[],issues:[],team:[...S.defaultTeam.map(m=>({...m,id:(typeof genId==='function'?genId('tm'):'tm'+Date.now()+Math.random())}))],signoff:{summary:'',result:'Completed',remarks:''},signature:'',reportTasks:[],reportTaskNotes:{}};
-  sv();closeModal('modal-new-trip');clearForm();
+  S.reports[trip.id] = { checklist: S.templates.map((tmpl, i) => ({ id: (typeof genId === 'function' ? genId('ci') : 'ci' + i + Date.now()), name: tmpl, result: '', note: '' })), readings: [], issues: [], team: [...S.defaultTeam.map(m => ({ ...m, id: (typeof genId === 'function' ? genId('tm') : 'tm' + Date.now() + Math.random()) }))], signoff: { summary: '', result: 'Completed', remarks: '' }, signature: '', reportTasks: [], reportTaskNotes: {} };
+  sv(); closeModal('modal-new-trip'); clearForm();
   Store.commit('trip:save');
-  showToast(t('saveTrip')+' ✓');
-  if(Notification.permission==='granted')scheduleNotifications();
+  showToast(t('saveTrip') + ' ✓');
+  if (Notification.permission === 'granted') scheduleNotifications();
   // Offer to generate TA PDF immediately if this trip has flight info
-  if(trip.flight && trip.ta && trip.ta.taNo){
-    setTimeout(async ()=>{
+  if (trip.flight && trip.ta && trip.ta.taNo) {
+    setTimeout(async () => {
       const ok = await appConfirm('Flight trip created!\n\nGenerate Travel Authorization PDF now?', {
         title: 'Travel Authorization',
         confirmText: 'Generate PDF',
         icon: '✈️'
       });
-      if(ok){
+      if (ok) {
         generateTAPdf(trip.id);
       }
     }, 600);
   }
 }
 // ── FILTER HELPERS ──────────────────────────────────────────
-function toggleTripDateRow(){
-  const row=document.getElementById('trip-date-row');
-  const btn=document.getElementById('trip-date-toggle');
-  const open=row&&row.style.display!=='none';
-  if(row)row.style.display=open?'none':'';
-  if(btn){btn.style.background=open?'#fff':'var(--gl)';btn.style.borderColor=open?'var(--g200)':'var(--green)';btn.style.color=open?'var(--g600)':'var(--gd)';}
+function toggleTripDateRow() {
+  const row = document.getElementById('trip-date-row');
+  const btn = document.getElementById('trip-date-toggle');
+  const open = row && row.style.display !== 'none';
+  if (row) row.style.display = open ? 'none' : '';
+  if (btn) { btn.style.background = open ? '#fff' : 'var(--gl)'; btn.style.borderColor = open ? 'var(--g200)' : 'var(--green)'; btn.style.color = open ? 'var(--g600)' : 'var(--gd)'; }
 }
-function clearTripDates(){
-  const f=document.getElementById('trip-from');const t=document.getElementById('trip-to');
-  if(f)f.value='';if(t)t.value='';renderTripList();
+function clearTripDates() {
+  const f = document.getElementById('trip-from'); const t = document.getElementById('trip-to');
+  if (f) f.value = ''; if (t) t.value = ''; renderTripList();
 }
-function toggleTaskDateRow(){
-  const row=document.getElementById('task-date-row');
-  const btn=document.getElementById('task-date-toggle');
-  const open=row&&row.style.display!=='none';
-  if(row)row.style.display=open?'none':'';
-  if(btn){btn.style.background=open?'#fff':'var(--gl)';btn.style.borderColor=open?'var(--g200)':'var(--green)';btn.style.color=open?'var(--g600)':'var(--gd)';}
+function toggleTaskDateRow() {
+  const row = document.getElementById('task-date-row');
+  const btn = document.getElementById('task-date-toggle');
+  const open = row && row.style.display !== 'none';
+  if (row) row.style.display = open ? 'none' : '';
+  if (btn) { btn.style.background = open ? '#fff' : 'var(--gl)'; btn.style.borderColor = open ? 'var(--g200)' : 'var(--green)'; btn.style.color = open ? 'var(--g600)' : 'var(--gd)'; }
 }
-function clearTaskDates(){
-  const f=document.getElementById('task-from');const t=document.getElementById('task-to');
-  if(f)f.value='';if(t)t.value='';renderTasks();
+function clearTaskDates() {
+  const f = document.getElementById('task-from'); const t = document.getElementById('task-to');
+  if (f) f.value = ''; if (t) t.value = ''; renderTasks();
 }
 
-let _tripStatusFilter='all';
-function filterTrips(f){
-  _tripStatusFilter=f;
-  ['all','planned','active','done'].forEach(k=>{
-    const b=document.getElementById('trip-f-'+k);
-    if(b)b.classList.toggle('active',
-      (k==='all'&&f==='all')||(k==='planned'&&f==='planned')||
-      (k==='active'&&f==='in_progress')||(k==='done'&&f==='completed')
+let _tripStatusFilter = 'all';
+function filterTrips(f) {
+  _tripStatusFilter = f;
+  ['all', 'planned', 'active', 'done'].forEach(k => {
+    const b = document.getElementById('trip-f-' + k);
+    if (b) b.classList.toggle('active',
+      (k === 'all' && f === 'all') || (k === 'planned' && f === 'planned') ||
+      (k === 'active' && f === 'in_progress') || (k === 'done' && f === 'completed')
     );
   });
   renderTripList();
 }
-function renderTripList(filter){
-  if(filter!==undefined)_tripStatusFilter=filter;
-  const f=_tripStatusFilter||'all';
-  const list=document.getElementById('trip-list');
-  let trips=S.trips.filter(tr=>f==='all'||tr.status===f);
+function renderTripList(filter) {
+  if (filter !== undefined) _tripStatusFilter = filter;
+  const f = _tripStatusFilter || 'all';
+  const list = document.getElementById('trip-list');
+  let trips = S.trips.filter(tr => f === 'all' || tr.status === f);
 
   // Text search
-  const q=((document.getElementById('trip-search')||{}).value||'').toLowerCase().trim();
-  if(q)trips=trips.filter(tr=>
-    (tr.plant||'').toLowerCase().includes(q)||
-    (tr.location||'').toLowerCase().includes(q)||
-    (tr.purpose||'').toLowerCase().includes(q)||
-    (tr.contact||'').toLowerCase().includes(q)
+  const q = ((document.getElementById('trip-search') || {}).value || '').toLowerCase().trim();
+  if (q) trips = trips.filter(tr =>
+    (tr.plant || '').toLowerCase().includes(q) ||
+    (tr.location || '').toLowerCase().includes(q) ||
+    (tr.purpose || '').toLowerCase().includes(q) ||
+    (tr.contact || '').toLowerCase().includes(q)
   );
 
   // Date range
-  const dfEl=document.getElementById('trip-from'); const df=dfEl?dfEl.value:'';
-  const dtEl=document.getElementById('trip-to'); const dt=dtEl?dtEl.value:'';
-  if(df)trips=trips.filter(tr=>(tr.dateEnd||tr.date||'')>=df);
-  if(dt)trips=trips.filter(tr=>(tr.date||'')<=dt);
+  const dfEl = document.getElementById('trip-from'); const df = dfEl ? dfEl.value : '';
+  const dtEl = document.getElementById('trip-to'); const dt = dtEl ? dtEl.value : '';
+  if (df) trips = trips.filter(tr => (tr.dateEnd || tr.date || '') >= df);
+  if (dt) trips = trips.filter(tr => (tr.date || '') <= dt);
 
   // Status order: in_progress first, planned second, completed last
-  const statusOrder={in_progress:0,planned:1,completed:2};
-  trips.sort((a,b)=>{
-    const sa=statusOrder[a.status||'planned']??1;
-    const sb=statusOrder[b.status||'planned']??1;
-    if(sa!==sb) return sa-sb;
+  const statusOrder = { in_progress: 0, planned: 1, completed: 2 };
+  trips.sort((a, b) => {
+    const sa = statusOrder[a.status || 'planned'] ?? 1;
+    const sb = statusOrder[b.status || 'planned'] ?? 1;
+    if (sa !== sb) return sa - sb;
     // Within same status: in_progress/planned → earliest date first; completed → latest first
-    const dateA=new Date(a.date||0), dateB=new Date(b.date||0);
-    return sa===2 ? dateB-dateA : dateA-dateB;
+    const dateA = new Date(a.date || 0), dateB = new Date(b.date || 0);
+    return sa === 2 ? dateB - dateA : dateA - dateB;
   });
 
   // Active filter label
-  const lbl=document.getElementById('trip-active-filter');
-  if(lbl){
-    const parts=[];
-    if(q)parts.push(`"${q}"`);
-    if(df||dt)parts.push(`${df||'start'} → ${dt||'end'}`);
-    lbl.style.display=parts.length?'':'none';
-    lbl.textContent=parts.length?`Showing ${trips.length} trip${trips.length!==1?'s':''} · ${parts.join(' · ')}`:''
+  const lbl = document.getElementById('trip-active-filter');
+  if (lbl) {
+    const parts = [];
+    if (q) parts.push(`"${q}"`);
+    if (df || dt) parts.push(`${df || 'start'} → ${dt || 'end'}`);
+    lbl.style.display = parts.length ? '' : 'none';
+    lbl.textContent = parts.length ? `Showing ${trips.length} trip${trips.length !== 1 ? 's' : ''} · ${parts.join(' · ')}` : ''
   }
 
-  if(!trips.length){
-    list.innerHTML=`<div class="empty"><div class="ei">🔍</div><div class="et">${q||df||dt?'No trips match your search.':t('noTrips')}</div></div>`;
+  if (!trips.length) {
+    list.innerHTML = `<div class="empty"><div class="ei">🔍</div><div class="et">${q || df || dt ? 'No trips match your search.' : t('noTrips')}</div></div>`;
     return;
   }
-  list.innerHTML=trips.map(tr=>{
-    const bc=tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba';
-    const bt=tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned');
-    const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
-    const tripTasks=(S.tasks||[]).filter(tk=>tk.tripId===tr.id);
-    const doneTasks=tripTasks.filter(tk=>tk.status==='done'||tk.status==='completed');
-    const pct=tripTasks.length?Math.round(doneTasks.length/tripTasks.length*100):0;
+  list.innerHTML = trips.map(tr => {
+    const bc = tr.status === 'completed' ? 'bg' : tr.status === 'in_progress' ? 'bb' : 'ba';
+    const bt = tr.status === 'in_progress' ? t('inProgress') : tr.status === 'completed' ? t('completed') : t('planned');
+    const wk = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
+    const tripTasks = (S.tasks || []).filter(tk => tk.tripId === tr.id);
+    const doneTasks = tripTasks.filter(tk => tk.status === 'done' || tk.status === 'completed');
+    const pct = tripTasks.length ? Math.round(doneTasks.length / tripTasks.length * 100) : 0;
     const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
     return `<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;flex-wrap:wrap;">
           <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
           ${typeBadge}
-          ${wk?`<span class="badge-week">${wk}</span>`:''}
+          ${wk ? `<span class="badge-week">${wk}</span>` : ''}
         </div>
         <span class="badge ${bc}" style="flex-shrink:0;">${bt}</span>
       </div>
-      <div class="cs">${fmtDate(tr.date)}${tr.location?' · '+tr.location:''}</div>
-      ${tr.purpose?`<div style="font-size:12px;color:var(--g500);margin-top:4px;">${tr.purpose.substring(0,55)}${tr.purpose.length>55?'...':''}</div>`:''}
-      ${tripTasks.length?`
+      <div class="cs">${fmtDate(tr.date)}${tr.location ? ' · ' + tr.location : ''}</div>
+      ${tr.purpose ? `<div style="font-size:12px;color:var(--g500);margin-top:4px;">${tr.purpose.substring(0, 55)}${tr.purpose.length > 55 ? '...' : ''}</div>` : ''}
+      ${tripTasks.length ? `
         <div class="tc-progress-bar">
           <div class="tc-progress-fill" style="width:${pct}%;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--n500);margin-top:3px;font-weight:600;">
           <span onclick="event.stopPropagation();if(typeof filterTasksByTrip==='function')filterTasksByTrip('${tr.id}');else showScreen('tasks');" style="cursor:pointer;" title="View tasks for this trip">📋 Tasks: ${doneTasks.length}/${tripTasks.length}</span>
           <span>${pct}%</span>
-        </div>`:''}
+        </div>`: ''}
     </div>`;
   }).join('');
 }
-function openTripDetail(id){
-  curTrip=id;
-  const tr=S.trips.find(t=>t.id===id);if(!tr)return;
-  const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
-  const nameEl=document.getElementById('detail-plant-name');
-  if(nameEl){
+function openTripDetail(id) {
+  curTrip = id;
+  const tr = S.trips.find(t => t.id === id); if (!tr) return;
+  const wk = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
+  const nameEl = document.getElementById('detail-plant-name');
+  if (nameEl) {
     const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
-    nameEl.innerHTML=`<span>${tr.plant}</span> ${typeBadge}${wk?` <span class="badge-week" style="background:rgba(255,255,255,0.22);color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px;vertical-align:middle;margin-left:6px;">${wk}</span>`:''}`;
+    nameEl.innerHTML = `<span>${tr.plant}</span> ${typeBadge}${wk ? ` <span class="badge-week" style="background:rgba(255,255,255,0.22);color:#fff;border-color:rgba(255,255,255,0.4);font-size:11px;vertical-align:middle;margin-left:6px;">${wk}</span>` : ''}`;
   }
-  document.getElementById('detail-date').textContent=fmtDate(tr.date)+(tr.location?' · '+tr.location:'');
+  document.getElementById('detail-date').textContent = fmtDate(tr.date) + (tr.location ? ' · ' + tr.location : '');
   // render bills for this trip
-  setTimeout(()=>renderTripBills(id),50);
+  setTimeout(() => renderTripBills(id), 50);
   const tripBills = (S.bills || []).filter(b => b.tripId === id);
   const totalVND = tripBills.reduce((acc, b) => acc + (parseFloat(b.vndAmount) || (b.currency === 'VND' ? parseFloat(b.amount) || 0 : 0)), 0);
   const expenseSummaryHtml = tripBills.length ? `
@@ -10977,17 +10993,17 @@ function openTripDetail(id){
   // IMP-57: Plant Base & Leave visual indicator badge
   const tripTypeBadgeHtml = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
 
-  document.getElementById('trip-detail-card').innerHTML=`
+  document.getElementById('trip-detail-card').innerHTML = `
     <div style="margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-      <span class="badge ${tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba'}">${tr.status==='in_progress'?t('inProgress'):tr.status==='completed'?t('completed'):t('planned')}</span>
+      <span class="badge ${tr.status === 'completed' ? 'bg' : tr.status === 'in_progress' ? 'bb' : 'ba'}">${tr.status === 'in_progress' ? t('inProgress') : tr.status === 'completed' ? t('completed') : t('planned')}</span>
       ${tripTypeBadgeHtml}
     </div>
     ${expenseSummaryHtml}
-    ${kv(t('plantName').replace(' *',''),tr.plant)}${kv(t('location'),tr.location||'—')}${kv(t('visitDate').replace(' *',''),fmtDate(tr.date))}
-    ${tr.dateEnd&&tr.dateEnd!==tr.date?kv(t('endDate'),fmtDate(tr.dateEnd)):''}
-    ${kv(t('purposeScope'),tr.purpose||'—')}${kv(t('contactPerson'),tr.contact||'—')}${kv(t('transport'),tr.transport||'—')}
-    ${tr.flight&&formatTripFlightInfo(tr.flight)?kv('Flight Details',formatTripFlightInfo(tr.flight).replace(/\n/g,'<br>')):''}
-    ${(()=>{
+    ${kv(t('plantName').replace(' *', ''), tr.plant)}${kv(t('location'), tr.location || '—')}${kv(t('visitDate').replace(' *', ''), fmtDate(tr.date))}
+    ${tr.dateEnd && tr.dateEnd !== tr.date ? kv(t('endDate'), fmtDate(tr.dateEnd)) : ''}
+    ${kv(t('purposeScope'), tr.purpose || '—')}${kv(t('contactPerson'), tr.contact || '—')}${kv(t('transport'), tr.transport || '—')}
+    ${tr.flight && formatTripFlightInfo(tr.flight) ? kv('Flight Details', formatTripFlightInfo(tr.flight).replace(/\n/g, '<br>')) : ''}
+    ${(() => {
       const trTasks = (S.tasks || []).filter(tk => String(tk.tripId) === String(tr.id));
       if (!trTasks.length) return '';
       const doneT = trTasks.filter(tk => tk.status === 'done' || tk.status === 'completed').length;
@@ -10998,13 +11014,13 @@ function openTripDetail(id){
       </div>`;
     })()}`;
   // Load trip note
-  const noteEl=document.getElementById('trip-note-input');
-  if(noteEl)noteEl.value=tr.notes||'';
+  const noteEl = document.getElementById('trip-note-input');
+  if (noteEl) noteEl.value = tr.notes || '';
   renderTripStatusToggle(tr);
   renderTripInspCounts();
-  if(typeof renderTripTimesheets==='function') renderTripTimesheets(id);
-  if(typeof renderTripSafety==='function') renderTripSafety(id);
-  if(typeof renderTripSavedReports==='function') renderTripSavedReports();
+  if (typeof renderTripTimesheets === 'function') renderTripTimesheets(id);
+  if (typeof renderTripSafety === 'function') renderTripSafety(id);
+  if (typeof renderTripSavedReports === 'function') renderTripSavedReports();
   switchTripDetailTab('overview');
   showScreen('trip-detail');
 }
@@ -11019,26 +11035,26 @@ function switchTripDetailTab(tab) {
     if (pane) pane.style.display = (t === _currentTripDetailTab) ? 'block' : 'none';
   });
 }
-function addTripOutboundFlightLeg(data){
+function addTripOutboundFlightLeg(data) {
   const container = document.getElementById('nt-fl-outbound-extra-container');
-  if(!container) return;
+  if (!container) return;
   const count = container.querySelectorAll('.trip-flight-extra-card').length;
   const legNum = count + 2;
-  
+
   let prevTo = '';
-  if(count === 0){
+  if (count === 0) {
     const mainTo = document.getElementById('nt-fl-to');
-    if(mainTo) prevTo = mainTo.value.trim();
+    if (mainTo) prevTo = mainTo.value.trim();
   } else {
     const toInputs = container.querySelectorAll('.fl-extra-to');
-    if(toInputs.length > 0) prevTo = toInputs[toInputs.length - 1].value.trim();
+    if (toInputs.length > 0) prevTo = toInputs[toInputs.length - 1].value.trim();
   }
 
   const card = document.createElement('div');
   card.className = 'trip-flight-extra-card';
   card.setAttribute('data-leg-type', 'outbound');
   card.style.cssText = 'background:rgba(255,255,255,0.7);border:1px dashed rgba(16,185,129,0.4);border-radius:var(--rs);padding:8px 10px;margin-top:8px;';
-  
+
   card.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
       <span style="font-size:10px;font-weight:700;color:var(--gd);letter-spacing:0.05em;">✈️ OUTBOUND LEG ${legNum} (TRANSIT)</span>
@@ -11059,39 +11075,39 @@ function addTripOutboundFlightLeg(data){
   `;
   container.appendChild(card);
 
-  if(data){
-    const numEl = card.querySelector('.fl-extra-num'); if(numEl) numEl.value = data.num || data.flightNo || '';
-    const airEl = card.querySelector('.fl-extra-airline'); if(airEl) airEl.value = data.airline || '';
-    const fromEl = card.querySelector('.fl-extra-from'); if(fromEl) fromEl.value = data.from || '';
-    const toEl = card.querySelector('.fl-extra-to'); if(toEl) toEl.value = data.to || '';
-    const depEl = card.querySelector('.fl-extra-depart'); if(depEl) depEl.value = data.depart || data.departTime || '';
-    const arrEl = card.querySelector('.fl-extra-arrive'); if(arrEl) arrEl.value = data.arrive || data.arriveTime || '';
-  } else if(prevTo){
+  if (data) {
+    const numEl = card.querySelector('.fl-extra-num'); if (numEl) numEl.value = data.num || data.flightNo || '';
+    const airEl = card.querySelector('.fl-extra-airline'); if (airEl) airEl.value = data.airline || '';
+    const fromEl = card.querySelector('.fl-extra-from'); if (fromEl) fromEl.value = data.from || '';
+    const toEl = card.querySelector('.fl-extra-to'); if (toEl) toEl.value = data.to || '';
+    const depEl = card.querySelector('.fl-extra-depart'); if (depEl) depEl.value = data.depart || data.departTime || '';
+    const arrEl = card.querySelector('.fl-extra-arrive'); if (arrEl) arrEl.value = data.arrive || data.arriveTime || '';
+  } else if (prevTo) {
     const fromEl = card.querySelector('.fl-extra-from');
-    if(fromEl && !fromEl.value) fromEl.value = prevTo;
+    if (fromEl && !fromEl.value) fromEl.value = prevTo;
   }
 }
 
-function addTripReturnFlightLeg(data){
+function addTripReturnFlightLeg(data) {
   const container = document.getElementById('nt-fl-return-extra-container');
-  if(!container) return;
+  if (!container) return;
   const count = container.querySelectorAll('.trip-flight-extra-card').length;
   const legNum = count + 2;
-  
+
   let prevTo = '';
-  if(count === 0){
+  if (count === 0) {
     const mainRetTo = document.getElementById('nt-fl-ret-to');
-    if(mainRetTo) prevTo = mainRetTo.value.trim();
+    if (mainRetTo) prevTo = mainRetTo.value.trim();
   } else {
     const toInputs = container.querySelectorAll('.fl-extra-to');
-    if(toInputs.length > 0) prevTo = toInputs[toInputs.length - 1].value.trim();
+    if (toInputs.length > 0) prevTo = toInputs[toInputs.length - 1].value.trim();
   }
 
   const card = document.createElement('div');
   card.className = 'trip-flight-extra-card';
   card.setAttribute('data-leg-type', 'return');
   card.style.cssText = 'background:rgba(255,255,255,0.7);border:1px dashed rgba(59,130,246,0.4);border-radius:var(--rs);padding:8px 10px;margin-top:8px;';
-  
+
   card.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
       <span style="font-size:10px;font-weight:700;color:#1D4ED8;letter-spacing:0.05em;">✈️ RETURN LEG ${legNum} (TRANSIT)</span>
@@ -11112,120 +11128,120 @@ function addTripReturnFlightLeg(data){
   `;
   container.appendChild(card);
 
-  if(data){
-    const numEl = card.querySelector('.fl-extra-num'); if(numEl) numEl.value = data.num || data.flightNo || '';
-    const airEl = card.querySelector('.fl-extra-airline'); if(airEl) airEl.value = data.airline || '';
-    const fromEl = card.querySelector('.fl-extra-from'); if(fromEl) fromEl.value = data.from || '';
-    const toEl = card.querySelector('.fl-extra-to'); if(toEl) toEl.value = data.to || '';
-    const depEl = card.querySelector('.fl-extra-depart'); if(depEl) depEl.value = data.depart || data.departTime || '';
-    const arrEl = card.querySelector('.fl-extra-arrive'); if(arrEl) arrEl.value = data.arrive || data.arriveTime || '';
-  } else if(prevTo){
+  if (data) {
+    const numEl = card.querySelector('.fl-extra-num'); if (numEl) numEl.value = data.num || data.flightNo || '';
+    const airEl = card.querySelector('.fl-extra-airline'); if (airEl) airEl.value = data.airline || '';
+    const fromEl = card.querySelector('.fl-extra-from'); if (fromEl) fromEl.value = data.from || '';
+    const toEl = card.querySelector('.fl-extra-to'); if (toEl) toEl.value = data.to || '';
+    const depEl = card.querySelector('.fl-extra-depart'); if (depEl) depEl.value = data.depart || data.departTime || '';
+    const arrEl = card.querySelector('.fl-extra-arrive'); if (arrEl) arrEl.value = data.arrive || data.arriveTime || '';
+  } else if (prevTo) {
     const fromEl = card.querySelector('.fl-extra-from');
-    if(fromEl && !fromEl.value) fromEl.value = prevTo;
+    if (fromEl && !fromEl.value) fromEl.value = prevTo;
   }
 }
 
-function removeTripFlightLeg(btn){
+function removeTripFlightLeg(btn) {
   const card = btn ? btn.closest('.trip-flight-extra-card') : null;
-  if(card && card.parentNode){
+  if (card && card.parentNode) {
     const parent = card.parentNode;
     const isOut = parent.id === 'nt-fl-outbound-extra-container';
     card.remove();
     const cards = parent.querySelectorAll('.trip-flight-extra-card');
     cards.forEach((c, idx) => {
       const titleSpan = c.querySelector('span');
-      if(titleSpan){
+      if (titleSpan) {
         titleSpan.textContent = `✈️ ${isOut ? 'OUTBOUND LEG' : 'RETURN LEG'} ${idx + 2} (TRANSIT)`;
       }
     });
   }
 }
 
-function onTripExtraFlightNumInput(input){
-  if(!input) return;
+function onTripExtraFlightNumInput(input) {
+  if (!input) return;
   const card = input.closest('.trip-flight-extra-card');
-  if(!card) return;
+  if (!card) return;
   const airlineEl = card.querySelector('.fl-extra-airline');
   const code = (input.value || '').toUpperCase().trim();
-  if(airlineEl && !airlineEl.value){
-    if(code.startsWith('VN')) airlineEl.value = 'Vietnam Airlines';
-    else if(code.startsWith('VJ')) airlineEl.value = 'VietJet Air';
-    else if(code.startsWith('QH')) airlineEl.value = 'Bamboo Airways';
-    else if(code.startsWith('VU')) airlineEl.value = 'Vietravel Airlines';
-    else if(code.startsWith('TG')) airlineEl.value = 'Thai Airways';
-    else if(code.startsWith('SQ')) airlineEl.value = 'Singapore Airlines';
+  if (airlineEl && !airlineEl.value) {
+    if (code.startsWith('VN')) airlineEl.value = 'Vietnam Airlines';
+    else if (code.startsWith('VJ')) airlineEl.value = 'VietJet Air';
+    else if (code.startsWith('QH')) airlineEl.value = 'Bamboo Airways';
+    else if (code.startsWith('VU')) airlineEl.value = 'Vietravel Airlines';
+    else if (code.startsWith('TG')) airlineEl.value = 'Thai Airways';
+    else if (code.startsWith('SQ')) airlineEl.value = 'Singapore Airlines';
   }
 }
 
-function resetTripFlightFields(){
-  const etf0=document.getElementById('nt-fl-num');if(etf0)etf0.value='';
-  const etf1=document.getElementById('nt-fl-airline');if(etf1)etf1.value='';
-  const etf2=document.getElementById('nt-fl-from');if(etf2)etf2.value='';
-  const etf3=document.getElementById('nt-fl-to');if(etf3)etf3.value='';
-  const etf4=document.getElementById('nt-fl-depart');if(etf4)etf4.value='';
-  const etf5=document.getElementById('nt-fl-arrive');if(etf5)etf5.value='';
-  const etf6=document.getElementById('nt-fl-ret-num');if(etf6)etf6.value='';
-  const etf7=document.getElementById('nt-fl-ret-airline');if(etf7)etf7.value='';
-  const etf8=document.getElementById('nt-fl-ret-from');if(etf8)etf8.value='';
-  const etf9=document.getElementById('nt-fl-ret-to');if(etf9)etf9.value='';
-  const etf10=document.getElementById('nt-fl-ret-depart');if(etf10)etf10.value='';
-  const etf11=document.getElementById('nt-fl-ret-arrive');if(etf11)etf11.value='';
-  const etf12=document.getElementById('nt-fl-pnr');if(etf12)etf12.value='';
-  const outExtra = document.getElementById('nt-fl-outbound-extra-container'); if(outExtra) outExtra.innerHTML = '';
-  const retExtra = document.getElementById('nt-fl-return-extra-container'); if(retExtra) retExtra.innerHTML = '';
-  const hasRet=document.getElementById('nt-fl-has-return');if(hasRet)hasRet.checked=false;
-  const retSec=document.getElementById('nt-fl-return-section');if(retSec)retSec.style.display='none';
-  const flSec=document.getElementById('trip-flight-section');if(flSec)flSec.style.display='none';
+function resetTripFlightFields() {
+  const etf0 = document.getElementById('nt-fl-num'); if (etf0) etf0.value = '';
+  const etf1 = document.getElementById('nt-fl-airline'); if (etf1) etf1.value = '';
+  const etf2 = document.getElementById('nt-fl-from'); if (etf2) etf2.value = '';
+  const etf3 = document.getElementById('nt-fl-to'); if (etf3) etf3.value = '';
+  const etf4 = document.getElementById('nt-fl-depart'); if (etf4) etf4.value = '';
+  const etf5 = document.getElementById('nt-fl-arrive'); if (etf5) etf5.value = '';
+  const etf6 = document.getElementById('nt-fl-ret-num'); if (etf6) etf6.value = '';
+  const etf7 = document.getElementById('nt-fl-ret-airline'); if (etf7) etf7.value = '';
+  const etf8 = document.getElementById('nt-fl-ret-from'); if (etf8) etf8.value = '';
+  const etf9 = document.getElementById('nt-fl-ret-to'); if (etf9) etf9.value = '';
+  const etf10 = document.getElementById('nt-fl-ret-depart'); if (etf10) etf10.value = '';
+  const etf11 = document.getElementById('nt-fl-ret-arrive'); if (etf11) etf11.value = '';
+  const etf12 = document.getElementById('nt-fl-pnr'); if (etf12) etf12.value = '';
+  const outExtra = document.getElementById('nt-fl-outbound-extra-container'); if (outExtra) outExtra.innerHTML = '';
+  const retExtra = document.getElementById('nt-fl-return-extra-container'); if (retExtra) retExtra.innerHTML = '';
+  const hasRet = document.getElementById('nt-fl-has-return'); if (hasRet) hasRet.checked = false;
+  const retSec = document.getElementById('nt-fl-return-section'); if (retSec) retSec.style.display = 'none';
+  const flSec = document.getElementById('trip-flight-section'); if (flSec) flSec.style.display = 'none';
 }
 
-function loadTripFlightFields(flight){
-  if(!flight)return;
-  if(typeof flight === 'string' && flight.startsWith('{')) {
-    try { flight = JSON.parse(flight); } catch(e){}
+function loadTripFlightFields(flight) {
+  if (!flight) return;
+  if (typeof flight === 'string' && flight.startsWith('{')) {
+    try { flight = JSON.parse(flight); } catch (e) { }
   }
   resetTripFlightFields();
 
   let outboundLegs = [];
   let returnLegs = [];
 
-  if(flight.legs && Array.isArray(flight.legs) && flight.legs.length > 0) {
+  if (flight.legs && Array.isArray(flight.legs) && flight.legs.length > 0) {
     outboundLegs = flight.legs.filter(l => (l.type || 'outbound').toLowerCase() === 'outbound');
     returnLegs = flight.legs.filter(l => (l.type || '').toLowerCase() === 'return');
   }
 
   const out1 = outboundLegs.length > 0 ? outboundLegs[0] : flight;
-  const etf0=document.getElementById('nt-fl-num');if(etf0)etf0.value=out1['num']||out1['flightNo']||flight['num']||'';
-  const etf1=document.getElementById('nt-fl-airline');if(etf1)etf1.value=out1['airline']||flight['airline']||'';
-  const etf2=document.getElementById('nt-fl-from');if(etf2)etf2.value=out1['from']||flight['from']||'';
-  const etf3=document.getElementById('nt-fl-to');if(etf3)etf3.value=out1['to']||flight['to']||'';
-  const etf4=document.getElementById('nt-fl-depart');if(etf4)etf4.value=out1['depart']||out1['departTime']||flight['depart']||'';
-  const etf5=document.getElementById('nt-fl-arrive');if(etf5)etf5.value=out1['arrive']||out1['arriveTime']||flight['arrive']||'';
+  const etf0 = document.getElementById('nt-fl-num'); if (etf0) etf0.value = out1['num'] || out1['flightNo'] || flight['num'] || '';
+  const etf1 = document.getElementById('nt-fl-airline'); if (etf1) etf1.value = out1['airline'] || flight['airline'] || '';
+  const etf2 = document.getElementById('nt-fl-from'); if (etf2) etf2.value = out1['from'] || flight['from'] || '';
+  const etf3 = document.getElementById('nt-fl-to'); if (etf3) etf3.value = out1['to'] || flight['to'] || '';
+  const etf4 = document.getElementById('nt-fl-depart'); if (etf4) etf4.value = out1['depart'] || out1['departTime'] || flight['depart'] || '';
+  const etf5 = document.getElementById('nt-fl-arrive'); if (etf5) etf5.value = out1['arrive'] || out1['arriveTime'] || flight['arrive'] || '';
 
-  for(let i = 1; i < outboundLegs.length; i++){
+  for (let i = 1; i < outboundLegs.length; i++) {
     addTripOutboundFlightLeg(outboundLegs[i]);
   }
 
   const ret1 = returnLegs.length > 0 ? returnLegs[0] : flight;
-  const hasReturn=!!(returnLegs.length > 0 || flight.ret_num || flight.ret_from || flight.ret_to);
-  const etf6=document.getElementById('nt-fl-ret-num');if(etf6)etf6.value=returnLegs.length > 0 ? (ret1['num']||ret1['flightNo']||'') : (flight['ret_num']||'');
-  const etf7=document.getElementById('nt-fl-ret-airline');if(etf7)etf7.value=returnLegs.length > 0 ? (ret1['airline']||'') : (flight['ret_airline']||'');
-  const etf8=document.getElementById('nt-fl-ret-from');if(etf8)etf8.value=returnLegs.length > 0 ? (ret1['from']||'') : (flight['ret_from']||'');
-  const etf9=document.getElementById('nt-fl-ret-to');if(etf9)etf9.value=returnLegs.length > 0 ? (ret1['to']||'') : (flight['ret_to']||'');
-  const etf10=document.getElementById('nt-fl-ret-depart');if(etf10)etf10.value=returnLegs.length > 0 ? (ret1['depart']||ret1['departTime']||'') : (flight['ret_depart']||'');
-  const etf11=document.getElementById('nt-fl-ret-arrive');if(etf11)etf11.value=returnLegs.length > 0 ? (ret1['arrive']||ret1['arriveTime']||'') : (flight['ret_arrive']||'');
+  const hasReturn = !!(returnLegs.length > 0 || flight.ret_num || flight.ret_from || flight.ret_to);
+  const etf6 = document.getElementById('nt-fl-ret-num'); if (etf6) etf6.value = returnLegs.length > 0 ? (ret1['num'] || ret1['flightNo'] || '') : (flight['ret_num'] || '');
+  const etf7 = document.getElementById('nt-fl-ret-airline'); if (etf7) etf7.value = returnLegs.length > 0 ? (ret1['airline'] || '') : (flight['ret_airline'] || '');
+  const etf8 = document.getElementById('nt-fl-ret-from'); if (etf8) etf8.value = returnLegs.length > 0 ? (ret1['from'] || '') : (flight['ret_from'] || '');
+  const etf9 = document.getElementById('nt-fl-ret-to'); if (etf9) etf9.value = returnLegs.length > 0 ? (ret1['to'] || '') : (flight['ret_to'] || '');
+  const etf10 = document.getElementById('nt-fl-ret-depart'); if (etf10) etf10.value = returnLegs.length > 0 ? (ret1['depart'] || ret1['departTime'] || '') : (flight['ret_depart'] || '');
+  const etf11 = document.getElementById('nt-fl-ret-arrive'); if (etf11) etf11.value = returnLegs.length > 0 ? (ret1['arrive'] || ret1['arriveTime'] || '') : (flight['ret_arrive'] || '');
 
-  for(let j = 1; j < returnLegs.length; j++){
+  for (let j = 1; j < returnLegs.length; j++) {
     addTripReturnFlightLeg(returnLegs[j]);
   }
 
-  const etf12=document.getElementById('nt-fl-pnr');if(etf12)etf12.value=flight['pnr']||'';
-  const hasRet=document.getElementById('nt-fl-has-return');if(hasRet)hasRet.checked=hasReturn;
-  const retSec=document.getElementById('nt-fl-return-section');if(retSec)retSec.style.display=hasReturn?'':'none';
-  const flSec=document.getElementById('trip-flight-section');if(flSec)flSec.style.display='';
+  const etf12 = document.getElementById('nt-fl-pnr'); if (etf12) etf12.value = flight['pnr'] || '';
+  const hasRet = document.getElementById('nt-fl-has-return'); if (hasRet) hasRet.checked = hasReturn;
+  const retSec = document.getElementById('nt-fl-return-section'); if (retSec) retSec.style.display = hasReturn ? '' : 'none';
+  const flSec = document.getElementById('trip-flight-section'); if (flSec) flSec.style.display = '';
 }
 
-function getTripFlightFields(){
-  const gv=id=>{const e=document.getElementById(id);return e?e.value:'';};
+function getTripFlightFields() {
+  const gv = id => { const e = document.getElementById(id); return e ? e.value : ''; };
   const legs = [];
 
   const out1Num = gv('nt-fl-num');
@@ -11235,7 +11251,7 @@ function getTripFlightFields(){
   const out1Depart = gv('nt-fl-depart');
   const out1Arrive = gv('nt-fl-arrive');
 
-  if(out1Num || out1From || out1To || out1Depart){
+  if (out1Num || out1From || out1To || out1Depart) {
     legs.push({
       type: 'outbound',
       leg: 1,
@@ -11249,16 +11265,16 @@ function getTripFlightFields(){
   }
 
   const outExtra = document.getElementById('nt-fl-outbound-extra-container');
-  if(outExtra){
+  if (outExtra) {
     const extraCards = outExtra.querySelectorAll('.trip-flight-extra-card');
     extraCards.forEach((c, idx) => {
-      const num = (c.querySelector('.fl-extra-num')||{}).value || '';
-      const airline = (c.querySelector('.fl-extra-airline')||{}).value || '';
-      const from = (c.querySelector('.fl-extra-from')||{}).value || '';
-      const to = (c.querySelector('.fl-extra-to')||{}).value || '';
-      const depart = (c.querySelector('.fl-extra-depart')||{}).value || '';
-      const arrive = (c.querySelector('.fl-extra-arrive')||{}).value || '';
-      if(num || from || to || depart){
+      const num = (c.querySelector('.fl-extra-num') || {}).value || '';
+      const airline = (c.querySelector('.fl-extra-airline') || {}).value || '';
+      const from = (c.querySelector('.fl-extra-from') || {}).value || '';
+      const to = (c.querySelector('.fl-extra-to') || {}).value || '';
+      const depart = (c.querySelector('.fl-extra-depart') || {}).value || '';
+      const arrive = (c.querySelector('.fl-extra-arrive') || {}).value || '';
+      if (num || from || to || depart) {
         legs.push({
           type: 'outbound',
           leg: idx + 2,
@@ -11275,7 +11291,7 @@ function getTripFlightFields(){
 
   const hasRet = document.getElementById('nt-fl-has-return');
   let ret1Num = '', ret1Airline = '', ret1From = '', ret1To = '', ret1Depart = '', ret1Arrive = '';
-  if(hasRet && hasRet.checked){
+  if (hasRet && hasRet.checked) {
     ret1Num = gv('nt-fl-ret-num');
     ret1Airline = gv('nt-fl-ret-airline');
     ret1From = gv('nt-fl-ret-from');
@@ -11283,7 +11299,7 @@ function getTripFlightFields(){
     ret1Depart = gv('nt-fl-ret-depart');
     ret1Arrive = gv('nt-fl-ret-arrive');
 
-    if(ret1Num || ret1From || ret1To || ret1Depart){
+    if (ret1Num || ret1From || ret1To || ret1Depart) {
       legs.push({
         type: 'return',
         leg: 1,
@@ -11297,16 +11313,16 @@ function getTripFlightFields(){
     }
 
     const retExtra = document.getElementById('nt-fl-return-extra-container');
-    if(retExtra){
+    if (retExtra) {
       const extraCards = retExtra.querySelectorAll('.trip-flight-extra-card');
       extraCards.forEach((c, idx) => {
-        const num = (c.querySelector('.fl-extra-num')||{}).value || '';
-        const airline = (c.querySelector('.fl-extra-airline')||{}).value || '';
-        const from = (c.querySelector('.fl-extra-from')||{}).value || '';
-        const to = (c.querySelector('.fl-extra-to')||{}).value || '';
-        const depart = (c.querySelector('.fl-extra-depart')||{}).value || '';
-        const arrive = (c.querySelector('.fl-extra-arrive')||{}).value || '';
-        if(num || from || to || depart){
+        const num = (c.querySelector('.fl-extra-num') || {}).value || '';
+        const airline = (c.querySelector('.fl-extra-airline') || {}).value || '';
+        const from = (c.querySelector('.fl-extra-from') || {}).value || '';
+        const to = (c.querySelector('.fl-extra-to') || {}).value || '';
+        const depart = (c.querySelector('.fl-extra-depart') || {}).value || '';
+        const arrive = (c.querySelector('.fl-extra-arrive') || {}).value || '';
+        if (num || from || to || depart) {
           legs.push({
             type: 'return',
             leg: idx + 2,
@@ -11340,52 +11356,52 @@ function getTripFlightFields(){
   };
 }
 
-function formatTripFlightInfo(fl){
-  if(!fl) return '';
-  if(typeof fl === 'string' && fl.startsWith('{')){
-    try { fl = JSON.parse(fl); } catch(e){}
+function formatTripFlightInfo(fl) {
+  if (!fl) return '';
+  if (typeof fl === 'string' && fl.startsWith('{')) {
+    try { fl = JSON.parse(fl); } catch (e) { }
   }
   const lines = [];
 
-  if(fl.legs && Array.isArray(fl.legs) && fl.legs.length > 0){
+  if (fl.legs && Array.isArray(fl.legs) && fl.legs.length > 0) {
     const outLegs = fl.legs.filter(l => (l.type || 'outbound').toLowerCase() === 'outbound');
     const retLegs = fl.legs.filter(l => (l.type || '').toLowerCase() === 'return');
 
-    if(outLegs.length > 0){
-      if(outLegs.length === 1){
+    if (outLegs.length > 0) {
+      if (outLegs.length === 1) {
         const l = outLegs[0];
         let str = l.num || '';
-        if(l.airline) str += (str ? ` (${l.airline})` : l.airline);
-        if(l.from || l.to) str += (str ? ': ' : '') + `${l.from||'—'} -> ${l.to||'—'}`;
-        if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
-        if(str.trim()) lines.push(str.trim());
+        if (l.airline) str += (str ? ` (${l.airline})` : l.airline);
+        if (l.from || l.to) str += (str ? ': ' : '') + `${l.from || '—'} -> ${l.to || '—'}`;
+        if (l.depart || l.arrive) str += ` (${l.depart || ''}${l.depart && l.arrive ? '–' : ''}${l.arrive || ''})`;
+        if (str.trim()) lines.push(str.trim());
       } else {
         lines.push('✈️ Outbound Flights:');
         outLegs.forEach((l, idx) => {
           let str = `  • Leg ${idx + 1}: ${l.num || 'Flight'}`;
-          if(l.airline) str += ` (${l.airline})`;
-          if(l.from || l.to) str += `: ${l.from||'—'} -> ${l.to||'—'}`;
-          if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
+          if (l.airline) str += ` (${l.airline})`;
+          if (l.from || l.to) str += `: ${l.from || '—'} -> ${l.to || '—'}`;
+          if (l.depart || l.arrive) str += ` (${l.depart || ''}${l.depart && l.arrive ? '–' : ''}${l.arrive || ''})`;
           lines.push(str);
         });
       }
     }
 
-    if(retLegs.length > 0){
-      if(retLegs.length === 1){
+    if (retLegs.length > 0) {
+      if (retLegs.length === 1) {
         const l = retLegs[0];
         let str = 'Return: ' + (l.num || '');
-        if(l.airline) str += (l.num ? ` (${l.airline})` : l.airline);
-        if(l.from || l.to) str += (l.num||l.airline ? ': ' : '') + `${l.from||'—'} -> ${l.to||'—'}`;
-        if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
-        if(str.trim()) lines.push(str.trim());
+        if (l.airline) str += (l.num ? ` (${l.airline})` : l.airline);
+        if (l.from || l.to) str += (l.num || l.airline ? ': ' : '') + `${l.from || '—'} -> ${l.to || '—'}`;
+        if (l.depart || l.arrive) str += ` (${l.depart || ''}${l.depart && l.arrive ? '–' : ''}${l.arrive || ''})`;
+        if (str.trim()) lines.push(str.trim());
       } else {
         lines.push('✈️ Return Flights:');
         retLegs.forEach((l, idx) => {
           let str = `  • Return Leg ${idx + 1}: ${l.num || 'Flight'}`;
-          if(l.airline) str += ` (${l.airline})`;
-          if(l.from || l.to) str += `: ${l.from||'—'} -> ${l.to||'—'}`;
-          if(l.depart || l.arrive) str += ` (${l.depart||''}${l.depart&&l.arrive?'–':''}${l.arrive||''})`;
+          if (l.airline) str += ` (${l.airline})`;
+          if (l.from || l.to) str += `: ${l.from || '—'} -> ${l.to || '—'}`;
+          if (l.depart || l.arrive) str += ` (${l.depart || ''}${l.depart && l.arrive ? '–' : ''}${l.arrive || ''})`;
           lines.push(str);
         });
       }
@@ -11398,12 +11414,12 @@ function formatTripFlightInfo(fl){
     const outDepart = fl.depart || fl.departTime || '';
     const outArrive = fl.arrive || fl.arriveTime || '';
 
-    if(outNum || outFrom || outTo || outAirline){
+    if (outNum || outFrom || outTo || outAirline) {
       let str = outNum;
-      if(outAirline) str += (str ? ` (${outAirline})` : outAirline);
-      if(outFrom || outTo) str += (str ? ': ' : '') + `${outFrom||'—'} -> ${outTo||'—'}`;
-      if(outDepart || outArrive) str += ` (${outDepart||''}${outDepart&&outArrive?'–':''}${outArrive||''})`;
-      if(str.trim()) lines.push(str.trim());
+      if (outAirline) str += (str ? ` (${outAirline})` : outAirline);
+      if (outFrom || outTo) str += (str ? ': ' : '') + `${outFrom || '—'} -> ${outTo || '—'}`;
+      if (outDepart || outArrive) str += ` (${outDepart || ''}${outDepart && outArrive ? '–' : ''}${outArrive || ''})`;
+      if (str.trim()) lines.push(str.trim());
     }
 
     const retNum = fl.ret_num || fl.retNum || '';
@@ -11413,16 +11429,16 @@ function formatTripFlightInfo(fl){
     const retDepart = fl.ret_depart || fl.retDepart || '';
     const retArrive = fl.ret_arrive || fl.retArrive || '';
 
-    if(retNum || retFrom || retTo || retAirline){
+    if (retNum || retFrom || retTo || retAirline) {
       let str = 'Return: ' + retNum;
-      if(retAirline) str += (retNum ? ` (${retAirline})` : retAirline);
-      if(retFrom || retTo) str += (retNum||retAirline ? ': ' : '') + `${retFrom||'—'} -> ${retTo||'—'}`;
-      if(retDepart || retArrive) str += ` (${retDepart||''}${retDepart&&retArrive?'–':''}${retArrive||''})`;
-      if(str.trim()) lines.push(str.trim());
+      if (retAirline) str += (retNum ? ` (${retAirline})` : retAirline);
+      if (retFrom || retTo) str += (retNum || retAirline ? ': ' : '') + `${retFrom || '—'} -> ${retTo || '—'}`;
+      if (retDepart || retArrive) str += ` (${retDepart || ''}${retDepart && retArrive ? '–' : ''}${retArrive || ''})`;
+      if (str.trim()) lines.push(str.trim());
     }
   }
 
-  if(fl.pnr){
+  if (fl.pnr) {
     lines.push(`PNR: ${fl.pnr}`);
   }
 
@@ -11430,75 +11446,75 @@ function formatTripFlightInfo(fl){
 }
 
 // ── Travel Authorization (TA) fields — separate from flight ──
-function getTripTAFields(){
-  const gv=id=>{const e=document.getElementById(id);return e?e.value:'';};
+function getTripTAFields() {
+  const gv = id => { const e = document.getElementById(id); return e ? e.value : ''; };
   return {
-    taNo:        gv('nt-ta-no'),
-    taClass:     gv('nt-ta-class')||'E',
-    allocation:  gv('nt-ta-allocation'),
-    entity:      gv('nt-ta-entity'),
-    extension:   gv('nt-ta-extension'),
+    taNo: gv('nt-ta-no'),
+    taClass: gv('nt-ta-class') || 'E',
+    allocation: gv('nt-ta-allocation'),
+    entity: gv('nt-ta-entity'),
+    extension: gv('nt-ta-extension'),
     requestDate: gv('nt-ta-reqdate')
   };
 }
 
-function loadTripTAFields(ta){
-  const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
-  ta=ta||{};
+function loadTripTAFields(ta) {
+  const sv = (id, v) => { const e = document.getElementById(id); if (e) e.value = v || ''; };
+  ta = ta || {};
   sv('nt-ta-no', ta.taNo);
-  sv('nt-ta-class', ta.taClass||'E');
+  sv('nt-ta-class', ta.taClass || 'E');
   sv('nt-ta-allocation', ta.allocation);
   sv('nt-ta-entity', ta.entity);
   sv('nt-ta-extension', ta.extension);
   sv('nt-ta-reqdate', ta.requestDate);
 }
 
-function resetTripTAFields(){
+function resetTripTAFields() {
   loadTripTAFields({});
 }
 
-function kv(l,v){
-  if(l==='Flight Details'||l==='Chi tiết chuyến bay'){
+function kv(l, v) {
+  if (l === 'Flight Details' || l === 'Chi tiết chuyến bay') {
     return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g100);font-size:11px;align-items:flex-start;"><span style="color:var(--g500);white-space:nowrap;margin-right:8px;">${l}</span><span style="font-weight:500;text-align:right;max-width:75%;font-size:11px;line-height:1.4;word-break:break-word;color:var(--g800);">${v}</span></div>`;
   }
   return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g100);font-size:13px;"><span style="color:var(--g500);">${l}</span><span style="font-weight:500;text-align:right;max-width:60%;">${v}</span></div>`;
 }
 
-function openNewTripModal(){
-  editingTripId=null;
-  document.getElementById('trip-modal-title').textContent='New Trip';
-  document.getElementById('trip-edit-badge').textContent='';
-  document.getElementById('trip-save-btn').textContent='Save trip';
-  ['nt-plant','nt-location','nt-date','nt-date-end','nt-purpose','nt-contact'].forEach(id=>{
-    const e=document.getElementById(id);if(e)e.value='';
+function openNewTripModal() {
+  editingTripId = null;
+  document.getElementById('trip-modal-title').textContent = 'New Trip';
+  document.getElementById('trip-edit-badge').textContent = '';
+  document.getElementById('trip-save-btn').textContent = 'Save trip';
+  ['nt-plant', 'nt-location', 'nt-date', 'nt-date-end', 'nt-purpose', 'nt-contact'].forEach(id => {
+    const e = document.getElementById(id); if (e) e.value = '';
   });
-  document.getElementById('nt-transport').value='';
+  document.getElementById('nt-transport').value = '';
   resetTripFlightFields();
   resetTripTAFields();
   openModal('modal-new-trip');
 }
-function openEditTrip(){
-  const tr=S.trips.find(t=>t.id===curTrip);if(!tr)return;
-  editingTripId=tr.id;
-  document.getElementById('trip-modal-title').textContent='Edit Trip';
-  document.getElementById('trip-edit-badge').textContent='#'+tr.id.slice(-6);
-  document.getElementById('trip-save-btn').textContent='Update trip';
-  document.getElementById('nt-plant').value=tr.plant||'';
-  document.getElementById('nt-location').value=tr.location||'';
-  document.getElementById('nt-date').value=tr.date||'';
-  document.getElementById('nt-date-end').value=tr.dateEnd||'';
-  document.getElementById('nt-purpose').value=tr.purpose||'';
-  document.getElementById('nt-contact').value=tr.contact||'';
-  document.getElementById('nt-transport').value=tr.transport||'';
+function openEditTrip() {
+  const tr = S.trips.find(t => t.id === curTrip); if (!tr) return;
+  editingTripId = tr.id;
+  document.getElementById('trip-modal-title').textContent = 'Edit Trip';
+  document.getElementById('trip-edit-badge').textContent = '#' + tr.id.slice(-6);
+  document.getElementById('trip-save-btn').textContent = 'Update trip';
+  document.getElementById('nt-plant').value = tr.plant || '';
+  document.getElementById('nt-location').value = tr.location || '';
+  document.getElementById('nt-date').value = tr.date || '';
+  document.getElementById('nt-date-end').value = tr.dateEnd || '';
+  document.getElementById('nt-purpose').value = tr.purpose || '';
+  document.getElementById('nt-contact').value = tr.contact || '';
+  document.getElementById('nt-transport').value = tr.transport || '';
   resetTripFlightFields();
   resetTripTAFields();
-  if(tr.flight)loadTripFlightFields(tr.flight);
+  if (tr.flight) loadTripFlightFields(tr.flight);
   else toggleTripFlight();
-  if(tr.ta)loadTripTAFields(tr.ta);
+  if (tr.ta) loadTripTAFields(tr.ta);
   openModal('modal-new-trip');
 }
-async function deleteTripCurrent(){
-  const tr = S.trips.find(t=>t.id===curTrip);
+async function deleteTripCurrent() {
+  const tr = S.trips.find(t => t.id === curTrip);
   const tripName = tr ? tr.plant : 'Trip';
   const ok = await appConfirm(`Delete trip "${tripName}" and all its associated reports?`, {
     title: 'Delete Trip',
@@ -11506,12 +11522,12 @@ async function deleteTripCurrent(){
     confirmText: 'Delete Trip',
     icon: '🗑️'
   });
-  if(!ok) return;
+  if (!ok) return;
   // UX-07: Take snapshot before deletion so the user can undo within 6 seconds
   if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Trip: ' + tripName);
   if (!S.deletedIds) S.deletedIds = {};
   S.deletedIds[curTrip] = Date.now();
-  S.trips=S.trips.filter(tr=>tr.id!==curTrip);
+  S.trips = S.trips.filter(tr => tr.id !== curTrip);
   delete S.reports[curTrip];
   sv();
   showScreen('trips');
@@ -11520,74 +11536,74 @@ async function deleteTripCurrent(){
   if (typeof showUndoToast === 'function') showUndoToast(`Trip "${tripName}" deleted`);
 }
 
-function setTripStatus(status){
-  const tr=S.trips.find(t=>t.id===curTrip);
-  if(!tr)return;
-  tr.status=status;
+function setTripStatus(status) {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) return;
+  tr.status = status;
   Store.commit('trip:save');
   // Re-render the status toggle
   renderTripStatusToggle(tr);
-  showToast('Status updated: '+{planned:'Planned',in_progress:'In Progress',completed:'Completed'}[status]);
+  showToast('Status updated: ' + { planned: 'Planned', in_progress: 'In Progress', completed: 'Completed' }[status]);
 }
 
-function renderTripStatusToggle(tr){
-  const el=document.getElementById('trip-status-toggle');
-  if(!el||!tr)return;
-  const statuses=[
-    {key:'planned',    label:'📋 Planned',  bg:'var(--al)',          color:'var(--ad)'},
-    {key:'in_progress',label:'🔄 Active',   bg:'var(--bl)',          color:'var(--bd)'},
-    {key:'completed',  label:'✅ Done',     bg:'var(--brand-light)', color:'var(--brand-dark)'}
+function renderTripStatusToggle(tr) {
+  const el = document.getElementById('trip-status-toggle');
+  if (!el || !tr) return;
+  const statuses = [
+    { key: 'planned', label: '📋 Planned', bg: 'var(--al)', color: 'var(--ad)' },
+    { key: 'in_progress', label: '🔄 Active', bg: 'var(--bl)', color: 'var(--bd)' },
+    { key: 'completed', label: '✅ Done', bg: 'var(--brand-light)', color: 'var(--brand-dark)' }
   ];
-  el.innerHTML=statuses.map(s=>`
+  el.innerHTML = statuses.map(s => `
     <button onclick="setTripStatus('${s.key}')"
       style="flex:1;padding:8px 4px;border:none;border-radius:5px;cursor:pointer;
              font-family:var(--font);font-size:11px;font-weight:700;
              transition:all 0.15s;
-             background:${tr.status===s.key?s.bg:'transparent'};
-             color:${tr.status===s.key?s.color:'var(--n500)'};">
+             background:${tr.status === s.key ? s.bg : 'transparent'};
+             color:${tr.status === s.key ? s.color : 'var(--n500)'};">
       ${s.label}
     </button>`).join('');
 }
 
-let _noteSaveTimer=null;
-function saveTripNote(){
-  const tr=S.trips.find(t=>t.id===curTrip);if(!tr)return;
-  const val=document.getElementById('trip-note-input').value;
-  tr.notes=val;
+let _noteSaveTimer = null;
+function saveTripNote() {
+  const tr = S.trips.find(t => t.id === curTrip); if (!tr) return;
+  const val = document.getElementById('trip-note-input').value;
+  tr.notes = val;
   // Debounce: save after 800ms of no typing
   clearTimeout(_noteSaveTimer);
-  _noteSaveTimer=setTimeout(()=>{
+  _noteSaveTimer = setTimeout(() => {
     sv();
     // Show saved indicator
-    const ind=document.getElementById('trip-note-saved');
-    if(ind){ind.style.opacity='1';setTimeout(()=>ind.style.opacity='0',1500);}
+    const ind = document.getElementById('trip-note-saved');
+    if (ind) { ind.style.opacity = '1'; setTimeout(() => ind.style.opacity = '0', 1500); }
     svAndSync('trip_note');
-  },800);
+  }, 800);
 }
-function openReport(){
-  const tr = S.trips.find(t=>t.id===curTrip);
-  if(!tr){ showToast('No trip selected'); return; }
+function openReport() {
+  const tr = S.trips.find(t => t.id === curTrip);
+  if (!tr) { showToast('No trip selected'); return; }
 
   // Init report data
-  if(!S.reports[tr.id]){
-    const defTeam = (S.defaultTeam||[]).map(m=>({...m,id:'tm'+Date.now()+'_'+Math.random()}));
-    S.reports[tr.id]={
-      checklist:[],readings:[],issues:[],team:defTeam,
-      signoff:{summary:'',result:'Completed',remarks:''},
-      signature:'',reportTasks:[],reportTaskNotes:{},reportSnaps:[]
+  if (!S.reports[tr.id]) {
+    const defTeam = (S.defaultTeam || []).map(m => ({ ...m, id: 'tm' + Date.now() + '_' + Math.random() }));
+    S.reports[tr.id] = {
+      checklist: [], readings: [], issues: [], team: defTeam,
+      signoff: { summary: '', result: 'Completed', remarks: '' },
+      signature: '', reportTasks: [], reportTaskNotes: {}, reportSnaps: []
     };
   }
-  curReport=S.reports[tr.id];
-  if(!curReport.reportTasks)     curReport.reportTasks=[];
-  if(!curReport.reportTaskNotes) curReport.reportTaskNotes={};
-  if(!curReport.reportSnaps)     curReport.reportSnaps=[];
-  if(!curReport.signoff)         curReport.signoff={summary:'',result:'Completed',remarks:''};
-  S.reports[tr.id]=curReport;
+  curReport = S.reports[tr.id];
+  if (!curReport.reportTasks) curReport.reportTasks = [];
+  if (!curReport.reportTaskNotes) curReport.reportTaskNotes = {};
+  if (!curReport.reportSnaps) curReport.reportSnaps = [];
+  if (!curReport.signoff) curReport.signoff = { summary: '', result: 'Completed', remarks: '' };
+  S.reports[tr.id] = curReport;
 
   // Check if trip has inspection records → show picker
   // Otherwise go straight to report
-  const hasInspections=(S.inspections||[]).some(i=>i.tripId===curTrip);
-  if(hasInspections){
+  const hasInspections = (S.inspections || []).some(i => i.tripId === curTrip);
+  if (hasInspections) {
     openReportInspPicker();
   } else {
     openReportDirect(0);
@@ -11595,105 +11611,105 @@ function openReport(){
 }
 
 // ═══════ CALENDAR ═══════
-function renderCalendar(){
-  const now=new Date();
+function renderCalendar() {
+  const now = new Date();
   // Guard: initialize if not set (can happen before init() completes)
-  if(calY===undefined||calY===null||isNaN(calY)){calY=now.getFullYear();}
-  if(calM===undefined||calM===null||isNaN(calM)){calM=now.getMonth();}
-  document.getElementById('cal-month-label').textContent=new Date(calY,calM,1).toLocaleDateString(S.lang==='vi'?'vi-VN':'en-US',{month:'long',year:'numeric'});
-  const grid=document.getElementById('cal-grid');
-  const days=S.lang==='vi'?['CN','T2','T3','T4','T5','T6','T7']:['Su','Mo','Tu','We','Th','Fr','Sa'];
-  let html=days.map(d=>`<div class="cc chdr">${d}</div>`).join('');
-  const first=new Date(calY,calM,1).getDay();
-  const dim=new Date(calY,calM+1,0).getDate();
-  const prev=new Date(calY,calM,0).getDate();
-  const prefix=`${calY}-${String(calM+1).padStart(2,'0')}-`;
-  for(let i=0;i<first;i++)html+=`<div class="cc other">${prev-first+i+1}</div>`;
-  for(let d=1;d<=dim;d++){
-    const key=prefix+String(d).padStart(2,'0');
-    const type=S.leaveData[key];
-    const isToday=calY===now.getFullYear()&&calM===now.getMonth()&&d===now.getDate();
-    const hasTask=S.tasks.some(tk=>tk.date===key&&tk.status!=='done');
-    const hasReminder=typeof getRemindersForDate==='function'&&getRemindersForDate(key).length>0;
-    let cls='cc'+(isToday&&!type?' today':type?' '+type:'')+(hasTask?' has-task':'');
-    const reminderDot=hasReminder?'<div style="position:absolute;bottom:2px;right:2px;width:5px;height:5px;border-radius:50%;background:var(--am);"></div>':'';
-    html+=`<div class="${cls}" style="position:relative;" onclick="selCalDay('${key}',${d})">${d}${reminderDot}</div>`;
+  if (calY === undefined || calY === null || isNaN(calY)) { calY = now.getFullYear(); }
+  if (calM === undefined || calM === null || isNaN(calM)) { calM = now.getMonth(); }
+  document.getElementById('cal-month-label').textContent = new Date(calY, calM, 1).toLocaleDateString(S.lang === 'vi' ? 'vi-VN' : 'en-US', { month: 'long', year: 'numeric' });
+  const grid = document.getElementById('cal-grid');
+  const days = S.lang === 'vi' ? ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'] : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  let html = days.map(d => `<div class="cc chdr">${d}</div>`).join('');
+  const first = new Date(calY, calM, 1).getDay();
+  const dim = new Date(calY, calM + 1, 0).getDate();
+  const prev = new Date(calY, calM, 0).getDate();
+  const prefix = `${calY}-${String(calM + 1).padStart(2, '0')}-`;
+  for (let i = 0; i < first; i++)html += `<div class="cc other">${prev - first + i + 1}</div>`;
+  for (let d = 1; d <= dim; d++) {
+    const key = prefix + String(d).padStart(2, '0');
+    const type = S.leaveData[key];
+    const isToday = calY === now.getFullYear() && calM === now.getMonth() && d === now.getDate();
+    const hasTask = S.tasks.some(tk => tk.date === key && tk.status !== 'done');
+    const hasReminder = typeof getRemindersForDate === 'function' && getRemindersForDate(key).length > 0;
+    let cls = 'cc' + (isToday && !type ? ' today' : type ? ' ' + type : '') + (hasTask ? ' has-task' : '');
+    const reminderDot = hasReminder ? '<div style="position:absolute;bottom:2px;right:2px;width:5px;height:5px;border-radius:50%;background:var(--am);"></div>' : '';
+    html += `<div class="${cls}" style="position:relative;" onclick="selCalDay('${key}',${d})">${d}${reminderDot}</div>`;
   }
-  grid.innerHTML=html;updateLeaveSummary();
+  grid.innerHTML = html; updateLeaveSummary();
 }
-function changeMonth(dir){calM+=dir;if(calM<0){calM=11;calY--;}if(calM>11){calM=0;calY++;}renderCalendar();}
-function selCalDay(key,d){
-  selDay=key;
-  document.getElementById('sel-day-ed').style.display='';
-  const dayLabel=new Date(calY,calM,d).toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('sel-day-lbl').textContent=dayLabel;
+function changeMonth(dir) { calM += dir; if (calM < 0) { calM = 11; calY--; } if (calM > 11) { calM = 0; calY++; } renderCalendar(); }
+function selCalDay(key, d) {
+  selDay = key;
+  document.getElementById('sel-day-ed').style.display = '';
+  const dayLabel = new Date(calY, calM, d).toLocaleDateString(S.lang === 'vi' ? 'vi-VN' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('sel-day-lbl').textContent = dayLabel;
 
-  const dayTasks=S.tasks.filter(tk=>(tk.dateStart||tk.date||'')=== key);
-  const dayTrips=S.trips.filter(tr=>{
-    const start=tr.date||'';const end=tr.dateEnd||start;
-    return key>=start&&key<=end;
+  const dayTasks = S.tasks.filter(tk => (tk.dateStart || tk.date || '') === key);
+  const dayTrips = S.trips.filter(tr => {
+    const start = tr.date || ''; const end = tr.dateEnd || start;
+    return key >= start && key <= end;
   });
-  const leaveType=S.leaveData[key]||null;
-  const leaveLabels={trip:'🏭 Work trip',leave:'🌴 Leave',wfh:'💻 WFH',holiday:'🎉 Holiday'};
+  const leaveType = S.leaveData[key] || null;
+  const leaveLabels = { trip: '🏭 Work trip', leave: '🌴 Leave', wfh: '💻 WFH', holiday: '🎉 Holiday' };
 
-  const dtl=document.getElementById('day-task-list');
-  let html='';
+  const dtl = document.getElementById('day-task-list');
+  let html = '';
 
   // Reminders for this day
-  const dayReminders = typeof getRemindersForDate==='function' ? getRemindersForDate(key) : [];
-  if(dayReminders.length){
-    html+=`<div style="background:var(--al);border-radius:var(--rs);padding:8px 10px;margin-bottom:8px;">`;
-    dayReminders.forEach(r=>{
-      html+=`<div style="display:flex;align-items:center;gap:8px;padding:3px 0;">
+  const dayReminders = typeof getRemindersForDate === 'function' ? getRemindersForDate(key) : [];
+  if (dayReminders.length) {
+    html += `<div style="background:var(--al);border-radius:var(--rs);padding:8px 10px;margin-bottom:8px;">`;
+    dayReminders.forEach(r => {
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;">
         <span style="font-size:14px;">🔔</span>
         <div>
           <div style="font-size:12px;font-weight:700;color:var(--ad);">${r.title}</div>
-          ${r.note?`<div style="font-size:11px;color:var(--am);">${r.note}</div>`:''}
+          ${r.note ? `<div style="font-size:11px;color:var(--am);">${r.note}</div>` : ''}
         </div>
       </div>`;
     });
-    html+='</div>';
+    html += '</div>';
   }
 
   // Leave / day type banner
-  if(leaveType){
-    const lc={trip:'var(--gl)',leave:'var(--al)',wfh:'var(--bl)',holiday:'var(--rl)'}[leaveType]||'var(--g100)';
-    const ltc={trip:'var(--gd)',leave:'#92400E',wfh:'#1E40AF',holiday:'#991B1B'}[leaveType]||'var(--g600)';
-    html+=`<div style="background:${lc};color:${ltc};border-radius:var(--rs);padding:8px 10px;margin-bottom:10px;font-size:12px;font-weight:600;">${leaveLabels[leaveType]||leaveType}</div>`;
+  if (leaveType) {
+    const lc = { trip: 'var(--gl)', leave: 'var(--al)', wfh: 'var(--bl)', holiday: 'var(--rl)' }[leaveType] || 'var(--g100)';
+    const ltc = { trip: 'var(--gd)', leave: '#92400E', wfh: '#1E40AF', holiday: '#991B1B' }[leaveType] || 'var(--g600)';
+    html += `<div style="background:${lc};color:${ltc};border-radius:var(--rs);padding:8px 10px;margin-bottom:10px;font-size:12px;font-weight:600;">${leaveLabels[leaveType] || leaveType}</div>`;
   }
 
   // Trips on this day
-  if(dayTrips.length){
-    html+=`<div style="font-size:11px;font-weight:700;color:#00843D;letter-spacing:0.05em;margin-bottom:5px;">TRIPS</div>`;
-    dayTrips.forEach(tr=>{
-      const bc=tr.status==='completed'?'bg':tr.status==='in_progress'?'bb':'ba';
-      const bs=tr.status==='completed'?t('completed'):tr.status==='in_progress'?t('inProgress'):t('planned');
-      html+=`<div onclick="openTripDetail('${tr.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--g100);cursor:pointer;">
+  if (dayTrips.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:#00843D;letter-spacing:0.05em;margin-bottom:5px;">TRIPS</div>`;
+    dayTrips.forEach(tr => {
+      const bc = tr.status === 'completed' ? 'bg' : tr.status === 'in_progress' ? 'bb' : 'ba';
+      const bs = tr.status === 'completed' ? t('completed') : tr.status === 'in_progress' ? t('inProgress') : t('planned');
+      html += `<div onclick="openTripDetail('${tr.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--g100);cursor:pointer;">
         <div>
           <div style="font-size:12px;font-weight:600;color:var(--g800);">🏭 ${tr.plant}</div>
-          <div style="font-size:10px;color:var(--g500);">${tr.location||''}${tr.dateEnd&&tr.dateEnd!==tr.date?' · until '+fmtDate(tr.dateEnd):''}</div>
+          <div style="font-size:10px;color:var(--g500);">${tr.location || ''}${tr.dateEnd && tr.dateEnd !== tr.date ? ' · until ' + fmtDate(tr.dateEnd) : ''}</div>
         </div>
         <span class="badge ${bc}" style="font-size:10px;">${bs}</span>
       </div>`;
     });
-    html+='<div style="height:10px;"></div>';
+    html += '<div style="height:10px;"></div>';
   }
 
   // Tasks on this day
-  if(dayTasks.length){
-    html+=`<div style="font-size:11px;font-weight:700;color:#00843D;letter-spacing:0.05em;margin-bottom:5px;">TASKS (${dayTasks.length})</div>`;
-    dayTasks.forEach(tk=>{
-      const catIcon={work:'🔧',leave:'🌴',travel:'✈️'}[tk.category||'work']||'📋';
-      const timeStr=tk.timeStart?(tk.timeEnd?`${tk.timeStart}–${tk.timeEnd}`:tk.timeStart):'';
-      const dur=calcDuration(tk);
-      const cycle={'pending':'in_progress','in_progress':'done','done':'pending'};
-      const nextStatus=cycle[tk.status]||'pending';
-      const statusIcon=tk.status==='done'?'✅':tk.status==='in_progress'?'🔄':'⏳';
-      html+=`<div style="padding:7px 0;border-bottom:1px solid var(--g100);">
+  if (dayTasks.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:#00843D;letter-spacing:0.05em;margin-bottom:5px;">TASKS (${dayTasks.length})</div>`;
+    dayTasks.forEach(tk => {
+      const catIcon = { work: '🔧', leave: '🌴', travel: '✈️' }[tk.category || 'work'] || '📋';
+      const timeStr = tk.timeStart ? (tk.timeEnd ? `${tk.timeStart}–${tk.timeEnd}` : tk.timeStart) : '';
+      const dur = calcDuration(tk);
+      const cycle = { 'pending': 'in_progress', 'in_progress': 'done', 'done': 'pending' };
+      const nextStatus = cycle[tk.status] || 'pending';
+      const statusIcon = tk.status === 'done' ? '✅' : tk.status === 'in_progress' ? '🔄' : '⏳';
+      html += `<div style="padding:7px 0;border-bottom:1px solid var(--g100);">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
           <div style="flex:1;cursor:pointer;" onclick="openTaskDetail('${tk.id}')">
             <div style="font-size:12px;font-weight:500;color:var(--g800);">${catIcon} ${tk.title}</div>
-            ${timeStr||dur||tk.machine?`<div style="font-size:10px;color:var(--g500);margin-top:2px;">${[timeStr,dur,tk.machine].filter(Boolean).join(' · ')}</div>`:''}
+            ${timeStr || dur || tk.machine ? `<div style="font-size:10px;color:var(--g500);margin-top:2px;">${[timeStr, dur, tk.machine].filter(Boolean).join(' · ')}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
             <span style="font-size:14px;">${statusIcon}</span>
@@ -11702,38 +11718,38 @@ function selCalDay(key,d){
         </div>
       </div>`;
     });
-    html+='<div style="height:4px;"></div>';
+    html += '<div style="height:4px;"></div>';
   }
 
-  if(!dayTrips.length&&!dayTasks.length&&!leaveType){
-    html=`<div style="text-align:center;padding:16px 0;font-size:12px;color:var(--g400);">Nothing scheduled for this day.</div>`;
+  if (!dayTrips.length && !dayTasks.length && !leaveType) {
+    html = `<div style="text-align:center;padding:16px 0;font-size:12px;color:var(--g400);">Nothing scheduled for this day.</div>`;
   }
 
-  html+=`<button onclick="openNewTaskModal('${key}','work')" style="width:100%;margin-top:6px;padding:8px;border-radius:var(--rs);border:1px dashed var(--g300);background:transparent;font-family:var(--font);font-size:12px;color:var(--green);cursor:pointer;">＋ Add task for this day</button>`;
+  html += `<button onclick="openNewTaskModal('${key}','work')" style="width:100%;margin-top:6px;padding:8px;border-radius:var(--rs);border:1px dashed var(--g300);background:transparent;font-family:var(--font);font-size:12px;color:var(--green);cursor:pointer;">＋ Add task for this day</button>`;
 
-  dtl.innerHTML=html;
+  dtl.innerHTML = html;
 }
-function setDayType(type){if(!selDay)return;if(type===null)delete S.leaveData[selDay];else S.leaveData[selDay]=type;sv();renderCalendar();svAndSync('leave');}
-function updateLeaveSummary(){
-  const pfx=`${calY}-${String(calM+1).padStart(2,'0')}-`;
-  let trip=0,leave=0,wfh=0;
-  Object.entries(S.leaveData).forEach(([k,v])=>{if(k.startsWith(pfx)){if(v==='trip')trip++;else if(v==='leave')leave++;else if(v==='wfh')wfh++;}});
-  document.getElementById('lv-trip').textContent=trip;
-  document.getElementById('lv-leave').textContent=leave;
-  document.getElementById('lv-wfh').textContent=wfh;
+function setDayType(type) { if (!selDay) return; if (type === null) delete S.leaveData[selDay]; else S.leaveData[selDay] = type; sv(); renderCalendar(); svAndSync('leave'); }
+function updateLeaveSummary() {
+  const pfx = `${calY}-${String(calM + 1).padStart(2, '0')}-`;
+  let trip = 0, leave = 0, wfh = 0;
+  Object.entries(S.leaveData).forEach(([k, v]) => { if (k.startsWith(pfx)) { if (v === 'trip') trip++; else if (v === 'leave') leave++; else if (v === 'wfh') wfh++; } });
+  document.getElementById('lv-trip').textContent = trip;
+  document.getElementById('lv-leave').textContent = leave;
+  document.getElementById('lv-wfh').textContent = wfh;
 }
 
 // ═══════ DASHBOARD ═══════
-function renderDash(){
-  const now=new Date();const today=typeof localDateStr === 'function' ? localDateStr(now) : now.toISOString().slice(0,10);
-  const thisM=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById('stat-trips').textContent=S.trips.filter(tr=>tr.date&&tr.date.startsWith(thisM)).length;
-  const todayTasks=S.tasks.filter(tk=>tk.date===today&&tk.status!=='done');
-  document.getElementById('stat-tasks').textContent=todayTasks.length;
-  document.getElementById('stat-leave').textContent=Object.entries(S.leaveData).filter(([k,v])=>k.startsWith(thisM)&&v==='leave').length;
-  const h=now.getHours();
-  document.getElementById('greeting').textContent=(h<12?t('goodMorning'):h<17?t('goodAfternoon'):t('goodEvening'))+', '+(S.profile.name||'Engineer');
-  document.getElementById('today-date').textContent=now.toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+function renderDash() {
+  const now = new Date(); const today = typeof localDateStr === 'function' ? localDateStr(now) : now.toISOString().slice(0, 10);
+  const thisM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  document.getElementById('stat-trips').textContent = S.trips.filter(tr => tr.date && tr.date.startsWith(thisM)).length;
+  const todayTasks = S.tasks.filter(tk => tk.date === today && tk.status !== 'done');
+  document.getElementById('stat-tasks').textContent = todayTasks.length;
+  document.getElementById('stat-leave').textContent = Object.entries(S.leaveData).filter(([k, v]) => k.startsWith(thisM) && v === 'leave').length;
+  const h = now.getHours();
+  document.getElementById('greeting').textContent = (h < 12 ? t('goodMorning') : h < 17 ? t('goodAfternoon') : t('goodEvening')) + ', ' + (S.profile.name || 'Engineer');
+  document.getElementById('today-date').textContent = now.toLocaleDateString(S.lang === 'vi' ? 'vi-VN' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   // ── Executive Mission Hero Card ──
   const activeMissionEl = document.getElementById('home-active-mission');
@@ -11774,63 +11790,63 @@ function renderDash(){
   }
 
   // ── Today's Work — ALL work tasks for today, grouped by status ──
-  const allTodayWork=S.tasks.filter(tk=>{
-    const d=tk.dateStart||tk.date||'';
-    return d===today;  // ALL categories: work, leave, travel
-  }).sort((a,b)=>(a.timeStart||a.time||'').localeCompare(b.timeStart||b.time||'')||a.title.localeCompare(b.title));
+  const allTodayWork = S.tasks.filter(tk => {
+    const d = tk.dateStart || tk.date || '';
+    return d === today;  // ALL categories: work, leave, travel
+  }).sort((a, b) => (a.timeStart || a.time || '').localeCompare(b.timeStart || b.time || '') || a.title.localeCompare(b.title));
 
-  const htt=document.getElementById('home-tasks');
-  const lbl=document.getElementById('today-date-label');
-  if(lbl)lbl.textContent=allTodayWork.length?allTodayWork.length+' task'+(allTodayWork.length>1?'s':''):'';
+  const htt = document.getElementById('home-tasks');
+  const lbl = document.getElementById('today-date-label');
+  if (lbl) lbl.textContent = allTodayWork.length ? allTodayWork.length + ' task' + (allTodayWork.length > 1 ? 's' : '') : '';
 
   // Also update stat to show ALL today work tasks (not just pending)
-  document.getElementById('stat-tasks').textContent=allTodayWork.length;
+  document.getElementById('stat-tasks').textContent = allTodayWork.length;
 
-  if(!allTodayWork.length){
-    htt.innerHTML=`<div style="background:var(--surface);border-radius:var(--rs);box-shadow:var(--sh);border:1px solid var(--n200);padding:12px;text-align:center;margin-bottom:6px;">
+  if (!allTodayWork.length) {
+    htt.innerHTML = `<div style="background:var(--surface);border-radius:var(--rs);box-shadow:var(--sh);border:1px solid var(--n200);padding:12px;text-align:center;margin-bottom:6px;">
       <div style="font-size:12px;color:var(--g500);">✅ No work tasks scheduled for today.</div>
       <button onclick="openNewTaskModal(todayStr(),'work')" style="margin-top:8px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);padding:6px 14px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:var(--font);">＋ Add today's task</button>
     </div>`;
   } else {
     // Group into 3 status buckets
-    const groups=[
-      {key:'in_progress', label:'🔄 In Progress', color:'var(--amber)', bg:'var(--al)', txtColor:'#92400E'},
-      {key:'pending',     label:'⏳ Pending',     color:'var(--g400)', bg:'var(--g100)', txtColor:'var(--g600)'},
-      {key:'done',        label:'✅ Done',        color:'var(--green)', bg:'var(--gl)', txtColor:'var(--gd)'}
+    const groups = [
+      { key: 'in_progress', label: '🔄 In Progress', color: 'var(--amber)', bg: 'var(--al)', txtColor: '#92400E' },
+      { key: 'pending', label: '⏳ Pending', color: 'var(--g400)', bg: 'var(--g100)', txtColor: 'var(--g600)' },
+      { key: 'done', label: '✅ Done', color: 'var(--green)', bg: 'var(--gl)', txtColor: 'var(--gd)' }
     ];
     // Empty message per category type
-    const leaveToday=allTodayWork.filter(tk=>(tk.category||'work')==='leave');
-    const travelToday=allTodayWork.filter(tk=>(tk.category||'work')==='travel');
-    let out='';
-    groups.forEach(g=>{
-      const items=allTodayWork.filter(tk=>tk.status===g.key);
-      if(!items.length)return;
-      out+=`<div style="margin-bottom:10px;">
+    const leaveToday = allTodayWork.filter(tk => (tk.category || 'work') === 'leave');
+    const travelToday = allTodayWork.filter(tk => (tk.category || 'work') === 'travel');
+    let out = '';
+    groups.forEach(g => {
+      const items = allTodayWork.filter(tk => tk.status === g.key);
+      if (!items.length) return;
+      out += `<div style="margin-bottom:10px;">
         <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:${g.bg};border-radius:var(--rs) var(--rs) 0 0;border-bottom:2px solid ${g.color};">
           <span style="font-size:12px;font-weight:700;color:${g.txtColor};">${g.label}</span>
-          <span style="font-size:10px;font-weight:600;color:${g.txtColor};opacity:0.7;">${items.length} task${items.length>1?'s':''}</span>
+          <span style="font-size:10px;font-weight:600;color:${g.txtColor};opacity:0.7;">${items.length} task${items.length > 1 ? 's' : ''}</span>
         </div>
         <div style="background:var(--surface);border-radius:0 0 var(--r) var(--r);box-shadow:var(--sh);border:1px solid rgba(0,0,0,0.05);border-top:none;">
-          ${items.map(tk=>{
-            const dur=calcDuration(tk);
-            const timeStr=tk.timeStart?(tk.timeEnd?`${tk.timeStart}–${tk.timeEnd}`:tk.timeStart):'';
-            const cycle={pending:'in_progress',in_progress:'done',done:'pending'};
-            const nextS=cycle[tk.status]||'pending';
-            const nextLabel={pending:'→ Start',in_progress:'→ Done',done:'↺ Reopen'}[tk.status];
-            const nextBg={pending:'var(--al)',in_progress:'var(--gl)',done:'var(--g100)'}[tk.status];
-            const nextColor={pending:'#92400E',in_progress:'var(--gd)',done:'var(--g600)'}[tk.status];
-            return `<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-bottom:1px solid var(--g100);">
+          ${items.map(tk => {
+        const dur = calcDuration(tk);
+        const timeStr = tk.timeStart ? (tk.timeEnd ? `${tk.timeStart}–${tk.timeEnd}` : tk.timeStart) : '';
+        const cycle = { pending: 'in_progress', in_progress: 'done', done: 'pending' };
+        const nextS = cycle[tk.status] || 'pending';
+        const nextLabel = { pending: '→ Start', in_progress: '→ Done', done: '↺ Reopen' }[tk.status];
+        const nextBg = { pending: 'var(--al)', in_progress: 'var(--gl)', done: 'var(--g100)' }[tk.status];
+        const nextColor = { pending: '#92400E', in_progress: 'var(--gd)', done: 'var(--g600)' }[tk.status];
+        return `<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-bottom:1px solid var(--g100);">
               <div style="flex:1;min-width:0;cursor:pointer;" onclick="openTaskDetail('${tk.id}')">
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
-                  ${(()=>{const cc=catConfig(tk.category||'work');return `<span style="background:${cc.bg};color:${cc.text};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600;">${cc.icon} ${(tk.category||'work').charAt(0).toUpperCase()+(tk.category||'work').slice(1)}</span>`})()}
+                  ${(() => { const cc = catConfig(tk.category || 'work'); return `<span style="background:${cc.bg};color:${cc.text};padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600;">${cc.icon} ${(tk.category || 'work').charAt(0).toUpperCase() + (tk.category || 'work').slice(1)}</span>` })()}
                 </div>
-                <div style="font-size:13px;font-weight:600;color:var(--g800);${tk.status==='done'?'text-decoration:line-through;color:var(--g400);':''}line-height:1.3;">${tk.title}</div>
+                <div style="font-size:13px;font-weight:600;color:var(--g800);${tk.status === 'done' ? 'text-decoration:line-through;color:var(--g400);' : ''}line-height:1.3;">${tk.title}</div>
                 <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
-                  ${timeStr?`<span style="font-size:10px;color:var(--g500);">⏰ ${timeStr}</span>`:''}
-                  ${dur?`<span style="font-size:10px;color:var(--g500);">⏱ ${dur}</span>`:''}
-                  ${tk.machine?`<span style="font-size:10px;color:var(--g500);">🔩 ${tk.machine}</span>`:''}
-                  ${tk.plan?`<span style="font-size:10px;color:var(--g500);">📁 ${tk.plan}</span>`:''}
-                  ${tk.checklist&&tk.checklist.length?`<span style="font-size:10px;color:var(--g500);">${tk.checklist.filter(c=>c.done).length}/${tk.checklist.length} items</span>`:''}
+                  ${timeStr ? `<span style="font-size:10px;color:var(--g500);">⏰ ${timeStr}</span>` : ''}
+                  ${dur ? `<span style="font-size:10px;color:var(--g500);">⏱ ${dur}</span>` : ''}
+                  ${tk.machine ? `<span style="font-size:10px;color:var(--g500);">🔩 ${tk.machine}</span>` : ''}
+                  ${tk.plan ? `<span style="font-size:10px;color:var(--g500);">📁 ${tk.plan}</span>` : ''}
+                  ${tk.checklist && tk.checklist.length ? `<span style="font-size:10px;color:var(--g500);">${tk.checklist.filter(c => c.done).length}/${tk.checklist.length} items</span>` : ''}
                 </div>
               </div>
               <button onclick="setTaskStatus('${tk.id}','${nextS}');renderDash();"
@@ -11838,47 +11854,47 @@ function renderDash(){
                 ${nextLabel}
               </button>
             </div>`;
-          }).join('')}
+      }).join('')}
         </div>
       </div>`;
     });
-    htt.innerHTML=out;
+    htt.innerHTML = out;
   }
 
-  const upcoming=S.trips.filter(tr=>tr.status!=='completed').sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);
-  const upEl=document.getElementById('upcoming-trips');
-  upEl.innerHTML=upcoming.length?upcoming.map(tr=>{
-    const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+  const upcoming = S.trips.filter(tr => tr.status !== 'completed').sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 3);
+  const upEl = document.getElementById('upcoming-trips');
+  upEl.innerHTML = upcoming.length ? upcoming.map(tr => {
+    const wk = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
     const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
     return `<div class="tc ${tr.status}" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;flex-wrap:wrap;">
           <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
           ${typeBadge}
-          ${wk?`<span class="badge-week">${wk}</span>`:''}
+          ${wk ? `<span class="badge-week">${wk}</span>` : ''}
         </div>
-        <span class="badge ${tr.status==='in_progress'?'bb':'ba'}" style="flex-shrink:0;">${tr.status==='in_progress'?t('inProgress'):t('planned')}</span>
+        <span class="badge ${tr.status === 'in_progress' ? 'bb' : 'ba'}" style="flex-shrink:0;">${tr.status === 'in_progress' ? t('inProgress') : t('planned')}</span>
       </div>
-      <div class="cs">${fmtDate(tr.date)}${tr.location?' · '+tr.location:''}</div>
+      <div class="cs">${fmtDate(tr.date)}${tr.location ? ' · ' + tr.location : ''}</div>
     </div>`;
-  }).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noTrips')}</div>`;
-  const completed=S.trips.filter(tr=>tr.status==='completed').sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,3);
-  const recEl=document.getElementById('recent-reports');
-  recEl.innerHTML=completed.length?completed.map(tr=>{
-    const wk=typeof getTripWeekLabel==='function'?getTripWeekLabel(tr.date,tr.dateEnd):'';
+  }).join('') : `<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noTrips')}</div>`;
+  const completed = S.trips.filter(tr => tr.status === 'completed').sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+  const recEl = document.getElementById('recent-reports');
+  recEl.innerHTML = completed.length ? completed.map(tr => {
+    const wk = typeof getTripWeekLabel === 'function' ? getTripWeekLabel(tr.date, tr.dateEnd) : '';
     const typeBadge = typeof getTripTypeBadge === 'function' ? getTripTypeBadge(tr) : '';
     return `<div class="card" style="cursor:pointer;" onclick="openTripDetail('${tr.id}')">
       <div class="ch">
         <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1;margin-right:8px;flex-wrap:wrap;">
           <div class="ct" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tr.plant}</div>
           ${typeBadge}
-          ${wk?`<span class="badge-week">${wk}</span>`:''}
+          ${wk ? `<span class="badge-week">${wk}</span>` : ''}
         </div>
         <span class="badge bg" style="flex-shrink:0;">${t('completed')}</span>
       </div>
       <div class="cs">${fmtDate(tr.date)}</div>
     </div>`;
-  }).join(''):`<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noReports')}</div>`;
+  }).join('') : `<div style="font-size:13px;color:var(--g500);padding:8px 0;">${t('noReports')}</div>`;
 
   try {
     if (typeof renderHomeFinanceWidget === 'function') renderHomeFinanceWidget();
@@ -11957,8 +11973,8 @@ function renderTripTimesheets(tripId) {
             No daily tickets recorded yet. Tap <b>＋ Add Ticket</b> to log hours and get daily customer sign-off.
           </div>
         ` : tickets.map((tk) => {
-          const hasSig = !!tk.signature;
-          return `
+    const hasSig = !!tk.signature;
+    return `
             <div class="ts-ticket-card">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
                 <div>
@@ -11998,7 +12014,7 @@ function renderTripTimesheets(tripId) {
               </div>
             </div>
           `;
-        }).join('')}
+  }).join('')}
       </div>
     </div>
   `;
@@ -12117,7 +12133,7 @@ function initTicketSigCanvas() {
       isTicketDrawing = false;
       try {
         _tempTicketSigDataUrl = ticketSigCanvas.toDataURL('image/png');
-      } catch(e) {}
+      } catch (e) { }
     }
   };
 
@@ -12159,7 +12175,7 @@ function saveServiceTicket() {
     try {
       const data = ticketSigCanvas.toDataURL('image/png');
       if (data.length > 1000) sig = data;
-    } catch(e) {}
+    } catch (e) { }
   }
 
   tr.timesheets = tr.timesheets || [];
@@ -12415,7 +12431,7 @@ async function handleLotoPhotoUpload(event) {
     }
     triggerHaptic('light');
     showToast('LOTO photo loaded ✓');
-  } catch(err) {
+  } catch (err) {
     console.error('LOTO photo error:', err);
     showToast('Failed to load image');
   }
