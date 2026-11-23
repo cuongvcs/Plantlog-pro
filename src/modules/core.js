@@ -5,128 +5,128 @@
 // =====================================================
 
 // ═══════ TRANSLATIONS ═══════
-const T={
-  en:{
-    home:'Home',trips:'Trips',tasks:'Tasks',leave:'Leave',settings:'Settings',tools:'Tools',
-    tripsMonth:'Trips',pendingTasks:'Tasks today',leaveDays:'Leave days',
-    upcomingTrips:'Upcoming trips',recentReports:'Recent reports',todayTasks:"Today's tasks",
-    noTrips:'No upcoming trips. Tap + to create.',noReports:'No completed reports yet.',noTasks:'No tasks yet. Tap + to add.',
-    myTrips:'My Trips',all:'All',planned:'Planned',inProgress:'In Progress',completed:'Completed',
-    pending:'Pending',done:'Done',kanban:'Kanban',
-    delete:'Delete',openReport:'Open Report',
-    tab1:'1 Checklist',tab2:'2 Readings',tab3:'3 Issues',tab4:'4 Team',tab5:'5 Tasks',tab6:'6 Sign-off',
-    inspectionChecklist:'INSPECTION CHECKLIST',addCheckItem:'Add item',nextReadings:'Next: Readings →',
-    equipmentReadings:'EQUIPMENT READINGS',addReading:'Add reading',nextIssues:'Next: Issues →',
-    noIssues:'No issues found.',addIssue:'Add issue',nextTeam:'Next: Team →',
-    teamSignoffs:'TEAM & SIGN-OFFS',addTeamMember:'Add member',nextSignoff:'Next: Sign-off →',
-    workSummary:'Work summary',result:'Result',remarks:'Remarks',
-    engineerSig:'Signature',signHint:'Sign above with finger or stylus',clearSig:'Clear',
-    useMySig:'Use my signature',uploadSig:'Upload',saveDefaultSig:'Set Default',sigSavedDefault:'Saved as default signature ✓',calendar:'Calendar',
-    exportPdf:'Export PDF',exportPdfReport:'Export Report',downloadPdf:'Download PDF',
-    emailPdf:'Email Report',markCompleted:'Mark completed',
-    leavePlanner:'Leave Planner',workTrip:'Work trip',holiday:'Holiday',tripDays:'Trip days',clearDay:'Clear day',
-    addTaskForDay:'Add task for this day',
-    fullName:'Full name',jobTitle:'Job title',company:'Company',plantBase:'Plant Base',plantBaseHint:'Your primary base plant (trips at base plant or leave will not require travel claims)',employeeId:'Employee ID',
-    defaultTeam:'Default Team',industryTemplates:'Industry templates',
-    loadChecklistTemplates:'Load checklist for your industry',checklistTemplates:'Checklist templates',
-    manageDefaultItems:'Manage default items',clearData:'Clear all data',
-    notifications:'Notifications',enableNotif:'Enable notifications',notifDesc:'Get reminders for trips, tasks & leave',
-    newTrip:'New Trip',plantName:'Plant name *',location:'Location',visitDate:'Date *',endDate:'End date',
-    purposeScope:'Purpose',contactPerson:'Contact',transport:'Transport',saveTrip:'Save trip',cancel:'Cancel',
-    newTask:'New Task',taskTitle:'Task title *',description:'Description',dueDate:'Due date *',time:'Time',
-    priority:'Priority',linkedTrip:'Linked trip',saveTask:'Save task',
-    itemName:'Item name *',notesOptional:'Notes',addItem:'Add',
-    equipmentName:'Equipment *',value:'Value *',unit:'Unit',status:'Status',inSpec:'In spec',outOfRange:'Out of range',notes:'Notes',
-    issueTitle:'Title *',details:'Details',severity:'Severity',recommendedAction:'Action',photoEvidence:'Photos',addPhoto:'Add photo',
-    name:'Name *',rolePosition:'Role',organization:'Organization',signoffRequired:'Sign-off?',addMember:'Add',
-    selectIndustry:'Select your industry:',
-    emailReport:'Email Report',recipientEmail:'To *',ccEmail:'CC',subject:'Subject',message:'Message',send:'Send',
-    done2:'Done',add:'Add',partial:'Partial',deferred:'Deferred',
-    goodMorning:'Good morning',goodAfternoon:'Good afternoon',goodEvening:'Good evening',
-    installApp:'Install PlantLog on your phone for offline use',install:'Install',
-    taskOverdue:'Overdue',taskDueToday:'Due today',taskUpcoming:'Upcoming',
-    noIssuesFound:'No issues.',noReadings:'No readings.',
-    inProgress2:'In Progress'
+const T = {
+  en: {
+    home: 'Home', trips: 'Trips', tasks: 'Tasks', leave: 'Leave', settings: 'Settings', tools: 'Tools',
+    tripsMonth: 'Trips', pendingTasks: 'Tasks today', leaveDays: 'Leave days',
+    upcomingTrips: 'Upcoming trips', recentReports: 'Recent reports', todayTasks: "Today's tasks",
+    noTrips: 'No upcoming trips. Tap + to create.', noReports: 'No completed reports yet.', noTasks: 'No tasks yet. Tap + to add.',
+    myTrips: 'My Trips', all: 'All', planned: 'Planned', inProgress: 'In Progress', completed: 'Completed',
+    pending: 'Pending', done: 'Done', kanban: 'Kanban',
+    delete: 'Delete', openReport: 'Open Report',
+    tab1: '1 Checklist', tab2: '2 Readings', tab3: '3 Issues', tab4: '4 Team', tab5: '5 Tasks', tab6: '6 Sign-off',
+    inspectionChecklist: 'INSPECTION CHECKLIST', addCheckItem: 'Add item', nextReadings: 'Next: Readings →',
+    equipmentReadings: 'EQUIPMENT READINGS', addReading: 'Add reading', nextIssues: 'Next: Issues →',
+    noIssues: 'No issues found.', addIssue: 'Add issue', nextTeam: 'Next: Team →',
+    teamSignoffs: 'TEAM & SIGN-OFFS', addTeamMember: 'Add member', nextSignoff: 'Next: Sign-off →',
+    workSummary: 'Work summary', result: 'Result', remarks: 'Remarks',
+    engineerSig: 'Signature', signHint: 'Sign above with finger or stylus', clearSig: 'Clear',
+    useMySig: 'Use my signature', uploadSig: 'Upload', saveDefaultSig: 'Set Default', sigSavedDefault: 'Saved as default signature ✓', calendar: 'Calendar',
+    exportPdf: 'Export PDF', exportPdfReport: 'Export Report', downloadPdf: 'Download PDF',
+    emailPdf: 'Email Report', markCompleted: 'Mark completed',
+    leavePlanner: 'Leave Planner', workTrip: 'Work trip', holiday: 'Holiday', tripDays: 'Trip days', clearDay: 'Clear day',
+    addTaskForDay: 'Add task for this day',
+    fullName: 'Full name', jobTitle: 'Job title', company: 'Company', plantBase: 'Plant Base', plantBaseHint: 'Your primary base plant (trips at base plant or leave will not require travel claims)', employeeId: 'Employee ID',
+    defaultTeam: 'Default Team', industryTemplates: 'Industry templates',
+    loadChecklistTemplates: 'Load checklist for your industry', checklistTemplates: 'Checklist templates',
+    manageDefaultItems: 'Manage default items', clearData: 'Clear all data',
+    notifications: 'Notifications', enableNotif: 'Enable notifications', notifDesc: 'Get reminders for trips, tasks & leave',
+    newTrip: 'New Trip', plantName: 'Plant name *', location: 'Location', visitDate: 'Date *', endDate: 'End date',
+    purposeScope: 'Purpose', contactPerson: 'Contact', transport: 'Transport', saveTrip: 'Save trip', cancel: 'Cancel',
+    newTask: 'New Task', taskTitle: 'Task title *', description: 'Description', dueDate: 'Due date *', time: 'Time',
+    priority: 'Priority', linkedTrip: 'Linked trip', saveTask: 'Save task',
+    itemName: 'Item name *', notesOptional: 'Notes', addItem: 'Add',
+    equipmentName: 'Equipment *', value: 'Value *', unit: 'Unit', status: 'Status', inSpec: 'In spec', outOfRange: 'Out of range', notes: 'Notes',
+    issueTitle: 'Title *', details: 'Details', severity: 'Severity', recommendedAction: 'Action', photoEvidence: 'Photos', addPhoto: 'Add photo',
+    name: 'Name *', rolePosition: 'Role', organization: 'Organization', signoffRequired: 'Sign-off?', addMember: 'Add',
+    selectIndustry: 'Select your industry:',
+    emailReport: 'Email Report', recipientEmail: 'To *', ccEmail: 'CC', subject: 'Subject', message: 'Message', send: 'Send',
+    done2: 'Done', add: 'Add', partial: 'Partial', deferred: 'Deferred',
+    goodMorning: 'Good morning', goodAfternoon: 'Good afternoon', goodEvening: 'Good evening',
+    installApp: 'Install PlantLog on your phone for offline use', install: 'Install',
+    taskOverdue: 'Overdue', taskDueToday: 'Due today', taskUpcoming: 'Upcoming',
+    noIssuesFound: 'No issues.', noReadings: 'No readings.',
+    inProgress2: 'In Progress'
   },
-  vi:{
-    home:'Trang chủ',trips:'Chuyến đi',tasks:'Nhiệm vụ',leave:'Nghỉ phép',settings:'Cài đặt',tools:'Công cụ',
-    tripsMonth:'Chuyến đi',pendingTasks:'Việc hôm nay',leaveDays:'Ngày nghỉ',
-    upcomingTrips:'Chuyến sắp tới',recentReports:'Báo cáo gần đây',todayTasks:'Nhiệm vụ hôm nay',
-    noTrips:'Chưa có chuyến đi. Nhấn + để tạo.',noReports:'Chưa có báo cáo hoàn thành.',noTasks:'Chưa có nhiệm vụ. Nhấn + để thêm.',
-    myTrips:'Chuyến của tôi',all:'Tất cả',planned:'Đã lên kế hoạch',inProgress:'Đang thực hiện',completed:'Hoàn thành',
-    pending:'Chờ xử lý',done:'Xong',kanban:'Kanban',
-    delete:'Xóa',openReport:'Mở báo cáo',
-    tab1:'1 Danh mục',tab2:'2 Đo lường',tab3:'3 Sự cố',tab4:'4 Nhóm',tab5:'5 Nhiệm vụ',tab6:'6 Ký duyệt',
-    inspectionChecklist:'DANH MỤC KIỂM TRA',addCheckItem:'Thêm mục',nextReadings:'Tiếp: Đo lường →',
-    equipmentReadings:'SỐ LIỆU THIẾT BỊ',addReading:'Thêm số liệu',nextIssues:'Tiếp: Sự cố →',
-    noIssues:'Không có sự cố.',addIssue:'Thêm sự cố',nextTeam:'Tiếp: Nhóm →',
-    teamSignoffs:'NHÓM & KÝ DUYỆT',addTeamMember:'Thêm thành viên',nextSignoff:'Tiếp: Ký duyệt →',
-    workSummary:'Tóm tắt công việc',result:'Kết quả',remarks:'Ghi chú',
-    engineerSig:'Chữ ký',signHint:'Ký bằng ngón tay hoặc bút cảm ứng',clearSig:'Xóa',
-    useMySig:'Dùng chữ ký của tôi',uploadSig:'Tải ảnh',saveDefaultSig:'Lưu mặc định',sigSavedDefault:'Đã lưu làm chữ ký mặc định ✓',calendar:'Lịch',
-    exportPdf:'Xuất PDF',exportPdfReport:'Xuất báo cáo',downloadPdf:'Tải PDF',
-    emailPdf:'Gửi qua email',markCompleted:'Đánh dấu hoàn thành',
-    leavePlanner:'Kế hoạch nghỉ phép',workTrip:'Công tác',holiday:'Ngày lễ',tripDays:'Ngày công tác',clearDay:'Xóa ngày',
-    addTaskForDay:'Thêm nhiệm vụ cho ngày này',
-    fullName:'Họ và tên',jobTitle:'Chức danh',company:'Công ty',plantBase:'Nhà máy cơ sở',plantBaseHint:'Nhà máy làm việc chính (chuyến đi tại base hoặc nghỉ phép sẽ không phát sinh claim)',employeeId:'Mã nhân viên',
-    defaultTeam:'Nhóm mặc định',industryTemplates:'Mẫu theo ngành',
-    loadChecklistTemplates:'Tải mẫu kiểm tra theo ngành',checklistTemplates:'Mẫu danh mục',
-    manageDefaultItems:'Quản lý mẫu mặc định',clearData:'Xóa tất cả dữ liệu',
-    notifications:'Thông báo',enableNotif:'Bật thông báo',notifDesc:'Nhắc nhở chuyến đi, nhiệm vụ & nghỉ phép',
-    newTrip:'Chuyến mới',plantName:'Tên nhà máy *',location:'Địa điểm',visitDate:'Ngày thăm *',endDate:'Ngày kết thúc',
-    purposeScope:'Mục đích',contactPerson:'Người liên hệ',transport:'Phương tiện',saveTrip:'Lưu chuyến',cancel:'Hủy',
-    newTask:'Nhiệm vụ mới',taskTitle:'Tiêu đề *',description:'Mô tả',dueDate:'Ngày hạn *',time:'Giờ',
-    priority:'Độ ưu tiên',linkedTrip:'Chuyến liên kết',saveTask:'Lưu nhiệm vụ',
-    itemName:'Tên mục *',notesOptional:'Ghi chú',addItem:'Thêm',
-    equipmentName:'Thiết bị *',value:'Giá trị *',unit:'Đơn vị',status:'Trạng thái',inSpec:'Đạt chuẩn',outOfRange:'Ngoài phạm vi',notes:'Ghi chú',
-    issueTitle:'Tiêu đề *',details:'Chi tiết',severity:'Mức độ',recommendedAction:'Biện pháp',photoEvidence:'Ảnh',addPhoto:'Thêm ảnh',
-    name:'Tên *',rolePosition:'Chức vụ',organization:'Đơn vị',signoffRequired:'Cần ký?',addMember:'Thêm',
-    selectIndustry:'Chọn ngành để tải mẫu:',
-    emailReport:'Gửi báo cáo',recipientEmail:'Đến *',ccEmail:'CC',subject:'Tiêu đề',message:'Nội dung',send:'Gửi',
-    done2:'Xong',add:'Thêm',partial:'Một phần',deferred:'Hoãn lại',
-    goodMorning:'Chào buổi sáng',goodAfternoon:'Chào buổi chiều',goodEvening:'Chào buổi tối',
-    installApp:'Cài PlantLog lên điện thoại để dùng offline',install:'Cài đặt',
-    taskOverdue:'Quá hạn',taskDueToday:'Hôm nay',taskUpcoming:'Sắp đến',
-    noIssuesFound:'Không có sự cố.',noReadings:'Chưa có số liệu.',
-    inProgress2:'Đang thực hiện'
+  vi: {
+    home: 'Trang chủ', trips: 'Chuyến đi', tasks: 'Nhiệm vụ', leave: 'Nghỉ phép', settings: 'Cài đặt', tools: 'Công cụ',
+    tripsMonth: 'Chuyến đi', pendingTasks: 'Việc hôm nay', leaveDays: 'Ngày nghỉ',
+    upcomingTrips: 'Chuyến sắp tới', recentReports: 'Báo cáo gần đây', todayTasks: 'Nhiệm vụ hôm nay',
+    noTrips: 'Chưa có chuyến đi. Nhấn + để tạo.', noReports: 'Chưa có báo cáo hoàn thành.', noTasks: 'Chưa có nhiệm vụ. Nhấn + để thêm.',
+    myTrips: 'Chuyến của tôi', all: 'Tất cả', planned: 'Đã lên kế hoạch', inProgress: 'Đang thực hiện', completed: 'Hoàn thành',
+    pending: 'Chờ xử lý', done: 'Xong', kanban: 'Kanban',
+    delete: 'Xóa', openReport: 'Mở báo cáo',
+    tab1: '1 Danh mục', tab2: '2 Đo lường', tab3: '3 Sự cố', tab4: '4 Nhóm', tab5: '5 Nhiệm vụ', tab6: '6 Ký duyệt',
+    inspectionChecklist: 'DANH MỤC KIỂM TRA', addCheckItem: 'Thêm mục', nextReadings: 'Tiếp: Đo lường →',
+    equipmentReadings: 'SỐ LIỆU THIẾT BỊ', addReading: 'Thêm số liệu', nextIssues: 'Tiếp: Sự cố →',
+    noIssues: 'Không có sự cố.', addIssue: 'Thêm sự cố', nextTeam: 'Tiếp: Nhóm →',
+    teamSignoffs: 'NHÓM & KÝ DUYỆT', addTeamMember: 'Thêm thành viên', nextSignoff: 'Tiếp: Ký duyệt →',
+    workSummary: 'Tóm tắt công việc', result: 'Kết quả', remarks: 'Ghi chú',
+    engineerSig: 'Chữ ký', signHint: 'Ký bằng ngón tay hoặc bút cảm ứng', clearSig: 'Xóa',
+    useMySig: 'Dùng chữ ký của tôi', uploadSig: 'Tải ảnh', saveDefaultSig: 'Lưu mặc định', sigSavedDefault: 'Đã lưu làm chữ ký mặc định ✓', calendar: 'Lịch',
+    exportPdf: 'Xuất PDF', exportPdfReport: 'Xuất báo cáo', downloadPdf: 'Tải PDF',
+    emailPdf: 'Gửi qua email', markCompleted: 'Đánh dấu hoàn thành',
+    leavePlanner: 'Kế hoạch nghỉ phép', workTrip: 'Công tác', holiday: 'Ngày lễ', tripDays: 'Ngày công tác', clearDay: 'Xóa ngày',
+    addTaskForDay: 'Thêm nhiệm vụ cho ngày này',
+    fullName: 'Họ và tên', jobTitle: 'Chức danh', company: 'Công ty', plantBase: 'Nhà máy cơ sở', plantBaseHint: 'Nhà máy làm việc chính (chuyến đi tại base hoặc nghỉ phép sẽ không phát sinh claim)', employeeId: 'Mã nhân viên',
+    defaultTeam: 'Nhóm mặc định', industryTemplates: 'Mẫu theo ngành',
+    loadChecklistTemplates: 'Tải mẫu kiểm tra theo ngành', checklistTemplates: 'Mẫu danh mục',
+    manageDefaultItems: 'Quản lý mẫu mặc định', clearData: 'Xóa tất cả dữ liệu',
+    notifications: 'Thông báo', enableNotif: 'Bật thông báo', notifDesc: 'Nhắc nhở chuyến đi, nhiệm vụ & nghỉ phép',
+    newTrip: 'Chuyến mới', plantName: 'Tên nhà máy *', location: 'Địa điểm', visitDate: 'Ngày thăm *', endDate: 'Ngày kết thúc',
+    purposeScope: 'Mục đích', contactPerson: 'Người liên hệ', transport: 'Phương tiện', saveTrip: 'Lưu chuyến', cancel: 'Hủy',
+    newTask: 'Nhiệm vụ mới', taskTitle: 'Tiêu đề *', description: 'Mô tả', dueDate: 'Ngày hạn *', time: 'Giờ',
+    priority: 'Độ ưu tiên', linkedTrip: 'Chuyến liên kết', saveTask: 'Lưu nhiệm vụ',
+    itemName: 'Tên mục *', notesOptional: 'Ghi chú', addItem: 'Thêm',
+    equipmentName: 'Thiết bị *', value: 'Giá trị *', unit: 'Đơn vị', status: 'Trạng thái', inSpec: 'Đạt chuẩn', outOfRange: 'Ngoài phạm vi', notes: 'Ghi chú',
+    issueTitle: 'Tiêu đề *', details: 'Chi tiết', severity: 'Mức độ', recommendedAction: 'Biện pháp', photoEvidence: 'Ảnh', addPhoto: 'Thêm ảnh',
+    name: 'Tên *', rolePosition: 'Chức vụ', organization: 'Đơn vị', signoffRequired: 'Cần ký?', addMember: 'Thêm',
+    selectIndustry: 'Chọn ngành để tải mẫu:',
+    emailReport: 'Gửi báo cáo', recipientEmail: 'Đến *', ccEmail: 'CC', subject: 'Tiêu đề', message: 'Nội dung', send: 'Gửi',
+    done2: 'Xong', add: 'Thêm', partial: 'Một phần', deferred: 'Hoãn lại',
+    goodMorning: 'Chào buổi sáng', goodAfternoon: 'Chào buổi chiều', goodEvening: 'Chào buổi tối',
+    installApp: 'Cài PlantLog lên điện thoại để dùng offline', install: 'Cài đặt',
+    taskOverdue: 'Quá hạn', taskDueToday: 'Hôm nay', taskUpcoming: 'Sắp đến',
+    noIssuesFound: 'Không có sự cố.', noReadings: 'Chưa có số liệu.',
+    inProgress2: 'Đang thực hiện'
   }
 };
 
 // ═══════ INDUSTRY TEMPLATES ═══════
-const IND={
-  oil:['Safety pressure relief valves','Pipeline corrosion inspection','Fire & gas detection system','Flare stack condition','Emergency shutdown valves','Tank level gauges calibration','Pump mechanical seals','Compressor vibration check','PPE availability & condition','Spill containment condition'],
-  power:['Generator output readings','Transformer oil level','Circuit breaker condition','Cooling system inspection','Battery backup systems','Earthing & bonding check','Cable tray condition','Control panel interlocks','Steam trap operation','Turbine bearing temperature'],
-  mfg:['Machine guarding condition','Emergency stop buttons','Hydraulic system pressure','Conveyor belt alignment','Lubrication levels check','Air compressor operation','Fire extinguisher placement','Electrical panel condition','Ventilation system','Quality inspection equipment'],
-  chemical:['Chemical storage labeling','Bund wall integrity','Fume hood operation','Emergency eyewash stations','Pressure vessel inspection','Leak detection survey','Hazmat PPE availability','Scrubber system operation','Waste disposal records','Safety shower test'],
-  water:['Chlorine dosing system','pH monitoring equipment','Turbidity meters calibration','Pump station operation','Filter media condition','UV disinfection units','Sludge level readings','Flow meter accuracy','Overflow protection','SCADA system status'],
-  food:['Temperature logger calibration','CIP system operation','Allergen separation check','Pest control records','Cold chain verification','Hygiene station availability','Conveyor cleanliness','Metal detector test','Packaging seal integrity','HACCP record review']
+const IND = {
+  oil: ['Safety pressure relief valves', 'Pipeline corrosion inspection', 'Fire & gas detection system', 'Flare stack condition', 'Emergency shutdown valves', 'Tank level gauges calibration', 'Pump mechanical seals', 'Compressor vibration check', 'PPE availability & condition', 'Spill containment condition'],
+  power: ['Generator output readings', 'Transformer oil level', 'Circuit breaker condition', 'Cooling system inspection', 'Battery backup systems', 'Earthing & bonding check', 'Cable tray condition', 'Control panel interlocks', 'Steam trap operation', 'Turbine bearing temperature'],
+  mfg: ['Machine guarding condition', 'Emergency stop buttons', 'Hydraulic system pressure', 'Conveyor belt alignment', 'Lubrication levels check', 'Air compressor operation', 'Fire extinguisher placement', 'Electrical panel condition', 'Ventilation system', 'Quality inspection equipment'],
+  chemical: ['Chemical storage labeling', 'Bund wall integrity', 'Fume hood operation', 'Emergency eyewash stations', 'Pressure vessel inspection', 'Leak detection survey', 'Hazmat PPE availability', 'Scrubber system operation', 'Waste disposal records', 'Safety shower test'],
+  water: ['Chlorine dosing system', 'pH monitoring equipment', 'Turbidity meters calibration', 'Pump station operation', 'Filter media condition', 'UV disinfection units', 'Sludge level readings', 'Flow meter accuracy', 'Overflow protection', 'SCADA system status'],
+  food: ['Temperature logger calibration', 'CIP system operation', 'Allergen separation check', 'Pest control records', 'Cold chain verification', 'Hygiene station availability', 'Conveyor cleanliness', 'Metal detector test', 'Packaging seal integrity', 'HACCP record review']
 };
 
 // ═══════ STATE ═══════
-let S={
-  profile:{name:'',title:'',company:'',plantBase:'DaNang',empid:'',signature:''},
-  gsUrl:'',gsApiKey:'',
-  trips:[],reports:{},tasks:[],leaveData:{},
-  machines:[],plans:[],bills:[],
-  inspections:[],
-  assets:[],      // [{id, tag, name, customer, model, serial, spec, location, notes, createdAt}] (IMP-24)
-  scratchpad:[],  // [{id, title, text, photo, category, tripId, createdAt}] (IMP-22)
-  deletedIds:{},  // { [id]: timestamp } (tombstones to prevent zombie records on sync)
-  library:[],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
-  defaultTeam:[],lang:'en',
-  theme:'auto', // 'auto' | 'light' | 'dark' (IMP-13)
-  telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
-  calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
-  reminders:[],  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
-  tripClaims:[], // [{tripId, dateRequest, dateApproved, processDate, doneDate, paymentStatus, comment, updatedAt}] (IMP-31)
-  creditCard:{budget:50000000,cardName:'Corporate Credit Card',transfers:[]},
-  securityConfig:{exit:'1m',idle:'2m'}
+let S = {
+  profile: { name: '', title: '', company: '', plantBase: 'DaNang', empid: '', signature: '' },
+  gsUrl: '', gsApiKey: '',
+  trips: [], reports: {}, tasks: [], leaveData: {},
+  machines: [], plans: [], bills: [],
+  inspections: [],
+  assets: [],      // [{id, tag, name, customer, model, serial, spec, location, notes, createdAt}] (IMP-24)
+  scratchpad: [],  // [{id, title, text, photo, category, tripId, createdAt}] (IMP-22)
+  deletedIds: {},  // { [id]: timestamp } (tombstones to prevent zombie records on sync)
+  library: [],  // [{id, name, type:'checklist'|'readings'|'issues', items:[], createdAt}]
+  defaultTeam: [], lang: 'en',
+  theme: 'auto', // 'auto' | 'light' | 'dark' (IMP-13)
+  telegramConfig: { token: '', chatId: '', notifyTrips: true, notifyTasks: true, notifyLeave: true },
+  calendarConfig: { calId: '', pushTrips: true, pushTasks: true, pullEvents: true },
+  reminders: [],  // [{id, title, freq:'daily'|'weekly'|'monthly'|'yearly', weekday, monthday, yearMonth, yearDay, time, note, notifyTele, notifyCalendar, status:'active'|'paused', createdAt}]
+  tripClaims: [], // [{tripId, dateRequest, dateApproved, processDate, doneDate, paymentStatus, comment, updatedAt}] (IMP-31)
+  creditCard: { budget: 50000000, cardName: 'Corporate Credit Card', transfers: [] },
+  securityConfig: { exit: '1m', idle: '2m' }
 };
-let curTrip=null,curReport=null,sigCanvas,sigCtx,isDrw=false;
-let calY,calM,selDay=null,signoffRes='Completed';
-let photoCtx=null,tmpPhotos=[];
-let taskView='list',taskFilter='all';
-let deferredPrompt=null;
+let curTrip = null, curReport = null, sigCanvas, sigCtx, isDrw = false;
+let calY, calM, selDay = null, signoffRes = 'Completed';
+let photoCtx = null, tmpPhotos = [];
+let taskView = 'list', taskFilter = 'all';
+let deferredPrompt = null;
 
 // ── Haptic feedback helper (IMP-14) ──
 function triggerHaptic(type = 'light') {
@@ -136,7 +136,7 @@ function triggerHaptic(type = 'light') {
       else if (type === 'medium') navigator.vibrate(25);
       else if (type === 'heavy') navigator.vibrate([35, 30, 35]);
       else if (type === 'success') navigator.vibrate([15, 40, 20]);
-    } catch(e) {}
+    } catch (e) { }
   }
 }
 
@@ -178,43 +178,43 @@ if (typeof window !== 'undefined' && window.matchMedia) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
       if ((S && S.theme) === 'auto') applyTheme('auto');
     });
-  } catch(e) {}
+  } catch (e) { }
 }
 
-function sv(){
-  try{
+function sv() {
+  try {
     S._savedAt = Date.now();
     const json = JSON.stringify(S);
     localStorage.setItem('plpro1', json);
     if (typeof scheduleMirror === 'function') scheduleMirror(json);
-  }catch(e){
+  } catch (e) {
     console.error('[PlantLog] LocalStorage save error:', e);
     // Quota error fallback: still mirror to IndexedDB which has no 5MB quota!
     try {
       if (typeof scheduleMirror === 'function') scheduleMirror(JSON.stringify(S));
-    } catch(err){}
-    if(e.name==='QuotaExceededError'||e.code===22||e.code===1014||(e.message&&e.message.toLowerCase().includes('quota'))){
-      if(typeof showToast==='function'){
+    } catch (err) { }
+    if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014 || (e.message && e.message.toLowerCase().includes('quota'))) {
+      if (typeof showToast === 'function') {
         showToast('⚠️ Bộ nhớ máy bị đầy (LocalStorage Quota)! Dữ liệu vẫn được lưu an toàn vào bản sao thiết bị.', 6000);
       }
     }
   }
   if (typeof refreshBackupStatus === 'function') refreshBackupStatus();
 }
-function ld(){
+function ld() {
   let hadLocal = false;
   let parseError = false;
-  try{
-    const d=localStorage.getItem('plpro1');
+  try {
+    const d = localStorage.getItem('plpro1');
     hadLocal = !!d;
-    if(d) {
+    if (d) {
       const parsed = JSON.parse(d);
-      S={...S,...parsed};
-      if(S.profile && !S.profile.plantBase) {
+      S = { ...S, ...parsed };
+      if (S.profile && !S.profile.plantBase) {
         S.profile.plantBase = 'DaNang';
       }
     }
-  }catch(e){
+  } catch (e) {
     console.error('[PlantLog] LocalStorage load error:', e);
     parseError = true;
   }
@@ -227,58 +227,58 @@ function ld(){
   if (!S.securityConfig) S.securityConfig = { exit: '1m', idle: '2m' };
   if (typeof ensureStateShape === 'function') ensureStateShape(S);
   if (typeof migrateState === 'function') migrateState(S);
-  if(!S.assets) S.assets = [];
-  if(!S.scratchpad) S.scratchpad = [];
-  if(!S.tripClaims) S.tripClaims = [];
-  if(!S.deletedIds) S.deletedIds = {};
+  if (!S.assets) S.assets = [];
+  if (!S.scratchpad) S.scratchpad = [];
+  if (!S.tripClaims) S.tripClaims = [];
+  if (!S.deletedIds) S.deletedIds = {};
   try {
     const cutoff = Date.now() - 30 * 86400 * 1000; // prune tombstones older than 30 days
     for (const [k, v] of Object.entries(S.deletedIds)) {
       if (v < cutoff) delete S.deletedIds[k];
     }
-  } catch(e){}
+  } catch (e) { }
   applyTheme();
 }
-function t(k){return T[S.lang][k]||T.en[k]||k;}
+function t(k) { return T[S.lang][k] || T.en[k] || k; }
 
 /**
  * Local calendar YYYY-MM-DD (avoids UTC midnight shift before 7AM in UTC+7)
  */
-function localDateStr(d){
-  const dt=(d instanceof Date)?d:(d?new Date(d):new Date());
-  if(isNaN(dt.getTime())) return '';
-  const y=dt.getFullYear();
-  const m=String(dt.getMonth()+1).padStart(2,'0');
-  const day=String(dt.getDate()).padStart(2,'0');
+function localDateStr(d) {
+  const dt = (d instanceof Date) ? d : (d ? new Date(d) : new Date());
+  if (isNaN(dt.getTime())) return '';
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
 
 /**
  * Escape HTML special chars before interpolating untrusted strings into innerHTML / attributes
  */
-function escHtml(v){
-  if(v===null||v===undefined) return '';
+function escHtml(v) {
+  if (v === null || v === undefined) return '';
   return String(v)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
-function sanitizeJsonKeys_(obj){
-  if(!obj||typeof obj!=='object') return obj;
-  if(Array.isArray(obj)) return obj.map(sanitizeJsonKeys_);
-  const clean={};
-  for(const [k,v] of Object.entries(obj)){
-    if(k==='__proto__'||k==='constructor'||k==='prototype') continue;
-    clean[k]=sanitizeJsonKeys_(v);
+function sanitizeJsonKeys_(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeJsonKeys_);
+  const clean = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+    clean[k] = sanitizeJsonKeys_(v);
   }
   return clean;
 }
 
 // ═══════ STORAGE & IMAGE OPTIMIZATION (IMP-01) ═══════
-function getStorageUsage(){
+function getStorageUsage() {
   try {
     let total = 0;
     for (let x in localStorage) {
@@ -291,7 +291,7 @@ function getStorageUsage(){
       usedMB: (total / (1024 * 1024)).toFixed(2),
       percent: Math.min(100, Math.round((total / (5 * 1024 * 1024)) * 100))
     };
-  } catch(e) {
+  } catch (e) {
     return { usedBytes: 0, usedMB: '0', percent: 0 };
   }
 }
@@ -405,10 +405,10 @@ function exportDataBackupJSON() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    if(typeof showToast === 'function') showToast('✓ Backup file exported successfully!');
+    if (typeof showToast === 'function') showToast('✓ Backup file exported successfully!');
   } catch (e) {
     console.error('[Backup]', e);
-    if(typeof showToast === 'function') showToast('❌ Export backup failed: ' + e.message);
+    if (typeof showToast === 'function') showToast('❌ Export backup failed: ' + e.message);
   }
 }
 
@@ -431,7 +431,7 @@ function handleBackupFileSelect(e) {
       const rawData = parsed && typeof parsed === 'object' ? (parsed.data || parsed) : null;
       const incomingData = sanitizeJsonKeys_(rawData);
       if (!incomingData || typeof incomingData !== 'object' || Array.isArray(incomingData) || (!incomingData.trips && !incomingData.tasks && !incomingData.profile)) {
-        if(typeof showToast === 'function') showToast('❌ Invalid PlantLog Pro backup file!');
+        if (typeof showToast === 'function') showToast('❌ Invalid PlantLog Pro backup file!');
         return;
       }
 
@@ -447,13 +447,13 @@ function handleBackupFileSelect(e) {
         if (typeof StorageMirror !== 'undefined' && StorageMirror.put) {
           await StorageMirror.put('pre_restore', { ts: Date.now(), json: JSON.stringify(S) });
         }
-      } catch (e) {}
+      } catch (e) { }
 
       S = { ...S, ...incomingData };
       if (typeof ensureStateShape === 'function') ensureStateShape(S);
       if (typeof migrateState === 'function') migrateState(S);
       sv();
-      if(typeof showToast === 'function') showToast('✅ Data restored successfully!');
+      if (typeof showToast === 'function') showToast('✅ Data restored successfully!');
 
       // Re-render whole interface
       if (typeof refreshAllViews === 'function') refreshAllViews();
@@ -466,7 +466,7 @@ function handleBackupFileSelect(e) {
       }
     } catch (err) {
       console.error('[Restore]', err);
-      if(typeof showToast === 'function') showToast('❌ Error reading JSON file: ' + err.message);
+      if (typeof showToast === 'function') showToast('❌ Error reading JSON file: ' + err.message);
     }
   };
   reader.readAsText(file);
@@ -490,44 +490,44 @@ function updateNetworkStatus() {
     badge.title = 'Mất kết nối Internet - Chạy chế độ Offline';
   }
 }
-if(typeof window !== 'undefined'){
+if (typeof window !== 'undefined') {
   window.addEventListener('online', updateNetworkStatus);
   window.addEventListener('offline', updateNetworkStatus);
 }
 
 // ═══════ PWA ═══════
-function setupPWA(){
+function setupPWA() {
   // ── Clear legacy pre-v10 caches only (sw.js activate handles current cache rotation) ─────
-  if('caches' in window){
+  if ('caches' in window) {
     try {
-      caches.keys().then(keys=>keys.forEach(k=>{
-        if(!k.startsWith('plantlog-pro-') || /^plantlog-pro-v\d$/.test(k)){
-          console.log('[PlantLog] Deleting old cache:',k);
+      caches.keys().then(keys => keys.forEach(k => {
+        if (!k.startsWith('plantlog-pro-') || /^plantlog-pro-v\d$/.test(k)) {
+          console.log('[PlantLog] Deleting old cache:', k);
           caches.delete(k);
         }
       })).catch(e => console.warn('[PlantLog] Cache cleanup error:', e));
-    } catch(e) {}
+    } catch (e) { }
   }
   // Unregister any old service workers not pointing to our sw.js
-  if('serviceWorker' in navigator){
+  if ('serviceWorker' in navigator) {
     try {
-      navigator.serviceWorker.getRegistrations().then(regs=>{
-        regs.forEach(reg=>{
-          const url=reg.active&&reg.active.scriptURL||'';
-          if(url&&!url.endsWith('sw.js')){
-            console.log('[PlantLog] Unregistering old SW:',url);
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => {
+          const url = reg.active && reg.active.scriptURL || '';
+          if (url && !url.endsWith('sw.js')) {
+            console.log('[PlantLog] Unregistering old SW:', url);
             reg.unregister();
           }
         });
       }).catch(e => console.warn('[PlantLog] SW getRegistrations error:', e));
-    } catch(e) {}
+    } catch (e) { }
   }
 
   // Manifest is now a static file (manifest.json) — no dynamic blob needed
   // This ensures reliable PWA install and standalone mode (no address bar)
 
   // Service Worker for offline
-  if('serviceWorker' in navigator){
+  if ('serviceWorker' in navigator) {
     // Try relative sw.js first (GitHub Pages), fall back to inline
     try {
       navigator.serviceWorker.register('./sw.js')
@@ -558,64 +558,64 @@ function setupPWA(){
               "  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));",
               "});"
             ].join('\n');
-            const blob = new Blob([swCode], {type:'application/javascript'});
+            const blob = new Blob([swCode], { type: 'application/javascript' });
             const url = URL.createObjectURL(blob);
-            navigator.serviceWorker.register(url).catch(e=>console.warn('[PlantLog] Inline SW failed:',e));
-          } catch(e2) {}
+            navigator.serviceWorker.register(url).catch(e => console.warn('[PlantLog] Inline SW failed:', e));
+          } catch (e2) { }
         });
-    } catch(e) {}
+    } catch (e) { }
   }
 
   // Install prompt — fires when app meets PWA criteria
   let isStandalone = false;
   try {
     isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)')?.matches) || (window.navigator && window.navigator.standalone === true);
-  } catch(e) {}
-  if(!isStandalone && typeof window !== 'undefined'){
+  } catch (e) { }
+  if (!isStandalone && typeof window !== 'undefined') {
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       deferredPrompt = e;
       console.log('[PlantLog] Install prompt available');
       const bar = document.getElementById('pwa-install-bar');
-      if(bar) bar.style.display = 'flex';
+      if (bar) bar.style.display = 'flex';
     });
     window.addEventListener('appinstalled', () => {
       console.log('[PlantLog] App installed!');
       deferredPrompt = null;
       const bar = document.getElementById('pwa-install-bar');
-      if(bar) bar.style.display = 'none';
+      if (bar) bar.style.display = 'none';
       showToast('✓ PlantLog Pro installed!');
     });
     // On mobile phone, if not running in standalone mode, show install bar if not dismissed
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    if(isMobile && !localStorage.getItem('plpro_pwa_dismissed')) {
+    if (isMobile && !localStorage.getItem('plpro_pwa_dismissed')) {
       setTimeout(() => {
         const bar = document.getElementById('pwa-install-bar');
-        if(bar) bar.style.display = 'flex';
+        if (bar) bar.style.display = 'flex';
       }, 1500);
     }
   }
 }
 
-function installPWA(){
+function installPWA() {
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  if(isStandalone){
+  if (isStandalone) {
     showToast('📱 App is already installed & running!');
     const bar = document.getElementById('pwa-install-bar');
-    if(bar) bar.style.display = 'none';
+    if (bar) bar.style.display = 'none';
     return;
   }
-  if(deferredPrompt){
+  if (deferredPrompt) {
     deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(()=>{
+    deferredPrompt.userChoice.then(() => {
       deferredPrompt = null;
       const bar = document.getElementById('pwa-install-bar');
-      if(bar) bar.style.display = 'none';
+      if (bar) bar.style.display = 'none';
     });
     return;
   }
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  if(isIOS){
+  if (isIOS) {
     alert('📱 Hướng dẫn cài đặt VCS PlantLog Pro trên iPhone / iPad:\n\n1. Bấm biểu tượng Chia sẻ (Share ⎋) ở thanh công cụ Safari bên dưới.\n2. Cuộn xuống chọn "Thêm vào Màn hình chính" (Add to Home Screen).\n3. Bấm "Thêm" ở góc phải để cài đặt.');
   } else {
     alert('📱 Hướng dẫn cài đặt VCS PlantLog Pro trên Android / Chrome:\n\n1. Bấm biểu tượng 3 chấm (⋮) ở góc trên bên phải Chrome.\n2. Chọn "Cài đặt ứng dụng" (Install App) hoặc "Thêm vào Màn hình chính".\n3. Nhấn Bật / Cài đặt.');
@@ -623,46 +623,46 @@ function installPWA(){
 }
 
 // ═══════ NOTIFICATIONS ═══════
-async function requestNotifications(){
-  if(!('Notification' in window)){showToast('Notifications not supported on this browser');return;}
-  const perm=await Notification.requestPermission();
-  if(perm==='granted'){
+async function requestNotifications() {
+  if (!('Notification' in window)) { showToast('Notifications not supported on this browser'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
     showToast('Notifications enabled ✓');
-    document.getElementById('notif-status').textContent='Enabled';
-    document.getElementById('notif-prompt').style.display='none';
+    document.getElementById('notif-status').textContent = 'Enabled';
+    document.getElementById('notif-prompt').style.display = 'none';
     scheduleNotifications();
   } else {
     showToast('Please allow notifications in browser settings');
-    document.getElementById('notif-status').textContent='Not allowed';
+    document.getElementById('notif-status').textContent = 'Not allowed';
   }
 }
-function scheduleNotifications(){
-  if(Notification.permission!=='granted')return;
-  const now=new Date();
-  const today=localDateStr(now);
-  const tomorrow=localDateStr(new Date(now.getTime()+86400000));
+function scheduleNotifications() {
+  if (Notification.permission !== 'granted') return;
+  const now = new Date();
+  const today = localDateStr(now);
+  const tomorrow = localDateStr(new Date(now.getTime() + 86400000));
   // Check upcoming trips
-  S.trips.filter(tr=>tr.status!=='completed'&&(tr.date===today||tr.date===tomorrow)).forEach(tr=>{
-    const msg=tr.date===today?`🏭 Trip today: ${tr.plant}`:`🏭 Trip tomorrow: ${tr.plant} (${tr.location||''})`;
-    setTimeout(()=>new Notification('PlantLog – Trip Reminder',{body:msg,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%231D9E75"/><text y=".9em" font-size="70" x="15">🏭</text></svg>'}),500);
+  S.trips.filter(tr => tr.status !== 'completed' && (tr.date === today || tr.date === tomorrow)).forEach(tr => {
+    const msg = tr.date === today ? `🏭 Trip today: ${tr.plant}` : `🏭 Trip tomorrow: ${tr.plant} (${tr.location || ''})`;
+    setTimeout(() => new Notification('PlantLog – Trip Reminder', { body: msg, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%231D9E75"/><text y=".9em" font-size="70" x="15">🏭</text></svg>' }), 500);
   });
   // Check due tasks
-  S.tasks.filter(tk=>tk.status!=='done'&&(tk.date===today||tk.date===tomorrow)).forEach(tk=>{
-    const msg=tk.date===today?`📋 Task due today: ${tk.title}`:`📋 Task due tomorrow: ${tk.title}`;
-    setTimeout(()=>new Notification('PlantLog – Task Reminder',{body:msg,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%231D9E75"/><text y=".9em" font-size="70" x="15">📋</text></svg>'}),1000);
+  S.tasks.filter(tk => tk.status !== 'done' && (tk.date === today || tk.date === tomorrow)).forEach(tk => {
+    const msg = tk.date === today ? `📋 Task due today: ${tk.title}` : `📋 Task due tomorrow: ${tk.title}`;
+    setTimeout(() => new Notification('PlantLog – Task Reminder', { body: msg, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%231D9E75"/><text y=".9em" font-size="70" x="15">📋</text></svg>' }), 1000);
   });
 }
-function checkNotifPrompt(){
-  if('Notification' in window&&Notification.permission==='default'){
-    document.getElementById('notif-prompt').style.display='flex';
-  } else if(Notification.permission==='granted'){
-    document.getElementById('notif-status').textContent='Enabled';
+function checkNotifPrompt() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    document.getElementById('notif-prompt').style.display = 'flex';
+  } else if (Notification.permission === 'granted') {
+    document.getElementById('notif-status').textContent = 'Enabled';
     scheduleNotifications();
   }
 }
 
 // ═══════ LANG (IMP-55) ═══════
-function setLang(l){
+function setLang(l) {
   S.lang = l;
   sv();
   const btnEn = document.getElementById('lang-en');
@@ -679,7 +679,7 @@ function setLang(l){
   applyT(); renderDash(); renderTripList(); renderCalendar(); renderTasks();
 }
 
-function toggleLang(){
+function toggleLang() {
   const cur = (S && S.lang) || 'en';
   const next = (cur === 'vi') ? 'en' : 'vi';
   setLang(next);
@@ -687,7 +687,7 @@ function toggleLang(){
     showToast(next === 'vi' ? '🇻🇳 Đã chuyển sang Tiếng Việt' : '🇺🇸 Switched to English');
   }
 }
-function applyT(){
+function applyT() {
   const lang = (S && S.lang) || 'en';
   const langDict = (T && T[lang]) || (T && T['en']) || {};
   document.querySelectorAll('[data-t]').forEach(el => {
@@ -698,19 +698,19 @@ function applyT(){
 }
 
 // ═══════ INIT ═══════
-function safeRun(fn, name){
+function safeRun(fn, name) {
   try { fn(); }
-  catch(e) { console.warn('PlantLog init error in '+name+':', e.message); }
+  catch (e) { console.warn('PlantLog init error in ' + name + ':', e.message); }
 }
 
-function init(){
+function init() {
   safeRun(ld, 'ld');
   safeRun(setupPWA, 'setupPWA');
   // ARC-01: Check device mirror for recovery if localStorage was cleared or corrupted
   if (typeof recoverFromMirror === 'function') {
     try {
       recoverFromMirror().catch(err => console.warn('[Recover]', err));
-    } catch(e) {}
+    } catch (e) { }
   }
   // UX-10: Accessibility keyboard & label bindings
   if (typeof initA11y === 'function') safeRun(initA11y, 'initA11y');
@@ -718,27 +718,27 @@ function init(){
   // ALWAYS initialize calendar vars first
   const now = new Date();
   calY = now.getFullYear();
-  calM  = now.getMonth();
+  calM = now.getMonth();
 
   // Set today label safely
   const todayEl = document.getElementById('today-date');
-  if(todayEl) todayEl.textContent = now.toLocaleDateString(
-    (S && S.lang==='vi')?'vi-VN':'en-GB',
-    {weekday:'long',day:'numeric',month:'long',year:'numeric'}
+  if (todayEl) todayEl.textContent = now.toLocaleDateString(
+    (S && S.lang === 'vi') ? 'vi-VN' : 'en-GB',
+    { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
   );
 
   // Run all render functions safely — a crash in one won't stop the rest
-  safeRun(loadProfile,      'loadProfile');
-  safeRun(renderDash,       'renderDash');
-  safeRun(renderTripList,   'renderTripList');
-  safeRun(renderCalendar,   'renderCalendar');
-  safeRun(renderTasks,      'renderTasks');
-  safeRun(initSig,          'initSig');
-  safeRun(renderTemplates,  'renderTemplates');
-  safeRun(renderDefaultTeam,'renderDefaultTeam');
-  safeRun(() => setLang((S && S.lang)||'en'), 'setLang');
+  safeRun(loadProfile, 'loadProfile');
+  safeRun(renderDash, 'renderDash');
+  safeRun(renderTripList, 'renderTripList');
+  safeRun(renderCalendar, 'renderCalendar');
+  safeRun(renderTasks, 'renderTasks');
+  safeRun(initSig, 'initSig');
+  safeRun(renderTemplates, 'renderTemplates');
+  safeRun(renderDefaultTeam, 'renderDefaultTeam');
+  safeRun(() => setLang((S && S.lang) || 'en'), 'setLang');
   safeRun(checkNotifPrompt, 'checkNotifPrompt');
-  safeRun(updateGSStatus,   'updateGSStatus');
+  safeRun(updateGSStatus, 'updateGSStatus');
   safeRun(updateNetworkStatus, 'updateNetworkStatus');
   safeRun(refreshBackupStatus, 'refreshBackupStatus');
   safeRun(ensureAssetsInitialized, 'ensureAssetsInitialized');
@@ -747,38 +747,38 @@ function init(){
   // Auth controls app visibility & security gate
   safeRun(authInit, 'authInit');
   // Telegram: update status label + schedule daily notification check
-  try{
+  try {
     updateTelegramStatusLabel();
-    if(typeof updateCalendarStatusLabel==='function') updateCalendarStatusLabel();
+    if (typeof updateCalendarStatusLabel === 'function') updateCalendarStatusLabel();
     // Check reminders on startup
-    setTimeout(()=>{ try{if(typeof checkRemindersToday==='function')checkRemindersToday();}catch(e){} }, 2000);
+    setTimeout(() => { try { if (typeof checkRemindersToday === 'function') checkRemindersToday(); } catch (e) { } }, 2000);
     // Check once on startup (after 3s delay so UI is ready)
-    setTimeout(()=>{ try{checkAndSendDailyNotifications();}catch(e){} }, 3000);
-  }catch(e){}
+    setTimeout(() => { try { checkAndSendDailyNotifications(); } catch (e) { } }, 3000);
+  } catch (e) { }
 
   // ── Auto-start trips and tasks whose date has arrived (once per day) ──
-  try{ autoStartTodayItems(); }catch(e){ console.warn('autoStart:',e); }
+  try { autoStartTodayItems(); } catch (e) { console.warn('autoStart:', e); }
 
   // Auto-load from Google Sheets on start if URL is configured
-  setTimeout(()=>{
-    try{
+  setTimeout(() => {
+    try {
       const gsUrl = (S && S.gsUrl) ? S.gsUrl : '';
-      if(gsUrl && gsUrl.includes('/exec')){
+      if (gsUrl && gsUrl.includes('/exec')) {
         showToast('⟳ Syncing data…');
         loadFromSheets(false);
       }
-    }catch(e){ console.warn('Auto-load error:', e); }
+    } catch (e) { console.warn('Auto-load error:', e); }
   }, 1000);
 
   // Auto-sync Google Calendar events (silent, 5s delay)
-  setTimeout(()=>{
-    try{ if(typeof autoSyncCalendar==='function') autoSyncCalendar(); }
-    catch(e){}
+  setTimeout(() => {
+    try { if (typeof autoSyncCalendar === 'function') autoSyncCalendar(); }
+    catch (e) { }
   }, 5000);
 }
 
 // ═══════ SCREEN NAV ═══════
-function showScreen(n){
+function showScreen(n) {
   // Gate Settings behind PIN if set
   if (n === 'settings' && hasPIN() && !_settingsUnlocked) {
     _pendingScreen = 'settings';
@@ -799,49 +799,49 @@ function showScreen(n){
     window._prevScreen = window._currentScreen;
   }
   window._currentScreen = n;
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  const target = document.getElementById('screen-'+n);
-  if(target) target.classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + n);
+  if (target) target.classList.add('active');
   updateBottomNav(n);
-  if(n==='home')renderDash();
-  if(n==='trips')renderTripList();
-  if(n==='tasks')renderTasks();
-  if(n==='bills') {
-    if(typeof currentBillsView!=='undefined' && currentBillsView==='claims') {
-      if(typeof renderTripClaimsScreen==='function') renderTripClaimsScreen();
-    } else if(typeof currentBillsView!=='undefined' && currentBillsView==='card') {
-      if(typeof renderCreditCardScreen==='function') renderCreditCardScreen();
+  if (n === 'home') renderDash();
+  if (n === 'trips') renderTripList();
+  if (n === 'tasks') renderTasks();
+  if (n === 'bills') {
+    if (typeof currentBillsView !== 'undefined' && currentBillsView === 'claims') {
+      if (typeof renderTripClaimsScreen === 'function') renderTripClaimsScreen();
+    } else if (typeof currentBillsView !== 'undefined' && currentBillsView === 'card') {
+      if (typeof renderCreditCardScreen === 'function') renderCreditCardScreen();
     } else {
       renderBillsScreen();
     }
   }
-  if(n==='export'){saveSignoff();buildPDFPreview();populateReportName();}
-  if(n==='leave')renderCalendar();
-  if(n==='library')renderLibrary();
-  if(n==='reminders')renderRemindersScreen();
-  if(n==='inspection')renderInspectionScreen();
-  if(n==='toolbox') { if(typeof switchToolboxTab==='function') switchToolboxTab(curToolboxTab||'pressure'); }
-  if(n==='assets') { if(typeof renderAssetList==='function') renderAssetList(); }
-  if(n==='bill-export')buildBillPDFPreview();
-  if(n==='settings') {
-    if(typeof renderSettingsAbout==='function') renderSettingsAbout();
-    if(typeof updatePINStatusLabel==='function') updatePINStatusLabel();
+  if (n === 'export') { saveSignoff(); buildPDFPreview(); populateReportName(); }
+  if (n === 'leave') renderCalendar();
+  if (n === 'library') renderLibrary();
+  if (n === 'reminders') renderRemindersScreen();
+  if (n === 'inspection') renderInspectionScreen();
+  if (n === 'toolbox') { if (typeof switchToolboxTab === 'function') switchToolboxTab(curToolboxTab || 'pressure'); }
+  if (n === 'assets') { if (typeof renderAssetList === 'function') renderAssetList(); }
+  if (n === 'bill-export') buildBillPDFPreview();
+  if (n === 'settings') {
+    if (typeof renderSettingsAbout === 'function') renderSettingsAbout();
+    if (typeof updatePINStatusLabel === 'function') updatePINStatusLabel();
   }
-  if(n==='tools') { if(typeof renderToolsScreen==='function') renderToolsScreen(); }
+  if (n === 'tools') { if (typeof renderToolsScreen === 'function') renderToolsScreen(); }
 }
 
 // ── Unified Bottom Nav synchronization (IMP-10, IMP-50) ──
-function updateBottomNav(activeScreen){
+function updateBottomNav(activeScreen) {
   document.querySelectorAll('.bnav').forEach(nav => {
     nav.querySelectorAll('.nb').forEach(btn => {
       const onclickAttr = btn.getAttribute('onclick') || '';
       const dataScreen = btn.getAttribute('data-screen');
       const match = onclickAttr.match(/showScreen\(['"]([^'"]+)['"]\)/);
       const screenName = dataScreen || (match ? match[1] : null);
-      if(screenName){
+      if (screenName) {
         const isMatch = (screenName === activeScreen) ||
           (screenName === 'tools' && ['tools', 'toolbox', 'assets', 'library'].includes(activeScreen));
-        if(isMatch){
+        if (isMatch) {
           btn.classList.add('active');
         } else {
           btn.classList.remove('active');
@@ -956,64 +956,64 @@ function resolveAppPrompt(isConfirm) {
     cb(isConfirm ? val : null);
   }
 }
-function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
-function openModal(id){
-  const el=document.getElementById(id);
-  if(!el)return;
+function showToast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2800); }
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
   el.classList.add('open');
   // Prevent the opening click from immediately re-closing via backdrop listener
-  el.addEventListener('click',e=>e.stopPropagation(),{once:true});
-  if(id==='modal-check-templates')renderTemplates();
-  if(id==='modal-new-task'){populateTaskTripSelect();populateMachineSelect();populatePlanSelect();}
-  if(id==='modal-add-reading'){rdType='condition';setReadingType('condition');}
+  el.addEventListener('click', e => e.stopPropagation(), { once: true });
+  if (id === 'modal-check-templates') renderTemplates();
+  if (id === 'modal-new-task') { populateTaskTripSelect(); populateMachineSelect(); populatePlanSelect(); }
+  if (id === 'modal-add-reading') { rdType = 'condition'; setReadingType('condition'); }
 }
-function closeModal(id){
+function closeModal(id) {
   const el = document.getElementById(id);
   if (el) el.classList.remove('open');
   if (id === 'modal-voice-input' && typeof _activeRecognition !== 'undefined' && _activeRecognition) {
-    try { _activeRecognition.abort(); } catch(e){}
+    try { _activeRecognition.abort(); } catch (e) { }
     _activeRecognition = null;
   }
 }
-document.addEventListener('click',e=>{if(e.target.classList.contains('mo'))closeModal(e.target.id);});
+document.addEventListener('click', e => { if (e.target.classList.contains('mo')) closeModal(e.target.id); });
 
 // ═══════ PROFILE ═══════
-function loadProfile(){
-  document.getElementById('pref-name').value=S.profile.name||'';
-  document.getElementById('pref-title').value=S.profile.title||'';
-  document.getElementById('pref-company').value=S.profile.company||'';
+function loadProfile() {
+  document.getElementById('pref-name').value = S.profile.name || '';
+  document.getElementById('pref-title').value = S.profile.title || '';
+  document.getElementById('pref-company').value = S.profile.company || '';
   const baseEl = document.getElementById('pref-plant-base');
-  if(baseEl) baseEl.value=S.profile.plantBase!==undefined?S.profile.plantBase:'DaNang';
-  document.getElementById('pref-empid').value=S.profile.empid||'';
+  if (baseEl) baseEl.value = S.profile.plantBase !== undefined ? S.profile.plantBase : 'DaNang';
+  document.getElementById('pref-empid').value = S.profile.empid || '';
   updateProfileDisplay();
-  if(typeof renderSettingsAbout==='function') renderSettingsAbout();
-  if(typeof updatePINStatusLabel==='function') updatePINStatusLabel();
+  if (typeof renderSettingsAbout === 'function') renderSettingsAbout();
+  if (typeof updatePINStatusLabel === 'function') updatePINStatusLabel();
 }
-function saveProfile(){
-  S.profile.name=document.getElementById('pref-name').value;
-  S.profile.title=document.getElementById('pref-title').value;
-  S.profile.company=document.getElementById('pref-company').value;
+function saveProfile() {
+  S.profile.name = document.getElementById('pref-name').value;
+  S.profile.title = document.getElementById('pref-title').value;
+  S.profile.company = document.getElementById('pref-company').value;
   const baseEl = document.getElementById('pref-plant-base');
-  if(baseEl) S.profile.plantBase=(baseEl.value||'').trim();
-  S.profile.empid=document.getElementById('pref-empid').value;
-  sv();updateProfileDisplay();
+  if (baseEl) S.profile.plantBase = (baseEl.value || '').trim();
+  S.profile.empid = document.getElementById('pref-empid').value;
+  sv(); updateProfileDisplay();
 }
-function updateProfileDisplay(){
-  const n=S.profile.name||'PL';
-  const ini=n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+function updateProfileDisplay() {
+  const n = S.profile.name || 'PL';
+  const ini = n.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   const homeAv = document.getElementById('home-av');
   const setAv = document.getElementById('settings-av');
-  if(homeAv) homeAv.textContent=ini;
-  if(setAv) setAv.textContent=ini;
+  if (homeAv) homeAv.textContent = ini;
+  if (setAv) setAv.textContent = ini;
   const snd = document.getElementById('s-name-d');
   const std = document.getElementById('s-title-d');
-  if(snd) snd.textContent=S.profile.name||'Set your name';
+  if (snd) snd.textContent = S.profile.name || 'Set your name';
   const subParts = [S.profile.title, S.profile.company, S.profile.plantBase ? '📍 ' + S.profile.plantBase : ''].filter(Boolean);
-  if(std) std.textContent=subParts.join(' · ')||'Add title & company';
+  if (std) std.textContent = subParts.join(' · ') || 'Add title & company';
 
   const sigPrev = document.getElementById('profile-sig-preview');
-  if(sigPrev){
-    if(S.profile && S.profile.signature){
+  if (sigPrev) {
+    if (S.profile && S.profile.signature) {
       sigPrev.innerHTML = `<img src="${S.profile.signature}" style="max-width:100%;max-height:100%;object-fit:contain;display:block;">`;
     } else {
       sigPrev.innerHTML = `<span style="font-size:11px;color:var(--n400);">No signature</span>`;
@@ -1053,11 +1053,11 @@ function isTripClaimable(tr) {
     (plantNorm && (plantNorm.includes(baseNorm) || baseNorm.includes(plantNorm))) ||
     (locationNorm && (locationNorm.includes(baseNorm) || baseNorm.includes(locationNorm)))
   )) || (
-    (baseNorm.includes('danang') || baseNorm === 'dn') && (
-      plantNorm.includes('danang') || locationNorm.includes('danang') ||
-      /\b(dn|dana)\b/i.test(plant) || /\b(dn|dana)\b/i.test(location)
-    )
-  );
+      (baseNorm.includes('danang') || baseNorm === 'dn') && (
+        plantNorm.includes('danang') || locationNorm.includes('danang') ||
+        /\b(dn|dana)\b/i.test(plant) || /\b(dn|dana)\b/i.test(location)
+      )
+    );
 
   if (isBase) return false;
 
@@ -1101,10 +1101,10 @@ function getTripTypeBadge(tr) {
 
   // 1. Leave Check
   if (plantNorm.includes('leave') || plantNorm.includes('nghiphep') || plantNorm.includes('phep') ||
-      plantNorm.includes('annualleave') || plantNorm.includes('dayoff') || plantNorm.includes('nghibu') ||
-      purposeNorm.includes('leave') || purposeNorm.includes('nghiphep') || purposeNorm.includes('phep') ||
-      purposeNorm.includes('annualleave') || purposeNorm.includes('dayoff') || purposeNorm.includes('nghibu') ||
-      typeNorm === 'leave' || tr.category === 'leave') {
+    plantNorm.includes('annualleave') || plantNorm.includes('dayoff') || plantNorm.includes('nghibu') ||
+    purposeNorm.includes('leave') || purposeNorm.includes('nghiphep') || purposeNorm.includes('phep') ||
+    purposeNorm.includes('annualleave') || purposeNorm.includes('dayoff') || purposeNorm.includes('nghibu') ||
+    typeNorm === 'leave' || tr.category === 'leave') {
     return `<span class="badge" style="font-size:10.5px;font-weight:700;color:#92400E;background:var(--al);padding:2px 8px;border-radius:12px;border:1px solid rgba(245,158,11,0.35);flex-shrink:0;">🌴 Leave</span>`;
   }
 
@@ -1113,11 +1113,11 @@ function getTripTypeBadge(tr) {
     (plantNorm && (plantNorm.includes(baseNorm) || baseNorm.includes(plantNorm))) ||
     (locationNorm && (locationNorm.includes(baseNorm) || baseNorm.includes(locationNorm)))
   )) || (
-    (baseNorm.includes('danang') || baseNorm === 'dn') && (
-      plantNorm.includes('danang') || locationNorm.includes('danang') ||
-      /\b(dn|dana)\b/i.test(plant) || /\b(dn|dana)\b/i.test(location)
-    )
-  );
+      (baseNorm.includes('danang') || baseNorm === 'dn') && (
+        plantNorm.includes('danang') || locationNorm.includes('danang') ||
+        /\b(dn|dana)\b/i.test(plant) || /\b(dn|dana)\b/i.test(location)
+      )
+    );
 
   if (isBase) {
     return `<span class="badge" style="font-size:10.5px;font-weight:700;color:var(--green);background:var(--gl);padding:2px 8px;border-radius:12px;border:1px solid rgba(0,132,61,0.25);flex-shrink:0;">📍 ${base} Base</span>`;
@@ -1126,8 +1126,8 @@ function getTripTypeBadge(tr) {
   return '';
 }
 
-function clearProfileSignature(){
-  if(!S.profile) S.profile = {};
+function clearProfileSignature() {
+  if (!S.profile) S.profile = {};
   S.profile.signature = '';
   sv();
   updateProfileDisplay();
@@ -1135,13 +1135,13 @@ function clearProfileSignature(){
   triggerHaptic('light');
 }
 
-async function handleProfileSignatureUpload(e){
+async function handleProfileSignatureUpload(e) {
   const file = e.target.files && e.target.files[0];
-  if(!file) return;
+  if (!file) return;
   try {
     let b64 = '';
     if (typeof compressImageFile === 'function') {
-      try { b64 = await compressImageFile(file, 600, 0.85); } catch(err){}
+      try { b64 = await compressImageFile(file, 600, 0.85); } catch (err) { }
     }
     if (!b64) {
       b64 = await new Promise(res => {
@@ -1150,108 +1150,108 @@ async function handleProfileSignatureUpload(e){
         reader.readAsDataURL(file);
       });
     }
-    if(!S.profile) S.profile = {};
+    if (!S.profile) S.profile = {};
     S.profile.signature = b64;
     sv();
     updateProfileDisplay();
     showToast('Default signature updated ✓');
     triggerHaptic('success');
-  } catch(err) {
+  } catch (err) {
     showToast('Failed to update signature');
   }
   e.target.value = '';
 }
 
 // ═══════ INDUSTRY TEMPLATES (FIXED) ═══════
-function loadIndustryTemplate(ind){
-  const items=IND[ind];if(!items||!items.length)return;
-  S.templates=[...items];sv();
+function loadIndustryTemplate(ind) {
+  const items = IND[ind]; if (!items || !items.length) return;
+  S.templates = [...items]; sv();
   closeModal('modal-industry');
-  showToast('Loaded '+items.length+' items ✓');
+  showToast('Loaded ' + items.length + ' items ✓');
   // Immediately show in template editor
   openModal('modal-check-templates');
 }
 
 // ═══════ CHECKLIST TEMPLATES ═══════
-function renderTemplates(){
-  const el=document.getElementById('template-list');if(!el)return;
+function renderTemplates() {
+  const el = document.getElementById('template-list'); if (!el) return;
   const tmpls = Array.isArray(S.templates) ? S.templates : [];
-  el.innerHTML=tmpls.length
-    ?tmpls.map((tmpl,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--g100);"><div style="flex:1;font-size:13px;">${tmpl}</div><button class="db" onclick="rmTemplate(${i})">×</button></div>`).join('')
-    :`<div style="font-size:12px;color:var(--g500);padding:8px 0;">No templates. Add below or use Industry Templates.</div>`;
+  el.innerHTML = tmpls.length
+    ? tmpls.map((tmpl, i) => `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--g100);"><div style="flex:1;font-size:13px;">${tmpl}</div><button class="db" onclick="rmTemplate(${i})">×</button></div>`).join('')
+    : `<div style="font-size:12px;color:var(--g500);padding:8px 0;">No templates. Add below or use Industry Templates.</div>`;
 }
-function addTemplate(){const v=document.getElementById('tmpl-new').value.trim();if(!v)return;S.templates.push(v);sv();document.getElementById('tmpl-new').value='';renderTemplates();}
-function rmTemplate(i){S.templates.splice(i,1);sv();renderTemplates();}
+function addTemplate() { const v = document.getElementById('tmpl-new').value.trim(); if (!v) return; S.templates.push(v); sv(); document.getElementById('tmpl-new').value = ''; renderTemplates(); }
+function rmTemplate(i) { S.templates.splice(i, 1); sv(); renderTemplates(); }
 
 // ═══════ UTILS ═══════
-function fmtDate(d){
-  if(!d||d==='—'||d==='undefined'||d==='null'||d==='')return'—';
+function fmtDate(d) {
+  if (!d || d === '—' || d === 'undefined' || d === 'null' || d === '') return '—';
   // Reject time strings like '08:00', '17:30' — these are NOT dates
-  if(/^\d{2}:\d{2}/.test(String(d).trim()))return'—';
-  try{
+  if (/^\d{2}:\d{2}/.test(String(d).trim())) return '—';
+  try {
     // Strip any existing time part, keep only YYYY-MM-DD
-    const dateOnly=String(d).trim().slice(0,10);
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly))return'—';
-    const[y,m,day]=dateOnly.split('-').map(Number);
-    if(isNaN(y)||isNaN(m)||isNaN(day))return String(d);
+    const dateOnly = String(d).trim().slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return '—';
+    const [y, m, day] = dateOnly.split('-').map(Number);
+    if (isNaN(y) || isNaN(m) || isNaN(day)) return String(d);
     // Use explicit parts to avoid timezone offset issues
-    const dt=new Date(y,m-1,day);
-    return dt.toLocaleDateString(S.lang==='vi'?'vi-VN':'en-GB',{day:'numeric',month:'short',year:'numeric'});
-  }catch(e){return String(d);}
+    const dt = new Date(y, m - 1, day);
+    return dt.toLocaleDateString(S.lang === 'vi' ? 'vi-VN' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch (e) { return String(d); }
 }
 
 // ── ISO-8601 Week Number Calculation (IMP-09) ─────────────────
-function getWeekInfo(dateStr){
-  if(!dateStr||typeof dateStr!=='string')return null;
-  const dateOnly=dateStr.trim().slice(0,10);
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly))return null;
-  const[y,m,day]=dateOnly.split('-').map(Number);
-  if(isNaN(y)||isNaN(m)||isNaN(day))return null;
-  const d=new Date(y,m-1,day);
-  if(isNaN(d.getTime()))return null;
+function getWeekInfo(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return null;
+  const dateOnly = dateStr.trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return null;
+  const [y, m, day] = dateOnly.split('-').map(Number);
+  if (isNaN(y) || isNaN(m) || isNaN(day)) return null;
+  const d = new Date(y, m - 1, day);
+  if (isNaN(d.getTime())) return null;
 
-  d.setHours(0,0,0,0);
-  d.setDate(d.getDate()+4-(d.getDay()||7));
-  const yearStart=new Date(d.getFullYear(),0,1);
-  const weekNo=Math.ceil((((d-yearStart)/86400000)+1)/7);
-  const year2d=String(d.getFullYear()).slice(-2);
-  return {week:weekNo,year2d,year:d.getFullYear()};
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  const year2d = String(d.getFullYear()).slice(-2);
+  return { week: weekNo, year2d, year: d.getFullYear() };
 }
 
-function getTripWeekLabel(startDateStr,endDateStr){
-  const startInfo=getWeekInfo(startDateStr);
-  if(!startInfo)return'';
-  const endInfo=(endDateStr&&endDateStr!==startDateStr)?getWeekInfo(endDateStr):null;
-  if(!endInfo||(startInfo.week===endInfo.week&&startInfo.year===endInfo.year)){
+function getTripWeekLabel(startDateStr, endDateStr) {
+  const startInfo = getWeekInfo(startDateStr);
+  if (!startInfo) return '';
+  const endInfo = (endDateStr && endDateStr !== startDateStr) ? getWeekInfo(endDateStr) : null;
+  if (!endInfo || (startInfo.week === endInfo.week && startInfo.year === endInfo.year)) {
     return `W${startInfo.week}/${startInfo.year2d}`;
   }
-  if(startInfo.year===endInfo.year){
+  if (startInfo.year === endInfo.year) {
     return `W${startInfo.week}-W${endInfo.week}/${startInfo.year2d}`;
   }
   return `W${startInfo.week}/${startInfo.year2d}-W${endInfo.week}/${endInfo.year2d}`;
 }
 
-function getSortedTrips(){
-  return [...(S.trips||[])].sort((a,b)=>{
+function getSortedTrips() {
+  return [...(S.trips || [])].sort((a, b) => {
     const dateA = a.dateEnd || a.date || '';
     const dateB = b.dateEnd || b.date || '';
-    if(dateA !== dateB) return dateB.localeCompare(dateA);
-    return (b.id||'').localeCompare(a.id||'');
+    if (dateA !== dateB) return dateB.localeCompare(dateA);
+    return (b.id || '').localeCompare(a.id || '');
   });
 }
 // ── Auto-start trips and tasks whose date has arrived ────────
-function autoStartTodayItems(){
+function autoStartTodayItems() {
   const today = localDateStr();
   let changed = false;
 
   // ── Trips: planned → in_progress if start date reached ──
-  (S.trips||[]).forEach(tr=>{
-    if(tr.status !== 'planned') return;
-    const start = tr.date||'';
-    const end   = tr.dateEnd||tr.date||'';
-    if(!start) return;
+  (S.trips || []).forEach(tr => {
+    if (tr.status !== 'planned') return;
+    const start = tr.date || '';
+    const end = tr.dateEnd || tr.date || '';
+    if (!start) return;
     // Trip starts today or has already started and not ended yet
-    if(start <= today && end >= today){
+    if (start <= today && end >= today) {
       tr.status = 'in_progress';
       changed = true;
       console.log('[AutoStart] Trip started:', tr.plant, start);
@@ -1259,28 +1259,28 @@ function autoStartTodayItems(){
   });
 
   // ── Tasks: pending → in_progress if start date reached ──
-  (S.tasks||[]).forEach(tk=>{
-    if(tk.status !== 'pending') return;
-    const start = tk.dateStart||tk.date||'';
-    if(!start) return;
-    const end = tk.dateEnd||tk.dateStart||tk.date||'';
+  (S.tasks || []).forEach(tk => {
+    if (tk.status !== 'pending') return;
+    const start = tk.dateStart || tk.date || '';
+    if (!start) return;
+    const end = tk.dateEnd || tk.dateStart || tk.date || '';
     // Task starts today or is overdue (started in the past, not yet done)
-    if(start <= today && end >= today){
+    if (start <= today && end >= today) {
       tk.status = 'in_progress';
       changed = true;
     }
   });
 
-  if(changed){
+  if (changed) {
     sv();
     // Auto-sync status update (in_progress) to Google Sheets immediately
-    if(typeof syncToSheets === 'function'){
+    if (typeof syncToSheets === 'function') {
       syncToSheets().catch(e => console.warn('[AutoStart] Sync error:', e));
     }
     // Re-render affected screens
-    try{ renderDash(); }catch(e){}
-    try{ renderTripList(); }catch(e){}
-    try{ renderTasks(); }catch(e){}
+    try { renderDash(); } catch (e) { }
+    try { renderTripList(); } catch (e) { }
+    try { renderTasks(); } catch (e) { }
     showToast('📅 Schedule updated — tasks & trips set to Active');
   }
 
@@ -1288,30 +1288,30 @@ function autoStartTodayItems(){
   localStorage.setItem('plpro_autostart_date', today);
 }
 
-async function clearAllData(){
+async function clearAllData() {
   const ok = await appConfirm('Delete ALL data? Trips, tasks, reports, and bills will be permanently erased. This cannot be undone.', {
     title: 'Erase All Data',
     danger: true,
     confirmText: 'Delete All Data',
     icon: '⚠️'
   });
-  if(!ok) return;
-  S={
-    profile:{name:'',title:'',company:'',plantBase:'DaNang',empid:'',signature:''},
-    gsUrl:'',gsApiKey:'',
-    trips:[],reports:{},tasks:[],leaveData:{},
-    machines:[],plans:[],bills:[],inspections:[],
-    assets:[],scratchpad:[],deletedIds:{},library:[],
-    reminders:[],tripClaims:[],
-    creditCard:{budget:50000000,cardName:'Corporate Credit Card',transfers:[]},
-    securityConfig:{exit:'1m',idle:'2m'},
-    telegramConfig:{token:'',chatId:'',notifyTrips:true,notifyTasks:true,notifyLeave:true},
-    calendarConfig:{calId:'',pushTrips:true,pushTasks:true,pullEvents:true},
-    templates:['Safety pressure valves','Fire suppression system','Emergency stop buttons','PPE compliance check','Electrical panel condition','Pipe insulation condition'],
-    defaultTeam:[],lang:S.lang,theme:S.theme||'auto'
+  if (!ok) return;
+  S = {
+    profile: { name: '', title: '', company: '', plantBase: 'DaNang', empid: '', signature: '' },
+    gsUrl: '', gsApiKey: '',
+    trips: [], reports: {}, tasks: [], leaveData: {},
+    machines: [], plans: [], bills: [], inspections: [],
+    assets: [], scratchpad: [], deletedIds: {}, library: [],
+    reminders: [], tripClaims: [],
+    creditCard: { budget: 50000000, cardName: 'Corporate Credit Card', transfers: [] },
+    securityConfig: { exit: '1m', idle: '2m' },
+    telegramConfig: { token: '', chatId: '', notifyTrips: true, notifyTasks: true, notifyLeave: true },
+    calendarConfig: { calId: '', pushTrips: true, pushTasks: true, pullEvents: true },
+    templates: ['Safety pressure valves', 'Fire suppression system', 'Emergency stop buttons', 'PPE compliance check', 'Electrical panel condition', 'Pipe insulation condition'],
+    defaultTeam: [], lang: S.lang, theme: S.theme || 'auto'
   };
-  sv();loadProfile();renderDash();renderTripList();renderCalendar();renderTasks();renderDefaultTeam();
-  if(typeof updateGSStatus==='function')updateGSStatus();
+  sv(); loadProfile(); renderDash(); renderTripList(); renderCalendar(); renderTasks(); renderDefaultTeam();
+  if (typeof updateGSStatus === 'function') updateGSStatus();
   showToast('All data cleared');
 }
 
@@ -1325,7 +1325,7 @@ const Store = {
   },
   emit(event, data) {
     (this._listeners[event] || []).forEach(fn => {
-      try { fn(data); } catch(e) { console.warn('Store.emit error', event, e); }
+      try { fn(data); } catch (e) { console.warn('Store.emit error', event, e); }
     });
   },
   // Commit saves data and fires the relevant event
@@ -1337,11 +1337,11 @@ const Store = {
 };
 
 // Wire up global auto-render on data changes
-Store.on('trip:save',    () => { renderTripList(); renderDash(); });
-Store.on('trip:delete',  () => { renderTripList(); renderDash(); });
-Store.on('task:save',    () => { renderTasks(); renderDash(); renderCalendar(); });
-Store.on('task:status',  () => { renderTasks(); renderDash(); });
-Store.on('bill:save',    () => {
+Store.on('trip:save', () => { renderTripList(); renderDash(); });
+Store.on('trip:delete', () => { renderTripList(); renderDash(); });
+Store.on('task:save', () => { renderTasks(); renderDash(); renderCalendar(); });
+Store.on('task:status', () => { renderTasks(); renderDash(); });
+Store.on('bill:save', () => {
   renderBillsScreen();
   renderDash();
   if (typeof currentBillsView !== 'undefined' && currentBillsView === 'card' && typeof renderCreditCardScreen === 'function') {
@@ -1350,8 +1350,8 @@ Store.on('bill:save',    () => {
     renderTripClaimsScreen();
   }
 });
-Store.on('leave:save',   () => { renderCalendar(); renderDash(); });
-Store.on('*',            ({ action }) => {
+Store.on('leave:save', () => { renderCalendar(); renderDash(); });
+Store.on('*', ({ action }) => {
   // Auto-sync to Google Sheets on any commit
   if (S.gsUrl) svAndSync(action);
 });
@@ -1372,7 +1372,7 @@ async function translateViToEn(text) {
     if (data && Array.isArray(data[0])) {
       return data[0].map(x => x[0]).filter(Boolean).join('');
     }
-  } catch(e) {
+  } catch (e) {
     console.warn('[translateViToEn] Error translating:', e);
   }
   return text; // Fallback to original text if offline or error
@@ -1474,7 +1474,7 @@ function startVoiceToEnglish(targetId, onSavedCb) {
 
   try {
     if (_activeRecognition) {
-      try { _activeRecognition.abort(); } catch(x) {}
+      try { _activeRecognition.abort(); } catch (x) { }
     }
     const rec = new SpeechRec();
     rec.lang = 'vi-VN';
@@ -1505,7 +1505,7 @@ function startVoiceToEnglish(targetId, onSavedCb) {
 
     rec.start();
     _activeRecognition = rec;
-  } catch(err) {
+  } catch (err) {
     console.error('[startVoiceToEnglish] Init error:', err);
     if (statusEl) statusEl.textContent = '⚠️ Cannot start microphone: ' + err.message;
   }
@@ -1519,7 +1519,7 @@ async function stopVoiceAndTranslate() {
   const insertBtn = document.getElementById('voice-insert-btn');
 
   if (_activeRecognition) {
-    try { _activeRecognition.stop(); } catch(x) {}
+    try { _activeRecognition.stop(); } catch (x) { }
     _activeRecognition = null;
   }
 
@@ -1559,7 +1559,7 @@ function applyVoiceResultToInput() {
   }
 
   if (_voiceCallback) {
-    try { _voiceCallback(); } catch(x) {}
+    try { _voiceCallback(); } catch (x) { }
   }
 
   if (typeof closeModal === 'function') closeModal('modal-voice-input');
@@ -1580,14 +1580,14 @@ function pdfSafeText(v) {
     s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }
   s = s.replace(/[→➔➜]/g, '->')
-       .replace(/[←]/g, '<-')
-       .replace(/[—–]/g, '-')
-       .replace(/[‘’]/g, "'")
-       .replace(/[“”]/g, '"')
-       .replace(/[•·]/g, '-')
-       .replace(/[…]/g, '...')
-       .replace(/[✓✔]/g, 'OK')
-       .replace(/[✗✘✕]/g, 'X');
+    .replace(/[←]/g, '<-')
+    .replace(/[—–]/g, '-')
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[•·]/g, '-')
+    .replace(/[…]/g, '...')
+    .replace(/[✓✔]/g, 'OK')
+    .replace(/[✗✘✕]/g, 'X');
   // Strip emojis, pictographs & unsupported glyphs while preserving ASCII + degree sign (°)
   s = s.replace(/[^\x09\x0A\x0D\x20-\x7E\xB0]+ ?/g, '');
   s = s.replace(/ +\n/g, '\n').replace(/\s+$/, '');
@@ -1600,20 +1600,20 @@ function attachPdfTextNormalizer(doc) {
   doc._pdfSafeWrapped = true;
   if (typeof doc.splitTextToSize === 'function') {
     const origSplit = doc.splitTextToSize.bind(doc);
-    doc.splitTextToSize = function(text, maxWidth, options) {
+    doc.splitTextToSize = function (text, maxWidth, options) {
       const clean = Array.isArray(text) ? text.map(pdfSafeText) : pdfSafeText(text);
       return origSplit(clean, maxWidth, options);
     };
   }
   if (typeof doc.getTextWidth === 'function') {
     const origWidth = doc.getTextWidth.bind(doc);
-    doc.getTextWidth = function(text) {
+    doc.getTextWidth = function (text) {
       return origWidth(pdfSafeText(text));
     };
   }
   if (typeof doc.text === 'function') {
     const origText = doc.text.bind(doc);
-    doc.text = function(text, x, y, options, transform) {
+    doc.text = function (text, x, y, options, transform) {
       const clean = Array.isArray(text) ? text.map(pdfSafeText) : pdfSafeText(text);
       return origText(clean, x, y, options, transform);
     };
@@ -1698,7 +1698,7 @@ async function quickSyncFromHome() {
     if (typeof syncToSheets === 'function') {
       await syncToSheets();
     }
-  } catch(e) {
+  } catch (e) {
     console.warn('[quickSyncFromHome] Error:', e);
   } finally {
     if (btn) { btn.classList.remove('syncing'); btn.disabled = false; }
