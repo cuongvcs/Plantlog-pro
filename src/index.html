@@ -6073,32 +6073,32 @@ button:focus-visible {
             <span>📱</span> <span>Lock on App Exit / Switch</span>
           </label>
           <select id="pref-lock-exit" class="fi" style="font-size:12.5px;min-height:38px;padding:6px 10px;background:var(--surface);width:100%;box-sizing:border-box;" onchange="saveAppLockSettings()">
-            <option value="immediate">⚡ Immediately when exiting app</option>
-            <option value="30s">⏳ After 30 seconds in background</option>
-            <option value="1m">⏳ After 1 minute in background (Recommended)</option>
-            <option value="2m">⏳ After 2 minutes in background</option>
-            <option value="3m">⏳ After 3 minutes in background</option>
-            <option value="4m">⏳ After 4 minutes in background</option>
-            <option value="5m">⏳ After 5 minutes in background</option>
-            <option value="never">✕ Never lock on app switch</option>
+            <option value="immediate">Immediately</option>
+            <option value="30s">30s</option>
+            <option value="1m">1 min</option>
+            <option value="2m">2 min</option>
+            <option value="3m">3 min</option>
+            <option value="4m">4 min</option>
+            <option value="5m">5 min</option>
+            <option value="never">Never</option>
           </select>
-          <div style="font-size:11px;color:var(--n500);margin-top:3px;line-height:1.4;">Automatically locks to protect data when swiping Home or switching apps</div>
+          <div style="font-size:11px;color:var(--n500);margin-top:3px;line-height:1.4;">Automatically locks when switching or leaving app</div>
         </div>
         <div>
           <label class="fl" style="font-size:12px;font-weight:700;color:var(--n700);margin-bottom:4px;display:flex;align-items:center;gap:6px;">
-            <span>⏱️</span> <span>Auto-Lock when Idle (Inactivity)</span>
+            <span>⏱️</span> <span>Auto-Lock when Idle</span>
           </label>
           <select id="pref-lock-idle" class="fi" style="font-size:12.5px;min-height:38px;padding:6px 10px;background:var(--surface);width:100%;box-sizing:border-box;" onchange="saveAppLockSettings()">
-            <option value="30s">⏱️ After 30 seconds of inactivity</option>
-            <option value="1m">⏱️ After 1 minute of inactivity</option>
-            <option value="2m" selected>⏱️ After 2 minutes of inactivity (Default)</option>
-            <option value="3m">⏱️ After 3 minutes of inactivity</option>
-            <option value="4m">⏱️ After 4 minutes of inactivity</option>
-            <option value="5m">⏱️ After 5 minutes of inactivity</option>
-            <option value="10m">⏱️ After 10 minutes of inactivity</option>
-            <option value="never">🔓 Never auto-lock while app is open</option>
+            <option value="30s">30s</option>
+            <option value="1m">1 min</option>
+            <option value="2m" selected>2 min</option>
+            <option value="3m">3 min</option>
+            <option value="4m">4 min</option>
+            <option value="5m">5 min</option>
+            <option value="10m">10 min</option>
+            <option value="never">Never</option>
           </select>
-          <div style="font-size:11px;color:var(--n500);margin-top:3px;line-height:1.4;">Timer automatically resets on any screen touch, scroll, swipe, or keypress</div>
+          <div style="font-size:11px;color:var(--n500);margin-top:3px;line-height:1.4;">Timer resets on any screen tap, scroll, or input</div>
         </div>
       </div>
     </div>
