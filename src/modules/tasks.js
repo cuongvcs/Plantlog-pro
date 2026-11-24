@@ -699,6 +699,10 @@ function renderTasks() {
           ${tk.completionNotes ? `<span class="tc-meta-item" style="color:var(--green);font-weight:600;" title="${escHtml(tk.completionNotes)}">📝 Note</span>` : ''}
           ${isOver ? `<span class="tc-meta-item" style="color:var(--red);font-weight:600;">⚠ Overdue</span>` : ''}
         </div>
+        ${tk.status === 'in_progress' && (tk.assigneeEmail || tk.assigneeName) ? `
+        <div style="margin-top:6px;margin-bottom:6px;display:inline-flex;align-items:center;gap:4px;background:#FEF3C7;color:#B45309;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;">
+          🔔 In Progress by ${escHtml(tk.assigneeName || tk.assigneeEmail.split('@')[0])} · Review &amp; Close
+        </div>` : ''}
         ${tk.checklist && tk.checklist.length ? (() => {
         const doneC = tk.checklist.filter(c => c.done).length;
         const totalC = tk.checklist.length;
@@ -982,6 +986,14 @@ function openTaskDetail(id) {
       <button class="ss-btn ${tk.status === 'in_progress' ? 'active-ip' : ''}" style="padding:8px 14px;font-size:13px;" onclick="setTaskStatus('${tk.id}','in_progress');openTaskDetail('${tk.id}')">◑ In Progress</button>
       <button class="ss-btn ${tk.status === 'done' ? 'active-d' : ''}" style="padding:8px 14px;font-size:13px;" onclick="setTaskStatus('${tk.id}','done');openTaskDetail('${tk.id}')">● Done</button>
     </div>
+    ${(tk.status === 'in_progress' && (tk.assigneeEmail || tk.assigneeName)) ? `
+    <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:var(--rs);padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div style="font-size:12px;color:#92400E;line-height:1.4;">
+        <strong>🔔 Technician is working on this task.</strong><br>
+        Once verified completed on site, mark as Complete to finalize.
+      </div>
+      <button class="btn btn-sm btn-p" onclick="markTaskCompleteFromDetail('${tk.id}')" style="background:#059669;border-color:#059669;color:#fff;white-space:nowrap;font-size:11px;font-weight:700;padding:6px 12px;border-radius:14px;cursor:pointer;">✅ Mark Complete</button>
+    </div>` : ''}
     ${tk.assigneeEmail ? `
     <div style="background:var(--n50);border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:14px;">
       <div style="font-size:10px;font-weight:700;color:var(--brand);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">👤 ASSIGNED COLLABORATION</div>
@@ -1001,6 +1013,24 @@ function openTaskDetail(id) {
       <button class="btn btn-o btn-sm" onclick="closeModal('modal-task-detail')">Close</button>
     </div>`;
   openModal('modal-task-detail');
+}
+
+function markTaskCompleteFromDetail(id) {
+  const tk = (S.tasks || []).find(t => String(t.id) === String(id));
+  if (!tk) return;
+  tk.status = 'done';
+  tk.updatedAt = new Date().toISOString();
+  if (typeof Store !== 'undefined' && Store.commit) {
+    Store.commit('task:status');
+  } else {
+    sv();
+    renderTasks();
+  }
+  closeModal('modal-task-detail');
+  showToast('✓ Task verified and marked Complete!');
+  if (typeof svAndSync === 'function') {
+    svAndSync('task_complete');
+  }
 }
 
 function openTaskForDay() {
