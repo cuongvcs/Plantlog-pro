@@ -14141,12 +14141,11 @@ function getTaskMagicLink(task) {
   if (!task || !task.id) return '';
   const gsUrl = S.gsUrl || localStorage.getItem('plantlog_gs_url') || '';
   if (!gsUrl) return '';
-  const rawToken = String(task.id) + ':' + String(task.createdAt || '');
   let token = '';
   try {
-    token = btoa(rawToken).replace(/=/g, '');
+    token = btoa('PL_TASK:' + String(task.id)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   } catch (e) {
-    token = encodeURIComponent(rawToken);
+    token = encodeURIComponent(String(task.id));
   }
   return gsUrl + (gsUrl.includes('?') ? '&' : '?') + 'action=taskView&id=' + encodeURIComponent(task.id) + '&token=' + encodeURIComponent(token);
 }
@@ -14367,6 +14366,7 @@ async function sendTaskAssignmentEmail(taskIdOrTask) {
     const payload = {
       action: 'assignTaskEmail',
       apiKey: apiKey,
+      gasUrl: gasUrl,
       task: task,
       assigneeEmail: email,
       assigneeName: task.assigneeName || '',
