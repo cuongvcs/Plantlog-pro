@@ -1,6 +1,6 @@
-// PlantLog Pro Service Worker v169
+// PlantLog Pro Service Worker v171
 // Single-file architecture — reliable caching with failsafe offline fallback
-const CACHE = 'plantlog-pro-v169';
+const CACHE = 'plantlog-pro-v171';
 
 self.addEventListener('install', e => {
   self.skipWaiting();

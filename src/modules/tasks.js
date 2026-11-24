@@ -1638,10 +1638,16 @@ function onTaskAssigneeEmailChange() {
 
 function getTaskMagicLink(task) {
   if (!task || !task.id) return '';
-  const gsUrl = S.gsUrl || localStorage.getItem('plantlog_gs_url') || '';
+  const gsUrl = (typeof getGSUrl === 'function') ? getGSUrl() : (S.gsUrl || localStorage.getItem('plantlog_gs_url') || '');
   if (!gsUrl) return '';
   const cleanUrl = gsUrl.split('?')[0];
-  return cleanUrl + '?t=' + encodeURIComponent(task.id);
+  let token = '';
+  try {
+    token = btoa('PL_TASK:' + String(task.id)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  } catch (e) {
+    token = encodeURIComponent(String(task.id));
+  }
+  return cleanUrl + '?action=taskView&id=' + encodeURIComponent(task.id) + '&token=' + encodeURIComponent(token);
 }
 
 function buildTaskAssignmentEmailContent(task) {
@@ -1694,11 +1700,10 @@ function buildTaskAssignmentEmailContent(task) {
     textBody += `\n`;
   }
 
-  const activeLink = task.shortUrl || magicLink;
-  if (activeLink) {
+  if (magicLink) {
     textBody += `----------------------------------------\n`;
-    textBody += `👉 ONLINE TASK ACTION FORM:\n`;
-    textBody += `${activeLink}\n`;
+    textBody += `👉 INTERACTIVE ONLINE UPDATE (No app installation required):\n`;
+    textBody += `${magicLink}\n`;
     textBody += `(Tap link to complete checklist & update progress)\n`;
     textBody += `----------------------------------------\n\n`;
   }
@@ -1765,12 +1770,12 @@ function buildTaskAssignmentEmailContent(task) {
       </div>` : ''}
       ${htmlChecklist}
       ${htmlParts}
-      ${activeLink ? `
+      ${magicLink ? `
       <div style="margin-top:24px;text-align:center;">
-        <a href="${activeLink}" target="_blank" style="display:inline-block;background:#00843D;color:#FFFFFF;text-decoration:none;padding:14px 28px;border-radius:24px;font-size:14.5px;font-weight:700;box-shadow:0 3px 10px rgba(0,132,61,0.35);letter-spacing:0.02em;">
+        <a href="${magicLink}" target="_blank" style="display:inline-block;background:#00843D;color:#FFFFFF;text-decoration:none;padding:14px 28px;border-radius:24px;font-size:14.5px;font-weight:700;box-shadow:0 3px 10px rgba(0,132,61,0.35);letter-spacing:0.02em;">
           👉 Open &amp; Update Task Progress (Online Form)
         </a>
-        <div style="font-size:12px;color:#64748B;margin-top:10px;">Direct link: <a href="${activeLink}" target="_blank" style="color:#00843D;font-weight:600;text-decoration:underline;">${escHtml(activeLink)}</a></div>
+        <div style="font-size:12px;color:#64748B;margin-top:10px;">Direct link: <a href="${magicLink}" target="_blank" style="color:#00843D;font-weight:600;text-decoration:underline;">${escHtml(magicLink)}</a></div>
       </div>` : ''}
     </div>
     <div style="background:#F8FAFC;border-top:1px solid #E2E8F0;padding:14px 24px;font-size:12px;color:#64748B;">
@@ -1790,27 +1795,13 @@ function resolveTaskObj(taskIdOrTask) {
   return (S.tasks || []).find(t => String(t.id) === String(taskIdOrTask)) || null;
 }
 
-async function openTaskMailto(taskIdOrTask) {
+function openTaskMailto(taskIdOrTask) {
   const task = resolveTaskObj(taskIdOrTask);
   if (!task) { showToast('Task not found'); return; }
   const email = (task.assigneeEmail || '').trim();
   if (!email || !email.includes('@')) {
     showToast('Please specify a valid Assignee Email first');
     return;
-  }
-
-  // Pre-fetch short TinyURL via GAS if online and not yet cached
-  if (!task.shortUrl && navigator.onLine && (S.gsUrl || localStorage.getItem('plantlog_gs_url'))) {
-    try {
-      const rawLink = getTaskMagicLink(task);
-      const gasUrl = (S.gsUrl || localStorage.getItem('plantlog_gs_url')).split('?')[0];
-      const qUrl = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'action=shortenUrl&url=' + encodeURIComponent(rawLink);
-      const r = await fetch(qUrl, { method: 'GET', mode: 'cors' });
-      const res = await r.json();
-      if (res && res.ok && res.shortUrl) {
-        task.shortUrl = res.shortUrl;
-      }
-    } catch (e) {}
   }
 
   const content = buildTaskAssignmentEmailContent(task);
@@ -1865,12 +1856,12 @@ async function sendTaskAssignmentEmail(taskIdOrTask) {
     return;
   }
 
-  const gasUrl = S.gsUrl || localStorage.getItem('plantlog_gs_url') || '';
-  const apiKey = S.apiKey || localStorage.getItem('plantlog_api_key') || '';
+  const gasUrl = (typeof getGSUrl === 'function') ? getGSUrl() : (S.gsUrl || localStorage.getItem('plantlog_gs_url') || '');
+  const apiKey = (typeof getGSApiKey === 'function') ? getGSApiKey() : (S.gsApiKey || S.apiKey || localStorage.getItem('plantlog_gs_api_key') || localStorage.getItem('plantlog_api_key') || '');
 
   if (!navigator.onLine || !gasUrl) {
-    showToast('Offline or Google Sheets not connected. Opening mail client...');
-    setTimeout(() => { openTaskMailto(task); }, 300);
+    showToast('Offline or Google Sheets not connected. Opening email client...');
+    setTimeout(() => { openTaskMailto(task); }, 250);
     return;
   }
 
@@ -1879,6 +1870,7 @@ async function sendTaskAssignmentEmail(taskIdOrTask) {
     const payload = {
       action: 'assignTaskEmail',
       apiKey: apiKey,
+      secret: apiKey,
       gasUrl: gasUrl,
       task: task,
       assigneeEmail: email,
@@ -1899,16 +1891,16 @@ async function sendTaskAssignmentEmail(taskIdOrTask) {
     }
 
     if (data && data.ok) {
-      if (data.magicUrl) task.shortUrl = data.magicUrl;
-      showToast(`Email dispatched to ${email} ✓`);
+      showToast(`Email dispatched directly to ${email} ✓`);
     } else {
-      const errMsg = (data && data.error) ? data.error : 'Server dispatch failed';
-      showToast(`Email error: ${errMsg}. Opening mail client...`);
-      setTimeout(() => { openTaskMailto(task); }, 400);
+      // Seamless fallback to user's email client if backend MailApp is not configured or pending deployment
+      showToast('Opening email client to dispatch assignment...');
+      setTimeout(() => { openTaskMailto(task); }, 350);
     }
   } catch (err) {
-    showToast('Failed to reach backend. Opening mail client...');
-    setTimeout(() => { openTaskMailto(task); }, 400);
+    // Seamless fallback to user's email client
+    showToast('Opening email client to dispatch assignment...');
+    setTimeout(() => { openTaskMailto(task); }, 350);
   }
 }
 
@@ -1918,25 +1910,13 @@ function sendTaskAssignmentEmailFromModal() {
   sendTaskAssignmentEmail(tempTask);
 }
 
-async function copyTaskMagicLink(taskId) {
+function copyTaskMagicLink(taskId) {
   const task = resolveTaskObj(taskId);
   if (!task) { showToast('Task not found'); return; }
-  let link = task.shortUrl || getTaskMagicLink(task);
+  const link = getTaskMagicLink(task);
   if (!link) {
     showToast('Google Apps Script URL is not configured yet');
     return;
-  }
-  if (!task.shortUrl && navigator.onLine && (S.gsUrl || localStorage.getItem('plantlog_gs_url'))) {
-    try {
-      const gasUrl = (S.gsUrl || localStorage.getItem('plantlog_gs_url')).split('?')[0];
-      const qUrl = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'action=shortenUrl&url=' + encodeURIComponent(link);
-      const r = await fetch(qUrl, { method: 'GET', mode: 'cors' });
-      const res = await r.json();
-      if (res && res.ok && res.shortUrl) {
-        task.shortUrl = res.shortUrl;
-        link = res.shortUrl;
-      }
-    } catch(e) {}
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(link).then(() => {
