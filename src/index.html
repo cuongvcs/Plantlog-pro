@@ -14171,13 +14171,8 @@ function getTaskMagicLink(task) {
   if (!task || !task.id) return '';
   const gsUrl = S.gsUrl || localStorage.getItem('plantlog_gs_url') || '';
   if (!gsUrl) return '';
-  let token = '';
-  try {
-    token = btoa('PL_TASK:' + String(task.id)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  } catch (e) {
-    token = encodeURIComponent(String(task.id));
-  }
-  return gsUrl + (gsUrl.includes('?') ? '&' : '?') + 'action=taskView&id=' + encodeURIComponent(task.id) + '&token=' + encodeURIComponent(token);
+  const cleanUrl = gsUrl.split('?')[0];
+  return cleanUrl + '?t=' + encodeURIComponent(task.id);
 }
 
 function buildTaskAssignmentEmailContent(task) {
@@ -14230,9 +14225,13 @@ function buildTaskAssignmentEmailContent(task) {
     textBody += `\n`;
   }
 
-  if (magicLink) {
-    textBody += `👉 INTERACTIVE ONLINE UPDATE (No app installation required):\n`;
-    textBody += `${magicLink}\n\n`;
+  const activeLink = task.shortUrl || magicLink;
+  if (activeLink) {
+    textBody += `----------------------------------------\n`;
+    textBody += `👉 ONLINE TASK ACTION FORM:\n`;
+    textBody += `${activeLink}\n`;
+    textBody += `(Tap link to complete checklist & update progress)\n`;
+    textBody += `----------------------------------------\n\n`;
   }
 
   textBody += `Assigned by: ${sender}${senderContact ? ' (' + senderContact + ')' : ''}\n`;
@@ -14297,12 +14296,12 @@ function buildTaskAssignmentEmailContent(task) {
       </div>` : ''}
       ${htmlChecklist}
       ${htmlParts}
-      ${magicLink ? `
+      ${activeLink ? `
       <div style="margin-top:24px;text-align:center;">
-        <a href="${magicLink}" target="_blank" style="display:inline-block;background:#00843D;color:#FFFFFF;text-decoration:none;padding:13px 26px;border-radius:24px;font-size:14px;font-weight:700;box-shadow:0 3px 8px rgba(0,132,61,0.35);">
-          👉 Open &amp; Update Task Progress (Online)
+        <a href="${activeLink}" target="_blank" style="display:inline-block;background:#00843D;color:#FFFFFF;text-decoration:none;padding:14px 28px;border-radius:24px;font-size:14.5px;font-weight:700;box-shadow:0 3px 10px rgba(0,132,61,0.35);letter-spacing:0.02em;">
+          👉 Open &amp; Update Task Progress (Online Form)
         </a>
-        <div style="font-size:11px;color:#94A3B8;margin-top:8px;">No app installation required · Direct update to Google Sheet</div>
+        <div style="font-size:12px;color:#64748B;margin-top:10px;">Direct link: <a href="${activeLink}" target="_blank" style="color:#00843D;font-weight:600;text-decoration:underline;">${escHtml(activeLink)}</a></div>
       </div>` : ''}
     </div>
     <div style="background:#F8FAFC;border-top:1px solid #E2E8F0;padding:14px 24px;font-size:12px;color:#64748B;">
@@ -14322,7 +14321,7 @@ function resolveTaskObj(taskIdOrTask) {
   return (S.tasks || []).find(t => String(t.id) === String(taskIdOrTask)) || null;
 }
 
-function openTaskMailto(taskIdOrTask) {
+async function openTaskMailto(taskIdOrTask) {
   const task = resolveTaskObj(taskIdOrTask);
   if (!task) { showToast('Task not found'); return; }
   const email = (task.assigneeEmail || '').trim();
@@ -14330,6 +14329,21 @@ function openTaskMailto(taskIdOrTask) {
     showToast('Please specify a valid Assignee Email first');
     return;
   }
+
+  // Pre-fetch short TinyURL via GAS if online and not yet cached
+  if (!task.shortUrl && navigator.onLine && (S.gsUrl || localStorage.getItem('plantlog_gs_url'))) {
+    try {
+      const rawLink = getTaskMagicLink(task);
+      const gasUrl = (S.gsUrl || localStorage.getItem('plantlog_gs_url')).split('?')[0];
+      const qUrl = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'action=shortenUrl&url=' + encodeURIComponent(rawLink);
+      const r = await fetch(qUrl, { method: 'GET', mode: 'cors' });
+      const res = await r.json();
+      if (res && res.ok && res.shortUrl) {
+        task.shortUrl = res.shortUrl;
+      }
+    } catch (e) {}
+  }
+
   const content = buildTaskAssignmentEmailContent(task);
   if (!content) return;
   const mailtoUri = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(content.subject)}&body=${encodeURIComponent(content.textBody)}`;
@@ -14403,12 +14417,20 @@ async function sendTaskAssignmentEmail(taskIdOrTask) {
       senderName: (S.user && S.user.name) || (S.company && S.company.name) || 'Lead Service Engineer'
     };
 
-    const res = await fetch(gasUrl, {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
+    let data = null;
+    if (typeof gsPost === 'function') {
+      data = await gsPost(gasUrl, payload);
+    } else {
+      const res = await fetch(gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      data = await res.json();
+    }
+
     if (data && data.ok) {
+      if (data.magicUrl) task.shortUrl = data.magicUrl;
       showToast(`Email dispatched to ${email} ✓`);
     } else {
       const errMsg = (data && data.error) ? data.error : 'Server dispatch failed';
@@ -14427,22 +14449,34 @@ function sendTaskAssignmentEmailFromModal() {
   sendTaskAssignmentEmail(tempTask);
 }
 
-function copyTaskMagicLink(taskId) {
+async function copyTaskMagicLink(taskId) {
   const task = resolveTaskObj(taskId);
   if (!task) { showToast('Task not found'); return; }
-  const link = getTaskMagicLink(task);
+  let link = task.shortUrl || getTaskMagicLink(task);
   if (!link) {
     showToast('Google Apps Script URL is not configured yet');
     return;
   }
+  if (!task.shortUrl && navigator.onLine && (S.gsUrl || localStorage.getItem('plantlog_gs_url'))) {
+    try {
+      const gasUrl = (S.gsUrl || localStorage.getItem('plantlog_gs_url')).split('?')[0];
+      const qUrl = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'action=shortenUrl&url=' + encodeURIComponent(link);
+      const r = await fetch(qUrl, { method: 'GET', mode: 'cors' });
+      const res = await r.json();
+      if (res && res.ok && res.shortUrl) {
+        task.shortUrl = res.shortUrl;
+        link = res.shortUrl;
+      }
+    } catch(e) {}
+  }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(link).then(() => {
-      showToast('Magic Link copied to clipboard ✓');
+      showToast('Action link copied to clipboard ✓');
     }).catch(() => {
-      prompt('Copy this Magic Link:', link);
+      prompt('Copy this Action Link:', link);
     });
   } else {
-    prompt('Copy this Magic Link:', link);
+    prompt('Copy this Action Link:', link);
   }
 }
 
