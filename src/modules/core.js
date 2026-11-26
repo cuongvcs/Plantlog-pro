@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog — core.js
 // State, translations, navigation, profile, utils
@@ -254,6 +253,20 @@ function localDateStr(d) {
 }
 
 /**
+ * Safe JSON parser with fallback that never throws on truncated or malformed input
+ */
+function safeJsonParse(str, fallback = null) {
+  if (!str) return fallback;
+  if (typeof str === 'object') return str;
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    console.warn('[PlantLog] safeJsonParse caught malformed JSON:', String(str).slice(0, 100), e.message);
+    return fallback;
+  }
+}
+
+/**
  * Escape HTML special chars before interpolating untrusted strings into innerHTML / attributes
  */
 function escHtml(v) {
@@ -275,6 +288,44 @@ function sanitizeJsonKeys_(obj) {
     clean[k] = sanitizeJsonKeys_(v);
   }
   return clean;
+}
+
+/**
+ * Native Haptic Feedback helper for touch operations
+ */
+function triggerHaptic(type = 'light') {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      if (type === 'light') navigator.vibrate(12);
+      else if (type === 'medium') navigator.vibrate(25);
+      else if (type === 'success') navigator.vibrate([15, 60, 20]);
+      else if (type === 'warning') navigator.vibrate([30, 80, 40]);
+    }
+  } catch (e) { }
+}
+
+// Auto-scroll input into view on mobile keyboard open
+if (typeof window !== 'undefined') {
+  window.addEventListener('focusin', function (e) {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
+      const modal = e.target.closest('.modal, .modal-body, .card');
+      if (modal) {
+        setTimeout(() => {
+          try { e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (err) { }
+        }, 220);
+      }
+    }
+  }, { passive: true });
+}
+
+// ═══════ APPLICATION NAMESPACE (SENIOR ARCHITECTURE) ═══════
+if (typeof window !== 'undefined') {
+  window.PlantLog = window.PlantLog || {};
+  window.PlantLog.version = 'v4.20';
+  window.PlantLog.getState = () => S;
+  window.PlantLog.haptic = triggerHaptic;
+  window.PlantLog.safeJsonParse = safeJsonParse;
+  window.PlantLog.escHtml = escHtml;
 }
 
 // ═══════ STORAGE & IMAGE OPTIMIZATION (IMP-01) ═══════
@@ -1709,4 +1760,3 @@ async function quickSyncFromHome() {
 
 // Note: init() is invoked at the end of the final bundled module (sync.js)
 // so all module-level let/const declarations are initialized first.
-

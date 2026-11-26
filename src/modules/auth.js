@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog — auth.js
 // PIN security, lock/unlock, session management
@@ -40,6 +39,79 @@ function storeHash(hash) {
   try { localStorage.setItem(SEC_KEY, hash); } catch (e) { }
 }
 function hasPIN() { return !!getStoredHash(); }
+
+/**
+ * Web Crypto API AES-GCM Vault Helpers (PBKDF2 100k + AES-GCM 256)
+ */
+const VaultCrypto = {
+  async deriveKey(pin, salt = 'plantlog_vault_salt_') {
+    if (typeof crypto === 'undefined' || !crypto.subtle) return null;
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      enc.encode(pin),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: enc.encode(salt),
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  },
+  async encrypt(dataStr, pin) {
+    if (typeof crypto === 'undefined' || !crypto.subtle || !pin) return null;
+    try {
+      const key = await this.deriveKey(pin);
+      if (!key) return null;
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const enc = new TextEncoder();
+      const ciphertext = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        enc.encode(dataStr)
+      );
+      return {
+        iv: Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join(''),
+        data: Array.from(new Uint8Array(ciphertext)).map(b => b.toString(16).padStart(2, '0')).join('')
+      };
+    } catch (e) {
+      console.warn('[VaultCrypto] encrypt error:', e.message);
+      return null;
+    }
+  },
+  async decrypt(payload, pin) {
+    if (typeof crypto === 'undefined' || !crypto.subtle || !payload || !payload.iv || !payload.data || !pin) return null;
+    try {
+      const key = await this.deriveKey(pin);
+      if (!key) return null;
+      const iv = new Uint8Array(payload.iv.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+      const data = new Uint8Array(payload.data.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        data
+      );
+      return new TextDecoder().decode(decrypted);
+    } catch (e) {
+      console.warn('[VaultCrypto] decrypt error:', e.message);
+      return null;
+    }
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.PlantLog = window.PlantLog || {};
+  window.PlantLog.Vault = VaultCrypto;
+}
 
 // ── Lock screen state ──────────────────────────────────────
 let pinBuffer = '';
@@ -540,4 +612,3 @@ function chPinDel() { modalPinBackspace(); }
 // ── settingsPinKey / settingsPinDel (also alias to modal) ─────
 function settingsPinKey(d) { modalPinKey(d); }
 function settingsPinDel() { modalPinBackspace(); }
-

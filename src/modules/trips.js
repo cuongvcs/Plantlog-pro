@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog — trips.js
 // Trip CRUD, calendar, dashboard, filters
@@ -1706,5 +1705,3 @@ function saveTripSafety() {
   showToast('Site Safety & LOTO updated ✓');
   if (typeof svAndSync === 'function') svAndSync('trip_safety');
 }
-
-

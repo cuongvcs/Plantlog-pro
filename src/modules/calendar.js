@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog Pro — calendar.js
 // Google Calendar bidirectional sync

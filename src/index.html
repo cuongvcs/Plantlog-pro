@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#00843D">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://api.telegram.org https://translate.googleapis.com data: blob:; worker-src 'self' blob:;">
   <!-- PWA standalone mode — hides address bar -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1225,8 +1226,11 @@ button {
   max-width: 430px;
   max-height: 93vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-padding-bottom: min(35vh, 220px);
   padding: 20px;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  padding-bottom: calc(30px + env(safe-area-inset-bottom));
   box-shadow: 0 -4px 32px rgba(11, 21, 32, 0.20);
   border-top: 1px solid var(--n150);
   animation: slideUp var(--dur-slow) var(--ease) both;
@@ -5522,7 +5526,7 @@ button:focus-visible {
     <div style="position:relative;margin-bottom:8px;">
       <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;color:var(--g400);">🔍</span>
       <input id="task-search" class="fi" placeholder="Task, machine, plan, trip…"
-        style="padding-left:32px;height:36px;font-size:13px;" oninput="renderTasks()">
+        style="padding-left:32px;height:36px;font-size:13px;" oninput="onTaskSearchInput()">
     </div>
     <!-- Filter bar (Date & Trip) -->
     <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;flex-wrap:wrap;">
@@ -8276,6 +8280,20 @@ function localDateStr(d) {
 }
 
 /**
+ * Safe JSON parser with fallback that never throws on truncated or malformed input
+ */
+function safeJsonParse(str, fallback = null) {
+  if (!str) return fallback;
+  if (typeof str === 'object') return str;
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    console.warn('[PlantLog] safeJsonParse caught malformed JSON:', String(str).slice(0, 100), e.message);
+    return fallback;
+  }
+}
+
+/**
  * Escape HTML special chars before interpolating untrusted strings into innerHTML / attributes
  */
 function escHtml(v) {
@@ -8297,6 +8315,44 @@ function sanitizeJsonKeys_(obj) {
     clean[k] = sanitizeJsonKeys_(v);
   }
   return clean;
+}
+
+/**
+ * Native Haptic Feedback helper for touch operations
+ */
+function triggerHaptic(type = 'light') {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      if (type === 'light') navigator.vibrate(12);
+      else if (type === 'medium') navigator.vibrate(25);
+      else if (type === 'success') navigator.vibrate([15, 60, 20]);
+      else if (type === 'warning') navigator.vibrate([30, 80, 40]);
+    }
+  } catch (e) { }
+}
+
+// Auto-scroll input into view on mobile keyboard open
+if (typeof window !== 'undefined') {
+  window.addEventListener('focusin', function (e) {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
+      const modal = e.target.closest('.modal, .modal-body, .card');
+      if (modal) {
+        setTimeout(() => {
+          try { e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (err) { }
+        }, 220);
+      }
+    }
+  }, { passive: true });
+}
+
+// ═══════ APPLICATION NAMESPACE (SENIOR ARCHITECTURE) ═══════
+if (typeof window !== 'undefined') {
+  window.PlantLog = window.PlantLog || {};
+  window.PlantLog.version = 'v4.20';
+  window.PlantLog.getState = () => S;
+  window.PlantLog.haptic = triggerHaptic;
+  window.PlantLog.safeJsonParse = safeJsonParse;
+  window.PlantLog.escHtml = escHtml;
 }
 
 // ═══════ STORAGE & IMAGE OPTIMIZATION (IMP-01) ═══════
@@ -10319,6 +10375,79 @@ function storeHash(hash) {
   try { localStorage.setItem(SEC_KEY, hash); } catch (e) { }
 }
 function hasPIN() { return !!getStoredHash(); }
+
+/**
+ * Web Crypto API AES-GCM Vault Helpers (PBKDF2 100k + AES-GCM 256)
+ */
+const VaultCrypto = {
+  async deriveKey(pin, salt = 'plantlog_vault_salt_') {
+    if (typeof crypto === 'undefined' || !crypto.subtle) return null;
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      enc.encode(pin),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: enc.encode(salt),
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  },
+  async encrypt(dataStr, pin) {
+    if (typeof crypto === 'undefined' || !crypto.subtle || !pin) return null;
+    try {
+      const key = await this.deriveKey(pin);
+      if (!key) return null;
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const enc = new TextEncoder();
+      const ciphertext = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        enc.encode(dataStr)
+      );
+      return {
+        iv: Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join(''),
+        data: Array.from(new Uint8Array(ciphertext)).map(b => b.toString(16).padStart(2, '0')).join('')
+      };
+    } catch (e) {
+      console.warn('[VaultCrypto] encrypt error:', e.message);
+      return null;
+    }
+  },
+  async decrypt(payload, pin) {
+    if (typeof crypto === 'undefined' || !crypto.subtle || !payload || !payload.iv || !payload.data || !pin) return null;
+    try {
+      const key = await this.deriveKey(pin);
+      if (!key) return null;
+      const iv = new Uint8Array(payload.iv.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+      const data = new Uint8Array(payload.data.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        data
+      );
+      return new TextDecoder().decode(decrypted);
+    } catch (e) {
+      console.warn('[VaultCrypto] decrypt error:', e.message);
+      return null;
+    }
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.PlantLog = window.PlantLog || {};
+  window.PlantLog.Vault = VaultCrypto;
+}
 
 // ── Lock screen state ──────────────────────────────────────
 let pinBuffer = '';
@@ -12603,6 +12732,7 @@ function resetTaskTripFilter() {
 }
 
 function clearTaskFilters() {
+  taskPageLimit = 35;
   const searchEl = document.getElementById('task-search');
   if (searchEl) searchEl.value = '';
   const fromEl = document.getElementById('task-from');
@@ -12620,6 +12750,7 @@ function clearTaskFilters() {
 }
 
 function filterTasksByTrip(tripId) {
+  taskPageLimit = 35;
   if (typeof showScreen === 'function') showScreen('tasks');
   const tripRow = document.getElementById('task-trip-filter-row');
   if (tripRow) tripRow.style.display = 'block';
@@ -12714,6 +12845,7 @@ let editingTaskId = null;
 let editingTripId = null;
 
 function setTaskCat(cat) {
+  taskPageLimit = 35;
   taskCat = cat;
   document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
   const tabs = document.getElementById('cat-tabs');
@@ -12726,6 +12858,7 @@ function setTaskCat(cat) {
   renderTasks();
 }
 function setStatusFilter(sf) {
+  taskPageLimit = 35;
   taskStatusFilter = sf;
   ['all', 'pending', 'in_progress', 'done'].forEach(id => {
     const el = document.getElementById('sf-' + id);
@@ -13098,6 +13231,22 @@ function prioConfig(p) {
 }
 function periodLabel(p) { return { daily: 'Day', weekly: 'Week', monthly: 'Month', yearly: 'Year' }[p] || p || ''; }
 
+let taskPageLimit = 35;
+let _taskSearchDebounceTimer = null;
+
+function onTaskSearchInput() {
+  clearTimeout(_taskSearchDebounceTimer);
+  _taskSearchDebounceTimer = setTimeout(() => {
+    taskPageLimit = 35;
+    renderTasks();
+  }, 180);
+}
+
+function loadMoreTasks() {
+  taskPageLimit += 35;
+  renderTasks();
+}
+
 function renderTasks() {
   const body = document.getElementById('task-list-body');
   if (!body) return;
@@ -13194,7 +13343,8 @@ function renderTasks() {
     body.innerHTML = html; return;
   }
 
-  html += tasks.map(tk => {
+  const displayTasks = tasks.slice(0, taskPageLimit);
+  html += displayTasks.map(tk => {
     const isOver = (tk.dateEnd || tk.date || tk.dateStart || '') < today && tk.status !== 'done';
     const cat = tk.category || 'work';
     const cc = catConfig(cat);
@@ -13260,6 +13410,16 @@ function renderTasks() {
       </div>
     </div>`;
   }).join('');
+
+  if (tasks.length > taskPageLimit) {
+    const remaining = tasks.length - taskPageLimit;
+    html += `<div style="text-align:center;padding:16px 0 24px;">
+      <button type="button" class="btn btn-o" onclick="loadMoreTasks()"
+        style="border-radius:24px;padding:9px 24px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;box-shadow:var(--sh);background:var(--surface);">
+        <span>📥 Load More Tasks (${remaining} remaining)</span>
+      </button>
+    </div>`;
+  }
 
   body.innerHTML = html;
 }
@@ -13409,6 +13569,7 @@ function renderKanban(body, today) {
 
 
 function setTaskStatus(id, status) {
+  if (typeof triggerHaptic === 'function') triggerHaptic('light');
   const tk = S.tasks.find(t => t.id === id); if (!tk) return;
   tk.status = status; tk.updatedAt = new Date().toISOString();
   Store.commit('task:status');
@@ -13423,6 +13584,7 @@ async function deleteTask(id) {
     icon: '🗑️'
   });
   if (!ok) return;
+  if (typeof triggerHaptic === 'function') triggerHaptic('warning');
   // UX-07: Snapshot state before deletion so the user can undo within 6 seconds
   if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Task: ' + title);
   if (!S.deletedIds) S.deletedIds = {};
@@ -13557,6 +13719,7 @@ function markTaskCompleteFromDetail(id) {
     sv();
     renderTasks();
   }
+  if (typeof triggerHaptic === 'function') triggerHaptic('success');
   closeModal('modal-task-detail');
   showToast('✓ Task verified and marked Complete!');
   if (typeof svAndSync === 'function') {
@@ -13566,6 +13729,7 @@ function markTaskCompleteFromDetail(id) {
 
 function openTaskForDay() {
   if (!selDay) return;
+  if (typeof triggerHaptic === 'function') triggerHaptic('success');
   closeModal('modal-task-detail');
   openNewTaskModal(selDay, taskCat === 'kanban' ? 'work' : taskCat === 'all' ? 'work' : taskCat);
 }
@@ -23036,21 +23200,24 @@ async function loadFromSheets(silent) {
         const existingTasks = S.tasks || [];
         const remoteTasks = d.tasks.map(tk => {
           let cl = [];
-          try {
-            const cj = str(tk.ChecklistJson || tk.checklistJson || '');
-            if (cj.startsWith('[')) cl = JSON.parse(cj);
-            else { const c2 = str(tk.Checklist || ''); if (c2.startsWith('[')) cl = JSON.parse(c2); }
-          } catch (e) { cl = []; }
+          const cj = str(tk.ChecklistJson || tk.checklistJson || '');
+          if (cj) {
+            cl = (typeof safeJsonParse === 'function') ? safeJsonParse(cj, []) : (() => { try { return JSON.parse(cj); } catch (e) { return []; } })();
+          }
+          if ((!cl || !cl.length) && tk.Checklist) {
+            const c2 = str(tk.Checklist);
+            if (c2) cl = (typeof safeJsonParse === 'function') ? safeJsonParse(c2, []) : (() => { try { return JSON.parse(c2); } catch (e) { return []; } })();
+          }
           const ds = safeDate(tk.DateStart || tk.Date);
           const de = safeDate(tk.DateEnd) || ds;
           const ts = safeTime(tk.TimeStart || tk.Time);
           const te = safeTime(tk.TimeEnd);
           // Parse parts JSON
           let pts = [];
-          try {
-            const pj = ss(tk.PartsJson || '');
-            if (pj.startsWith('[')) pts = JSON.parse(pj);
-          } catch (e) { pts = []; }
+          const pj = ss(tk.PartsJson || '');
+          if (pj) {
+            pts = (typeof safeJsonParse === 'function') ? safeJsonParse(pj, []) : (() => { try { return JSON.parse(pj); } catch (e) { return []; } })();
+          }
 
           return {
             id: ss(tk.ID),
@@ -23115,10 +23282,10 @@ async function loadFromSheets(silent) {
         const existingBills = S.bills || [];
         const remoteBills = d.bills.map(b => {
           let photos = [];
-          try {
-            const pj = strB(b.PhotosJson || b.photosJson || '');
-            if (pj && pj.startsWith('[')) photos = JSON.parse(pj);
-          } catch (e) { photos = []; }
+          const pj = strB(b.PhotosJson || b.photosJson || '');
+          if (pj) {
+            photos = (typeof safeJsonParse === 'function') ? safeJsonParse(pj, []) : (() => { try { return JSON.parse(pj); } catch (e) { return []; } })();
+          }
           return {
             id: ss(b.ID),
             tripId: ss(b.TripID),

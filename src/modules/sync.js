@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog — sync.js
 // Google Sheets sync, loadFromSheets, svAndSync
@@ -951,21 +950,24 @@ async function loadFromSheets(silent) {
         const existingTasks = S.tasks || [];
         const remoteTasks = d.tasks.map(tk => {
           let cl = [];
-          try {
-            const cj = str(tk.ChecklistJson || tk.checklistJson || '');
-            if (cj.startsWith('[')) cl = JSON.parse(cj);
-            else { const c2 = str(tk.Checklist || ''); if (c2.startsWith('[')) cl = JSON.parse(c2); }
-          } catch (e) { cl = []; }
+          const cj = str(tk.ChecklistJson || tk.checklistJson || '');
+          if (cj) {
+            cl = (typeof safeJsonParse === 'function') ? safeJsonParse(cj, []) : (() => { try { return JSON.parse(cj); } catch (e) { return []; } })();
+          }
+          if ((!cl || !cl.length) && tk.Checklist) {
+            const c2 = str(tk.Checklist);
+            if (c2) cl = (typeof safeJsonParse === 'function') ? safeJsonParse(c2, []) : (() => { try { return JSON.parse(c2); } catch (e) { return []; } })();
+          }
           const ds = safeDate(tk.DateStart || tk.Date);
           const de = safeDate(tk.DateEnd) || ds;
           const ts = safeTime(tk.TimeStart || tk.Time);
           const te = safeTime(tk.TimeEnd);
           // Parse parts JSON
           let pts = [];
-          try {
-            const pj = ss(tk.PartsJson || '');
-            if (pj.startsWith('[')) pts = JSON.parse(pj);
-          } catch (e) { pts = []; }
+          const pj = ss(tk.PartsJson || '');
+          if (pj) {
+            pts = (typeof safeJsonParse === 'function') ? safeJsonParse(pj, []) : (() => { try { return JSON.parse(pj); } catch (e) { return []; } })();
+          }
 
           return {
             id: ss(tk.ID),
@@ -1030,10 +1032,10 @@ async function loadFromSheets(silent) {
         const existingBills = S.bills || [];
         const remoteBills = d.bills.map(b => {
           let photos = [];
-          try {
-            const pj = strB(b.PhotosJson || b.photosJson || '');
-            if (pj && pj.startsWith('[')) photos = JSON.parse(pj);
-          } catch (e) { photos = []; }
+          const pj = strB(b.PhotosJson || b.photosJson || '');
+          if (pj) {
+            photos = (typeof safeJsonParse === 'function') ? safeJsonParse(pj, []) : (() => { try { return JSON.parse(pj); } catch (e) { return []; } })();
+          }
           return {
             id: ss(b.ID),
             tripId: ss(b.TripID),
@@ -1751,6 +1753,3 @@ if (typeof window !== 'undefined') {
 if (typeof init === 'function') {
   init();
 }
-
-
-

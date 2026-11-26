@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog Pro — inspection.js
 // Daily inspection records: checklist items, readings,

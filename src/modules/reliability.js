@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog — reliability.js   (IMP-35 / IMP-36)
 // Reliability & UX infrastructure layer. Loaded right after core.js.
@@ -542,4 +541,3 @@ if (typeof document !== 'undefined' && document.addEventListener) {
     else if (_swReg && typeof _swReg.update === 'function') { try { _swReg.update(); } catch (e) { } }
   });
 }
-

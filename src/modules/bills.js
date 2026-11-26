@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog — bills.js
 // Expense bills, bills screen, bills PDF export
@@ -2806,4 +2805,3 @@ async function balanceAllCardTransfersToMatchSpent() {
 if (typeof window !== 'undefined') {
   window.balanceAllCardTransfersToMatchSpent = balanceAllCardTransfersToMatchSpent;
 }
-

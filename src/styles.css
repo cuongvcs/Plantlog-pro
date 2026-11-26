@@ -1203,8 +1203,11 @@ button {
   max-width: 430px;
   max-height: 93vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-padding-bottom: min(35vh, 220px);
   padding: 20px;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  padding-bottom: calc(30px + env(safe-area-inset-bottom));
   box-shadow: 0 -4px 32px rgba(11, 21, 32, 0.20);
   border-top: 1px solid var(--n150);
   animation: slideUp var(--dur-slow) var(--ease) both;

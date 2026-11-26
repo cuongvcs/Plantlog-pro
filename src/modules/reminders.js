@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog Pro — reminders.js
 // Recurring reminders: daily / weekly / monthly / yearly

@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog — report.js
 // Field report: checklist, readings, issues, PDF export
@@ -1924,7 +1923,3 @@ async function generateTAPdf(tripId){
   const fn='TA_'+((ta.taNo||'NoNum').replace(/[^a-zA-Z0-9]/g,''))+'_'+sP+'_'+((trip.date||'').replace(/-/g,''))+'.pdf';
   showPdfSaveOptions(doc, fn, 'ta', tripId);
 }
-
-
-
-

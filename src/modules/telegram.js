@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog Pro — telegram.js
 // Telegram Bot notifications: upcoming events, trip reports

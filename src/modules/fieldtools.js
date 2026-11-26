@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog — fieldtools.js
 // Field Engineering Toolbox (IMP-21), Quick Field Scratchpad (IMP-22),
@@ -1159,4 +1158,3 @@ function getAssetSelectOptions(selectedVal = '') {
 
   return html;
 }
-

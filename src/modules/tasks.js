@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog — tasks.js
 // Task CRUD, kanban, sub-checklist, flight details
@@ -72,6 +71,7 @@ function resetTaskTripFilter() {
 }
 
 function clearTaskFilters() {
+  taskPageLimit = 35;
   const searchEl = document.getElementById('task-search');
   if (searchEl) searchEl.value = '';
   const fromEl = document.getElementById('task-from');
@@ -89,6 +89,7 @@ function clearTaskFilters() {
 }
 
 function filterTasksByTrip(tripId) {
+  taskPageLimit = 35;
   if (typeof showScreen === 'function') showScreen('tasks');
   const tripRow = document.getElementById('task-trip-filter-row');
   if (tripRow) tripRow.style.display = 'block';
@@ -183,6 +184,7 @@ let editingTaskId = null;
 let editingTripId = null;
 
 function setTaskCat(cat) {
+  taskPageLimit = 35;
   taskCat = cat;
   document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
   const tabs = document.getElementById('cat-tabs');
@@ -195,6 +197,7 @@ function setTaskCat(cat) {
   renderTasks();
 }
 function setStatusFilter(sf) {
+  taskPageLimit = 35;
   taskStatusFilter = sf;
   ['all', 'pending', 'in_progress', 'done'].forEach(id => {
     const el = document.getElementById('sf-' + id);
@@ -567,6 +570,22 @@ function prioConfig(p) {
 }
 function periodLabel(p) { return { daily: 'Day', weekly: 'Week', monthly: 'Month', yearly: 'Year' }[p] || p || ''; }
 
+let taskPageLimit = 35;
+let _taskSearchDebounceTimer = null;
+
+function onTaskSearchInput() {
+  clearTimeout(_taskSearchDebounceTimer);
+  _taskSearchDebounceTimer = setTimeout(() => {
+    taskPageLimit = 35;
+    renderTasks();
+  }, 180);
+}
+
+function loadMoreTasks() {
+  taskPageLimit += 35;
+  renderTasks();
+}
+
 function renderTasks() {
   const body = document.getElementById('task-list-body');
   if (!body) return;
@@ -663,7 +682,8 @@ function renderTasks() {
     body.innerHTML = html; return;
   }
 
-  html += tasks.map(tk => {
+  const displayTasks = tasks.slice(0, taskPageLimit);
+  html += displayTasks.map(tk => {
     const isOver = (tk.dateEnd || tk.date || tk.dateStart || '') < today && tk.status !== 'done';
     const cat = tk.category || 'work';
     const cc = catConfig(cat);
@@ -729,6 +749,16 @@ function renderTasks() {
       </div>
     </div>`;
   }).join('');
+
+  if (tasks.length > taskPageLimit) {
+    const remaining = tasks.length - taskPageLimit;
+    html += `<div style="text-align:center;padding:16px 0 24px;">
+      <button type="button" class="btn btn-o" onclick="loadMoreTasks()"
+        style="border-radius:24px;padding:9px 24px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;box-shadow:var(--sh);background:var(--surface);">
+        <span>📥 Load More Tasks (${remaining} remaining)</span>
+      </button>
+    </div>`;
+  }
 
   body.innerHTML = html;
 }
@@ -878,6 +908,7 @@ function renderKanban(body, today) {
 
 
 function setTaskStatus(id, status) {
+  if (typeof triggerHaptic === 'function') triggerHaptic('light');
   const tk = S.tasks.find(t => t.id === id); if (!tk) return;
   tk.status = status; tk.updatedAt = new Date().toISOString();
   Store.commit('task:status');
@@ -892,6 +923,7 @@ async function deleteTask(id) {
     icon: '🗑️'
   });
   if (!ok) return;
+  if (typeof triggerHaptic === 'function') triggerHaptic('warning');
   // UX-07: Snapshot state before deletion so the user can undo within 6 seconds
   if (typeof takeUndoSnapshot === 'function') takeUndoSnapshot('Task: ' + title);
   if (!S.deletedIds) S.deletedIds = {};
@@ -1026,6 +1058,7 @@ function markTaskCompleteFromDetail(id) {
     sv();
     renderTasks();
   }
+  if (typeof triggerHaptic === 'function') triggerHaptic('success');
   closeModal('modal-task-detail');
   showToast('✓ Task verified and marked Complete!');
   if (typeof svAndSync === 'function') {
@@ -1035,6 +1068,7 @@ function markTaskCompleteFromDetail(id) {
 
 function openTaskForDay() {
   if (!selDay) return;
+  if (typeof triggerHaptic === 'function') triggerHaptic('success');
   closeModal('modal-task-detail');
   openNewTaskModal(selDay, taskCat === 'kanban' ? 'work' : taskCat === 'all' ? 'work' : taskCat);
 }

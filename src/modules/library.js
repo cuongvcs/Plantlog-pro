@@ -1,4 +1,3 @@
-'use strict';
 // =====================================================
 // PlantLog Pro — library.js
 // Inspection Library: reusable checklists, readings,
@@ -389,4 +388,3 @@ function openReportDirect(step){
     }
   }catch(e){console.warn('sig init:',e);}
 }
-
