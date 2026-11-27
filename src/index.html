@@ -6100,44 +6100,55 @@ body.theme-solar #solar-mode-btn {
         <button class="btn btn-p btn-sm" onclick="addDefaultTeamMember()">+</button>
       </div>
     </div>
-    <div class="card">
-      <div class="si" style="cursor:default;">
-        <div class="sic" style="background:var(--n100);color:var(--n700);">🌓</div>
-        <div class="sin">
-          <div class="sil">Appearance / Theme</div>
-          <div class="sis">Light, Dark or System Auto</div>
-        </div>
-        <div style="display:flex;gap:6px;">
-          <button type="button" class="tf-btn" id="theme-btn-auto" onclick="setTheme('auto')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">Auto</button>
-          <button type="button" class="tf-btn" id="theme-btn-light" onclick="setTheme('light')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">☀️ Light</button>
-          <button type="button" class="tf-btn" id="theme-btn-dark" onclick="setTheme('dark')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">🌙 Dark</button>
-          <button type="button" class="tf-btn" id="theme-btn-solar" onclick="setTheme('solar')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">⚡ Solar</button>
+    <div class="card" style="margin-bottom:14px;">
+      <!-- Appearance Header -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div class="sic" style="background:var(--n100);color:var(--n700);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">🌓</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;color:var(--text);">Appearance / Theme</div>
+          <div style="font-size:11.5px;color:var(--n500);margin-top:1px;">Select display mode</div>
         </div>
       </div>
-      <div class="si" style="border-top:1px solid var(--n150);padding-top:12px;margin-top:8px;cursor:pointer;" onclick="toggleSolarMode()">
-        <div class="sic" style="background:#FEF3C7;color:#D97706;font-size:16px;">☀️</div>
-        <div class="sin">
-          <div class="sil">Chế độ Nắng gắt (Solar High-Contrast)</div>
-          <div class="sis">Nền trắng chữ đen đậm đạt chuẩn WCAG AAA ngoài trời nắng</div>
-        </div>
-        <button type="button" id="settings-solar-toggle" class="btn btn-sm btn-o" onclick="event.stopPropagation();toggleSolarMode()" style="font-size:12px;padding:6px 12px;min-width:78px;font-weight:600;">Bật / Tắt</button>
+      <!-- 3 Theme Options (Clean full-width 3-column grid) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+        <button type="button" class="tf-btn" id="theme-btn-auto" onclick="setTheme('auto')" style="padding:8px 6px;font-size:12.5px;font-weight:600;min-height:36px;justify-content:center;">Auto</button>
+        <button type="button" class="tf-btn" id="theme-btn-light" onclick="setTheme('light')" style="padding:8px 6px;font-size:12.5px;font-weight:600;min-height:36px;justify-content:center;">☀️ Light</button>
+        <button type="button" class="tf-btn" id="theme-btn-dark" onclick="setTheme('dark')" style="padding:8px 6px;font-size:12.5px;font-weight:600;min-height:36px;justify-content:center;">🌙 Dark</button>
       </div>
-      <div class="card" style="margin-bottom:14px;" id="storage-quota-card">
+      <!-- Solar High-Contrast Row -->
+      <div style="border-top:1px solid var(--n150);padding-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;" onclick="toggleSolarMode()">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+          <div class="sic" style="background:#FEF3C7;color:#D97706;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">☀️</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13.5px;font-weight:700;color:var(--text);">Solar High-Contrast</div>
+            <div style="font-size:11.5px;color:var(--n500);margin-top:1px;">High contrast for direct sunlight</div>
+          </div>
+        </div>
+        <button type="button" id="settings-solar-toggle" class="btn btn-sm btn-o" onclick="event.stopPropagation();toggleSolarMode()" style="font-size:12px;font-weight:700;padding:7px 14px;min-width:76px;flex-shrink:0;border-radius:var(--r-sm);">Enable</button>
+      </div>
+    </div>
+
+    <!-- Storage & Media Quota Card -->
+    <div class="card" style="margin-bottom:14px;" id="storage-quota-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:13.5px;font-weight:700;">💾 Bộ nhớ &amp; Dữ liệu ảnh (Storage Quota)</div>
-        <span id="storage-usage-text" style="font-size:12px;font-weight:600;color:var(--brand);">Đang tính...</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">💾</span>
+          <span style="font-size:13.5px;font-weight:700;color:var(--text);">Storage &amp; Media Quota</span>
+        </div>
+        <span id="storage-usage-text" style="font-size:12px;font-weight:700;color:var(--brand);">Calculating...</span>
       </div>
-      <div style="background:var(--n150);border-radius:6px;height:8px;overflow:hidden;margin-bottom:10px;">
+      <div style="background:var(--n150);border-radius:6px;height:7px;overflow:hidden;margin-bottom:10px;">
         <div id="storage-usage-bar" style="height:100%;background:var(--brand);width:0%;transition:width 0.3s ease;"></div>
       </div>
       <div style="font-size:11.5px;color:var(--n500);line-height:1.45;margin-bottom:12px;">
-        Ảnh chụp sự cố và hóa đơn được lưu trên thiết bị và đồng bộ lên Google Drive. Bạn có thể dọn dẹp các bản lưu ảnh tạm cũ hơn 30 ngày để giải phóng bộ nhớ máy.
+        Cached photos and local records. You can free up space by cleaning synced media older than 30 days.
       </div>
-      <button type="button" class="btn btn-o btn-sm" id="btn-prune-media" onclick="pruneOldSyncedMedia(true)" style="width:100%;font-size:12.5px;padding:9px 12px;display:flex;align-items:center;justify-content:center;gap:6px;">
-        🧹 <span>Dọn dẹp ảnh cũ (&gt;30 ngày đã lên Drive)</span>
+      <button type="button" class="btn btn-o btn-sm" id="btn-prune-media" onclick="pruneOldSyncedMedia(true)" style="width:100%;font-size:12.5px;font-weight:600;padding:9px 12px;display:flex;align-items:center;justify-content:center;gap:6px;">
+        🧹 <span>Clean Synced Media (&gt;30 Days)</span>
       </button>
     </div>
-    <div class="si" onclick="openModal('modal-industry')">
+    <div class="card">
+      <div class="si" onclick="openModal('modal-industry')">
         <div class="sic">🏭</div>
         <div class="sin"><div class="sil" data-t="industryTemplates">Industry templates</div><div class="sis" data-t="loadChecklistTemplates">Load checklist for your industry</div></div>
         <div style="color:var(--g400);">›</div>
@@ -8296,7 +8307,7 @@ function setTheme(mode) {
   sv();
   applyTheme(mode);
   triggerHaptic('light');
-  showToast(mode === 'dark' ? '🌙 Dark Mode enabled' : mode === 'light' ? '☀️ Light Mode enabled' : mode === 'solar' ? '☀️ High-Contrast Solar Mode enabled (Ngoài trời nắng)' : '🌓 Theme set to System Auto');
+  showToast(mode === 'dark' ? '🌙 Dark Mode enabled' : mode === 'light' ? '☀️ Light Mode enabled' : mode === 'solar' ? '☀️ Solar High-Contrast enabled' : '🌓 Theme set to System Auto');
 }
 
 function toggleSolarMode() {
@@ -8322,10 +8333,10 @@ function updateThemeUI() {
   const settingsSolarBtn = document.getElementById('settings-solar-toggle');
   if (settingsSolarBtn) {
     const isSolar = (cur === 'solar');
-    settingsSolarBtn.textContent = isSolar ? 'Đang bật ✓' : 'Bật ngay';
+    settingsSolarBtn.textContent = isSolar ? 'Active ✓' : 'Enable';
     settingsSolarBtn.style.background = isSolar ? '#FBBF24' : 'var(--n100)';
     settingsSolarBtn.style.color = isSolar ? '#000000' : 'var(--text)';
-    settingsSolarBtn.style.border = isSolar ? '1.5px solid #D97706' : '1px solid var(--n200)';
+    settingsSolarBtn.style.borderColor = isSolar ? '#D97706' : 'var(--n200)';
   }
 }
 
@@ -8729,13 +8740,13 @@ function updateNetworkStatus() {
       syncBtn.innerHTML = pending > 0 
         ? `🔄<span style="position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:#F87171;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #005A29;">${pending}</span>`
         : `☁️<span style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#F87171;border:1.5px solid #005A29;"></span>`;
-      syncBtn.title = `Offline (Mất kết nối) · ${pending} thay đổi đang lưu an toàn trong máy`;
+      syncBtn.title = `Offline · ${pending} change(s) stored locally`;
     } else if (pending > 0) {
       syncBtn.innerHTML = `🔄<span style="position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:#FBBF24;color:#000;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #005A29;">${pending}</span>`;
-      syncBtn.title = `${pending} mục chờ đồng bộ · Bấm để sync ngay lên Google Sheets`;
+      syncBtn.title = `${pending} change(s) pending · Click to sync now`;
     } else {
       syncBtn.innerHTML = '☁️';
-      syncBtn.title = 'Đang kết nối · Đã đồng bộ hoàn tất (Bấm để sync lại)';
+      syncBtn.title = 'Connected · All data synced (Click to sync again)';
     }
   }
 
@@ -8853,12 +8864,12 @@ function pruneOldSyncedMedia(isManual = false) {
     sv();
     calculateStorageUsage();
     if (typeof showToast === 'function') {
-      showToast(`✓ Đã dọn dẹp ${freedCount} ảnh cũ (>30 ngày đã lên Drive) để giải phóng bộ nhớ máy!`);
+      showToast(`✓ Freed ${freedCount} old synced photo(s) (>30 days on Drive) to save space!`);
     }
   } else if (isManual) {
     calculateStorageUsage();
     if (typeof showToast === 'function') {
-      showToast('ℹ️ Bộ nhớ đang tối ưu tốt. Không có ảnh cũ >30 ngày cần giải phóng.');
+      showToast('ℹ️ Storage is optimized. No synced media older than 30 days to clean.');
     }
   }
   return freedCount;

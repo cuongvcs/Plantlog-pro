@@ -165,7 +165,7 @@ function setTheme(mode) {
   sv();
   applyTheme(mode);
   triggerHaptic('light');
-  showToast(mode === 'dark' ? '🌙 Dark Mode enabled' : mode === 'light' ? '☀️ Light Mode enabled' : mode === 'solar' ? '☀️ High-Contrast Solar Mode enabled (Ngoài trời nắng)' : '🌓 Theme set to System Auto');
+  showToast(mode === 'dark' ? '🌙 Dark Mode enabled' : mode === 'light' ? '☀️ Light Mode enabled' : mode === 'solar' ? '☀️ Solar High-Contrast enabled' : '🌓 Theme set to System Auto');
 }
 
 function toggleSolarMode() {
@@ -191,10 +191,10 @@ function updateThemeUI() {
   const settingsSolarBtn = document.getElementById('settings-solar-toggle');
   if (settingsSolarBtn) {
     const isSolar = (cur === 'solar');
-    settingsSolarBtn.textContent = isSolar ? 'Đang bật ✓' : 'Bật ngay';
+    settingsSolarBtn.textContent = isSolar ? 'Active ✓' : 'Enable';
     settingsSolarBtn.style.background = isSolar ? '#FBBF24' : 'var(--n100)';
     settingsSolarBtn.style.color = isSolar ? '#000000' : 'var(--text)';
-    settingsSolarBtn.style.border = isSolar ? '1.5px solid #D97706' : '1px solid var(--n200)';
+    settingsSolarBtn.style.borderColor = isSolar ? '#D97706' : 'var(--n200)';
   }
 }
 
@@ -598,13 +598,13 @@ function updateNetworkStatus() {
       syncBtn.innerHTML = pending > 0 
         ? `🔄<span style="position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:#F87171;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #005A29;">${pending}</span>`
         : `☁️<span style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#F87171;border:1.5px solid #005A29;"></span>`;
-      syncBtn.title = `Offline (Mất kết nối) · ${pending} thay đổi đang lưu an toàn trong máy`;
+      syncBtn.title = `Offline · ${pending} change(s) stored locally`;
     } else if (pending > 0) {
       syncBtn.innerHTML = `🔄<span style="position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:#FBBF24;color:#000;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #005A29;">${pending}</span>`;
-      syncBtn.title = `${pending} mục chờ đồng bộ · Bấm để sync ngay lên Google Sheets`;
+      syncBtn.title = `${pending} change(s) pending · Click to sync now`;
     } else {
       syncBtn.innerHTML = '☁️';
-      syncBtn.title = 'Đang kết nối · Đã đồng bộ hoàn tất (Bấm để sync lại)';
+      syncBtn.title = 'Connected · All data synced (Click to sync again)';
     }
   }
 
@@ -722,12 +722,12 @@ function pruneOldSyncedMedia(isManual = false) {
     sv();
     calculateStorageUsage();
     if (typeof showToast === 'function') {
-      showToast(`✓ Đã dọn dẹp ${freedCount} ảnh cũ (>30 ngày đã lên Drive) để giải phóng bộ nhớ máy!`);
+      showToast(`✓ Freed ${freedCount} old synced photo(s) (>30 days on Drive) to save space!`);
     }
   } else if (isManual) {
     calculateStorageUsage();
     if (typeof showToast === 'function') {
-      showToast('ℹ️ Bộ nhớ đang tối ưu tốt. Không có ảnh cũ >30 ngày cần giải phóng.');
+      showToast('ℹ️ Storage is optimized. No synced media older than 30 days to clean.');
     }
   }
   return freedCount;
