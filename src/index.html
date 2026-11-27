@@ -4655,17 +4655,12 @@ body.theme-solar #solar-mode-btn {
 <div id="screen-home" class="screen active">
   <div class="topbar" style="padding-top:16px;">
     <div style="flex:1;min-width:0;">
-      <div id="greeting" style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Good morning</div>
+      <div id="greeting" style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.01em;">Good afternoon Van Cuong NGO</div>
       <div id="today-date" style="font-size:11px;opacity:0.78;margin-top:1px;"></div>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-      <button type="button" id="home-sync-btn" class="home-sync-btn" onclick="quickSyncFromHome()" title="Quick Cloud Sync">☁️</button>
-      <div id="net-status-badge" style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;background:rgba(255,255,255,0.18);font-size:11px;font-weight:600;color:#fff;">
-        <span id="net-dot" style="width:7px;height:7px;border-radius:50%;background:#4ADE80;"></span>
-        <span id="net-text">Online</span>
-      </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <button type="button" id="home-sync-btn" class="home-sync-btn" onclick="quickSyncFromHome()" title="Đồng bộ Google Sheets" style="position:relative;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;font-size:15px;padding:0;cursor:pointer;color:#fff;">☁️</button>
       <button type="button" class="lang-toggle-btn" id="lang-toggle-btn" onclick="toggleLang()" title="Language: English (Click to switch to VI)">EN</button>
-      <button type="button" id="solar-mode-btn" class="topbar-btn" onclick="toggleSolarMode()" title="Chế độ Nắng gắt (High-Contrast Solar Mode)" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;padding:0;font-size:16px;flex-shrink:0;">☀️</button>
       <button type="button" id="home-settings-btn" class="topbar-btn" onclick="showScreen('settings')" title="Settings" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;padding:0;flex-shrink:0;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
@@ -6118,6 +6113,14 @@ body.theme-solar #solar-mode-btn {
           <button type="button" class="tf-btn" id="theme-btn-dark" onclick="setTheme('dark')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">🌙 Dark</button>
           <button type="button" class="tf-btn" id="theme-btn-solar" onclick="setTheme('solar')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">⚡ Solar</button>
         </div>
+      </div>
+      <div class="si" style="border-top:1px solid var(--n150);padding-top:12px;margin-top:8px;cursor:pointer;" onclick="toggleSolarMode()">
+        <div class="sic" style="background:#FEF3C7;color:#D97706;font-size:16px;">☀️</div>
+        <div class="sin">
+          <div class="sil">Chế độ Nắng gắt (Solar High-Contrast)</div>
+          <div class="sis">Nền trắng chữ đen đậm đạt chuẩn WCAG AAA ngoài trời nắng</div>
+        </div>
+        <button type="button" id="settings-solar-toggle" class="btn btn-sm btn-o" onclick="event.stopPropagation();toggleSolarMode()" style="font-size:12px;padding:6px 12px;min-width:78px;font-weight:600;">Bật / Tắt</button>
       </div>
       <div class="card" style="margin-bottom:14px;" id="storage-quota-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -8231,7 +8234,7 @@ const IND = {
 
 // ═══════ STATE ═══════
 let S = {
-  profile: { name: '', title: '', company: '', plantBase: 'DaNang', empid: '', signature: '' },
+  profile: { name: 'Van Cuong NGO', title: 'Senior Field Engineer', company: 'Crown Global', plantBase: 'DaNang', empid: 'EMP-001', signature: '' },
   gsUrl: '', gsApiKey: '',
   trips: [], reports: {}, tasks: [], leaveData: {},
   machines: [], plans: [], bills: [],
@@ -8315,6 +8318,14 @@ function updateThemeUI() {
     solarBtn.style.background = isSolar ? '#FBBF24' : 'rgba(255,255,255,0.18)';
     solarBtn.style.color = isSolar ? '#000000' : '#ffffff';
     solarBtn.title = isSolar ? 'Tắt chế độ Nắng gắt (Về giao diện chuẩn)' : 'Bật chế độ Nắng gắt (High-Contrast Solar Mode)';
+  }
+  const settingsSolarBtn = document.getElementById('settings-solar-toggle');
+  if (settingsSolarBtn) {
+    const isSolar = (cur === 'solar');
+    settingsSolarBtn.textContent = isSolar ? 'Đang bật ✓' : 'Bật ngay';
+    settingsSolarBtn.style.background = isSolar ? '#FBBF24' : 'var(--n100)';
+    settingsSolarBtn.style.color = isSolar ? '#000000' : 'var(--text)';
+    settingsSolarBtn.style.border = isSolar ? '1.5px solid #D97706' : '1px solid var(--n200)';
   }
 }
 
@@ -8706,36 +8717,39 @@ function getPendingSyncCount() {
 
 function updateNetworkStatus() {
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  const pending = typeof getPendingSyncCount === 'function' ? getPendingSyncCount() : 0;
+  const syncBtn = document.getElementById('home-sync-btn');
+
+  // Cập nhật Smart Sync Button trên Topbar Home (Biểu tượng 🔄 khi có mục chờ sync)
+  if (syncBtn) {
+    if (syncBtn.classList.contains('syncing')) {
+      syncBtn.innerHTML = '🔄';
+      syncBtn.title = 'Đang đồng bộ lên Google Sheets...';
+    } else if (!isOnline) {
+      syncBtn.innerHTML = pending > 0 
+        ? `🔄<span style="position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:#F87171;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #005A29;">${pending}</span>`
+        : `☁️<span style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#F87171;border:1.5px solid #005A29;"></span>`;
+      syncBtn.title = `Offline (Mất kết nối) · ${pending} thay đổi đang lưu an toàn trong máy`;
+    } else if (pending > 0) {
+      syncBtn.innerHTML = `🔄<span style="position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:#FBBF24;color:#000;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #005A29;">${pending}</span>`;
+      syncBtn.title = `${pending} mục chờ đồng bộ · Bấm để sync ngay lên Google Sheets`;
+    } else {
+      syncBtn.innerHTML = '☁️';
+      syncBtn.title = 'Đang kết nối · Đã đồng bộ hoàn tất (Bấm để sync lại)';
+    }
+  }
+
+  // Tương thích ngược nếu còn net-status-badge ở màn hình khác
   const badge = document.getElementById('net-status-badge');
   const dot = document.getElementById('net-dot');
   const text = document.getElementById('net-text');
-  if (!badge || !dot || !text) return;
-
-  const pending = typeof getPendingSyncCount === 'function' ? getPendingSyncCount() : 0;
-
-  if (!isOnline) {
-    dot.style.background = '#F87171';
-    if (pending > 0) {
-      text.textContent = `Offline · ${pending} chờ sync`;
-      badge.style.background = 'rgba(239, 68, 68, 0.35)';
-      badge.title = `Mất kết nối Internet - ${pending} thay đổi đang được lưu trữ an toàn trong máy`;
+  if (badge && dot && text) {
+    if (!isOnline) {
+      dot.style.background = '#F87171';
+      text.textContent = pending > 0 ? `Offline · ${pending}` : 'Offline';
     } else {
-      text.textContent = 'Offline';
-      badge.style.background = 'rgba(255, 255, 255, 0.18)';
-      badge.title = 'Mất kết nối Internet - Đang chạy chế độ Offline';
-    }
-  } else {
-    // Online
-    if (pending > 0) {
-      dot.style.background = '#FBBF24';
-      text.textContent = `${pending} chờ sync`;
-      badge.style.background = 'rgba(245, 158, 11, 0.32)';
-      badge.title = `${pending} thay đổi đang chờ gửi lên Google Sheets (Bấm ☁️ để sync ngay)`;
-    } else {
-      dot.style.background = '#4ADE80';
-      text.textContent = 'Online';
-      badge.style.background = 'rgba(255, 255, 255, 0.18)';
-      badge.title = 'Đang kết nối Internet · Dữ liệu đã đồng bộ hoàn tất';
+      dot.style.background = pending > 0 ? '#FBBF24' : '#4ADE80';
+      text.textContent = pending > 0 ? `${pending} chờ sync` : 'Online';
     }
   }
 }
@@ -12187,7 +12201,9 @@ function renderDash() {
   document.getElementById('stat-tasks').textContent = todayTasks.length;
   document.getElementById('stat-leave').textContent = Object.entries(S.leaveData).filter(([k, v]) => k.startsWith(thisM) && v === 'leave').length;
   const h = now.getHours();
-  document.getElementById('greeting').textContent = (h < 12 ? t('goodMorning') : h < 17 ? t('goodAfternoon') : t('goodEvening')) + ', ' + (S.profile.name || 'Engineer');
+  const userName = (S && S.profile && S.profile.name && S.profile.name.trim()) ? S.profile.name.trim() : 'Van Cuong NGO';
+  const greetPrefix = (h < 12 ? t('goodMorning') : h < 17 ? t('goodAfternoon') : t('goodEvening'));
+  document.getElementById('greeting').textContent = `${greetPrefix} ${userName}`;
   document.getElementById('today-date').textContent = now.toLocaleDateString(S.lang === 'vi' ? 'vi-VN' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   // ── Executive Mission Hero Card ──

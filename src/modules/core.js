@@ -103,7 +103,7 @@ const IND = {
 
 // ═══════ STATE ═══════
 let S = {
-  profile: { name: '', title: '', company: '', plantBase: 'DaNang', empid: '', signature: '' },
+  profile: { name: 'Van Cuong NGO', title: 'Senior Field Engineer', company: 'Crown Global', plantBase: 'DaNang', empid: 'EMP-001', signature: '' },
   gsUrl: '', gsApiKey: '',
   trips: [], reports: {}, tasks: [], leaveData: {},
   machines: [], plans: [], bills: [],
@@ -187,6 +187,14 @@ function updateThemeUI() {
     solarBtn.style.background = isSolar ? '#FBBF24' : 'rgba(255,255,255,0.18)';
     solarBtn.style.color = isSolar ? '#000000' : '#ffffff';
     solarBtn.title = isSolar ? 'Tắt chế độ Nắng gắt (Về giao diện chuẩn)' : 'Bật chế độ Nắng gắt (High-Contrast Solar Mode)';
+  }
+  const settingsSolarBtn = document.getElementById('settings-solar-toggle');
+  if (settingsSolarBtn) {
+    const isSolar = (cur === 'solar');
+    settingsSolarBtn.textContent = isSolar ? 'Đang bật ✓' : 'Bật ngay';
+    settingsSolarBtn.style.background = isSolar ? '#FBBF24' : 'var(--n100)';
+    settingsSolarBtn.style.color = isSolar ? '#000000' : 'var(--text)';
+    settingsSolarBtn.style.border = isSolar ? '1.5px solid #D97706' : '1px solid var(--n200)';
   }
 }
 
@@ -578,36 +586,39 @@ function getPendingSyncCount() {
 
 function updateNetworkStatus() {
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  const pending = typeof getPendingSyncCount === 'function' ? getPendingSyncCount() : 0;
+  const syncBtn = document.getElementById('home-sync-btn');
+
+  // Cập nhật Smart Sync Button trên Topbar Home (Biểu tượng 🔄 khi có mục chờ sync)
+  if (syncBtn) {
+    if (syncBtn.classList.contains('syncing')) {
+      syncBtn.innerHTML = '🔄';
+      syncBtn.title = 'Đang đồng bộ lên Google Sheets...';
+    } else if (!isOnline) {
+      syncBtn.innerHTML = pending > 0 
+        ? `🔄<span style="position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:#F87171;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #005A29;">${pending}</span>`
+        : `☁️<span style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#F87171;border:1.5px solid #005A29;"></span>`;
+      syncBtn.title = `Offline (Mất kết nối) · ${pending} thay đổi đang lưu an toàn trong máy`;
+    } else if (pending > 0) {
+      syncBtn.innerHTML = `🔄<span style="position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:#FBBF24;color:#000;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #005A29;">${pending}</span>`;
+      syncBtn.title = `${pending} mục chờ đồng bộ · Bấm để sync ngay lên Google Sheets`;
+    } else {
+      syncBtn.innerHTML = '☁️';
+      syncBtn.title = 'Đang kết nối · Đã đồng bộ hoàn tất (Bấm để sync lại)';
+    }
+  }
+
+  // Tương thích ngược nếu còn net-status-badge ở màn hình khác
   const badge = document.getElementById('net-status-badge');
   const dot = document.getElementById('net-dot');
   const text = document.getElementById('net-text');
-  if (!badge || !dot || !text) return;
-
-  const pending = typeof getPendingSyncCount === 'function' ? getPendingSyncCount() : 0;
-
-  if (!isOnline) {
-    dot.style.background = '#F87171';
-    if (pending > 0) {
-      text.textContent = `Offline · ${pending} chờ sync`;
-      badge.style.background = 'rgba(239, 68, 68, 0.35)';
-      badge.title = `Mất kết nối Internet - ${pending} thay đổi đang được lưu trữ an toàn trong máy`;
+  if (badge && dot && text) {
+    if (!isOnline) {
+      dot.style.background = '#F87171';
+      text.textContent = pending > 0 ? `Offline · ${pending}` : 'Offline';
     } else {
-      text.textContent = 'Offline';
-      badge.style.background = 'rgba(255, 255, 255, 0.18)';
-      badge.title = 'Mất kết nối Internet - Đang chạy chế độ Offline';
-    }
-  } else {
-    // Online
-    if (pending > 0) {
-      dot.style.background = '#FBBF24';
-      text.textContent = `${pending} chờ sync`;
-      badge.style.background = 'rgba(245, 158, 11, 0.32)';
-      badge.title = `${pending} thay đổi đang chờ gửi lên Google Sheets (Bấm ☁️ để sync ngay)`;
-    } else {
-      dot.style.background = '#4ADE80';
-      text.textContent = 'Online';
-      badge.style.background = 'rgba(255, 255, 255, 0.18)';
-      badge.title = 'Đang kết nối Internet · Dữ liệu đã đồng bộ hoàn tất';
+      dot.style.background = pending > 0 ? '#FBBF24' : '#4ADE80';
+      text.textContent = pending > 0 ? `${pending} chờ sync` : 'Online';
     }
   }
 }

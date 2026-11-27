@@ -1,5 +1,5 @@
-// PlantLog Pro Service Worker v178
-const CACHE = 'plantlog-pro-v178';
+// PlantLog Pro Service Worker v179
+const CACHE = 'plantlog-pro-v179';
 
 const ASSETS = [
   './',

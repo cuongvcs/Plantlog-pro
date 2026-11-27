@@ -956,7 +956,9 @@ function renderDash() {
   document.getElementById('stat-tasks').textContent = todayTasks.length;
   document.getElementById('stat-leave').textContent = Object.entries(S.leaveData).filter(([k, v]) => k.startsWith(thisM) && v === 'leave').length;
   const h = now.getHours();
-  document.getElementById('greeting').textContent = (h < 12 ? t('goodMorning') : h < 17 ? t('goodAfternoon') : t('goodEvening')) + ', ' + (S.profile.name || 'Engineer');
+  const userName = (S && S.profile && S.profile.name && S.profile.name.trim()) ? S.profile.name.trim() : 'Van Cuong NGO';
+  const greetPrefix = (h < 12 ? t('goodMorning') : h < 17 ? t('goodAfternoon') : t('goodEvening'));
+  document.getElementById('greeting').textContent = `${greetPrefix} ${userName}`;
   document.getElementById('today-date').textContent = now.toLocaleDateString(S.lang === 'vi' ? 'vi-VN' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   // ── Executive Mission Hero Card ──
