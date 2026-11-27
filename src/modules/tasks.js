@@ -1681,7 +1681,7 @@ function getTaskMagicLink(task) {
   } catch (e) {
     token = encodeURIComponent(String(task.id));
   }
-  return cleanUrl + '?action=taskView&id=' + encodeURIComponent(task.id) + '&token=' + encodeURIComponent(token);
+  return cleanUrl + '?id=' + encodeURIComponent(task.id) + (token ? ('&token=' + encodeURIComponent(token)) : '');
 }
 
 function buildTaskAssignmentEmailContent(task) {
@@ -1689,10 +1689,12 @@ function buildTaskAssignmentEmailContent(task) {
   const plantObj = task.tripId ? (S.trips || []).find(t => String(t.id) === String(task.tripId)) : null;
   const plantName = plantObj ? (plantObj.plant + (plantObj.location ? ' - ' + plantObj.location : '')) : 'General Field Service';
   const tripTitle = plantObj ? plantObj.plant : '';
-  const dateRange = (task.dateStart && task.dateEnd && task.dateStart !== task.dateEnd)
-    ? (task.dateStart + ' to ' + task.dateEnd)
-    : (task.dateStart || task.date || 'TBD');
-  const timeRange = task.timeStart ? (task.timeStart + (task.timeEnd ? ' - ' + task.timeEnd : '')) : '';
+  const dStart = task.dateStart || task.date || '';
+  const dEnd = task.dateEnd || '';
+  const dateRange = (dStart && dEnd && dStart !== dEnd) ? (dStart + ' → ' + dEnd) : (dStart || dEnd || 'TBD');
+  const tStart = task.timeStart || '';
+  const tEnd = task.timeEnd || '';
+  const timeRange = (tStart && tEnd && tStart !== tEnd) ? (tStart + ' – ' + tEnd) : (tStart || tEnd || '');
   const dur = calcDuration(task);
   const prioUpper = (task.priority || 'MEDIUM').toUpperCase();
   const catUpper = (task.category || 'WORK').toUpperCase();
@@ -1736,9 +1738,9 @@ function buildTaskAssignmentEmailContent(task) {
 
   if (magicLink) {
     textBody += `----------------------------------------\n`;
-    textBody += `👉 INTERACTIVE ONLINE UPDATE (No app installation required):\n`;
+    textBody += `👉 ONLINE TASK FORM (No app installation required):\n`;
     textBody += `${magicLink}\n`;
-    textBody += `(Tap link to complete checklist & update progress)\n`;
+    textBody += `(Tap link to check off items & submit progress)\n`;
     textBody += `----------------------------------------\n\n`;
   }
 
@@ -1809,7 +1811,7 @@ function buildTaskAssignmentEmailContent(task) {
         <a href="${magicLink}" target="_blank" style="display:inline-block;background:#00843D;color:#FFFFFF;text-decoration:none;padding:14px 28px;border-radius:24px;font-size:14.5px;font-weight:700;box-shadow:0 3px 10px rgba(0,132,61,0.35);letter-spacing:0.02em;">
           👉 Open &amp; Update Task Progress (Online Form)
         </a>
-        <div style="font-size:12px;color:#64748B;margin-top:10px;">Direct link: <a href="${magicLink}" target="_blank" style="color:#00843D;font-weight:600;text-decoration:underline;">${escHtml(magicLink)}</a></div>
+        <div style="font-size:11.5px;color:#64748B;margin-top:8px;">(Tap button to check off items &amp; report status online)</div>
       </div>` : ''}
     </div>
     <div style="background:#F8FAFC;border-top:1px solid #E2E8F0;padding:14px 24px;font-size:12px;color:#64748B;">

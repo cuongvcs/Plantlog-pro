@@ -4511,3 +4511,85 @@ button:focus-visible {
   background: rgba(16, 185, 129, 0.15);
   border-color: var(--brand);
 }
+/* ═══════ HIGH-CONTRAST SOLAR MODE (IMP-62 / SENIOR ROADMAP) ═══════ */
+[data-theme="solar"],
+body.theme-solar {
+  --surface: #FFFFFF !important;
+  --bg: #FFFFFF !important;
+  --n900: #000000 !important;
+  --n800: #000000 !important;
+  --n700: #000000 !important;
+  --n600: #111111 !important;
+  --n500: #222222 !important;
+  --n400: #333333 !important;
+  --n300: #444444 !important;
+  --n200: #000000 !important;
+  --n150: #666666 !important;
+  --n100: #F1F5F9 !important;
+  --n50:  #FFFFFF !important;
+  --text: #000000 !important;
+  --text-muted: #111111 !important;
+  --card-border: 2px solid #000000 !important;
+  --brand: #005A29 !important;
+  --brand-dark: #003818 !important;
+  --brand-light: #EBF7F0 !important;
+  color: #000000 !important;
+  background-color: #FFFFFF !important;
+}
+
+[data-theme="solar"] .card,
+body.theme-solar .card {
+  border: 2px solid #000000 !important;
+  box-shadow: none !important;
+  background: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+[data-theme="solar"] .topbar,
+body.theme-solar .topbar {
+  background: #000000 !important;
+  color: #FFFFFF !important;
+  border-bottom: 2px solid #000000 !important;
+}
+
+[data-theme="solar"] .topbar *,
+body.theme-solar .topbar * {
+  color: #FFFFFF !important;
+}
+
+[data-theme="solar"] .card-title,
+[data-theme="solar"] .tb-title,
+[data-theme="solar"] label,
+[data-theme="solar"] .fl,
+[data-theme="solar"] .sn,
+[data-theme="solar"] .sl,
+[data-theme="solar"] .cl-text,
+body.theme-solar .card-title,
+body.theme-solar .tb-title,
+body.theme-solar label,
+body.theme-solar .fl,
+body.theme-solar .sn,
+body.theme-solar .sl,
+body.theme-solar .cl-text {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="solar"] .fi,
+[data-theme="solar"] select,
+[data-theme="solar"] textarea,
+body.theme-solar .fi,
+body.theme-solar select,
+body.theme-solar textarea {
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+  background: #FFFFFF !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="solar"] #solar-mode-btn,
+body.theme-solar #solar-mode-btn {
+  background: #FBBF24 !important;
+  color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}

@@ -139,7 +139,7 @@ function triggerHaptic(type = 'light') {
   }
 }
 
-// ── Theme / Dark Mode (IMP-13) ──
+// ── Theme / Dark Mode / Solar High-Contrast (IMP-13 & IMP-62) ──
 function applyTheme(theme) {
   const t = theme || (S && S.theme) || 'auto';
   let targetTheme = t;
@@ -147,9 +147,14 @@ function applyTheme(theme) {
     targetTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
   }
   document.documentElement.setAttribute('data-theme', targetTheme);
+  if (targetTheme === 'solar') {
+    document.body.classList.add('theme-solar');
+  } else {
+    document.body.classList.remove('theme-solar');
+  }
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
-    themeMeta.setAttribute('content', targetTheme === 'dark' ? '#084A24' : '#00843D');
+    themeMeta.setAttribute('content', targetTheme === 'dark' ? '#084A24' : targetTheme === 'solar' ? '#000000' : '#00843D');
   }
   updateThemeUI();
 }
@@ -160,15 +165,29 @@ function setTheme(mode) {
   sv();
   applyTheme(mode);
   triggerHaptic('light');
-  showToast(mode === 'dark' ? '🌙 Dark Mode enabled' : mode === 'light' ? '☀️ Light Mode enabled' : '🌓 Theme set to System Auto');
+  showToast(mode === 'dark' ? '🌙 Dark Mode enabled' : mode === 'light' ? '☀️ Light Mode enabled' : mode === 'solar' ? '☀️ High-Contrast Solar Mode enabled (Ngoài trời nắng)' : '🌓 Theme set to System Auto');
+}
+
+function toggleSolarMode() {
+  const cur = (S && S.theme) || 'auto';
+  const next = (cur === 'solar') ? 'auto' : 'solar';
+  setTheme(next);
 }
 
 function updateThemeUI() {
   const cur = (S && S.theme) || 'auto';
-  ['auto', 'light', 'dark'].forEach(m => {
+  ['auto', 'light', 'dark', 'solar'].forEach(m => {
     const btn = document.getElementById('theme-btn-' + m);
     if (btn) btn.classList.toggle('active', m === cur);
   });
+  const solarBtn = document.getElementById('solar-mode-btn');
+  if (solarBtn) {
+    const isSolar = (cur === 'solar');
+    solarBtn.textContent = isSolar ? '🕶️' : '☀️';
+    solarBtn.style.background = isSolar ? '#FBBF24' : 'rgba(255,255,255,0.18)';
+    solarBtn.style.color = isSolar ? '#000000' : '#ffffff';
+    solarBtn.title = isSolar ? 'Tắt chế độ Nắng gắt (Về giao diện chuẩn)' : 'Bật chế độ Nắng gắt (High-Contrast Solar Mode)';
+  }
 }
 
 // Listen to system theme change if set to auto
@@ -199,6 +218,7 @@ function sv() {
     }
   }
   if (typeof refreshBackupStatus === 'function') refreshBackupStatus();
+  if (typeof updateNetworkStatus === 'function') updateNetworkStatus();
 }
 function ld() {
   let hadLocal = false;
@@ -523,7 +543,39 @@ function handleBackupFileSelect(e) {
   reader.readAsText(file);
 }
 
-// ═══════ NETWORK STATUS INDICATOR (IMP-07) ═══════
+// ═══════ PENDING SYNC CALCULATOR & NETWORK STATUS (IMP-07 & IMP-62) ═══════
+function getPendingSyncCount() {
+  if (typeof S === 'undefined' || !S) return 0;
+  const lastSyncTime = S.lastSync ? new Date(S.lastSync).getTime() : 0;
+  let count = 0;
+
+  const checkCol = arr => {
+    if (!Array.isArray(arr)) return;
+    for (let i = 0; i < arr.length; i++) {
+      const it = arr[i];
+      if (!it) continue;
+      const t = new Date(it.updatedAt || it.createdAt || 0).getTime();
+      if (t > lastSyncTime) count++;
+    }
+  };
+
+  checkCol(S.tasks);
+  checkCol(S.trips);
+  checkCol(S.bills);
+  checkCol(S.scratchpad);
+  if (Array.isArray(S._tombstones)) count += S._tombstones.length;
+
+  // Đếm các ảnh offline dạng base64 data: URL chưa kịp đẩy lên Drive
+  if (Array.isArray(S.bills)) {
+    for (const b of S.bills) {
+      if (Array.isArray(b.photos)) {
+        for (const p of b.photos) if (typeof p === 'string' && p.startsWith('data:')) count++;
+      }
+    }
+  }
+  return count;
+}
+
 function updateNetworkStatus() {
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
   const badge = document.getElementById('net-status-badge');
@@ -531,19 +583,143 @@ function updateNetworkStatus() {
   const text = document.getElementById('net-text');
   if (!badge || !dot || !text) return;
 
-  if (isOnline) {
-    dot.style.background = '#4ADE80';
-    text.textContent = 'Online';
-    badge.title = 'Đang kết nối Internet';
-  } else {
+  const pending = typeof getPendingSyncCount === 'function' ? getPendingSyncCount() : 0;
+
+  if (!isOnline) {
     dot.style.background = '#F87171';
-    text.textContent = 'Offline';
-    badge.title = 'Mất kết nối Internet - Chạy chế độ Offline';
+    if (pending > 0) {
+      text.textContent = `Offline · ${pending} chờ sync`;
+      badge.style.background = 'rgba(239, 68, 68, 0.35)';
+      badge.title = `Mất kết nối Internet - ${pending} thay đổi đang được lưu trữ an toàn trong máy`;
+    } else {
+      text.textContent = 'Offline';
+      badge.style.background = 'rgba(255, 255, 255, 0.18)';
+      badge.title = 'Mất kết nối Internet - Đang chạy chế độ Offline';
+    }
+  } else {
+    // Online
+    if (pending > 0) {
+      dot.style.background = '#FBBF24';
+      text.textContent = `${pending} chờ sync`;
+      badge.style.background = 'rgba(245, 158, 11, 0.32)';
+      badge.title = `${pending} thay đổi đang chờ gửi lên Google Sheets (Bấm ☁️ để sync ngay)`;
+    } else {
+      dot.style.background = '#4ADE80';
+      text.textContent = 'Online';
+      badge.style.background = 'rgba(255, 255, 255, 0.18)';
+      badge.title = 'Đang kết nối Internet · Dữ liệu đã đồng bộ hoàn tất';
+    }
   }
 }
+
 if (typeof window !== 'undefined') {
-  window.addEventListener('online', updateNetworkStatus);
+  window.addEventListener('online', () => {
+    updateNetworkStatus();
+    // Tự động kích hoạt đồng bộ nền khi có mạng trở lại
+    const pending = typeof getPendingSyncCount === 'function' ? getPendingSyncCount() : 0;
+    if (pending > 0 && typeof quickSyncFromHome === 'function') {
+      console.log(`[PlantLog Network] Online detected with ${pending} pending changes. Triggering auto-sync...`);
+      setTimeout(() => {
+        try {
+          quickSyncFromHome();
+          if (typeof triggerHaptic === 'function') triggerHaptic('light');
+        } catch (e) { }
+      }, 1200);
+    }
+  });
   window.addEventListener('offline', updateNetworkStatus);
+}
+
+// ═══════ STORAGE QUOTA & AUTO-PRUNING (IMP-62) ═══════
+function calculateStorageUsage() {
+  try {
+    let totalBytes = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      const val = localStorage.getItem(key);
+      totalBytes += (key ? key.length : 0) + (val ? val.length : 0);
+    }
+    const maxBytes = 5 * 1024 * 1024; // 5MB quota
+    const usedMB = (totalBytes / (1024 * 1024)).toFixed(2);
+    const maxMB = (maxBytes / (1024 * 1024)).toFixed(1);
+    const pct = Math.min(100, Math.round((totalBytes / maxBytes) * 100));
+
+    const txtEl = document.getElementById('storage-usage-text');
+    const barEl = document.getElementById('storage-usage-bar');
+    if (txtEl) {
+      txtEl.textContent = `${usedMB} MB / ${maxMB} MB (${pct}%)`;
+      txtEl.style.color = pct > 80 ? 'var(--red)' : pct > 60 ? '#D97706' : 'var(--brand)';
+    }
+    if (barEl) {
+      barEl.style.width = pct + '%';
+      barEl.style.background = pct > 80 ? 'var(--red)' : pct > 60 ? '#D97706' : 'var(--brand)';
+    }
+    return { totalBytes, usedMB, maxMB, pct };
+  } catch (e) {
+    return { totalBytes: 0, usedMB: '0', maxMB: '5.0', pct: 0 };
+  }
+}
+
+function pruneOldSyncedMedia(isManual = false) {
+  if (typeof S === 'undefined' || !S) return 0;
+  let freedCount = 0;
+  const thirtyDaysMs = 30 * 86400 * 1000;
+  const now = Date.now();
+
+  // 1. Quét Bills
+  if (Array.isArray(S.bills)) {
+    S.bills.forEach(b => {
+      const bTime = new Date(b.date || b.createdAt || 0).getTime();
+      const isOld = (now - bTime) > thirtyDaysMs;
+      if (isOld && Array.isArray(b.photos)) {
+        b.photos = b.photos.map((p, idx) => {
+          if (typeof p === 'string' && p.startsWith('data:')) {
+            const meta = (b.photoMeta && b.photoMeta[idx]) || {};
+            const driveUrl = meta.driveUrl || meta.src;
+            if (driveUrl && !driveUrl.startsWith('data:')) {
+              freedCount++;
+              return driveUrl;
+            }
+          }
+          return p;
+        });
+      }
+    });
+  }
+
+  // 2. Quét Reports issues
+  if (S.reports && typeof S.reports === 'object') {
+    Object.values(S.reports).forEach(rep => {
+      if (!rep || !Array.isArray(rep.issues)) return;
+      rep.issues.forEach(iss => {
+        const issTime = new Date(iss.createdAt || rep.createdAt || 0).getTime();
+        const isOld = (now - issTime) > thirtyDaysMs;
+        if (isOld && Array.isArray(iss.photos)) {
+          iss.photos = iss.photos.map(p => {
+            if (typeof p === 'string' && p.startsWith('data:') && (p._driveUrl || iss.driveUrl)) {
+              freedCount++;
+              return p._driveUrl || iss.driveUrl;
+            }
+            return p;
+          });
+        }
+      });
+    });
+  }
+
+  if (freedCount > 0) {
+    sv();
+    calculateStorageUsage();
+    if (typeof showToast === 'function') {
+      showToast(`✓ Đã dọn dẹp ${freedCount} ảnh cũ (>30 ngày đã lên Drive) để giải phóng bộ nhớ máy!`);
+    }
+  } else if (isManual) {
+    calculateStorageUsage();
+    if (typeof showToast === 'function') {
+      showToast('ℹ️ Bộ nhớ đang tối ưu tốt. Không có ảnh cũ >30 ngày cần giải phóng.');
+    }
+  }
+  return freedCount;
 }
 
 // ═══════ PWA ═══════
@@ -877,6 +1053,7 @@ function showScreen(n) {
   if (n === 'settings') {
     if (typeof renderSettingsAbout === 'function') renderSettingsAbout();
     if (typeof updatePINStatusLabel === 'function') updatePINStatusLabel();
+    if (typeof calculateStorageUsage === 'function') calculateStorageUsage();
   }
   if (n === 'tools') { if (typeof renderToolsScreen === 'function') renderToolsScreen(); }
 }
@@ -1618,7 +1795,7 @@ function applyVoiceResultToInput() {
 }
 
 // ── App Version, PDF Text Normalizer & Settings About (IMP-34, IMP-53) ──
-const APP_VERSION = 'v4.18';
+const APP_VERSION = 'v4.20';
 
 function pdfSafeText(v) {
   if (v === null || v === undefined) return '';
@@ -1755,6 +1932,7 @@ async function quickSyncFromHome() {
     if (btn) { btn.classList.remove('syncing'); btn.disabled = false; }
     if (typeof renderDash === 'function') renderDash();
     renderSettingsAbout();
+    if (typeof updateNetworkStatus === 'function') updateNetworkStatus();
   }
 }
 

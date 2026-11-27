@@ -4533,7 +4533,90 @@ button:focus-visible {
 [data-theme="dark"] .indb:active {
   background: rgba(16, 185, 129, 0.15);
   border-color: var(--brand);
-}</style>
+}
+/* ═══════ HIGH-CONTRAST SOLAR MODE (IMP-62 / SENIOR ROADMAP) ═══════ */
+[data-theme="solar"],
+body.theme-solar {
+  --surface: #FFFFFF !important;
+  --bg: #FFFFFF !important;
+  --n900: #000000 !important;
+  --n800: #000000 !important;
+  --n700: #000000 !important;
+  --n600: #111111 !important;
+  --n500: #222222 !important;
+  --n400: #333333 !important;
+  --n300: #444444 !important;
+  --n200: #000000 !important;
+  --n150: #666666 !important;
+  --n100: #F1F5F9 !important;
+  --n50:  #FFFFFF !important;
+  --text: #000000 !important;
+  --text-muted: #111111 !important;
+  --card-border: 2px solid #000000 !important;
+  --brand: #005A29 !important;
+  --brand-dark: #003818 !important;
+  --brand-light: #EBF7F0 !important;
+  color: #000000 !important;
+  background-color: #FFFFFF !important;
+}
+
+[data-theme="solar"] .card,
+body.theme-solar .card {
+  border: 2px solid #000000 !important;
+  box-shadow: none !important;
+  background: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+[data-theme="solar"] .topbar,
+body.theme-solar .topbar {
+  background: #000000 !important;
+  color: #FFFFFF !important;
+  border-bottom: 2px solid #000000 !important;
+}
+
+[data-theme="solar"] .topbar *,
+body.theme-solar .topbar * {
+  color: #FFFFFF !important;
+}
+
+[data-theme="solar"] .card-title,
+[data-theme="solar"] .tb-title,
+[data-theme="solar"] label,
+[data-theme="solar"] .fl,
+[data-theme="solar"] .sn,
+[data-theme="solar"] .sl,
+[data-theme="solar"] .cl-text,
+body.theme-solar .card-title,
+body.theme-solar .tb-title,
+body.theme-solar label,
+body.theme-solar .fl,
+body.theme-solar .sn,
+body.theme-solar .sl,
+body.theme-solar .cl-text {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="solar"] .fi,
+[data-theme="solar"] select,
+[data-theme="solar"] textarea,
+body.theme-solar .fi,
+body.theme-solar select,
+body.theme-solar textarea {
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+  background: #FFFFFF !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="solar"] #solar-mode-btn,
+body.theme-solar #solar-mode-btn {
+  background: #FBBF24 !important;
+  color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+}
+</style>
 </head>
 <body>
 <!-- ═══ LOCK SCREEN ═══ -->
@@ -4582,6 +4665,7 @@ button:focus-visible {
         <span id="net-text">Online</span>
       </div>
       <button type="button" class="lang-toggle-btn" id="lang-toggle-btn" onclick="toggleLang()" title="Language: English (Click to switch to VI)">EN</button>
+      <button type="button" id="solar-mode-btn" class="topbar-btn" onclick="toggleSolarMode()" title="Chế độ Nắng gắt (High-Contrast Solar Mode)" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;padding:0;font-size:16px;flex-shrink:0;">☀️</button>
       <button type="button" id="home-settings-btn" class="topbar-btn" onclick="showScreen('settings')" title="Settings" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;padding:0;flex-shrink:0;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
@@ -6032,9 +6116,25 @@ button:focus-visible {
           <button type="button" class="tf-btn" id="theme-btn-auto" onclick="setTheme('auto')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">Auto</button>
           <button type="button" class="tf-btn" id="theme-btn-light" onclick="setTheme('light')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">☀️ Light</button>
           <button type="button" class="tf-btn" id="theme-btn-dark" onclick="setTheme('dark')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">🌙 Dark</button>
+          <button type="button" class="tf-btn" id="theme-btn-solar" onclick="setTheme('solar')" style="padding:6px 12px;font-size:12.5px;min-height:34px;">⚡ Solar</button>
         </div>
       </div>
-      <div class="si" onclick="openModal('modal-industry')">
+      <div class="card" style="margin-bottom:14px;" id="storage-quota-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:13.5px;font-weight:700;">💾 Bộ nhớ &amp; Dữ liệu ảnh (Storage Quota)</div>
+        <span id="storage-usage-text" style="font-size:12px;font-weight:600;color:var(--brand);">Đang tính...</span>
+      </div>
+      <div style="background:var(--n150);border-radius:6px;height:8px;overflow:hidden;margin-bottom:10px;">
+        <div id="storage-usage-bar" style="height:100%;background:var(--brand);width:0%;transition:width 0.3s ease;"></div>
+      </div>
+      <div style="font-size:11.5px;color:var(--n500);line-height:1.45;margin-bottom:12px;">
+        Ảnh chụp sự cố và hóa đơn được lưu trên thiết bị và đồng bộ lên Google Drive. Bạn có thể dọn dẹp các bản lưu ảnh tạm cũ hơn 30 ngày để giải phóng bộ nhớ máy.
+      </div>
+      <button type="button" class="btn btn-o btn-sm" id="btn-prune-media" onclick="pruneOldSyncedMedia(true)" style="width:100%;font-size:12.5px;padding:9px 12px;display:flex;align-items:center;justify-content:center;gap:6px;">
+        🧹 <span>Dọn dẹp ảnh cũ (&gt;30 ngày đã lên Drive)</span>
+      </button>
+    </div>
+    <div class="si" onclick="openModal('modal-industry')">
         <div class="sic">🏭</div>
         <div class="sin"><div class="sil" data-t="industryTemplates">Industry templates</div><div class="sis" data-t="loadChecklistTemplates">Load checklist for your industry</div></div>
         <div style="color:var(--g400);">›</div>
@@ -6197,7 +6297,7 @@ button:focus-visible {
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="font-size:14px;font-weight:800;color:var(--n900);">VCS PlantLog Pro</span>
-            <span class="about-badge" id="about-app-version">v4.18</span>
+            <span class="about-badge" id="about-app-version">v4.20</span>
           </div>
           <div style="font-size:11px;color:var(--n500);margin-top:1px;">Field Visit &amp; Service Operations PWA</div>
           <div class="about-badges">
@@ -7936,20 +8036,21 @@ button:focus-visible {
       <img src="./icon-192.png" alt="PlantLog" style="width:36px;height:36px;border-radius:9px;border:1px solid var(--n200);" onerror="this.style.display='none'">
       <div>
         <div class="mt" style="margin-bottom:0;">VCS PlantLog Pro</div>
-        <div style="font-size:11px;color:var(--n500);">Release <strong id="about-modal-version">v4.18</strong> · PWA Field Platform</div>
+        <div style="font-size:11px;color:var(--n500);">Release <strong id="about-modal-version">v4.20</strong> · PWA Field Platform</div>
       </div>
     </div>
     <button type="button" class="btn btn-sm btn-o" onclick="closeModal('modal-about-app')" style="font-size:12px;padding:3px 8px;">✕</button>
   </div>
 
   <div style="background:var(--n50);border:1px solid var(--n200);border-radius:var(--rs);padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.55;color:var(--n700);">
-    <div style="font-weight:700;color:var(--n900);margin-bottom:4px;">🆕 Highlights in v4.18 (Cockpit, Tools Hub &amp; Smart AI Assistant)</div>
+    <div style="font-weight:700;color:var(--n900);margin-bottom:4px;">🆕 Highlights in v4.20 (Field Collaboration, Smart Upsert &amp; Performance Engine)</div>
     <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:3px;">
-      <li><strong>Tools Navigation Hub:</strong> Thanh điều hướng đáy tích hợp tab Tools chuyên dụng, quy tụ Toolbox, Quick Snap, Asset Passport, Inspection Library, Industry &amp; Checklist Templates.</li>
-      <li><strong>Multi-Leg Flight System:</strong> Hỗ trợ quản lý chuyến bay nối chuyến nhiều chặng tự động điền hành trình và xuất phiếu TA chuẩn quốc tế.</li>
-      <li><strong>Credit Card 1:1 Rebalance &amp; Isolation:</strong> Đồng bộ hạn mức 100M VND, bảo vệ độc lập 32 chuyến đi 100% Settled, cân bằng số tiền chuyển trả 1 chạm.</li>
-      <li><strong>Zero-White-Screen Resilient Boot:</strong> Kiến trúc khởi động đa tầng chống màn hình trắng, hiển thị tức thì giao diện cả khi có hoặc không có mã PIN.</li>
-      <li><strong>Telegram AI Observation Classifier:</strong> Phân loại thông minh ghi chú hiện trường thành Checklist, Reading hoặc Issue kèm xác nhận tương tác.</li>
+      <li><strong>Field Task Assignment &amp; 2-Way Collaboration (IMP-61):</strong> Giao việc qua email, tương tác 2 chiều với Web Action Form trực tuyến, tự động cảnh báo khi đang thực hiện và nghiệm thu 1 chạm.</li>
+      <li><strong>Google Sheets Row-Level Delta Upsert:</strong> Đồng bộ thông minh theo dòng, loại bỏ hoàn toàn xóa trắng bảng (Zero Blank Window), bảo lưu an toàn dữ liệu từ Web Action Form.</li>
+      <li><strong>Tasks Pagination &amp; Search Debounce:</strong> Tối ưu hóa render danh sách với phân trang 35 tasks/lần kèm nút Load More và Debounce 180ms gõ tìm kiếm siêu mượt.</li>
+      <li><strong>Filter by Trip &amp; Date Ergonomics (IMP-59):</strong> Bộ lọc nhiệm vụ theo chuyến đi thông minh, trực quan hóa trạng thái và cân đối công thái học thanh lọc.</li>
+      <li><strong>Touch Ergonomics &amp; Native Haptics (IMP-57, IMP-60):</strong> Chuẩn hóa nút bấm 38–44px cho găng tay bảo hộ, chống che bàn phím ảo mobile, rung phản hồi xúc giác thực địa.</li>
+      <li><strong>Hardened Security &amp; Safe JSON:</strong> Content Security Policy chặn XSS, két sắt mã hóa Web Crypto AES-GCM 256-bit và bộ phân tích an toàn chống sập app.</li>
     </ul>
   </div>
 
@@ -8166,7 +8267,7 @@ function triggerHaptic(type = 'light') {
   }
 }
 
-// ── Theme / Dark Mode (IMP-13) ──
+// ── Theme / Dark Mode / Solar High-Contrast (IMP-13 & IMP-62) ──
 function applyTheme(theme) {
   const t = theme || (S && S.theme) || 'auto';
   let targetTheme = t;
@@ -8174,9 +8275,14 @@ function applyTheme(theme) {
     targetTheme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
   }
   document.documentElement.setAttribute('data-theme', targetTheme);
+  if (targetTheme === 'solar') {
+    document.body.classList.add('theme-solar');
+  } else {
+    document.body.classList.remove('theme-solar');
+  }
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
-    themeMeta.setAttribute('content', targetTheme === 'dark' ? '#084A24' : '#00843D');
+    themeMeta.setAttribute('content', targetTheme === 'dark' ? '#084A24' : targetTheme === 'solar' ? '#000000' : '#00843D');
   }
   updateThemeUI();
 }
@@ -8187,15 +8293,29 @@ function setTheme(mode) {
   sv();
   applyTheme(mode);
   triggerHaptic('light');
-  showToast(mode === 'dark' ? '🌙 Dark Mode enabled' : mode === 'light' ? '☀️ Light Mode enabled' : '🌓 Theme set to System Auto');
+  showToast(mode === 'dark' ? '🌙 Dark Mode enabled' : mode === 'light' ? '☀️ Light Mode enabled' : mode === 'solar' ? '☀️ High-Contrast Solar Mode enabled (Ngoài trời nắng)' : '🌓 Theme set to System Auto');
+}
+
+function toggleSolarMode() {
+  const cur = (S && S.theme) || 'auto';
+  const next = (cur === 'solar') ? 'auto' : 'solar';
+  setTheme(next);
 }
 
 function updateThemeUI() {
   const cur = (S && S.theme) || 'auto';
-  ['auto', 'light', 'dark'].forEach(m => {
+  ['auto', 'light', 'dark', 'solar'].forEach(m => {
     const btn = document.getElementById('theme-btn-' + m);
     if (btn) btn.classList.toggle('active', m === cur);
   });
+  const solarBtn = document.getElementById('solar-mode-btn');
+  if (solarBtn) {
+    const isSolar = (cur === 'solar');
+    solarBtn.textContent = isSolar ? '🕶️' : '☀️';
+    solarBtn.style.background = isSolar ? '#FBBF24' : 'rgba(255,255,255,0.18)';
+    solarBtn.style.color = isSolar ? '#000000' : '#ffffff';
+    solarBtn.title = isSolar ? 'Tắt chế độ Nắng gắt (Về giao diện chuẩn)' : 'Bật chế độ Nắng gắt (High-Contrast Solar Mode)';
+  }
 }
 
 // Listen to system theme change if set to auto
@@ -8226,6 +8346,7 @@ function sv() {
     }
   }
   if (typeof refreshBackupStatus === 'function') refreshBackupStatus();
+  if (typeof updateNetworkStatus === 'function') updateNetworkStatus();
 }
 function ld() {
   let hadLocal = false;
@@ -8550,7 +8671,39 @@ function handleBackupFileSelect(e) {
   reader.readAsText(file);
 }
 
-// ═══════ NETWORK STATUS INDICATOR (IMP-07) ═══════
+// ═══════ PENDING SYNC CALCULATOR & NETWORK STATUS (IMP-07 & IMP-62) ═══════
+function getPendingSyncCount() {
+  if (typeof S === 'undefined' || !S) return 0;
+  const lastSyncTime = S.lastSync ? new Date(S.lastSync).getTime() : 0;
+  let count = 0;
+
+  const checkCol = arr => {
+    if (!Array.isArray(arr)) return;
+    for (let i = 0; i < arr.length; i++) {
+      const it = arr[i];
+      if (!it) continue;
+      const t = new Date(it.updatedAt || it.createdAt || 0).getTime();
+      if (t > lastSyncTime) count++;
+    }
+  };
+
+  checkCol(S.tasks);
+  checkCol(S.trips);
+  checkCol(S.bills);
+  checkCol(S.scratchpad);
+  if (Array.isArray(S._tombstones)) count += S._tombstones.length;
+
+  // Đếm các ảnh offline dạng base64 data: URL chưa kịp đẩy lên Drive
+  if (Array.isArray(S.bills)) {
+    for (const b of S.bills) {
+      if (Array.isArray(b.photos)) {
+        for (const p of b.photos) if (typeof p === 'string' && p.startsWith('data:')) count++;
+      }
+    }
+  }
+  return count;
+}
+
 function updateNetworkStatus() {
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
   const badge = document.getElementById('net-status-badge');
@@ -8558,19 +8711,143 @@ function updateNetworkStatus() {
   const text = document.getElementById('net-text');
   if (!badge || !dot || !text) return;
 
-  if (isOnline) {
-    dot.style.background = '#4ADE80';
-    text.textContent = 'Online';
-    badge.title = 'Đang kết nối Internet';
-  } else {
+  const pending = typeof getPendingSyncCount === 'function' ? getPendingSyncCount() : 0;
+
+  if (!isOnline) {
     dot.style.background = '#F87171';
-    text.textContent = 'Offline';
-    badge.title = 'Mất kết nối Internet - Chạy chế độ Offline';
+    if (pending > 0) {
+      text.textContent = `Offline · ${pending} chờ sync`;
+      badge.style.background = 'rgba(239, 68, 68, 0.35)';
+      badge.title = `Mất kết nối Internet - ${pending} thay đổi đang được lưu trữ an toàn trong máy`;
+    } else {
+      text.textContent = 'Offline';
+      badge.style.background = 'rgba(255, 255, 255, 0.18)';
+      badge.title = 'Mất kết nối Internet - Đang chạy chế độ Offline';
+    }
+  } else {
+    // Online
+    if (pending > 0) {
+      dot.style.background = '#FBBF24';
+      text.textContent = `${pending} chờ sync`;
+      badge.style.background = 'rgba(245, 158, 11, 0.32)';
+      badge.title = `${pending} thay đổi đang chờ gửi lên Google Sheets (Bấm ☁️ để sync ngay)`;
+    } else {
+      dot.style.background = '#4ADE80';
+      text.textContent = 'Online';
+      badge.style.background = 'rgba(255, 255, 255, 0.18)';
+      badge.title = 'Đang kết nối Internet · Dữ liệu đã đồng bộ hoàn tất';
+    }
   }
 }
+
 if (typeof window !== 'undefined') {
-  window.addEventListener('online', updateNetworkStatus);
+  window.addEventListener('online', () => {
+    updateNetworkStatus();
+    // Tự động kích hoạt đồng bộ nền khi có mạng trở lại
+    const pending = typeof getPendingSyncCount === 'function' ? getPendingSyncCount() : 0;
+    if (pending > 0 && typeof quickSyncFromHome === 'function') {
+      console.log(`[PlantLog Network] Online detected with ${pending} pending changes. Triggering auto-sync...`);
+      setTimeout(() => {
+        try {
+          quickSyncFromHome();
+          if (typeof triggerHaptic === 'function') triggerHaptic('light');
+        } catch (e) { }
+      }, 1200);
+    }
+  });
   window.addEventListener('offline', updateNetworkStatus);
+}
+
+// ═══════ STORAGE QUOTA & AUTO-PRUNING (IMP-62) ═══════
+function calculateStorageUsage() {
+  try {
+    let totalBytes = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      const val = localStorage.getItem(key);
+      totalBytes += (key ? key.length : 0) + (val ? val.length : 0);
+    }
+    const maxBytes = 5 * 1024 * 1024; // 5MB quota
+    const usedMB = (totalBytes / (1024 * 1024)).toFixed(2);
+    const maxMB = (maxBytes / (1024 * 1024)).toFixed(1);
+    const pct = Math.min(100, Math.round((totalBytes / maxBytes) * 100));
+
+    const txtEl = document.getElementById('storage-usage-text');
+    const barEl = document.getElementById('storage-usage-bar');
+    if (txtEl) {
+      txtEl.textContent = `${usedMB} MB / ${maxMB} MB (${pct}%)`;
+      txtEl.style.color = pct > 80 ? 'var(--red)' : pct > 60 ? '#D97706' : 'var(--brand)';
+    }
+    if (barEl) {
+      barEl.style.width = pct + '%';
+      barEl.style.background = pct > 80 ? 'var(--red)' : pct > 60 ? '#D97706' : 'var(--brand)';
+    }
+    return { totalBytes, usedMB, maxMB, pct };
+  } catch (e) {
+    return { totalBytes: 0, usedMB: '0', maxMB: '5.0', pct: 0 };
+  }
+}
+
+function pruneOldSyncedMedia(isManual = false) {
+  if (typeof S === 'undefined' || !S) return 0;
+  let freedCount = 0;
+  const thirtyDaysMs = 30 * 86400 * 1000;
+  const now = Date.now();
+
+  // 1. Quét Bills
+  if (Array.isArray(S.bills)) {
+    S.bills.forEach(b => {
+      const bTime = new Date(b.date || b.createdAt || 0).getTime();
+      const isOld = (now - bTime) > thirtyDaysMs;
+      if (isOld && Array.isArray(b.photos)) {
+        b.photos = b.photos.map((p, idx) => {
+          if (typeof p === 'string' && p.startsWith('data:')) {
+            const meta = (b.photoMeta && b.photoMeta[idx]) || {};
+            const driveUrl = meta.driveUrl || meta.src;
+            if (driveUrl && !driveUrl.startsWith('data:')) {
+              freedCount++;
+              return driveUrl;
+            }
+          }
+          return p;
+        });
+      }
+    });
+  }
+
+  // 2. Quét Reports issues
+  if (S.reports && typeof S.reports === 'object') {
+    Object.values(S.reports).forEach(rep => {
+      if (!rep || !Array.isArray(rep.issues)) return;
+      rep.issues.forEach(iss => {
+        const issTime = new Date(iss.createdAt || rep.createdAt || 0).getTime();
+        const isOld = (now - issTime) > thirtyDaysMs;
+        if (isOld && Array.isArray(iss.photos)) {
+          iss.photos = iss.photos.map(p => {
+            if (typeof p === 'string' && p.startsWith('data:') && (p._driveUrl || iss.driveUrl)) {
+              freedCount++;
+              return p._driveUrl || iss.driveUrl;
+            }
+            return p;
+          });
+        }
+      });
+    });
+  }
+
+  if (freedCount > 0) {
+    sv();
+    calculateStorageUsage();
+    if (typeof showToast === 'function') {
+      showToast(`✓ Đã dọn dẹp ${freedCount} ảnh cũ (>30 ngày đã lên Drive) để giải phóng bộ nhớ máy!`);
+    }
+  } else if (isManual) {
+    calculateStorageUsage();
+    if (typeof showToast === 'function') {
+      showToast('ℹ️ Bộ nhớ đang tối ưu tốt. Không có ảnh cũ >30 ngày cần giải phóng.');
+    }
+  }
+  return freedCount;
 }
 
 // ═══════ PWA ═══════
@@ -8904,6 +9181,7 @@ function showScreen(n) {
   if (n === 'settings') {
     if (typeof renderSettingsAbout === 'function') renderSettingsAbout();
     if (typeof updatePINStatusLabel === 'function') updatePINStatusLabel();
+    if (typeof calculateStorageUsage === 'function') calculateStorageUsage();
   }
   if (n === 'tools') { if (typeof renderToolsScreen === 'function') renderToolsScreen(); }
 }
@@ -9645,7 +9923,7 @@ function applyVoiceResultToInput() {
 }
 
 // ── App Version, PDF Text Normalizer & Settings About (IMP-34, IMP-53) ──
-const APP_VERSION = 'v4.18';
+const APP_VERSION = 'v4.20';
 
 function pdfSafeText(v) {
   if (v === null || v === undefined) return '';
@@ -9782,6 +10060,7 @@ async function quickSyncFromHome() {
     if (btn) { btn.classList.remove('syncing'); btn.disabled = false; }
     if (typeof renderDash === 'function') renderDash();
     renderSettingsAbout();
+    if (typeof updateNetworkStatus === 'function') updateNetworkStatus();
   }
 }
 
@@ -14342,7 +14621,7 @@ function getTaskMagicLink(task) {
   } catch (e) {
     token = encodeURIComponent(String(task.id));
   }
-  return cleanUrl + '?action=taskView&id=' + encodeURIComponent(task.id) + '&token=' + encodeURIComponent(token);
+  return cleanUrl + '?id=' + encodeURIComponent(task.id) + (token ? ('&token=' + encodeURIComponent(token)) : '');
 }
 
 function buildTaskAssignmentEmailContent(task) {
@@ -14350,10 +14629,12 @@ function buildTaskAssignmentEmailContent(task) {
   const plantObj = task.tripId ? (S.trips || []).find(t => String(t.id) === String(task.tripId)) : null;
   const plantName = plantObj ? (plantObj.plant + (plantObj.location ? ' - ' + plantObj.location : '')) : 'General Field Service';
   const tripTitle = plantObj ? plantObj.plant : '';
-  const dateRange = (task.dateStart && task.dateEnd && task.dateStart !== task.dateEnd)
-    ? (task.dateStart + ' to ' + task.dateEnd)
-    : (task.dateStart || task.date || 'TBD');
-  const timeRange = task.timeStart ? (task.timeStart + (task.timeEnd ? ' - ' + task.timeEnd : '')) : '';
+  const dStart = task.dateStart || task.date || '';
+  const dEnd = task.dateEnd || '';
+  const dateRange = (dStart && dEnd && dStart !== dEnd) ? (dStart + ' → ' + dEnd) : (dStart || dEnd || 'TBD');
+  const tStart = task.timeStart || '';
+  const tEnd = task.timeEnd || '';
+  const timeRange = (tStart && tEnd && tStart !== tEnd) ? (tStart + ' – ' + tEnd) : (tStart || tEnd || '');
   const dur = calcDuration(task);
   const prioUpper = (task.priority || 'MEDIUM').toUpperCase();
   const catUpper = (task.category || 'WORK').toUpperCase();
@@ -14397,9 +14678,9 @@ function buildTaskAssignmentEmailContent(task) {
 
   if (magicLink) {
     textBody += `----------------------------------------\n`;
-    textBody += `👉 INTERACTIVE ONLINE UPDATE (No app installation required):\n`;
+    textBody += `👉 ONLINE TASK FORM (No app installation required):\n`;
     textBody += `${magicLink}\n`;
-    textBody += `(Tap link to complete checklist & update progress)\n`;
+    textBody += `(Tap link to check off items & submit progress)\n`;
     textBody += `----------------------------------------\n\n`;
   }
 
@@ -14470,7 +14751,7 @@ function buildTaskAssignmentEmailContent(task) {
         <a href="${magicLink}" target="_blank" style="display:inline-block;background:#00843D;color:#FFFFFF;text-decoration:none;padding:14px 28px;border-radius:24px;font-size:14.5px;font-weight:700;box-shadow:0 3px 10px rgba(0,132,61,0.35);letter-spacing:0.02em;">
           👉 Open &amp; Update Task Progress (Online Form)
         </a>
-        <div style="font-size:12px;color:#64748B;margin-top:10px;">Direct link: <a href="${magicLink}" target="_blank" style="color:#00843D;font-weight:600;text-decoration:underline;">${escHtml(magicLink)}</a></div>
+        <div style="font-size:11.5px;color:#64748B;margin-top:8px;">(Tap button to check off items &amp; report status online)</div>
       </div>` : ''}
     </div>
     <div style="background:#F8FAFC;border-top:1px solid #E2E8F0;padding:14px 24px;font-size:12px;color:#64748B;">
